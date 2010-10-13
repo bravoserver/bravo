@@ -21,6 +21,11 @@ required, so packets may be parsed with no wire trust involved.
 The packet's header is a single byte identifying the type of the packet. This
 byte is called the **identifier**.
 
+Ports
+-----
+
+Alpha listens on TCP port 25565.
+
 Types
 -----
 
