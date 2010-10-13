@@ -3,7 +3,8 @@ import functools
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory, Protocol
 
-from construct import Struct, PascalString, UBInt16
+from construct import Struct, Container
+from construct import PascalString, UBInt16, UBInt32
 
 STATE_UNAUTHENTICATED, STATE_CHALLENGED = range(2)
 
@@ -15,22 +16,39 @@ AlphaString = functools.partial(PascalString,
     length_field=UBInt16("length"),
     encoding="utf8")
 
+def login(protocol, container):
+    print "Got login: %s protocol %d" % (container.username,
+        container.protocol)
+
+    if container.protocol != 2:
+        # Kick old clients.
+        protocol.transport.write("\xff")
+
+    packet = "\x01" + "\x00" * 8
+    protocol.transport.write(packet)
+
 def handshake(protocol, container):
-    print "Got login: %s" % container.username
+    print "Got handshake: %s" % container.username
 
     protocol.username = container.username
     protocol.state = STATE_CHALLENGED
 
-    container.username = "-"
-    protocol.transport.write(parser.build(container))
+    packet = "\x02" + packets[2].build(Container(username="-"))
+    protocol.transport.write(packet)
 
 packets = {
+    1: Struct("login",
+        UBInt32("protocol"),
+        AlphaString("username"),
+        AlphaString("unused"),
+    ),
     2: Struct("handshake",
         AlphaString("username"),
     ),
 }
 
 handlers = {
+    1: login,
     2: handshake,
 }
 
