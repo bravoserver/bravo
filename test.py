@@ -25,7 +25,18 @@ packets = {
     2: Struct("handshake",
         AlphaString("username"),
     ),
+    255: Struct("error",
+        AlphaString("message"),
+    ),
 }
+
+def make_packet(packet, **kwargs):
+    header = chr(packet)
+    payload = packets[packet].build(Container(**kwargs))
+    return header + payload
+
+def make_error_packet(message):
+    return make_packet(255, message=message)
 
 class AlphaProtocol(Protocol):
     """
@@ -41,25 +52,28 @@ class AlphaProtocol(Protocol):
     parser = None
     handler = None
 
-    def login(protocol, container):
+    def login(self, container):
         print "Got login: %s protocol %d" % (container.username,
             container.protocol)
 
         if container.protocol != 2:
             # Kick old clients.
-            protocol.transport.write("\xff")
+            self.transport.write(make_error_packet(
+                "This server doesn't support your ancient client."
+            ))
+            return
 
-        packet = "\x01" + "\x00" * 8
-        protocol.transport.write(packet)
+        packet = make_packet(1, protocol=0, username="", unused="")
+        self.transport.write(packet)
 
-    def handshake(protocol, container):
+    def handshake(self, container):
         print "Got handshake: %s" % container.username
 
-        protocol.username = container.username
-        protocol.state = STATE_CHALLENGED
+        self.username = container.username
+        self.state = STATE_CHALLENGED
 
-        packet = "\x02" + packets[2].build(Container(username="-"))
-        protocol.transport.write(packet)
+        packet = make_packet(2, username="-")
+        self.transport.write(packet)
 
     handlers = {
         1: login,
@@ -79,6 +93,9 @@ class AlphaProtocol(Protocol):
                 self.handler = self.handlers[t]
             else:
                 print "Got some unknown packet; kicking client!"
+                self.transport.write(make_error_packet(
+                    "What ain't no country I ever heard of!"
+                ))
                 self.transport.loseConnection()
 
         try:
