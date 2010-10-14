@@ -74,9 +74,9 @@ PingPacket (0x00)
 
 No fields.
 
-PingPackets are a simple keepalive mechanism that must be sent and received
-within certain time intervals in order to keep the server from timing out the
-client or vice versa.
+A simple keepalive mechanism that must be sent and received within certain
+time intervals in order to keep the server from timing out the client or vice
+versa.
 
 LoginPacket (0x01)
 ^^^^^^^^^^^^^^^^^^
@@ -87,7 +87,8 @@ Fields:
  * username: string
  * unknown: string
 
-LoginPackets identify clients to the server.
+Identifies clients to the server. The server should reply with an empty
+LoginPacket if successful (version 0, no username or unknown.)
 
 The version of the client should be 2 for Alpha servers.
 
@@ -98,7 +99,7 @@ Fields:
 
  * message: string
 
-ChatPackets are used to relay messages from the chat subsystem of the client.
+Used to relay messages from the chat subsystem of the client.
 
 SpawnPacket (0x06)
 ^^^^^^^^^^^^^^^^^^
@@ -109,7 +110,7 @@ Fields:
  * y: int
  * z: int
 
-SpawnPackets specify the spawn location of the currently loaded world.
+Specifies the spawn location of the currently loaded world.
 
 ErrorPacket (0xff)
 ^^^^^^^^^^^^^^^^^^
@@ -118,4 +119,4 @@ Fields:
 
  * message: string
 
-ErrorPackets are used to deliver error messages to clients.
+Used to deliver error messages to clients.
