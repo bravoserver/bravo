@@ -30,6 +30,7 @@ position = Struct("position",
 look = Struct("look", BFloat32("rotation"), BFloat32("pitch"))
 
 packets = {
+    0: Struct("ping"),
     1: Struct("login",
         UBInt32("protocol"),
         AlphaString("username"),
@@ -97,10 +98,15 @@ class AlphaProtocol(Protocol):
         packet = make_packet(2, username="-")
         self.transport.write(packet)
 
-    handlers = {
+    def unhandled(self, container):
+        print "Unhandled but parseable packet found!"
+        print container
+
+    handlers = collections.defaultdict(lambda: AlphaProtocol.unhandled)
+    handlers.update({
         1: login,
         2: handshake,
-    }
+    })
 
     def dataReceived(self, data):
         print repr(data)
@@ -114,7 +120,7 @@ class AlphaProtocol(Protocol):
                 self.parser = packets[t]
                 self.handler = self.handlers[t]
             else:
-                print "Got some unknown packet; kicking client!"
+                print "Got some unknown packet %d; kicking client!" % t
                 self.transport.write(make_error_packet(
                     "What ain't no country I ever heard of!"
                 ))
