@@ -16,26 +16,6 @@ AlphaString = functools.partial(PascalString,
     length_field=UBInt16("length"),
     encoding="utf8")
 
-def login(protocol, container):
-    print "Got login: %s protocol %d" % (container.username,
-        container.protocol)
-
-    if container.protocol != 2:
-        # Kick old clients.
-        protocol.transport.write("\xff")
-
-    packet = "\x01" + "\x00" * 8
-    protocol.transport.write(packet)
-
-def handshake(protocol, container):
-    print "Got handshake: %s" % container.username
-
-    protocol.username = container.username
-    protocol.state = STATE_CHALLENGED
-
-    packet = "\x02" + packets[2].build(Container(username="-"))
-    protocol.transport.write(packet)
-
 packets = {
     1: Struct("login",
         UBInt32("protocol"),
@@ -45,11 +25,6 @@ packets = {
     2: Struct("handshake",
         AlphaString("username"),
     ),
-}
-
-handlers = {
-    1: login,
-    2: handshake,
 }
 
 class AlphaProtocol(Protocol):
@@ -66,6 +41,31 @@ class AlphaProtocol(Protocol):
     parser = None
     handler = None
 
+    def login(protocol, container):
+        print "Got login: %s protocol %d" % (container.username,
+            container.protocol)
+
+        if container.protocol != 2:
+            # Kick old clients.
+            protocol.transport.write("\xff")
+
+        packet = "\x01" + "\x00" * 8
+        protocol.transport.write(packet)
+
+    def handshake(protocol, container):
+        print "Got handshake: %s" % container.username
+
+        protocol.username = container.username
+        protocol.state = STATE_CHALLENGED
+
+        packet = "\x02" + packets[2].build(Container(username="-"))
+        protocol.transport.write(packet)
+
+    handlers = {
+        1: login,
+        2: handshake,
+    }
+
     def dataReceived(self, data):
         print repr(data)
         if self.buf:
@@ -74,9 +74,9 @@ class AlphaProtocol(Protocol):
         if not self.parser:
             t = ord(data[0])
             data = data[1:]
-            if t in packets and t in handlers:
+            if t in packets:
                 self.parser = packets[t]
-                self.handler = handlers[t]
+                self.handler = self.handlers[t]
             else:
                 print "Got some unknown packet; kicking client!"
                 self.transport.loseConnection()
