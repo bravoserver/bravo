@@ -42,8 +42,41 @@ Note: Strings may have embedded NULL bytes, as explained by the Java
 documentation. It is recommended that implementations correctly handle these
 NULL bytes in incoming strings, but not generate them in outgoing strings.
 
+A lazy implementor could certainly get by with a simple length-prefixed string
+parser, provided that they not forget to handle the characters as UTF-8.
+
+Byte
+^^^^
+
+A 8-bit signed integer in network byte order. At least the official server
+treats these as both signed and unsigned depending on the particular packet.
+
+Short
+^^^^^
+
+A 16-bit signed integer in network byte order.
+
+Int
+^^^
+
+A 32-bit signed integer in network byte order.
+
+Long
+^^^^
+
+A 64-bit signed integer in network byte order.
+
 Packets
 -------
+
+PingPacket (0x00)
+^^^^^^^^^^^^^^^^^
+
+No fields.
+
+PingPackets are a simple keepalive mechanism that must be sent and received
+within certain time intervals in order to keep the server from timing out the
+client or vice versa.
 
 LoginPacket (0x01)
 ^^^^^^^^^^^^^^^^^^
@@ -66,6 +99,17 @@ Fields:
  * message: string
 
 ChatPackets are used to relay messages from the chat subsystem of the client.
+
+SpawnPacket (0x06)
+^^^^^^^^^^^^^^^^^^
+
+Fields:
+
+ * x: int
+ * y: int
+ * z: int
+
+SpawnPackets specify the spawn location of the currently loaded world.
 
 ErrorPacket (0xff)
 ^^^^^^^^^^^^^^^^^^
