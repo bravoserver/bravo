@@ -14,6 +14,32 @@ LIGHTGRAY, WHITE, YELLOWFLOWER, REDFLOWER, MUSHROOM,
 REDMUSHROOM, GOLDSOLID, IRON, STAIRCASEFULL, STAIRCASESTEP,
 BRICK, TNT, BOOKCASE, STONEVINE, OBSIDIAN) = range(50)
 
+def base36(i):
+    """
+    Return the string representation of i in base 36, using lowercase letters.
+    """
+
+    letters = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+    if i < 0:
+        i = -i
+        signed = True
+    elif i == 0:
+        return "0"
+    else:
+        signed = False
+
+    s = ""
+
+    while i:
+        i, digit = divmod(i, 36)
+        s = letters[digit] + s
+
+    if signed:
+        s = "-" + s
+
+    return s
+
 class Chunk(object):
 
     def __init__(x, z):
@@ -46,3 +72,8 @@ class World(object):
                         self.chunk_coords.add(coords)
                     except:
                         pass
+
+    def load_chunk(self, x, z):
+        self.chunks[x, z] = Chunk(x, z)
+        filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
+            "c.%s.%s.dat" % (base36(x), base36(z)))
