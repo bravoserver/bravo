@@ -1,5 +1,7 @@
 import os
 
+from nbt.nbt import NBTFile
+
 # Block names. Order matters!
 (EMPTY, ROCK, GRASS, DIRT, STONE,
 WOOD, SHRUB, BLACKROCK, WATER, WATERSTILL,
@@ -23,10 +25,18 @@ class World(object):
     def __init__(self, folder):
         self.folder = folder
         self.chunk_coords = set()
+        self.chunks = dict()
 
-        self.scan()
+        self.load_level_data()
+        self.scan_chunks()
 
-    def scan(self):
+    def load_level_data(self):
+        f = NBTFile(os.path.join(self.folder, "level.dat"))
+
+        self.spawn = (f["Data"]["SpawnX"], f["Data"]["SpawnY"],
+            f["Data"]["SpawnZ"])
+
+    def scan_chunks(self):
         for directory, directories, files in os.walk(self.folder):
             for filename in files:
                 if filename.startswith("c.") and filename.endswith(".dat"):
@@ -36,4 +46,3 @@ class World(object):
                         self.chunk_coords.add(coords)
                     except:
                         pass
-        print sorted(self.chunk_coords)

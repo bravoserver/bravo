@@ -10,7 +10,9 @@ from construct import Struct, Container
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, BFloat32, BFloat64
 
-STATE_UNAUTHENTICATED, STATE_CHALLENGED = range(2)
+import world
+
+STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED = range(3)
 
 # Our tricky Java string decoder.
 # Note that Java has a weird encoding for the NULL byte which we do not
@@ -75,6 +77,9 @@ class AlphaProtocol(Protocol):
     parser = None
     handler = None
 
+    def __init__(self):
+        print "Started new connection..."
+
     def login(self, container):
         print "Got login: %s protocol %d" % (container.username,
             container.protocol)
@@ -88,6 +93,8 @@ class AlphaProtocol(Protocol):
 
         packet = make_packet(1, protocol=0, username="", unused="")
         self.transport.write(packet)
+
+        self.authenticated()
 
     def handshake(self, container):
         print "Got handshake: %s" % container.username
@@ -138,9 +145,23 @@ class AlphaProtocol(Protocol):
 
         self.buf = data
 
+    def authenticated(self):
+        self.state = STATE_AUTHENTICATED
+        self.factory.players.add(self)
+
+    def connectionLost(self, reason):
+        self.factory.players.discard(self)
+
 class AlphaFactory(Factory):
 
     protocol = AlphaProtocol
+
+    def __init__(self):
+
+        self.world = world.World("world")
+        self.players = set()
+
+        print "Factory init'd"
 
 reactor.listenTCP(25565, AlphaFactory())
 reactor.run()
