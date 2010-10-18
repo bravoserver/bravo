@@ -5,7 +5,7 @@ from construct import MetaRepeater, If
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, BFloat32, BFloat64
 
-from construct.core import FieldError
+from construct.core import ArrayError, FieldError
 
 # Our tricky Java string decoder.
 # Note that Java has a weird encoding for the NULL byte which we do not
@@ -85,7 +85,7 @@ def parse_packets(bytestream):
             parser = packets[header]
             try:
                 container = parser.parse(bytestream[1:])
-            except FieldError:
+            except (ArrayError, FieldError):
                 break
             except Exception, e:
                 print type(e), e
