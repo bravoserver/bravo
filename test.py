@@ -6,7 +6,7 @@ import functools
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory, Protocol
 
-import packets
+from packets import parse_packets, make_packet, make_error_packet
 import world
 
 STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED = range(3)
@@ -65,33 +65,15 @@ class AlphaProtocol(Protocol):
 
     def dataReceived(self, data):
         print repr(data)
-        if self.buf:
-            data = self.buf + data
+        self.buf += data
 
-        if not self.parser:
-            t = ord(data[0])
-            data = data[1:]
-            if t in packets.packets:
-                self.parser = packets.packets[t]
-                self.handler = self.handlers[t]
-            else:
-                print "Got some unknown packet %d; kicking client!" % t
-                self.transport.write(make_error_packet(
-                    "What ain't no country I ever heard of!"
-                ))
-                self.transport.loseConnection()
+        packets, self.buf = parse_packets(self.buf)
 
-        try:
-            container = self.parser.parse(data)
-            # Reconstruct the packet and discard the data from the stream
-            rebuilt = self.parser.build(container)
-            data = data[len(rebuilt):]
-            self.parser = None
-            self.handler(self, container)
-        except:
-            pass
+        print "Current packets:", packets
+        print "Current buffer:", repr(self.buf)
 
-        self.buf = data
+        for header, payload in packets:
+            self.handlers[header](self, payload)
 
     def authenticated(self):
         self.state = STATE_AUTHENTICATED

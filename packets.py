@@ -4,6 +4,8 @@ from construct import Struct, Container
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, BFloat32, BFloat64
 
+from construct.core import FieldError
+
 # Our tricky Java string decoder.
 # Note that Java has a weird encoding for the NULL byte which we do not
 # respect or honor since no client will generate it. Instead, we will get two
@@ -53,6 +55,37 @@ def parse_packets(bytestream):
     Returns a tuple containing a list of unpacked packet containers, and any
     leftover unparseable bytes.
     """
+
+    l = []
+
+    while bytestream:
+        print "top of loop"
+        header = ord(bytestream[0])
+
+        if header in packets:
+            parser = packets[header]
+            print "found packet %d" % header
+            try:
+                container = parser.parse(bytestream[1:])
+                print "parsed packet"
+            except FieldError, e:
+                print "fielderror"
+                print e
+                break
+            except Exception, e:
+                print type(e), e
+                break
+
+            # Reconstruct the packet and discard the data from the stream.
+            # The extra one is for the header; we want to advance the stream
+            # as atomically as possible.
+            rebuilt = parser.build(container)
+            bytestream = bytestream[1 + len(rebuilt):]
+            print "appended"
+            l.append((header, container))
+
+    print "broke, going back home"
+    return l, bytestream
 
 def make_packet(packet, **kwargs):
     """
