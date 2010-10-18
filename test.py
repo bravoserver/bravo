@@ -64,7 +64,6 @@ class AlphaProtocol(Protocol):
     })
 
     def dataReceived(self, data):
-        print repr(data)
         self.buf += data
 
         packets, self.buf = parse_packets(self.buf)

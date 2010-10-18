@@ -59,18 +59,13 @@ def parse_packets(bytestream):
     l = []
 
     while bytestream:
-        print "top of loop"
         header = ord(bytestream[0])
 
         if header in packets:
             parser = packets[header]
-            print "found packet %d" % header
             try:
                 container = parser.parse(bytestream[1:])
-                print "parsed packet"
-            except FieldError, e:
-                print "fielderror"
-                print e
+            except FieldError:
                 break
             except Exception, e:
                 print type(e), e
@@ -81,10 +76,8 @@ def parse_packets(bytestream):
             # as atomically as possible.
             rebuilt = parser.build(container)
             bytestream = bytestream[1 + len(rebuilt):]
-            print "appended"
             l.append((header, container))
 
-    print "broke, going back home"
     return l, bytestream
 
 def make_packet(packet, **kwargs):
