@@ -1,4 +1,5 @@
 import functools
+import sys
 
 from construct import Struct, Container, Embed
 from construct import MetaRepeater, If
@@ -68,6 +69,11 @@ packets = {
         UBInt32("unknown1"),
         UBInt16("unknown2"),
     ),
+    17: Struct("inventory",
+        UBInt16("type"),
+        UBInt8("quantity"),
+        UBInt16("wear"),
+    ),
     20: Struct("unknown1",
         UBInt32("unknown2"),
         AlphaString("unknown3"),
@@ -88,6 +94,13 @@ packets = {
         UBInt8("unknown8"),
         UBInt8("unknown9"),
         UBInt8("unknown10"),
+    ),
+    22: Struct("move-item",
+        UBInt32("item"),
+        UBInt32("destination"),
+    ),
+    29: Struct("unknown1",
+        UBInt32("unknown2"),
     ),
     30: Struct("unknown1",
         UBInt32("unknown2"),
@@ -151,6 +164,7 @@ def parse_packets(bytestream):
             l.append((header, container))
         else:
             print "Couldn't decode packet %d" % header
+            sys.exit()
 
     return l, bytestream
 
