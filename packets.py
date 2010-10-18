@@ -1,6 +1,7 @@
 import functools
 
-from construct import Struct, Container
+from construct import Struct, Container, Embed
+from construct import MetaRepeater, If
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, BFloat32, BFloat64
 
@@ -33,6 +34,21 @@ packets = {
     2: Struct("handshake",
         AlphaString("username"),
     ),
+    5: Struct("unknown5",
+        UBInt32("unknown1"),
+        UBInt16("length"),
+        MetaRepeater(lambda context: context["length"],
+            Struct("unknown2",
+                UBInt16("id"),
+                If(lambda context: context["id"] != 0xffff,
+                    Embed(Struct("unknown3",
+                        UBInt8("count"),
+                        UBInt16("damage"),
+                    )),
+                ),
+            ),
+        ),
+    ),
     6: Struct("spawn",
         UBInt32("x"),
         UBInt32("y"),
@@ -42,6 +58,10 @@ packets = {
     11: Struct("position", position, flying),
     12: Struct("look", look, flying),
     13: Struct("position-look", position, look, flying),
+    16: Struct("item-switch",
+        UBInt32("unknown1"),
+        UBInt16("unknown2"),
+    ),
     255: Struct("error",
         AlphaString("message"),
     ),
