@@ -6,62 +6,10 @@ import functools
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory, Protocol
 
-from construct import Struct, Container
-from construct import PascalString
-from construct import UBInt8, UBInt16, UBInt32, BFloat32, BFloat64
-
+import packets
 import world
 
 STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED = range(3)
-
-# Our tricky Java string decoder.
-# Note that Java has a weird encoding for the NULL byte which we do not
-# respect or honor since no client will generate it. Instead, we will get two
-# NULL bytes in a row.
-AlphaString = functools.partial(PascalString,
-    length_field=UBInt16("length"),
-    encoding="utf8")
-
-flying = Struct("flying", UBInt8("flying"))
-position = Struct("position",
-    BFloat64("x"),
-    BFloat64("y"),
-    BFloat64("stance"),
-    BFloat64("z")
-)
-look = Struct("look", BFloat32("rotation"), BFloat32("pitch"))
-
-packets = {
-    0: Struct("ping"),
-    1: Struct("login",
-        UBInt32("protocol"),
-        AlphaString("username"),
-        AlphaString("unused"),
-    ),
-    2: Struct("handshake",
-        AlphaString("username"),
-    ),
-    6: Struct("spawn",
-        UBInt32("x"),
-        UBInt32("y"),
-        UBInt32("z"),
-    ),
-    10: flying,
-    11: Struct("position", position, flying),
-    12: Struct("look", look, flying),
-    13: Struct("position-look", position, look, flying),
-    255: Struct("error",
-        AlphaString("message"),
-    ),
-}
-
-def make_packet(packet, **kwargs):
-    header = chr(packet)
-    payload = packets[packet].build(Container(**kwargs))
-    return header + payload
-
-def make_error_packet(message):
-    return make_packet(255, message=message)
 
 class AlphaProtocol(Protocol):
     """
@@ -123,8 +71,8 @@ class AlphaProtocol(Protocol):
         if not self.parser:
             t = ord(data[0])
             data = data[1:]
-            if t in packets:
-                self.parser = packets[t]
+            if t in packets.packets:
+                self.parser = packets.packets[t]
                 self.handler = self.handlers[t]
             else:
                 print "Got some unknown packet %d; kicking client!" % t
