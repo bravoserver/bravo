@@ -42,9 +42,9 @@ def base36(i):
 
 class Chunk(object):
 
-    def __init__(x, z):
-        self.x = x
-        self.z = z
+    def __init__(self, x, z):
+        self.x = int(x)
+        self.z = int(z)
 
 class World(object):
 
@@ -74,6 +74,10 @@ class World(object):
                         pass
 
     def load_chunk(self, x, z):
-        self.chunks[x, z] = Chunk(x, z)
+        chunk = Chunk(x, z)
+        self.chunks[x, z] = chunk
         filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
             "c.%s.%s.dat" % (base36(x), base36(z)))
+        f = NBTFile(filename)
+        chunk.tag = f
+        return chunk
