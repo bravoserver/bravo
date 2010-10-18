@@ -77,6 +77,8 @@ def parse_packets(bytestream):
             rebuilt = parser.build(container)
             bytestream = bytestream[1 + len(rebuilt):]
             l.append((header, container))
+        else:
+            print "Couldn't decode packet %d" % header
 
     return l, bytestream
 
