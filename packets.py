@@ -4,7 +4,9 @@ import sys
 from construct import Struct, Container, Embed
 from construct import MetaRepeater, If
 from construct import PascalString
-from construct import UBInt8, UBInt16, UBInt32, UBInt64, BFloat32, BFloat64
+from construct import UBInt8, UBInt16, UBInt32, UBInt64
+from construct import SBInt8, SBInt16, SBInt32, SBInt64
+from construct import BFloat32, BFloat64
 
 from construct.core import ArrayError, FieldError
 
@@ -167,14 +169,14 @@ packets = {
         UBInt8("unknown6"),
     ),
     50: Struct("chunk-enable",
-        UBInt32("x"),
-        UBInt32("z"),
+        SBInt32("x"),
+        SBInt32("z"),
         UBInt8("enabled"),
     ),
     51: Struct("chunk",
-        UBInt32("x"),
+        SBInt32("x"),
         UBInt16("y"),
-        UBInt32("z"),
+        SBInt32("z"),
         UBInt8("x-size"),
         UBInt8("y-size"),
         UBInt8("z-size"),
