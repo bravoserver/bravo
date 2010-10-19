@@ -2,7 +2,7 @@ import functools
 import sys
 
 from construct import Struct, Container, Embed
-from construct import MetaRepeater, If
+from construct import Construct, MetaRepeater, If
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32, SBInt64
@@ -28,6 +28,25 @@ position = Struct("position",
 look = Struct("look", BFloat32("rotation"), BFloat32("pitch"))
 
 entity = Struct("entity", UBInt32("id"))
+entity_position = Struct("entity_position",
+    entity,
+    UBInt8("x"),
+    UBInt8("y"),
+    UBInt8("z")
+)
+entity_look = Struct("entity_look",
+    entity,
+    UBInt8("rotation"),
+    UBInt8("pitch")
+)
+entity_position_look = Struct("entity_position_look",
+    entity,
+    UBInt8("x"),
+    UBInt8("y"),
+    UBInt8("z"),
+    UBInt8("rotation"),
+    UBInt8("pitch")
+)
 
 packets = {
     0: Struct("ping"),
@@ -137,29 +156,13 @@ packets = {
         UBInt8("unknown"),
         UBInt8("unknown"),
     ),
-    29: Struct("unknown1",
-        UBInt32("unknown2"),
+    29: Struct("destroy",
+        entity,
     ),
     30: entity,
-    31: Struct("unknown1",
-        entity,
-        UBInt8("unknown3"),
-        UBInt8("unknown4"),
-        UBInt8("unknown5"),
-    ),
-    32: Struct("unknown1",
-        entity,
-        UBInt8("unknown3"),
-        UBInt8("unknown4"),
-    ),
-    33: Struct("unknown1",
-        entity,
-        UBInt8("unknown3"),
-        UBInt8("unknown4"),
-        UBInt8("unknown5"),
-        UBInt8("unknown6"),
-        UBInt8("unknown7"),
-    ),
+    31: entity_position,
+    32: entity_look,
+    33: entity_position_look,
     34: Struct("unknown",
         UBInt32("unknown"),
         UBInt32("unknown"),
@@ -182,7 +185,7 @@ packets = {
         UBInt8("z_size"),
         PascalString("data", length_field=UBInt32("length"), encoding="zlib"),
     ),
-    52: Struct("unknown",
+    52: Struct("batch",
         UBInt32("unknown"),
         UBInt32("unknown"),
         UBInt16("length"),
@@ -219,6 +222,7 @@ def parse_packets(bytestream):
     """
 
     l = []
+    marker = 0
 
     while bytestream:
         header = ord(bytestream[0])
@@ -237,10 +241,14 @@ def parse_packets(bytestream):
             # The extra one is for the header; we want to advance the stream
             # as atomically as possible.
             rebuilt = parser.build(container)
-            bytestream = bytestream[1 + len(rebuilt):]
+            length = 1 + len(rebuilt)
+            bytestream = bytestream[length:]
+            print "Parsed packet %d (#%d) @ %#x (%#x bytes)" % (
+                header, len(l), marker, length)
             l.append((header, container))
+            marker += length
         else:
-            print "Couldn't decode packet %d" % header
+            print "Couldn't decode packet %d @ %#x" % (header, marker)
             sys.exit()
 
     return l, bytestream
