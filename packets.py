@@ -2,7 +2,7 @@ import functools
 import sys
 
 from construct import Struct, Container, Embed
-from construct import Construct, MetaRepeater, If
+from construct import Construct, MetaArray, If
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32, SBInt64
@@ -67,7 +67,7 @@ packets = {
     5: Struct("unknown5",
         UBInt32("unknown1"),
         UBInt16("length"),
-        MetaRepeater(lambda context: context["length"],
+        MetaArray(lambda context: context["length"],
             Struct("unknown2",
                 UBInt16("id"),
                 If(lambda context: context["id"] != 0xffff,
@@ -189,9 +189,9 @@ packets = {
         UBInt32("unknown"),
         UBInt32("unknown"),
         UBInt16("length"),
-        MetaRepeater(lambda context: context["length"], UBInt16("unknown")),
-        MetaRepeater(lambda context: context["length"], UBInt8("unknown")),
-        MetaRepeater(lambda context: context["length"], UBInt8("unknown")),
+        MetaArray(lambda context: context["length"], UBInt16("unknown")),
+        MetaArray(lambda context: context["length"], UBInt8("unknown")),
+        MetaArray(lambda context: context["length"], UBInt8("unknown")),
     ),
     53: Struct("unknown",
         UBInt32("unknown"),
@@ -201,11 +201,11 @@ packets = {
         UBInt8("unknown6"),
     ),
     59: Struct("unknown",
-        UBInt32("unknown"),
-        UBInt16("unknown"),
-        UBInt32("unknown"),
+        UBInt32("unknown1"),
+        UBInt16("unknown2"),
+        UBInt32("unknown3"),
         UBInt16("length"),
-        MetaRepeater(lambda context: context["length"], UBInt8("unknown")),
+        MetaArray(lambda context: context["length"], UBInt8("unknown4")),
     ),
     255: Struct("error",
         AlphaString("message"),
