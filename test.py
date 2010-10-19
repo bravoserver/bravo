@@ -117,7 +117,7 @@ class AlphaProtocol(Protocol):
         self.transport.write(packet)
 
         packet = make_packet(51, x=x * 16, y=0, z=z * 16,
-            x_size=15, y_size=127, z_size=15, data=array)
+            x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
 
         self.transport.write(packet)
 
