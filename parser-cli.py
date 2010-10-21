@@ -8,8 +8,11 @@ stream = sys.stdin.read()
 
 l, rest = packets.parse_packets(stream)
 
-for header, payload in l:
-    print "--- Packet %d" % header
+for i, t in enumerate(l):
+    header, payload = t
+    if not i % 100:
+        print "*" * 10, "PACKET COUNT: %d" % i, "*" * 10
+    print "--- Packet %d ---" % header
     print payload
 
 print "Trailing: %s" % repr(rest)

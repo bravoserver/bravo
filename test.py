@@ -40,6 +40,8 @@ class AlphaProtocol(Protocol):
             ))
             return
 
+        self.username = container.username
+
         packet = make_packet(1, protocol=0, username="", unused="")
         self.transport.write(packet)
 
@@ -132,6 +134,11 @@ class AlphaProtocol(Protocol):
     def authenticated(self):
         self.state = STATE_AUTHENTICATED
         self.factory.players.add(self)
+
+        # We should send a spawn packet next, before letting the position
+        # callback start sending chunks. We probably should also send
+        # inventory lists; -1 list is main inventory, dunno about others. -2
+        # might be armor, -3 might be crafting materials.
 
     def connectionLost(self, reason):
         self.factory.players.discard(self)

@@ -1,3 +1,4 @@
+import collections
 import functools
 import sys
 
@@ -7,6 +8,7 @@ from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32, SBInt64
 from construct import BFloat32, BFloat64
+from construct import Enum, Union
 
 from construct.core import ArrayError, FieldError
 
@@ -48,6 +50,12 @@ entity_position_look = Struct("entity_position_look",
     UBInt8("pitch")
 )
 
+items = collections.defaultdict(lambda: "unused")
+items.update({
+    4: "cobblestone",
+    20: "glass",
+})
+
 packets = {
     0: Struct("ping"),
     1: Struct("login",
@@ -64,14 +72,14 @@ packets = {
     4: Struct("time",
         UBInt64("timestamp"),
     ),
-    5: Struct("unknown5",
-        UBInt32("unknown1"),
+    5: Struct("inventory",
+        SBInt32("unknown1"),
         UBInt16("length"),
         MetaArray(lambda context: context["length"],
-            Struct("unknown2",
+            Struct("items",
                 UBInt16("id"),
                 If(lambda context: context["id"] != 0xffff,
-                    Embed(Struct("unknown3",
+                    Embed(Struct("item_information",
                         UBInt8("count"),
                         UBInt16("damage"),
                     )),
@@ -148,13 +156,13 @@ packets = {
         UBInt32("unknown"),
     ),
     24: Struct("unknown1",
-        UBInt32("unknown"),
-        UBInt8("unknown"),
-        UBInt32("unknown"),
-        UBInt32("unknown"),
-        UBInt32("unknown"),
-        UBInt8("unknown"),
-        UBInt8("unknown"),
+        UBInt32("unknown2"),
+        UBInt8("unknown3"),
+        UBInt32("unknown4"),
+        UBInt32("unknown5"),
+        UBInt32("unknown6"),
+        UBInt8("unknown7"),
+        UBInt8("unknown8"),
     ),
     29: Struct("destroy",
         entity,
