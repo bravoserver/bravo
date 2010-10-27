@@ -73,35 +73,27 @@ class AlphaProtocol(Protocol):
     def flying(self, container):
         print "Got flying!"
 
-    def position(self, container):
-        print "Got position!"
+        self.player.location.load_from_packet(container)
 
-        self.flying(container)
+    def position_look(self, container):
+        print "Got position/look!"
 
-        inner = container.position
-        self.pos = inner.x, inner.y, inner.z
+        self.player.location.load_from_packet(container)
 
-        print "Current position is %d, %d, %d" % self.pos
+        pos = (self.player.location.x, self.player.location.y,
+            self.player.location.z)
+        print "current position is %d, %d, %d" % pos
 
-        x = int(inner.x // 16)
-        z = int(inner.z // 16)
-        print "Sending chunks for [%d, %d]x[%d, %d]" % (
+        packet = self.player.location.save_to_packet()
+        self.transport.write(packet)
+
+        x = int(pos[0] // 16)
+        z = int(pos[2] // 16)
+        print "sending chunks for [%d, %d]x[%d, %d]" % (
             x - 10, x + 10, z - 10, z + 10)
         for i, j in itertools.product(
             xrange(x - 10, x + 10), xrange(z - 10, z + 10)):
             self.enable_chunk(i, j)
-
-    def look(self, container):
-        print "Got look!"
-
-        inner = container.look
-
-        self.rotation = inner.rotation
-        self.pitch = inner.pitch
-
-    def position_look(self, container):
-        self.position(container)
-        self.look(container)
 
     def equip(self, container):
         print "Got equip!"
@@ -118,8 +110,8 @@ class AlphaProtocol(Protocol):
         2: handshake,
         5: inventory,
         10: flying,
-        11: position,
-        12: look,
+        11: position_look,
+        12: position_look,
         13: position_look,
         16: equip,
     })

@@ -46,12 +46,57 @@ class Inventory(object):
 
         return packet
 
+class Location(object):
+    """
+    The position and orientation of an entity.
+    """
+
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.z = 0
+        self.theta = 0
+        self.pitch = 0
+        self.midair = False
+
+    def load_from_packet(self, container):
+        """
+        Update from a packet container.
+
+        Position, look, and flying packets are all handled.
+        """
+
+        if hasattr(container, "position"):
+            self.x = container.position.x
+            self.y = container.position.y
+            self.z = container.position.z
+        if hasattr(container, "look"):
+            self.theta = container.look.rotation
+            self.pitch = container.look.pitch
+        if hasattr(container, "flying"):
+            self.midair = bool(container.flying)
+
+    def save_to_packet(self):
+        """
+        Returns a position/look/flying packet.
+        """
+
+        position = Container(x=self.x, y=self.y, z=self.z, stance=0)
+        look = Container(rotation=self.theta, pitch=self.pitch)
+        flying = Container(flying=self.midair)
+
+        packet = make_packet(13, position=position, look=look, flying=flying)
+
+        return packet
+
 class Player(object):
 
     def __init__(self):
         self.inventory = Inventory(-1, 36)
         self.minustwo = Inventory(-2, 4)
         self.minusthree = Inventory(-3, 4)
+
+        self.location = Location()
 
     def load_from_tag(self, tag):
         """

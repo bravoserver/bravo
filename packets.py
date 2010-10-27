@@ -156,7 +156,7 @@ packets = {
         UBInt32("unknown"),
     ),
     24: Struct("unknown1",
-        UBInt32("unknown2"),
+        entity,
         UBInt8("unknown3"),
         SBInt32("x"),
         SBInt32("y"),
