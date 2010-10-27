@@ -4,6 +4,8 @@ import collections
 import functools
 import itertools
 
+from construct import Container, ListContainer
+
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory, Protocol
 
@@ -139,6 +141,24 @@ class AlphaProtocol(Protocol):
         # callback start sending chunks. We probably should also send
         # inventory lists; -1 list is main inventory, dunno about others. -2
         # might be armor, -3 might be crafting materials.
+
+        player = self.factory.world.load_player(self.username)
+        inventory = [None] * 36
+        for tag in player["Inventory"].tags:
+            inventory[tag["Slot"].value] = (tag["id"].value,
+                tag["Damage"].value, tag["Count"].value)
+
+        lc = ListContainer()
+        for item in inventory:
+            if item is None:
+                lc.append(Container(id=0xffff))
+            else:
+                lc.append(Container(id=item[0], damage=item[1],
+                        count=item[2]))
+
+        print lc
+        packet = make_packet(5, unknown1=-1, length = len(lc), items=lc)
+        self.transport.write(packet)
 
     def connectionLost(self, reason):
         self.factory.players.discard(self)

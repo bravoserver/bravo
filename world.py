@@ -70,3 +70,8 @@ class World(object):
         f = NBTFile(filename)
         chunk.tag = f
         return chunk
+
+    def load_player(self, username):
+        filename = os.path.join(self.folder, "players", "%s.dat" % username)
+        f = NBTFile(filename)
+        return f
