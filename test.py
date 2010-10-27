@@ -60,6 +60,16 @@ class AlphaProtocol(Protocol):
         packet = make_packet(2, username="-")
         self.transport.write(packet)
 
+    def inventory(self, container):
+        print "Got inventory %d" % container.unknown1
+
+        if container.unknown1 == -1:
+            self.player.inventory.load_from_packet(container)
+        elif container.unknown1 == -2:
+            self.player.minustwo.load_from_packet(container)
+        elif container.unknown1 == -3:
+            self.player.minusthree.load_from_packet(container)
+
     def flying(self, container):
         print "Got flying!"
 
@@ -102,6 +112,7 @@ class AlphaProtocol(Protocol):
         0: ping,
         1: login,
         2: handshake,
+        5: inventory,
         10: flying,
         11: position,
         12: look,
@@ -134,21 +145,20 @@ class AlphaProtocol(Protocol):
 
     def authenticated(self):
         self.state = STATE_AUTHENTICATED
-        player = Player()
-        player.protocol = self
-        self.factory.players.add(player)
+        self.player = Player()
+        self.factory.players.add(self)
 
         # We should send a spawn packet next, before letting the position
         # callback start sending chunks. We probably should also send
         # inventory lists; -1 list is main inventory, dunno about others. -2
         # might be armor, -3 might be crafting materials.
 
-        player.load_from_tag(self.factory.world.load_player(self.username))
-        packet = player.inventory.save_to_packet()
+        self.player.load_from_tag(self.factory.world.load_player(self.username))
+        packet = self.player.inventory.save_to_packet()
         self.transport.write(packet)
-        packet = player.minustwo.save_to_packet()
+        packet = self.player.minustwo.save_to_packet()
         self.transport.write(packet)
-        packet = player.minusthree.save_to_packet()
+        packet = self.player.minusthree.save_to_packet()
         self.transport.write(packet)
 
     def connectionLost(self, reason):

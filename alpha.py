@@ -21,6 +21,17 @@ class Inventory(object):
                 self.items[slot] = (item["id"].value, item["Damage"].value,
                     item["Count"].value)
 
+    def load_from_packet(self, container):
+        """
+        Load data from a packet container.
+        """
+
+        for i, item in enumerate(container.items):
+            if item.id == 0xffff:
+                self.items[i] = None
+            else:
+                self.items[i] = item.id, item.damage, item.count
+
     def save_to_packet(self):
         lc = ListContainer()
         for item in self.items:
