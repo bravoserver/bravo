@@ -37,8 +37,16 @@ class Inventory(object):
 
 class Player(object):
 
-    def load_from_container(self, container):
-        pass
+    def __init__(self):
+        self.inventory = Inventory(-1, 36)
+        self.minustwo = Inventory(-2, 4)
+        self.minusthree = Inventory(-3, 4)
 
-    def save_to_packet(self):
-        pass
+    def load_from_tag(self, tag):
+        """
+        Load data from a Player tag.
+
+        Players are compound tags.
+        """
+
+        self.inventory.load_from_tag(tag["Inventory"])

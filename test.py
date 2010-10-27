@@ -143,10 +143,12 @@ class AlphaProtocol(Protocol):
         # inventory lists; -1 list is main inventory, dunno about others. -2
         # might be armor, -3 might be crafting materials.
 
-        player = self.factory.world.load_player(self.username)
-        inventory = Inventory(-1, 36)
-        inventory.load_from_tag(player["Inventory"])
-        packet = inventory.save_to_packet()
+        player.load_from_tag(self.factory.world.load_player(self.username))
+        packet = player.inventory.save_to_packet()
+        self.transport.write(packet)
+        packet = player.minustwo.save_to_packet()
+        self.transport.write(packet)
+        packet = player.minusthree.save_to_packet()
         self.transport.write(packet)
 
     def connectionLost(self, reason):
