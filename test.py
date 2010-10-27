@@ -103,6 +103,10 @@ class AlphaProtocol(Protocol):
         self.position(container)
         self.look(container)
 
+    def equip(self, container):
+        print "Got equip!"
+        self.player.equipped = container.item
+
     def unhandled(self, container):
         print "Unhandled but parseable packet found!"
         print container
@@ -117,6 +121,7 @@ class AlphaProtocol(Protocol):
         11: position,
         12: look,
         13: position_look,
+        16: equip,
     })
 
     def enable_chunk(self, x, z):
