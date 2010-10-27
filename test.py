@@ -153,6 +153,14 @@ class AlphaProtocol(Protocol):
         self.player = Player()
         self.factory.players.add(self)
 
+        packet = make_packet(3,
+            message="%s is joining the game..." % self.username)
+        self.transport.write(packet)
+
+        spawn = self.factory.world.spawn
+        packet = make_packet(6, x=spawn[0], y=spawn[1], z=spawn[2])
+        self.transport.write(packet)
+
         # We should send a spawn packet next, before letting the position
         # callback start sending chunks. We probably should also send
         # inventory lists; -1 list is main inventory, dunno about others. -2

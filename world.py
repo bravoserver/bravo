@@ -58,8 +58,8 @@ class World(object):
     def load_level_data(self):
         f = NBTFile(os.path.join(self.folder, "level.dat"))
 
-        self.spawn = (f["Data"]["SpawnX"], f["Data"]["SpawnY"],
-            f["Data"]["SpawnZ"])
+        self.spawn = (f["Data"]["SpawnX"].value, f["Data"]["SpawnY"].value,
+            f["Data"]["SpawnZ"].value)
 
     def load_chunk(self, x, z):
         chunk = Chunk(x, z)
