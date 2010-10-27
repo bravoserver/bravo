@@ -5,13 +5,15 @@ import functools
 import itertools
 
 from twisted.internet import reactor
+from twisted.internet.defer import Deferred
 from twisted.internet.protocol import Factory, Protocol
 
 from alpha import Player, Inventory
 from packets import parse_packets, make_packet, make_error_packet
 import world
 
-STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED = range(3)
+(STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
+    STATE_LOCATED) = range(4)
 
 class AlphaProtocol(Protocol):
     """
@@ -80,12 +82,18 @@ class AlphaProtocol(Protocol):
 
         self.player.location.load_from_packet(container)
 
+        # So annoying. The order in which packets come in is *not*
+        # deterministic, and we need to have a valid location before we do
+        # things like send the initial position, so we need to defer until we
+        # have received enough data from the client.
+        if self.state == STATE_AUTHENTICATED:
+            packet = self.player.location.save_to_packet()
+            self.transport.write(packet)
+            self.state == STATE_LOCATED
+
         pos = (self.player.location.x, self.player.location.y,
             self.player.location.z)
         print "current position is %d, %d, %d" % pos
-
-        packet = self.player.location.save_to_packet()
-        self.transport.write(packet)
 
         x = int(pos[0] // 16)
         z = int(pos[2] // 16)
@@ -152,11 +160,6 @@ class AlphaProtocol(Protocol):
         spawn = self.factory.world.spawn
         packet = make_packet(6, x=spawn[0], y=spawn[1], z=spawn[2])
         self.transport.write(packet)
-
-        # We should send a spawn packet next, before letting the position
-        # callback start sending chunks. We probably should also send
-        # inventory lists; -1 list is main inventory, dunno about others. -2
-        # might be armor, -3 might be crafting materials.
 
         self.player.load_from_tag(self.factory.world.load_player(self.username))
         packet = self.player.inventory.save_to_packet()
