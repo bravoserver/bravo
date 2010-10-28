@@ -102,11 +102,7 @@ class AlphaProtocol(Protocol):
         z = int(pos[2] // 16)
 
         if oldx != x or oldz != z:
-            print "sending chunks for [%d, %d]x[%d, %d]" % (
-                x - 10, x + 10, z - 10, z + 10)
-            for i, j in itertools.product(
-                xrange(x - 10, x + 10), xrange(z - 10, z + 10)):
-                self.enable_chunk(i, j)
+            self.update_chunks()
 
     def equip(self, container):
         print "Got equip!"
@@ -157,12 +153,6 @@ class AlphaProtocol(Protocol):
 
         self.chunks[x, z] = chunk
 
-        if len(self.chunks) > 600:
-            victims = sorted(self.chunks.iterkeys(),
-                key=lambda i: self.chunk_lfu[i])
-            for coords in victims[:-600]:
-                self.disable_chunk(*coords)
-
     def dataReceived(self, data):
         self.buf += data
 
@@ -202,7 +192,28 @@ class AlphaProtocol(Protocol):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
 
+        self.update_chunks()
+
         self.state = STATE_LOCATED
+
+    def update_chunks(self):
+        print "Sending chunks..."
+        x = int(self.player.location.x // 16)
+        z = int(self.player.location.z // 16)
+
+        for i, j in itertools.product(
+            xrange(x - 10, x + 10), xrange(z - 10, z + 10)):
+            self.enable_chunk(i, j)
+
+        if len(self.chunks) > 600:
+            print "Pruning chunks..."
+            victims = sorted(self.chunks.iterkeys(),
+                key=lambda i: self.chunk_lfu[i])
+            for victim in victims:
+                if len(self.chunks) < 600:
+                    break
+                if x - 10 < victim[0] < x + 10 and z - 10 < victim[1] < z + 10:
+                    self.disable_chunk(*victim)
 
     def update_ping(self):
         packet = make_packet(0)
