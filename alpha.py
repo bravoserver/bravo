@@ -4,8 +4,9 @@ from packets import make_packet
 
 class Inventory(object):
 
-    def __init__(self, unknown1, length):
+    def __init__(self, unknown1, offset, length):
         self.unknown1 = unknown1
+        self.offset = offset
         self.items = [None] * length
 
     def load_from_tag(self, tag):
@@ -16,8 +17,8 @@ class Inventory(object):
         """
 
         for item in tag.tags:
-            slot = item["Slot"].value
-            if slot < len(self.items):
+            slot = item["Slot"].value - self.offset
+            if 0 <= slot < len(self.items):
                 self.items[slot] = (item["id"].value, item["Damage"].value,
                     item["Count"].value)
 
@@ -92,9 +93,13 @@ class Location(object):
 class Player(object):
 
     def __init__(self):
-        self.inventory = Inventory(-1, 36)
-        self.minustwo = Inventory(-2, 4)
-        self.minusthree = Inventory(-3, 4)
+        # There are three inventories. -1 is the main inventory, of 36 slots.
+        # The first nine slots [0-8] of the main inventory are the slots
+        # accessible from number keys, 1-9. -2 is the crafting inventory, and
+        # -3 is the equipped armor.
+        self.inventory = Inventory(-1, 0, 36)
+        self.crafting = Inventory(-2, 80, 4)
+        self.armor = Inventory(-3, 100, 4)
 
         self.location = Location()
 
@@ -106,3 +111,5 @@ class Player(object):
         """
 
         self.inventory.load_from_tag(tag["Inventory"])
+        self.crafting.load_from_tag(tag["Inventory"])
+        self.armor.load_from_tag(tag["Inventory"])

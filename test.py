@@ -68,9 +68,9 @@ class AlphaProtocol(Protocol):
         if container.unknown1 == -1:
             self.player.inventory.load_from_packet(container)
         elif container.unknown1 == -2:
-            self.player.minustwo.load_from_packet(container)
+            self.player.crafting.load_from_packet(container)
         elif container.unknown1 == -3:
-            self.player.minusthree.load_from_packet(container)
+            self.player.armor.load_from_packet(container)
 
     def flying(self, container):
         print "Got flying!"
@@ -164,9 +164,9 @@ class AlphaProtocol(Protocol):
         self.player.load_from_tag(self.factory.world.load_player(self.username))
         packet = self.player.inventory.save_to_packet()
         self.transport.write(packet)
-        packet = self.player.minustwo.save_to_packet()
+        packet = self.player.crafting.save_to_packet()
         self.transport.write(packet)
-        packet = self.player.minusthree.save_to_packet()
+        packet = self.player.armor.save_to_packet()
         self.transport.write(packet)
 
     def connectionLost(self, reason):
