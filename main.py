@@ -66,6 +66,17 @@ class AlphaProtocol(Protocol):
         packet = make_packet(2, username="-")
         self.transport.write(packet)
 
+    def chat(self, container):
+        message = container.message
+
+        print "--- %s" % message
+
+        packet = make_packet(3, message=message)
+
+        for player in self.factory.players:
+            if player is not self:
+                player.transport.write(packet)
+
     def inventory(self, container):
         print "Got inventory %d" % container.unknown1
 
@@ -96,7 +107,7 @@ class AlphaProtocol(Protocol):
 
         pos = (self.player.location.x, self.player.location.y,
             self.player.location.z)
-        print "current position is %d, %d, %d" % pos
+        print "current position is %f, %f, %f" % pos
 
         x = int(pos[0] // 16)
         z = int(pos[2] // 16)
@@ -117,6 +128,7 @@ class AlphaProtocol(Protocol):
         0: ping,
         1: login,
         2: handshake,
+        3: chat,
         5: inventory,
         10: flying,
         11: position_look,
@@ -231,7 +243,6 @@ class AlphaFactory(Factory):
     protocol = AlphaProtocol
 
     def __init__(self):
-
         self.world = world.World("world")
         self.players = set()
 
