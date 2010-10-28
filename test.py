@@ -7,6 +7,7 @@ import itertools
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.protocol import Factory, Protocol
+from twisted.internet.task import LoopingCall
 
 from alpha import Player, Inventory
 from packets import parse_packets, make_packet, make_error_packet
@@ -48,7 +49,7 @@ class AlphaProtocol(Protocol):
         packet = make_packet(1, protocol=0, username="", unused="")
         self.transport.write(packet)
 
-        self.authenticated()
+        reactor.callLater(0, self.authenticated)
 
     def ping(self, container):
         print "Got ping!"
@@ -73,8 +74,6 @@ class AlphaProtocol(Protocol):
             self.player.armor.load_from_packet(container)
 
     def flying(self, container):
-        print "Got flying!"
-
         self.player.location.load_from_packet(container)
 
     def position_look(self, container):
@@ -87,9 +86,7 @@ class AlphaProtocol(Protocol):
         # things like send the initial position, so we need to defer until we
         # have received enough data from the client.
         if self.state == STATE_AUTHENTICATED:
-            packet = self.player.location.save_to_packet()
-            self.transport.write(packet)
-            self.state == STATE_LOCATED
+            reactor.callLater(0, self.located)
 
         pos = (self.player.location.x, self.player.location.y,
             self.player.location.z)
@@ -167,6 +164,29 @@ class AlphaProtocol(Protocol):
         packet = self.player.crafting.save_to_packet()
         self.transport.write(packet)
         packet = self.player.armor.save_to_packet()
+        self.transport.write(packet)
+
+    def located(self):
+        packet = self.player.location.save_to_packet()
+        self.transport.write(packet)
+
+        self.ping_loop = LoopingCall(self.update_ping)
+        self.ping_loop.start(5)
+        self.time_loop = LoopingCall(self.update_time)
+        self.time_loop.start(10)
+
+        self.state = STATE_LOCATED
+
+    def update_ping(self):
+        packet = make_packet(0)
+        self.transport.write(packet)
+
+    def update_time(self):
+        self.time += 200
+        while self.time > 24000:
+            self.time -= 24000
+
+        packet = make_packet(4, time=self.time)
         self.transport.write(packet)
 
     def connectionLost(self, reason):
