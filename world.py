@@ -1,4 +1,5 @@
 import os
+import weakref
 
 from nbt.nbt import NBTFile
 
@@ -50,7 +51,7 @@ class World(object):
 
     def __init__(self, folder):
         self.folder = folder
-        self.chunks = dict()
+        self.chunks = weakref.WeakValueDictionary()
 
         self.load_level_data()
 

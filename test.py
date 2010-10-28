@@ -33,7 +33,8 @@ class AlphaProtocol(Protocol):
     def __init__(self):
         print "Started new connection..."
 
-        self.used_chunks = set()
+        self.chunks = dict()
+        self.chunk_lfu = collections.defaultdict(int)
 
     def login(self, container):
         print "Got login: %s protocol %d" % (container.username,
@@ -81,6 +82,9 @@ class AlphaProtocol(Protocol):
     def position_look(self, container):
         print "Got position/look!"
 
+        oldx = int(self.player.location.x // 16)
+        oldz = int(self.player.location.z // 16)
+
         self.player.location.load_from_packet(container)
 
         # So annoying. The order in which packets come in is *not*
@@ -96,11 +100,13 @@ class AlphaProtocol(Protocol):
 
         x = int(pos[0] // 16)
         z = int(pos[2] // 16)
-        print "sending chunks for [%d, %d]x[%d, %d]" % (
-            x - 10, x + 10, z - 10, z + 10)
-        for i, j in itertools.product(
-            xrange(x - 10, x + 10), xrange(z - 10, z + 10)):
-            self.enable_chunk(i, j)
+
+        if oldx != x or oldz != z:
+            print "sending chunks for [%d, %d]x[%d, %d]" % (
+                x - 10, x + 10, z - 10, z + 10)
+            for i, j in itertools.product(
+                xrange(x - 10, x + 10), xrange(z - 10, z + 10)):
+                self.enable_chunk(i, j)
 
     def equip(self, container):
         print "Got equip!"
@@ -123,8 +129,17 @@ class AlphaProtocol(Protocol):
         16: equip,
     })
 
+    def disable_chunk(self, x, z):
+        del self.chunk_lfu[x, z]
+        del self.chunks[x, z]
+
+        packet = make_packet(50, x=x, z=z, enabled=0)
+        self.transport.write(packet)
+
     def enable_chunk(self, x, z):
-        if (x, z) in self.used_chunks:
+        self.chunk_lfu[x, z] += 1
+
+        if (x, z) in self.chunks:
             return
 
         chunk = self.factory.world.load_chunk(x, z)
@@ -134,15 +149,19 @@ class AlphaProtocol(Protocol):
         array += level["BlockLight"].value + level["SkyLight"].value
 
         packet = make_packet(50, x=x, z=z, enabled=1)
-
         self.transport.write(packet)
 
         packet = make_packet(51, x=x * 16, y=0, z=z * 16,
             x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
-
         self.transport.write(packet)
 
-        self.used_chunks.add((x, z))
+        self.chunks[x, z] = chunk
+
+        if len(self.chunks) > 600:
+            victims = sorted(self.chunks.iterkeys(),
+                key=lambda i: self.chunk_lfu[i])
+            for coords in victims[:-600]:
+                self.disable_chunk(*coords)
 
     def dataReceived(self, data):
         self.buf += data
@@ -179,6 +198,7 @@ class AlphaProtocol(Protocol):
 
         self.ping_loop = LoopingCall(self.update_ping)
         self.ping_loop.start(5)
+
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
 
@@ -189,11 +209,7 @@ class AlphaProtocol(Protocol):
         self.transport.write(packet)
 
     def update_time(self):
-        self.time += 200
-        while self.time > 24000:
-            self.time -= 24000
-
-        packet = make_packet(4, time=self.time)
+        packet = make_packet(4, timestamp=self.factory.time)
         self.transport.write(packet)
 
     def connectionLost(self, reason):
@@ -208,7 +224,16 @@ class AlphaFactory(Factory):
         self.world = world.World("world")
         self.players = set()
 
+        self.time = 0
+        self.time_loop = LoopingCall(self.update_time)
+        self.time_loop.start(10)
+
         print "Factory init'd"
+
+    def update_time(self):
+        self.time += 200
+        while self.time > 24000:
+            self.time -= 24000
 
 reactor.listenTCP(25565, AlphaFactory())
 reactor.run()
