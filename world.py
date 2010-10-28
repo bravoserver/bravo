@@ -50,7 +50,6 @@ class World(object):
 
     def __init__(self, folder):
         self.folder = folder
-        self.chunk_coords = set()
         self.chunks = dict()
 
         self.load_level_data()
@@ -62,11 +61,13 @@ class World(object):
             f["Data"]["SpawnZ"].value)
 
     def load_chunk(self, x, z):
+        if (x, z) in self.chunks:
+            return self.chunks[x, z]
+
         chunk = Chunk(x, z)
         self.chunks[x, z] = chunk
         filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
             "c.%s.%s.dat" % (base36(x), base36(z)))
-        self.chunk_coords.add((x, z))
         f = NBTFile(filename)
         chunk.tag = f
         return chunk

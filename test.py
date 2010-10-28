@@ -33,6 +33,8 @@ class AlphaProtocol(Protocol):
     def __init__(self):
         print "Started new connection..."
 
+        self.used_chunks = set()
+
     def login(self, container):
         print "Got login: %s protocol %d" % (container.username,
             container.protocol)
@@ -122,6 +124,9 @@ class AlphaProtocol(Protocol):
     })
 
     def enable_chunk(self, x, z):
+        if (x, z) in self.used_chunks:
+            return
+
         chunk = self.factory.world.load_chunk(x, z)
 
         level = chunk.tag["Level"]
@@ -136,6 +141,8 @@ class AlphaProtocol(Protocol):
             x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
 
         self.transport.write(packet)
+
+        self.used_chunks.add((x, z))
 
     def dataReceived(self, data):
         self.buf += data
