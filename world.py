@@ -47,6 +47,9 @@ class Chunk(object):
         self.x = int(x)
         self.z = int(z)
 
+    def load_from_tag(self, tag):
+        self.tag = tag
+
 class World(object):
 
     def __init__(self, folder):
@@ -70,7 +73,7 @@ class World(object):
         filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
             "c.%s.%s.dat" % (base36(x), base36(z)))
         f = NBTFile(filename)
-        chunk.tag = f
+        chunk.load_from_tag(f)
         return chunk
 
     def load_player(self, username):
