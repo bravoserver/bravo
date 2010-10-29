@@ -25,6 +25,19 @@ Planned Features
  * hey0 features
  * And whatever else we can think of!
 
+Installing
+==========
+
+There's currently no way to "install" Beta. The server's main method is in
+main.py, and you will need Construct (http://construct.wikispaces.com/) and
+NBT (http://github.com/twoolie/NBT) as well as the more standard Twisted
+library. Twisted is almost certainly available in your distribution, but
+Construct and NBT will need to be downloaded and installed separately. We
+recommend pip:
+
+::
+ $ pip install construct NBT
+
 FAQ
 ===
 
