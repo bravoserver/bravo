@@ -152,15 +152,10 @@ class AlphaProtocol(Protocol):
 
         chunk = self.factory.world.load_chunk(x, z)
 
-        level = chunk.tag["Level"]
-        array = level["Blocks"].value + level["Data"].value
-        array += level["BlockLight"].value + level["SkyLight"].value
-
         packet = make_packet(50, x=x, z=z, enabled=1)
         self.transport.write(packet)
 
-        packet = make_packet(51, x=x * 16, y=0, z=z * 16,
-            x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
+        packet = chunk.save_to_packet()
         self.transport.write(packet)
 
         self.chunks[x, z] = chunk
