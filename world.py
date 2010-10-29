@@ -3,7 +3,7 @@ import weakref
 
 from nbt.nbt import NBTFile
 
-from packets import make_packet
+from alpha import Chunk
 
 # Block names. Order matters!
 (EMPTY, ROCK, GRASS, DIRT, STONE,
@@ -42,29 +42,6 @@ def base36(i):
         s = "-" + s
 
     return s
-
-class Chunk(object):
-
-    def __init__(self, x, z):
-        self.x = int(x)
-        self.z = int(z)
-
-    def load_from_tag(self, tag):
-        level = tag["Level"]
-        self.blocks = level["Blocks"].value
-        self.metadata = level["Data"].value
-        self.lightmap = level["BlockLight"].value
-        self.skylight = level["SkyLight"].value
-
-    def save_to_packet(self):
-        """
-        Generate a chunk packet.
-        """
-
-        array = self.blocks + self.metadata + self.lightmap + self.skylight
-        packet = make_packet(51, x=self.x * 16, y=0, z=self.z * 16,
-            x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
-        return packet
 
 class World(object):
 

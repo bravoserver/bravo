@@ -47,6 +47,52 @@ class Inventory(object):
 
         return packet
 
+class Chest(object):
+
+    def load_from_tag(self, tag):
+        self.inventory = Inventory(0, 0, 36)
+        self.inventory.load_from_tag(tag["Items"])
+
+        self.x = tag["x"].value
+        self.y = tag["y"].value
+        self.z = tag["z"].value
+
+tileentity_names = {
+    "Chest": Chest,
+}
+
+class Chunk(object):
+
+    def __init__(self, x, z):
+        self.x = int(x)
+        self.z = int(z)
+
+    def load_from_tag(self, tag):
+        level = tag["Level"]
+        self.blocks = level["Blocks"].value
+        self.metadata = level["Data"].value
+        self.lightmap = level["BlockLight"].value
+        self.skylight = level["SkyLight"].value
+
+        self.tileentities = []
+        for tag in level["TileEntities"].tags:
+            try:
+                te = tileentity_names[tag["id"].value]()
+                te.load_from_tag(tag)
+                self.tileentities.append(te)
+            except:
+                print "Unknown tile entity %s" % tag["id"].value
+
+    def save_to_packet(self):
+        """
+        Generate a chunk packet.
+        """
+
+        array = self.blocks + self.metadata + self.lightmap + self.skylight
+        packet = make_packet(51, x=self.x * 16, y=0, z=self.z * 16,
+            x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
+        return packet
+
 class Location(object):
     """
     The position and orientation of an entity.
