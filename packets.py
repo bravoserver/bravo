@@ -99,7 +99,7 @@ packets = {
     14: Struct("digging",
         UBInt8("state"),
         UBInt32("x"),
-        UBInt32("y"),
+        UBInt8("y"),
         UBInt32("z"),
         UBInt8("face"),
     ),
