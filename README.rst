@@ -36,6 +36,7 @@ Construct and NBT will need to be downloaded and installed separately. We
 recommend pip:
 
 ::
+
  $ pip install construct NBT
 
 FAQ
