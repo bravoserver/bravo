@@ -117,6 +117,10 @@ class Location(object):
             self.x = container.position.x
             self.y = container.position.y
             self.z = container.position.z
+            # Stance is the current jumping position, plus a small offset of
+            # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
+            # or the anti-flying code kicks the client.
+            self.stance = container.position.stance
         if hasattr(container, "look"):
             self.theta = container.look.rotation
             self.pitch = container.look.pitch
@@ -128,7 +132,7 @@ class Location(object):
         Returns a position/look/flying packet.
         """
 
-        position = Container(x=self.x, y=self.y, z=self.z, stance=0)
+        position = Container(x=self.x, y=self.y, z=self.z, stance=self.stance)
         look = Container(rotation=self.theta, pitch=self.pitch)
         flying = Container(flying=self.midair)
 

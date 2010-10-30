@@ -57,6 +57,13 @@ class World(object):
         self.spawn = (f["Data"]["SpawnX"].value, f["Data"]["SpawnY"].value,
             f["Data"]["SpawnZ"].value)
 
+        self.seed = f["Data"]["RandomSeed"].value
+
+    def seed_for_chunk(self, x, z, seed):
+        partialx = x**2 * 4987142 + x * 5947611
+        partialz = z**2 * 4392871 + z * 389711
+        return (partialx + partialz) ^ seed
+
     def load_chunk(self, x, z):
         if (x, z) in self.chunks:
             return self.chunks[x, z]
