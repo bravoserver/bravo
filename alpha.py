@@ -1,5 +1,6 @@
 from construct import Container, ListContainer
-from nbt.nbt import TAG_Compound, TAG_List, TAG_Short, TAG_Byte, TAG_String
+from nbt.nbt import TAG_Compound, TAG_List
+from nbt.nbt import TAG_Short, TAG_Byte, TAG_String, TAG_Int
 
 from packets import make_packet
 
@@ -26,7 +27,7 @@ class Inventory(object):
     def save_to_tag(self):
         tag = TAG_List(name="Items", type=TAG_Compound)
 
-        for i, item in enumerate(items):
+        for i, item in enumerate(self.items):
             d = TAG_Compound()
             if item is not None:
                 id, damage, count = item
@@ -89,7 +90,9 @@ class Chest(TileEntity):
     def save_to_tag(self):
         tag = super(Chest, self).save_to_tag()
 
-        tag.tags.append(self.inventory.save_to_tag(), "Items")
+        items = self.inventory.save_to_tag()
+        items.name = TAG_String("Items")
+        tag.tags.append(items)
 
         return tag
 
