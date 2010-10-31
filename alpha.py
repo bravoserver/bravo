@@ -1,4 +1,5 @@
 from construct import Container, ListContainer
+from nbt.nbt import TAG_Compound, TAG_List, TAG_Short, TAG_Byte, TAG_String
 
 from packets import make_packet
 
@@ -21,6 +22,21 @@ class Inventory(object):
             if 0 <= slot < len(self.items):
                 self.items[slot] = (item["id"].value, item["Damage"].value,
                     item["Count"].value)
+
+    def save_to_tag(self):
+        tag = TAG_List(name="Items", type=TAG_Compound)
+
+        for i, item in enumerate(items):
+            d = TAG_Compound()
+            if item is not None:
+                id, damage, count = item
+                d.tags.append(TAG_Short(id, "id"))
+                d.tags.append(TAG_Short(damage, "Damage"))
+                d.tags.append(TAG_Byte(count, "Count"))
+                d.tags.append(TAG_Byte(i, "Slot"))
+            tag.tags.append(d)
+
+        return tag
 
     def load_from_packet(self, container):
         """
@@ -47,15 +63,38 @@ class Inventory(object):
 
         return packet
 
-class Chest(object):
+class TileEntity(object):
 
     def load_from_tag(self, tag):
-        self.inventory = Inventory(0, 0, 36)
-        self.inventory.load_from_tag(tag["Items"])
-
         self.x = tag["x"].value
         self.y = tag["y"].value
         self.z = tag["z"].value
+
+    def save_to_tag(self):
+        tag = TAG_Compound()
+        tag.tags.append(TAG_Int(self.x, "x"))
+        tag.tags.append(TAG_Int(self.y, "y"))
+        tag.tags.append(TAG_Int(self.z, "z"))
+
+        return tag
+
+class Chest(TileEntity):
+
+    def load_from_tag(self, tag):
+        super(Chest, self).load_from_tag(tag)
+
+        self.inventory = Inventory(0, 0, 36)
+        self.inventory.load_from_tag(tag["Items"])
+
+    def save_to_tag(self):
+        tag = super(Chest, self).save_to_tag()
+
+        tag.tags.append(self.inventory.save_to_tag(), "Items")
+
+        return tag
+
+    def save_to_packet(self):
+        pass
 
 tileentity_names = {
     "Chest": Chest,
