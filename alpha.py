@@ -1,3 +1,5 @@
+import StringIO
+
 from construct import Container, ListContainer
 from nbt.nbt import TAG_Compound, TAG_List
 from nbt.nbt import TAG_Short, TAG_Byte, TAG_String, TAG_Int
@@ -79,6 +81,15 @@ class TileEntity(object):
 
         return tag
 
+    def save_to_packet(self):
+        tag = self.save_to_tag()
+        sio = StringIO.StringIO()
+        tag._render_buffer(sio)
+
+        packet = make_packet(59, x=self.x, y=self.y, z=self.z,
+            data=sio.getvalue())
+        return packet
+
 class Chest(TileEntity):
 
     def load_from_tag(self, tag):
@@ -95,9 +106,6 @@ class Chest(TileEntity):
         tag.tags.append(items)
 
         return tag
-
-    def save_to_packet(self):
-        pass
 
 tileentity_names = {
     "Chest": Chest,
