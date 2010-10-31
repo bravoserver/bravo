@@ -20,7 +20,7 @@ class Inventory(object):
         These tags are always lists of items.
         """
 
-        for item in tag.tags:
+        for item in tag.value:
             slot = item["Slot"].value - self.offset
             if 0 <= slot < len(self.items):
                 self.items[slot] = (item["id"].value, item["Damage"].value,
@@ -33,11 +33,11 @@ class Inventory(object):
             d = TAG_Compound()
             if item is not None:
                 id, damage, count = item
-                d.tags.append(TAG_Short(id, "id"))
-                d.tags.append(TAG_Short(damage, "Damage"))
-                d.tags.append(TAG_Byte(count, "Count"))
-                d.tags.append(TAG_Byte(i, "Slot"))
-            tag.tags.append(d)
+                d["id"] = TAG_Short(id)
+                d["Damage"] = TAG_Short(damage)
+                d["Count"] = TAG_Byte(count)
+                d["Slot"] = TAG_Byte(i)
+            tag.value.append(d)
 
         return tag
 
@@ -47,7 +47,7 @@ class Inventory(object):
         """
 
         for i, item in enumerate(container.items):
-            if item.id == 0xffff:
+            if item.id < 0:
                 self.items[i] = None
             else:
                 self.items[i] = item.id, item.damage, item.count
@@ -56,12 +56,12 @@ class Inventory(object):
         lc = ListContainer()
         for item in self.items:
             if item is None:
-                lc.append(Container(id=0xffff))
+                lc.append(Container(id=-1))
             else:
                 lc.append(Container(id=item[0], damage=item[1],
                         count=item[2]))
 
-        packet = make_packet(5, unknown1=self.unknown1, length = len(lc),
+        packet = make_packet(5, unknown1=self.unknown1, length=len(lc),
             items=lc)
 
         return packet
@@ -75,9 +75,9 @@ class TileEntity(object):
 
     def save_to_tag(self):
         tag = TAG_Compound()
-        tag.tags.append(TAG_Int(self.x, "x"))
-        tag.tags.append(TAG_Int(self.y, "y"))
-        tag.tags.append(TAG_Int(self.z, "z"))
+        tag["x"] = TAG_Int(self.x)
+        tag["y"] = TAG_Int(self.y)
+        tag["z"] = TAG_Int(self.z)
 
         return tag
 
@@ -87,7 +87,7 @@ class TileEntity(object):
         tag._render_buffer(sio)
 
         packet = make_packet(59, x=self.x, y=self.y, z=self.z,
-            data=sio.getvalue())
+            nbt=sio.getvalue())
         return packet
 
 class Chest(TileEntity):
@@ -102,8 +102,7 @@ class Chest(TileEntity):
         tag = super(Chest, self).save_to_tag()
 
         items = self.inventory.save_to_tag()
-        items.name = TAG_String("Items")
-        tag.tags.append(items)
+        tag["Items"] = items
 
         return tag
 
@@ -125,7 +124,7 @@ class Chunk(object):
         self.skylight = level["SkyLight"].value
 
         self.tileentities = []
-        for tag in level["TileEntities"].tags:
+        for tag in level["TileEntities"].value:
             try:
                 te = tileentity_names[tag["id"].value]()
                 te.load_from_tag(tag)
