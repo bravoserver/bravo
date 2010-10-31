@@ -92,11 +92,20 @@ Fields:
  * version: integer
  * username: string
  * unknown: string
+ * unknown: long
+ * unknown: byte
 
 Identifies clients to the server. The server should reply with an empty
 Login if successful (version 0, no username or unknown.)
 
 The version of the client should be 2 for Alpha servers.
+
+Handshake (0x02)
+^^^^^^^^^^^^^^^^
+
+Fields:
+
+ * username: string
 
 Chat (0x03)
 ^^^^^^^^^^^
@@ -132,9 +141,13 @@ Fields:
 A list of items in an inventory. The first unknown field corresponds to one of
 the sub-inventory slottings; -1 is the main inventory of 36 items, -2 is the
 crafting inventory of 4 items, and -3 is the armor inventory of 4 items. If an
-inventory slot is empty, then the id should be signed -1 (0xffff) and the
-count and damage must be omitted from the bytestream. As this implies, the
-size of the item struct is not constant.
+inventory slot is empty, then the id should be negative and the count and
+damage must be omitted from the bytestream. As this implies, the size of the
+item struct is not constant.
+
+Alpha servers always use -1 (0xffff) as the negative value; different clients
+and servers may check for negative values, or for equality to -1, so using -1
+is encouraged.
 
 Spawn (0x06)
 ^^^^^^^^^^^^

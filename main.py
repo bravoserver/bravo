@@ -39,17 +39,25 @@ class AlphaProtocol(Protocol):
     def login(self, container):
         print "Got login: %s protocol %d" % (container.username,
             container.protocol)
+        print container
 
-        if container.protocol != 2:
+        if container.protocol < 3:
             # Kick old clients.
             self.transport.write(make_error_packet(
                 "This server doesn't support your ancient client."
             ))
             return
+        elif container.protocol > 3:
+            # Kick new clients.
+            self.transport.write(make_error_packet(
+                "This server doesn't support your newfangled client."
+            ))
+            return
 
         self.username = container.username
 
-        packet = make_packet(1, protocol=0, username="", unused="")
+        packet = make_packet(1, protocol=0, username="", unused="",
+            unknown1=0, unknown2=0)
         self.transport.write(packet)
 
         reactor.callLater(0, self.authenticated)
