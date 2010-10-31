@@ -66,20 +66,26 @@ Long
 
 A 64-bit signed integer in network byte order.
 
+Array
+^^^^^
+
+A metatype consisting of a short followed by a number of items corresponding
+to the value of that short. A length-prefixed list of data with no delimiters.
+
 Packets
 -------
 
-PingPacket (0x00)
-^^^^^^^^^^^^^^^^^
+Ping (0x00)
+^^^^^^^^^^^
 
 No fields.
 
-A simple keepalive mechanism that must be sent and received within certain
+A simple keep-alive mechanism that must be sent and received within certain
 time intervals in order to keep the server from timing out the client or vice
 versa.
 
-LoginPacket (0x01)
-^^^^^^^^^^^^^^^^^^
+Login (0x01)
+^^^^^^^^^^^^
 
 Fields:
 
@@ -88,12 +94,12 @@ Fields:
  * unknown: string
 
 Identifies clients to the server. The server should reply with an empty
-LoginPacket if successful (version 0, no username or unknown.)
+Login if successful (version 0, no username or unknown.)
 
 The version of the client should be 2 for Alpha servers.
 
-ChatPacket (0x03)
-^^^^^^^^^^^^^^^^^
+Chat (0x03)
+^^^^^^^^^^^
 
 Fields:
 
@@ -101,8 +107,37 @@ Fields:
 
 Used to relay messages from the chat subsystem of the client.
 
-SpawnPacket (0x06)
-^^^^^^^^^^^^^^^^^^
+Time (0x04)
+^^^^^^^^^^^
+
+Fields:
+
+ * timestamp: long
+
+A number from 0 to 24000 signifying the virtual time of day. This can be used
+to synchronize the client's day/night mechanism.
+
+Inventory (0x05)
+^^^^^^^^^^^^^^^^
+
+Fields:
+
+ * unknown: int
+ * items: array of...
+
+   * id: short
+   * count: byte (optional)
+   * damage: short (optional)
+
+A list of items in an inventory. The first unknown field corresponds to one of
+the sub-inventory slottings; -1 is the main inventory of 36 items, -2 is the
+crafting inventory of 4 items, and -3 is the armor inventory of 4 items. If an
+inventory slot is empty, then the id should be signed -1 (0xffff) and the
+count and damage must be omitted from the bytestream. As this implies, the
+size of the item struct is not constant.
+
+Spawn (0x06)
+^^^^^^^^^^^^
 
 Fields:
 
@@ -110,13 +145,72 @@ Fields:
  * y: int
  * z: int
 
-Specifies the spawn location of the currently loaded world.
+Specifies the spawn location of the currently loaded world. Clients require
+this packet even if they intend to spawn at a previously saved location.
 
-ErrorPacket (0xff)
-^^^^^^^^^^^^^^^^^^
+Flying (0x0a)
+^^^^^^^^^^^^^
+
+Fields:
+
+ * flying: byte
+
+The general-purpose acknowledgement packet, used by the client to alert the
+server of its existence and intent to do things. Alpha clients dispatch five
+to ten of these per second for no reason.
+
+Position (0x0b)
+^^^^^^^^^^^^^^^
+
+Fields:
+
+ * position: struct of...
+
+   * x: double
+   * y: double
+   * stance: double
+   * z: double
+ * flying: byte
+
+The client's location and stance. Stance is the center of gravity of the
+player and may be between 0.1 and 1.65 greater than y depending on whether the
+client is currently jumping. Stance must be between 0.1 and 1.65 on Alpha
+servers, or the server will kick the client.
+
+Look (0x0c)
+^^^^^^^^^^^
+
+Fields:
+
+ * look: struct of...
+
+   * rotation: float
+   * pitch: float
+ * flying: byte
+
+Hopefully self-explanatory. I'll look at it more when I know more.
+
+Location (0x0d)
+^^^^^^^^^^^^^^^
+
+Fields:
+
+ * position
+ * look
+ * flying: byte
+
+A position, look, and flying update, all at once. The client will only send
+this once, at the beginning of the initial chunk exchange. The server needs to
+send this to the client to start the client's rendering loop.
+
+Error (0xff)
+^^^^^^^^^^^^
 
 Fields:
 
  * message: string
 
-Used to deliver error messages to clients.
+Used to deliver error messages to clients. The official client assumes that a
+disconnection is impending when it receives this packet, and preemptively
+closes the connection, so it should not be used for warnings or informational
+messages.
