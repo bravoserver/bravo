@@ -222,8 +222,8 @@ class AlphaProtocol(Protocol):
         self.state = STATE_LOCATED
 
     def send_initial_chunk_and_location(self):
-        bigx, smallx = divmod(self.player.location.x, 16)
-        bigz, smallz = divmod(self.player.location.z, 16)
+        bigx, smallx = divmod(int(self.player.location.x), 16)
+        bigz, smallz = divmod(int(self.player.location.z), 16)
 
         self.enable_chunk(bigx, bigz)
         chunk = self.chunks[bigx, bigz]
