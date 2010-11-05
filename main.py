@@ -231,7 +231,7 @@ class AlphaProtocol(Protocol):
         # This may not play well with recent Alpha clients, which have an
         # unfortunate bug at maximum heights. We have yet to ascertain whether
         # the bug is server-side or client-side.
-        height = chunk.height_at(smallx, smallz)
+        height = chunk.height_at(smallx, smallz) + 2
         self.player.location.y = height
 
         packet = self.player.location.save_to_packet()

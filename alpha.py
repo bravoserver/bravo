@@ -149,7 +149,7 @@ class Chunk(object):
         Get the height of an x-z column of blocks.
         """
 
-        return self.heightmap[x * 16 + z]
+        return ord(self.heightmap[x * 16 + z])
 
 class Location(object):
     """
