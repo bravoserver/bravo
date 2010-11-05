@@ -118,14 +118,18 @@ class AlphaProtocol(Protocol):
             self.update_chunks()
 
     def digging(self, container):
+        print "Got digging %d" % container.state
+
         if container.state != 3:
             return
-
-        print "Got digging!"
 
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
         chunk = self.chunks[bigx, bigz]
         chunk.set_block((smallx, container.y, smallz), 0)
+
+        packet = make_packet(53, x=container.x, y=container.y, z=container.z,
+            type=0, meta=0)
+        self.transport.write(packet)
 
     def equip(self, container):
         print "Got equip!"
