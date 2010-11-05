@@ -98,7 +98,7 @@ Fields:
 Identifies clients to the server. The server should reply with an empty
 Login if successful (version 0, no username or unknown.)
 
-The version of the client should be 2 for Alpha servers.
+The version of the client should be 3 for Alpha servers.
 
 Handshake (0x02)
 ^^^^^^^^^^^^^^^^
@@ -214,7 +214,22 @@ Fields:
 
 A position, look, and flying update, all at once. The client will only send
 this once, at the beginning of the initial chunk exchange. The server needs to
-send this to the client to start the client's rendering loop.
+send this to the client to start the client's rendering loop. The client will
+teleport to the position in this packet, regardless of geometry, so care
+should be taken to not embed the player in a tomb of bedrock.
+
+Digging (0x0e)
+^^^^^^^^^^^^^^
+
+Fields:
+
+ * state: byte
+ * x: int
+ * y: byte
+ * z: int
+ * face: byte
+
+A block is being mined.
 
 Error (0xff)
 ^^^^^^^^^^^^

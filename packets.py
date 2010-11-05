@@ -97,7 +97,7 @@ packets = {
     10: flying,
     11: Struct("position", position, flying),
     12: Struct("look", look, flying),
-    13: Struct("position_look", position, look, flying),
+    13: Struct("location", position, look, flying),
     14: Struct("digging",
         UBInt8("state"),
         UBInt32("x"),
