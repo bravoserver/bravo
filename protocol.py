@@ -95,8 +95,8 @@ class AlphaProtocol(Protocol):
     def position_look(self, container):
         print "Got position/look!"
 
-        oldx = int(self.player.location.x // 16)
-        oldz = int(self.player.location.z // 16)
+        oldx, chaff, oldz, chaff = split_coords(self.player.location.x,
+            self.player.location.z)
 
         self.player.location.load_from_packet(container)
 
@@ -111,8 +111,7 @@ class AlphaProtocol(Protocol):
             self.player.location.z)
         print "current position is %f, %f, %f" % pos
 
-        x = int(pos[0] // 16)
-        z = int(pos[2] // 16)
+        x, chaff, z, chaff = split_coords(pos[0], pos[2])
 
         if oldx != x or oldz != z:
             self.update_chunks()
@@ -231,8 +230,8 @@ class AlphaProtocol(Protocol):
         self.state = STATE_LOCATED
 
     def send_initial_chunk_and_location(self):
-        bigx, smallx = divmod(int(self.player.location.x), 16)
-        bigz, smallz = divmod(int(self.player.location.z), 16)
+        bigx, smallx, bigz, smallz = split_coords(self.player.location.x,
+            self.player.location.z)
 
         self.enable_chunk(bigx, bigz)
         chunk = self.chunks[bigx, bigz]
@@ -248,8 +247,8 @@ class AlphaProtocol(Protocol):
 
     def update_chunks(self):
         print "Sending chunks..."
-        x = int(self.player.location.x // 16)
-        z = int(self.player.location.z // 16)
+        x, chaff, z, chaff = split_coords(self.player.location.x,
+            self.player.location.z)
 
         for i, j in itertools.product(
             xrange(x - 10, x + 10), xrange(z - 10, z + 10)):
@@ -262,7 +261,8 @@ class AlphaProtocol(Protocol):
             for victim in victims:
                 if len(self.chunks) < 600:
                     break
-                if x - 10 < victim[0] < x + 10 and z - 10 < victim[1] < z + 10:
+                if (x - 10 < victim[0] < x + 10
+                    and z - 10 < victim[1] < z + 10):
                     self.disable_chunk(*victim)
 
     def update_ping(self):
