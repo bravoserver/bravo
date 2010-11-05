@@ -13,10 +13,12 @@ Features
  * Geometry ("chunk") transfer
  * Location updates
  * Passage of time (day/night)
+ * Destruction of blocks
 
 Planned Features
 ================
 
+ * Construction of blocks
  * Entity registration and tracking
  * Extra inventories (chests)
  * Chat commands
