@@ -3,7 +3,7 @@ import itertools
 
 from twisted.internet import reactor
 from twisted.internet.protocol import Protocol
-from twisted.internet.task import LoopingCall
+from twisted.internet.task import coiterate, LoopingCall
 
 from alpha import Player
 from packets import parse_packets, make_packet, make_error_packet
@@ -252,12 +252,21 @@ class AlphaProtocol(Protocol):
         x, chaff, z, chaff = split_coords(self.player.location.x,
             self.player.location.z)
 
-        for i, j in itertools.product(
-            xrange(x - 10, x + 10), xrange(z - 10, z + 10)):
-            self.enable_chunk(i, j)
+        d = coiterate(self.enable_chunk(i, j)
+            for i, j in
+            itertools.product(
+                xrange(x - 10, x + 10),
+                xrange(z - 10, z + 10)
+            )
+        )
 
+        d.addCallback(lambda chaff: self.prune_chunks())
+
+    def prune_chunks(self):
         if len(self.chunks) > 600:
             print "Pruning chunks..."
+            x, chaff, z, chaff = split_coords(self.player.location.x,
+                self.player.location.z)
             victims = sorted(self.chunks.iterkeys(),
                 key=lambda i: self.chunk_lfu[i])
             for victim in victims:
