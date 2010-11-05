@@ -209,8 +209,7 @@ class AlphaProtocol(Protocol):
         self.transport.write(packet)
 
     def located(self):
-        packet = self.player.location.save_to_packet()
-        self.transport.write(packet)
+        self.send_initial_chunk_and_location()
 
         self.ping_loop = LoopingCall(self.update_ping)
         self.ping_loop.start(5)
@@ -221,6 +220,22 @@ class AlphaProtocol(Protocol):
         self.update_chunks()
 
         self.state = STATE_LOCATED
+
+    def send_initial_chunk_and_location(self):
+        bigx, smallx = divmod(self.player.location.x, 16)
+        bigz, smallz = divmod(self.player.location.z, 16)
+
+        self.enable_chunk(bigx, bigz)
+        chunk = self.chunks[bigx, bigz]
+
+        # This may not play well with recent Alpha clients, which have an
+        # unfortunate bug at maximum heights. We have yet to ascertain whether
+        # the bug is server-side or client-side.
+        height = chunk.height_at(smallx, smallz)
+        self.player.location.y = height
+
+        packet = self.player.location.save_to_packet()
+        self.transport.write(packet)
 
     def update_chunks(self):
         print "Sending chunks..."
