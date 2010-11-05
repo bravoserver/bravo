@@ -193,7 +193,14 @@ class AlphaProtocol(Protocol):
         packet = make_packet(6, x=spawn[0], y=spawn[1], z=spawn[2])
         self.transport.write(packet)
 
-        self.player.load_from_tag(self.factory.world.load_player(self.username))
+        self.player.location.x = spawn[0]
+        self.player.location.y = spawn[1]
+        self.player.location.z = spawn[2]
+
+        tag = self.factory.world.load_player(self.username)
+        if tag:
+            self.player.load_from_tag(tag)
+
         packet = self.player.inventory.save_to_packet()
         self.transport.write(packet)
         packet = self.player.crafting.save_to_packet()

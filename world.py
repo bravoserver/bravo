@@ -88,5 +88,7 @@ class World(object):
 
     def load_player(self, username):
         filename = os.path.join(self.folder, "players", "%s.dat" % username)
-        f = NBTFile(filename)
-        return f
+        try:
+            return NBTFile(filename)
+        except IOError:
+            return None
