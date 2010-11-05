@@ -4,8 +4,8 @@ def split_coords(x, z):
     coordinates.
     """
 
-    first, second = divmod(x, 16)
-    third, fourth = divmod(z, 16)
+    first, second = divmod(int(x), 16)
+    third, fourth = divmod(int(z), 16)
 
     return first, second, third, fourth
 

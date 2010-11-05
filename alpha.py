@@ -119,11 +119,11 @@ class Chunk(object):
 
     def load_from_tag(self, tag):
         level = tag["Level"]
-        self.blocks = [int(i) for i in level["Blocks"].value]
-        self.heightmap = [int(i) for i in level["HeightMap"].value]
-        self.lightmap = [int(i) for i in level["BlockLight"].value]
-        self.metadata = [int(i) for i in level["Data"].value]
-        self.skylight = [int(i) for i in level["SkyLight"].value]
+        self.blocks = [ord(i) for i in level["Blocks"].value]
+        self.heightmap = [ord(i) for i in level["HeightMap"].value]
+        self.lightmap = [ord(i) for i in level["BlockLight"].value]
+        self.metadata = [ord(i) for i in level["Data"].value]
+        self.skylight = [ord(i) for i in level["SkyLight"].value]
 
         self.tileentities = []
         if level["TileEntities"].value:
@@ -140,7 +140,8 @@ class Chunk(object):
         Generate a chunk packet.
         """
 
-        array = self.blocks + self.metadata + self.lightmap + self.skylight
+        array = "".join(chr(i) for i in
+            self.blocks + self.metadata + self.lightmap + self.skylight)
         packet = make_packet(51, x=self.x * 16, y=0, z=self.z * 16,
             x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
         return packet
