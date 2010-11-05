@@ -82,9 +82,7 @@ class AlphaProtocol(Protocol):
 
         packet = make_packet(3, message=message)
 
-        for player in self.factory.players:
-            if player is not self:
-                player.transport.write(packet)
+        self.factory.broadcast(packet)
 
     def inventory(self, container):
         print "Got inventory %d" % container.unknown1
@@ -199,7 +197,7 @@ class AlphaProtocol(Protocol):
 
         packet = make_packet(3,
             message="%s is joining the game..." % self.username)
-        self.transport.write(packet)
+        self.factory.broadcast(packet)
 
         spawn = self.factory.world.spawn
         packet = make_packet(6, x=spawn[0], y=spawn[1], z=spawn[2])
@@ -297,6 +295,10 @@ class AlphaFactory(Factory):
         self.time += 200
         while self.time > 24000:
             self.time -= 24000
+
+    def broadcast(self, packet):
+        for player in self.players:
+            player.transport.write(packet)
 
 reactor.listenTCP(25565, AlphaFactory())
 reactor.run()
