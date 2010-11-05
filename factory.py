@@ -1,16 +1,7 @@
-import collections
-import functools
-import itertools
-
-from twisted.internet import reactor
-from twisted.internet.defer import Deferred
-from twisted.internet.protocol import Factory, Protocol
+from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 
-from alpha import Player, Inventory
-from packets import parse_packets, make_packet, make_error_packet
 from protocol import AlphaProtocol
-from utilities import split_coords
 import world
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
