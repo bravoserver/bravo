@@ -119,8 +119,9 @@ class Chunk(object):
     def load_from_tag(self, tag):
         level = tag["Level"]
         self.blocks = level["Blocks"].value
-        self.metadata = level["Data"].value
+        self.heightmap = level["HeightMap"].value
         self.lightmap = level["BlockLight"].value
+        self.metadata = level["Data"].value
         self.skylight = level["SkyLight"].value
 
         self.tileentities = []
@@ -142,6 +143,13 @@ class Chunk(object):
         packet = make_packet(51, x=self.x * 16, y=0, z=self.z * 16,
             x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
         return packet
+
+    def height_at(self, x, z):
+        """
+        Get the height of an x-z column of blocks.
+        """
+
+        return self.heightmap[x * 16 + z]
 
 class Location(object):
     """
