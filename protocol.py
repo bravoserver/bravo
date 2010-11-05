@@ -128,7 +128,9 @@ class AlphaProtocol(Protocol):
 
         packet = make_packet(53, x=container.x, y=container.y, z=container.z,
             type=0, meta=0)
-        self.transport.write(packet)
+        # This is too much; we should only send to those players who have this
+        # particular chunk loaded.
+        self.factory.broadcast(packet)
 
     def equip(self, container):
         print "Got equip!"
