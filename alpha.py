@@ -124,13 +124,14 @@ class Chunk(object):
         self.skylight = level["SkyLight"].value
 
         self.tileentities = []
-        for tag in level["TileEntities"].value:
-            try:
-                te = tileentity_names[tag["id"].value]()
-                te.load_from_tag(tag)
-                self.tileentities.append(te)
-            except:
-                print "Unknown tile entity %s" % tag["id"].value
+        if level["TileEntities"].value:
+            for tag in level["TileEntities"].value:
+                try:
+                    te = tileentity_names[tag["id"].value]()
+                    te.load_from_tag(tag)
+                    self.tileentities.append(te)
+                except:
+                    print "Unknown tile entity %s" % tag["id"].value
 
     def save_to_packet(self):
         """
