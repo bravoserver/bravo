@@ -110,6 +110,11 @@ tileentity_names = {
     "Chest": Chest,
 }
 
+def triplet_to_index(coords):
+    x, y, z = coords
+
+    return x * 128 + y * 16 + z
+
 class Chunk(object):
 
     def __init__(self, x, z):
@@ -143,6 +148,15 @@ class Chunk(object):
         packet = make_packet(51, x=self.x * 16, y=0, z=self.z * 16,
             x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
         return packet
+
+    def set_block(coords, block):
+        """
+        Update a block value.
+        """
+
+        index = triplet_to_index(coords)
+
+        self.blocks[index] = block
 
     def height_at(self, x, z):
         """

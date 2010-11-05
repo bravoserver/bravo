@@ -16,6 +16,17 @@ import world
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
 
+def split_coords(x, z):
+    """
+    Given an absolute coordinate pair, return the split chunk and subchunk
+    coordinates.
+    """
+
+    first, second = divmod(x, 16)
+    third, fourth = divmod(z, 16)
+
+    return first, second, third, fourth
+
 class AlphaProtocol(Protocol):
     """
     The Minecraft Alpha protocol.
@@ -123,6 +134,16 @@ class AlphaProtocol(Protocol):
         if oldx != x or oldz != z:
             self.update_chunks()
 
+    def digging(self, container):
+        if container.state != 3:
+            return
+
+        print "Got digging!"
+
+        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
+        chunk = self.chunks[bigx, bigz]
+        chunk.set_block((smallx, container.y, smallz), 0)
+
     def equip(self, container):
         print "Got equip!"
         self.player.equipped = container.item
@@ -142,6 +163,7 @@ class AlphaProtocol(Protocol):
         11: position_look,
         12: position_look,
         13: position_look,
+        14: digging,
         16: equip,
     })
 
