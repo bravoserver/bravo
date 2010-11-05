@@ -11,21 +11,11 @@ from twisted.internet.task import LoopingCall
 
 from alpha import Player, Inventory
 from packets import parse_packets, make_packet, make_error_packet
+from utilities import split_coords
 import world
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
-
-def split_coords(x, z):
-    """
-    Given an absolute coordinate pair, return the split chunk and subchunk
-    coordinates.
-    """
-
-    first, second = divmod(x, 16)
-    third, fourth = divmod(z, 16)
-
-    return first, second, third, fourth
 
 class AlphaProtocol(Protocol):
     """

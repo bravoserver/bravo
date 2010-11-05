@@ -5,6 +5,7 @@ from nbt.nbt import TAG_Compound, TAG_List
 from nbt.nbt import TAG_Short, TAG_Byte, TAG_String, TAG_Int
 
 from packets import make_packet
+from utilities import triplet_to_index
 
 class Inventory(object):
 
@@ -109,11 +110,6 @@ class Chest(TileEntity):
 tileentity_names = {
     "Chest": Chest,
 }
-
-def triplet_to_index(coords):
-    x, y, z = coords
-
-    return x * 128 + y * 16 + z
 
 class Chunk(object):
 
