@@ -1,4 +1,6 @@
 import os
+import random
+import sys
 import weakref
 
 from nbt.nbt import NBTFile
@@ -49,15 +51,23 @@ class World(object):
         self.folder = folder
         self.chunks = weakref.WeakValueDictionary()
 
-        self.load_level_data()
+        try:
+            self.level = NBTFile(os.path.join(self.folder, "level.dat"))
+            self.load_level_data()
+        except IOError:
+            self.level = NBTFile()
+            self.generate_level()
+
+    def generate_level(self):
+        self.spawn = (0, 0, 0)
+        self.seed = random.randint(0, sys.maxint)
 
     def load_level_data(self):
-        f = NBTFile(os.path.join(self.folder, "level.dat"))
+        self.spawn = (self.level["Data"]["SpawnX"].value,
+            self.level["Data"]["SpawnY"].value,
+            self.level["Data"]["SpawnZ"].value)
 
-        self.spawn = (f["Data"]["SpawnX"].value, f["Data"]["SpawnY"].value,
-            f["Data"]["SpawnZ"].value)
-
-        self.seed = f["Data"]["RandomSeed"].value
+        self.seed = self.level["Data"]["RandomSeed"].value
 
     def seed_for_chunk(self, x, z, seed):
         partialx = x**2 * 4987142 + x * 5947611
