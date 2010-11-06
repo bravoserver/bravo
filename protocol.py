@@ -139,6 +139,12 @@ class AlphaProtocol(Protocol):
         packet = make_packet(30, id=entity)
         self.transport.write(packet)
 
+        packet = make_packet(17, type=oldblock, quantity=1, wear=0)
+        self.transport.write(packet)
+
+        packet = make_packet(29, id=entity)
+        self.transport.write(packet)
+
     def build(self, container):
         print "Got build!"
 
