@@ -174,6 +174,10 @@ class AlphaProtocol(Protocol):
         print "Got equip!"
         self.player.equipped = container.item
 
+    def quit(self, container):
+        print "Client is quitting: %s" % container.message
+        self.transport.loseConnection()
+
     def unhandled(self, container):
         print "Unhandled but parseable packet found!"
         print container
@@ -192,6 +196,7 @@ class AlphaProtocol(Protocol):
         14: digging,
         15: build,
         16: equip,
+        255: quit,
     })
 
     def disable_chunk(self, x, z):
