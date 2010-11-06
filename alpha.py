@@ -47,8 +47,6 @@ class Inventory(object):
         Load data from a packet container.
         """
 
-        print container
-
         for i, item in enumerate(container.items):
             if item.id < 0:
                 self.items[i] = None
