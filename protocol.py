@@ -37,17 +37,10 @@ class AlphaProtocol(Protocol):
             container.protocol)
         print container
 
-        if container.protocol < 3:
+        if container.protocol != 3:
             # Kick old clients.
-            self.transport.write(make_error_packet(
-                "This server doesn't support your ancient client."
-            ))
-            return
-        elif container.protocol > 3:
-            # Kick new clients.
-            self.transport.write(make_error_packet(
-                "This server doesn't support your newfangled client."
-            ))
+            self.error("This server doesn't support your %s client."
+                % "ancient" if container.protocol < 3 else "newfangled")
             return
 
         self.username = container.username
@@ -324,6 +317,10 @@ class AlphaProtocol(Protocol):
     def update_time(self):
         packet = make_packet(4, timestamp=self.factory.time)
         self.transport.write(packet)
+
+    def error(self, message):
+        self.transport.write(make_error_packet(message))
+        self.transport.loseConnection()
 
     def connectionLost(self, reason):
         self.factory.players.discard(self)
