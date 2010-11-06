@@ -76,4 +76,5 @@ Why do you only have a small part of the server working?
 
 Who are you guys, anyway?
  Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
- is the visionary and provider of network traffic dumps.
+ is the visionary and provider of network traffic dumps. Ben Kero and Mark
+ Harris are the reluctant testers and bug-reporters.
