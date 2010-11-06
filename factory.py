@@ -29,3 +29,14 @@ class AlphaFactory(Factory):
     def broadcast(self, packet):
         for player in self.players:
             player.transport.write(packet)
+
+    def broadcast_for_chunk(self, packet, x, z):
+        """
+        Broadcast a packet to all players that have a certain chunk loaded.
+
+        `x` and `z` are chunk coordinates, not block coordinates.
+        """
+
+        for player in self.players:
+            if (x, z) in player.chunks:
+                player.transport.write(packet)

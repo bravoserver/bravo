@@ -127,9 +127,7 @@ class AlphaProtocol(Protocol):
 
         packet = make_packet(53, x=container.x, y=container.y, z=container.z,
             type=0, meta=0)
-        # This is too much; we should only send to those players who have this
-        # particular chunk loaded.
-        self.factory.broadcast(packet)
+        self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
     def build(self, container):
         print "Got build!"
@@ -163,9 +161,7 @@ class AlphaProtocol(Protocol):
         chunk.set_block((smallx, y, smallz), container.block)
 
         packet = make_packet(53, x=x, y=y, z=z, type=container.block, meta=0)
-        # This is too much; we should only send to those players who have this
-        # particular chunk loaded.
-        self.factory.broadcast(packet)
+        self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
     def equip(self, container):
         print "Got equip!"
