@@ -132,9 +132,12 @@ class AlphaProtocol(Protocol):
 
         entity = self.factory.create_entity()
         packet = make_packet(21, entity=Container(id=entity), item=oldblock,
-            count=1, x=container.x, y=container.y, z=container.z, yaw=0,
-            pitch=0, roll=0)
-        self.factory.broadcast_for_chunk(packet, bigx, bigz)
+            count=1, x=container.x * 32 + 16, y=container.y * 32,
+            z=container.z * 32 + 16, yaw=0, pitch=0, roll=0)
+        self.transport.write(packet)
+
+        packet = make_packet(30, id=entity)
+        self.transport.write(packet)
 
     def build(self, container):
         print "Got build!"
