@@ -15,11 +15,19 @@ class AlphaFactory(Factory):
         self.world = world.World("world")
         self.players = set()
 
+        self.entityid = 1
+        self.entities = dict()
+
         self.time = 0
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
 
         print "Factory init'd"
+
+    def create_entity(self):
+        self.entityid += 1
+        self.entities[self.entityid] = None
+        return self.entityid
 
     def update_time(self):
         self.time += 200

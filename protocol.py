@@ -5,6 +5,8 @@ from twisted.internet import reactor
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import coiterate, LoopingCall
 
+from construct import Container
+
 from alpha import Player
 from packets import parse_packets, make_packet, make_error_packet
 from utilities import split_coords
@@ -86,8 +88,6 @@ class AlphaProtocol(Protocol):
         self.player.location.load_from_packet(container)
 
     def position_look(self, container):
-        print "Got position/look!"
-
         oldx, chaff, oldz, chaff = split_coords(self.player.location.x,
             self.player.location.z)
 
@@ -110,10 +110,10 @@ class AlphaProtocol(Protocol):
             self.update_chunks()
 
     def digging(self, container):
-        print "Got digging %d" % container.state
-
         if container.state != 3:
             return
+
+        print "Got digging!"
 
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
 
@@ -123,10 +123,17 @@ class AlphaProtocol(Protocol):
             error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
             return
 
+        oldblock = chunk.get_block((smallx, container.y, smallz))
         chunk.set_block((smallx, container.y, smallz), 0)
 
         packet = make_packet(53, x=container.x, y=container.y, z=container.z,
             type=0, meta=0)
+        self.factory.broadcast_for_chunk(packet, bigx, bigz)
+
+        entity = self.factory.create_entity()
+        packet = make_packet(21, entity=Container(id=entity), item=oldblock,
+            count=1, x=container.x, y=container.y, z=container.z, yaw=0,
+            pitch=0, roll=0)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
     def build(self, container):

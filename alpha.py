@@ -146,6 +146,15 @@ class Chunk(object):
             x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
         return packet
 
+    def get_block(self, coords):
+        """
+        Look up a block value.
+        """
+
+        index = triplet_to_index(coords)
+
+        return self.blocks[index]
+
     def set_block(self, coords, block):
         """
         Update a block value.
