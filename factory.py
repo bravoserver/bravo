@@ -1,6 +1,9 @@
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
+from twisted.plugin import getPlugins
 
+from ibeta import IAuthenticator
+import plugins
 from protocol import AlphaProtocol
 import world
 
@@ -21,6 +24,9 @@ class AlphaFactory(Factory):
         self.time = 0
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
+
+        for plugin in getPlugins(IAuthenticator, plugins):
+            print "Plugin: %s" % plugin
 
         print "Factory init'd"
 
