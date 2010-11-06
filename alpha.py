@@ -47,6 +47,8 @@ class Inventory(object):
         Load data from a packet container.
         """
 
+        print container
+
         for i, item in enumerate(container.items):
             if item.id < 0:
                 self.items[i] = None
@@ -221,11 +223,12 @@ class Location(object):
 class Player(object):
 
     def __init__(self):
-        # There are three inventories. -1 is the main inventory, of 36 slots.
-        # The first nine slots [0-8] of the main inventory are the slots
-        # accessible from number keys, 1-9. -2 is the crafting inventory, and
-        # -3 is the equipped armor.
-        self.inventory = Inventory(-1, 0, 36)
+        # There are three inventories. -1 is the main inventory, of 36 slots
+        # plus one additional slot for the currently equipped item.  The first
+        # ten slots [0-9] of the main inventory are the current item and the
+        # slots accessible from number keys, 1-9. -2 is the crafting
+        # inventory, and -3 is the equipped armor.
+        self.inventory = Inventory(-1, 0, 37)
         self.crafting = Inventory(-2, 80, 4)
         self.armor = Inventory(-3, 100, 4)
 
