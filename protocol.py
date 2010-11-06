@@ -116,7 +116,13 @@ class AlphaProtocol(Protocol):
             return
 
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
-        chunk = self.chunks[bigx, bigz]
+
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
         chunk.set_block((smallx, container.y, smallz), 0)
 
         packet = make_packet(53, x=container.x, y=container.y, z=container.z,
@@ -147,7 +153,13 @@ class AlphaProtocol(Protocol):
             x += 1
 
         bigx, smallx, bigz, smallz = split_coords(x, z)
-        chunk = self.chunks[bigx, bigz]
+
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
         chunk.set_block((smallx, y, smallz), container.block)
 
         packet = make_packet(53, x=x, y=y, z=z, type=container.block, meta=0)
