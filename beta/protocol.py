@@ -7,9 +7,9 @@ from twisted.internet.task import coiterate, LoopingCall
 
 from construct import Container
 
-from alpha import Player
-from packets import parse_packets, make_packet, make_error_packet
-from utilities import split_coords
+from beta.alpha import Player
+from beta.packets import parse_packets, make_packet, make_error_packet
+from beta.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)

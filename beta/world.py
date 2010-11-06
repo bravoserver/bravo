@@ -5,7 +5,7 @@ import weakref
 
 from nbt.nbt import NBTFile
 
-from alpha import Chunk
+from beta.alpha import Chunk
 
 # Block names. Order matters!
 (EMPTY, ROCK, GRASS, DIRT, STONE,

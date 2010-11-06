@@ -2,10 +2,10 @@ from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 from twisted.plugin import getPlugins
 
-from ibeta import IAuthenticator
-import plugins
-from protocol import AlphaProtocol
-import world
+from beta.ibeta import IAuthenticator
+import beta.plugins
+from beta.protocol import AlphaProtocol
+from beta.world import World
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
@@ -15,7 +15,7 @@ class AlphaFactory(Factory):
     protocol = AlphaProtocol
 
     def __init__(self):
-        self.world = world.World("world")
+        self.world = World("world")
         self.players = set()
 
         self.entityid = 1
@@ -25,7 +25,7 @@ class AlphaFactory(Factory):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
 
-        for plugin in getPlugins(IAuthenticator, plugins):
+        for plugin in getPlugins(IAuthenticator, beta.plugins):
             print "Plugin: %s" % plugin
 
         print "Factory init'd"

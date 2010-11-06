@@ -5,7 +5,7 @@ import sys
 from twisted.internet import reactor
 from twisted.python import log
 
-from factory import AlphaFactory
+from beta.factory import AlphaFactory
 
 log.startLogging(sys.stdout)
 

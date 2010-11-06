@@ -1,7 +1,7 @@
 from zope.interface import implements
 from twisted.plugin import IPlugin
 
-from ibeta import IAuthenticator
+from beta.ibeta import IAuthenticator
 
 class OfflineAuthenticator(object):
 

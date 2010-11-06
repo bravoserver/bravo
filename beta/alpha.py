@@ -4,8 +4,8 @@ from construct import Container, ListContainer
 from nbt.nbt import TAG_Compound, TAG_List
 from nbt.nbt import TAG_Short, TAG_Byte, TAG_Int
 
-from packets import make_packet
-from utilities import triplet_to_index
+from beta.packets import make_packet
+from beta.utilities import triplet_to_index
 
 class Inventory(object):
 
