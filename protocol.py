@@ -283,11 +283,21 @@ class AlphaProtocol(Protocol):
         x, chaff, z, chaff = split_coords(self.player.location.x,
             self.player.location.z)
 
+        # Perhaps some explanation is in order.
+        # The coiterate() function iterates over the iterable it is fed,
+        # without tying up the reactor, by yielding after each iteration. The
+        # inner part of the generator expression generates all of the chunks
+        # around the currently needed chunk, and it sorts them by distance to
+        # the current chunk. The end result is that we load chunks one-by-one,
+        # nearest to furthest, without stalling other clients. After this is
+        # all done, we want to prune any unused chunks.
         d = coiterate(self.enable_chunk(i, j)
             for i, j in
-            itertools.product(
-                xrange(x - 10, x + 10),
-                xrange(z - 10, z + 10)
+            sorted(itertools.product(
+                    xrange(x - 10, x + 10),
+                    xrange(z - 10, z + 10)
+                ),
+                key=lambda t: (t[0] - x)**2 + (t[1] - z)**2
             )
         )
 
