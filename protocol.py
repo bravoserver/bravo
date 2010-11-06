@@ -132,6 +132,36 @@ class AlphaProtocol(Protocol):
         # particular chunk loaded.
         self.factory.broadcast(packet)
 
+    def build(self, container):
+        print "Got build!"
+
+        x = container.x
+        y = container.y
+        z = container.z
+
+        # Offset coords according to face.
+        if container.face == 0:
+            y -= 1
+        elif container.face == 1:
+            y += 1
+        elif container.face == 2:
+            z -= 1
+        elif container.face == 3:
+            z += 1
+        elif container.face == 4:
+            x -= 1
+        elif container.face == 5:
+            x += 1
+
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+        chunk = self.chunks[bigx, bigz]
+        chunk.set_block((smallx, y, smallz), container.block)
+
+        packet = make_packet(53, x=x, y=y, z=z, type=container.block, meta=0)
+        # This is too much; we should only send to those players who have this
+        # particular chunk loaded.
+        self.factory.broadcast(packet)
+
     def equip(self, container):
         print "Got equip!"
         self.player.equipped = container.item
@@ -152,6 +182,7 @@ class AlphaProtocol(Protocol):
         12: position_look,
         13: position_look,
         14: digging,
+        15: build,
         16: equip,
     })
 
