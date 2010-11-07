@@ -191,7 +191,7 @@ packets = {
         UBInt8("x_size"),
         UBInt8("y_size"),
         UBInt8("z_size"),
-        PascalString("data", length_field=UBInt32("length")),
+        PascalString("data", length_field=UBInt32("length"), encoding="zlib"),
     ),
     52: Struct("batch",
         SBInt32("x"),

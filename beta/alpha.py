@@ -143,7 +143,7 @@ class Chunk(object):
         array = "".join(chr(i) for i in
             self.blocks + self.metadata + self.lightmap + self.skylight)
         packet = make_packet(51, x=self.x * 16, y=0, z=self.z * 16,
-            x_size=15, y_size=127, z_size=15, data=array.encode("zlib"))
+            x_size=15, y_size=127, z_size=15, data=array)
         return packet
 
     def get_block(self, coords):
