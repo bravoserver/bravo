@@ -80,7 +80,7 @@ class AlphaFactory(Factory):
         """
         Returns all entities in a radius (objects)
         """
-        x,y,z,radius = x * 32, y * 32, z * 32,radius * 32 # Convert from block to absolute position
+        x,y,z,radius = x, y, z, radius # Convert from block to absolute position
         def tmp(e_old):
             e = self.entities[e_old]
             if e.x < x + radius and e.x > x - radius and e.y < y + radius \
@@ -93,4 +93,3 @@ class Entity(object):
     def __init__(self, id, x = 0, y = 0, z = 0, entity_type = None):
         self.id, self.x, self.y, self.z, self.entity_type = id,x,y,z,entity_type
 
-    

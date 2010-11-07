@@ -96,21 +96,17 @@ class AlphaProtocol(Protocol):
         if oldx != x or oldz != z:
             self.update_chunks()
 
-	for ent in self.factory.entities_in_radius(pos[0], self.player.location.y, pos[2],1):
-		#packet = make_packet(22, id=ent.id)
-        	#self.transport.write(packet)
+        for entity in self.factory.entities_near(pos[0] * 32,
+            self.player.location.y * 32, pos[2] * 32, 1):
 
-		packet = make_packet(17, type=ent.entity_type, quantity=1, wear=0)
-        	self.transport.write(packet)
+            packet = make_packet(17, type=ent.entity_type, quantity=1, wear=0)
+            self.transport.write(packet)
 
-        	packet = make_packet(29, id=ent.id)
-        	self.transport.write(packet)
+            packet = make_packet(29, id=ent.id)
+            self.transport.write(packet)
 
-		#TODO: delete entity
-		
-		self.factory.destroy_entity(ent.id)
+            self.factory.destroy_entity(ent.id)
 
-	
     def digging(self, container):
         if container.state != 3:
             return
