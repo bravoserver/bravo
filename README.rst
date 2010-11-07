@@ -26,6 +26,7 @@ Planned Features
  * Extra inventories (chests)
  * Chat commands
  * Metadata (redstone/minecarts)
+ * Geometry generation
  * hey0 features
  * And whatever else we can think of!
 
@@ -72,9 +73,10 @@ Are you going to make an open-source client? That would be awesome!
  for it. There's already enough Minecraft piracy going on; we don't feel like
  being part of the problem.
 
-Why do you only have a small part of the server working?
- We've only been working on this for two weeks, and I (Corbin) have been busy
- with other things.
+Where did the docs go?
+ We contribute to the Minecraft Collective's wiki at
+ http://mc.kev009.com/wiki/ now, since it allows us to share data faster. If
+ ReST documentation is really important to you, let us know.
 
 Who are you guys, anyway?
  Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
