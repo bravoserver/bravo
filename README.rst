@@ -9,6 +9,10 @@ Minecraft Alpha wire protocol.
 Features
 ========
 
+ * Pluggable architecture
+
+   * Authentication
+
  * Login and handshake
  * Geometry ("chunk") transfer
  * Location updates
@@ -22,7 +26,6 @@ Planned Features
  * Extra inventories (chests)
  * Chat commands
  * Metadata (redstone/minecarts)
- * Plugins
  * hey0 features
  * And whatever else we can think of!
 
