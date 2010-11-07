@@ -3,7 +3,8 @@ import functools
 import sys
 
 from construct import Struct, Container, Embed
-from construct import MetaArray, If
+from construct import MetaArray, If, Switch
+from construct import OptionalGreedyRepeater
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt16, SBInt32
@@ -218,6 +219,18 @@ packets = {
     ),
 }
 
+packet_stream = Struct("packet_stream",
+    OptionalGreedyRepeater(
+        Struct("full_packet",
+            UBInt8("header"),
+            Switch("payload", lambda context: context["header"], packets),
+        ),
+    ),
+    OptionalGreedyRepeater(
+        UBInt8("leftovers"),
+    ),
+)
+
 def parse_packets(bytestream):
     """
     Opportunistically parse out as many packets as possible from a raw
@@ -227,37 +240,12 @@ def parse_packets(bytestream):
     leftover unparseable bytes.
     """
 
-    l = []
-    marker = 0
+    container = packet_stream.parse(bytestream)
 
-    while bytestream:
-        header = ord(bytestream[0])
+    l = [(i.header, i.payload) for i in container.full_packet]
+    leftovers = "".join(chr(i) for i in container.leftovers)
 
-        if header in packets:
-            parser = packets[header]
-            try:
-                container = parser.parse(bytestream[1:])
-            except (ArrayError, FieldError):
-                break
-            except Exception, e:
-                print type(e), e
-                break
-
-            # Reconstruct the packet and discard the data from the stream.
-            # The extra one is for the header; we want to advance the stream
-            # as atomically as possible.
-            rebuilt = parser.build(container)
-            length = 1 + len(rebuilt)
-            bytestream = bytestream[length:]
-            print "Parsed packet %d (#%d) @ %#x (%#x bytes)" % (
-                header, len(l), marker, length)
-            l.append((header, container))
-            marker += length
-        else:
-            print "Couldn't decode packet %d @ %#x" % (header, marker)
-            sys.exit()
-
-    return l, bytestream
+    return l, leftovers
 
 def make_packet(packet, **kwargs):
     """
