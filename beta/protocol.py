@@ -37,8 +37,6 @@ class AlphaProtocol(Protocol):
         self.handlers = collections.defaultdict(lambda: self.unhandled)
         self.handlers.update({
             0: self.ping,
-            1: self.login,
-            2: self.handshake,
             3: self.chat,
             5: self.inventory,
             10: self.flying,
@@ -51,36 +49,8 @@ class AlphaProtocol(Protocol):
             255: self.quit,
         })
 
-    def login(self, container):
-        print "Got login: %s protocol %d" % (container.username,
-            container.protocol)
-        print container
-
-        if container.protocol != 3:
-            # Kick old clients.
-            self.error("This server doesn't support your %s client."
-                % ("ancient" if container.protocol < 3 else "newfangled"))
-            return
-
-        self.username = container.username
-
-        packet = make_packet(1, protocol=0, username="", unused="",
-            unknown1=0, unknown2=0)
-        self.transport.write(packet)
-
-        reactor.callLater(0, self.authenticated)
-
     def ping(self, container):
         print "Got ping!"
-
-    def handshake(self, container):
-        print "Got handshake: %s" % container.username
-
-        self.username = container.username
-        self.state = STATE_CHALLENGED
-
-        packet = make_packet(2, username="-")
-        self.transport.write(packet)
 
     def chat(self, container):
         message = container.message
