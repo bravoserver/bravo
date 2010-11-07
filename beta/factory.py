@@ -10,6 +10,8 @@ from beta.world import World
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
 
+authenticator = "offline"
+
 class AlphaFactory(Factory):
 
     protocol = AlphaProtocol
@@ -25,11 +27,26 @@ class AlphaFactory(Factory):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
 
+        self.vtable = {}
+
         print "Discovering authenticators..."
-        for plugin in getPlugins(IAuthenticator, beta.plugins):
+        authenticators = [i for i in getPlugins(IAuthenticator, beta.plugins)]
+        for plugin in authenticators:
             print " ~ Plugin: %s" % plugin.name
 
-        self.vtable = {}
+        if len(authenticators) == 1:
+            selected = authenticators[0]
+        else:
+            selected = next(i for i in authenticators
+                if i.name == authenticator)
+            if not selected:
+                selected = authenticators[0]
+
+        print "Using authenticator %s" % selected.name
+        self.vtable["login"] = selected.login
+        self.vtable["handshake"] = selected.handshake
+
+        print "Factory init'd"
 
         # Bind the methods, old-school.
         for k, v in self.vtable.iteritems():
