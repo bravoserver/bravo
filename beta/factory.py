@@ -48,10 +48,13 @@ class AlphaFactory(Factory):
 
         print "Factory init'd"
 
-    def create_entity(self):
+    def create_entity(self, x = 0, y = 0, z = 0, entity_type = None):
         self.entityid += 1
-        self.entities[self.entityid] = None
+        self.entities[self.entityid] = Entity(self.entityid, x, y, z, entity_type)
         return self.entityid
+
+    def destroy_entity(self, id):
+        del self.entities[id]
 
     def update_time(self):
         self.time += 200
@@ -72,3 +75,22 @@ class AlphaFactory(Factory):
         for player in self.players:
             if (x, z) in player.chunks:
                 player.transport.write(packet)
+
+    def entities_in_radius(self, x, y, z, radius):
+        """
+        Returns all entities in a radius (objects)
+        """
+        x,y,z,radius = x * 32, y * 32, z * 32,radius * 32 # Convert from block to absolute position
+        def tmp(e_old):
+            e = self.entities[e_old]
+            if e.x < x + radius and e.x > x - radius and e.y < y + radius \
+                and e.y > y - radius and e.z < z + radius and e.z > z - radius:
+                print type(e)
+                return e
+        return filter(lambda t: t is not None, map(tmp,self.entities))
+
+class Entity(object):
+    def __init__(self, id, x = 0, y = 0, z = 0, entity_type = None):
+        self.id, self.x, self.y, self.z, self.entity_type = id,x,y,z,entity_type
+
+    

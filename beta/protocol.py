@@ -96,6 +96,21 @@ class AlphaProtocol(Protocol):
         if oldx != x or oldz != z:
             self.update_chunks()
 
+	for ent in self.factory.entities_in_radius(pos[0], self.player.location.y, pos[2],1):
+		#packet = make_packet(22, id=ent.id)
+        	#self.transport.write(packet)
+
+		packet = make_packet(17, type=ent.entity_type, quantity=1, wear=0)
+        	self.transport.write(packet)
+
+        	packet = make_packet(29, id=ent.id)
+        	self.transport.write(packet)
+
+		#TODO: delete entity
+		
+		self.factory.destroy_entity(ent.id)
+
+	
     def digging(self, container):
         if container.state != 3:
             return
@@ -110,27 +125,29 @@ class AlphaProtocol(Protocol):
             error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        oldblock = chunk.get_block((smallx, container.y, smallz))
+        #oldblock = chunk.get_block((smallx, container.y, smallz))
+	oldblock = 3
         chunk.set_block((smallx, container.y, smallz), 0)
 
         packet = make_packet(53, x=container.x, y=container.y, z=container.z,
             type=0, meta=0)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
-        entity = self.factory.create_entity()
+        entity = self.factory.create_entity(container.x * 32 + 16,container.y * 32,container.z * 32 + 16,oldblock)
         packet = make_packet(21, entity=Container(id=entity), item=oldblock,
             count=1, x=container.x * 32 + 16, y=container.y * 32,
-            z=container.z * 32 + 16, yaw=0, pitch=0, roll=0)
+            z=container.z * 32 + 16, yaw=252, pitch=25, roll=12)
+
         self.transport.write(packet)
 
         packet = make_packet(30, id=entity)
         self.transport.write(packet)
 
-        packet = make_packet(17, type=oldblock, quantity=1, wear=0)
-        self.transport.write(packet)
+        #packet = make_packet(17, type=oldblock, quantity=1, wear=0)
+        #self.transport.write(packet)
 
-        packet = make_packet(29, id=entity)
-        self.transport.write(packet)
+        #packet = make_packet(29, id=entity)
+        #self.transport.write(packet)
 
     def build(self, container):
         print "Got build!"
