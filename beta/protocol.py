@@ -241,7 +241,10 @@ class AlphaProtocol(Protocol):
         packets, self.buf = parse_packets(self.buf)
 
         for header, payload in packets:
-            self.handlers[header](payload)
+            if header in self.factory.hooks:
+                self.factory.hooks[header](self, payload)
+            else:
+                self.handlers[header](payload)
 
     def authenticated(self):
         self.state = STATE_AUTHENTICATED

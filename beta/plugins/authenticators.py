@@ -1,7 +1,12 @@
-from zope.interface import implements
+from twisted.internet import reactor
 from twisted.plugin import IPlugin
+from zope.interface import implements
 
 from beta.ibeta import IAuthenticator
+from beta.packets import make_packet
+
+(STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
+    STATE_LOCATED) = range(4)
 
 class Authenticator(object):
     """

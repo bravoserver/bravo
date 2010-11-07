@@ -27,7 +27,7 @@ class AlphaFactory(Factory):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
 
-        self.vtable = {}
+        self.hooks = {}
 
         print "Discovering authenticators..."
         authenticators = [i for i in getPlugins(IAuthenticator, beta.plugins)]
@@ -43,14 +43,8 @@ class AlphaFactory(Factory):
                 selected = authenticators[0]
 
         print "Using authenticator %s" % selected.name
-        self.vtable["login"] = selected.login
-        self.vtable["handshake"] = selected.handshake
-
-        print "Factory init'd"
-
-        # Bind the methods, old-school.
-        for k, v in self.vtable.iteritems():
-            setattr(self.protocol, k, v)
+        self.hooks[2] = selected.handshake
+        self.hooks[1] = selected.login
 
         print "Factory init'd"
 
