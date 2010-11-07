@@ -242,3 +242,17 @@ class Player(object):
         self.inventory.load_from_tag(tag["Inventory"])
         self.crafting.load_from_tag(tag["Inventory"])
         self.armor.load_from_tag(tag["Inventory"])
+
+class Entity(object):
+    """
+    Class representing an entity.
+
+    Entities are simply dynamic in-game objects.
+    """
+
+    def __init__(self, id, x, y, z, entity_type):
+        self.id = id
+        self.x = x
+        self.y = y
+        self.z = z
+        self.entity_type = entity_type

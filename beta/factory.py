@@ -4,6 +4,7 @@ from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 from twisted.plugin import getPlugins
 
+from beta.alpha import Entity
 from beta.ibeta import IAuthenticator
 import beta.plugins
 from beta.protocol import AlphaProtocol
@@ -90,7 +91,3 @@ class AlphaFactory(Factory):
         return [entity for entity in self.entities
             if math.sqrt((entity.x - x)**2 + (entity.y - y)**2 +
                     (entity.z - z)**2) < radius]
-
-class Entity(object):
-    def __init__(self, id, x = 0, y = 0, z = 0, entity_type = None):
-        self.id, self.x, self.y, self.z, self.entity_type = id,x,y,z,entity_type
