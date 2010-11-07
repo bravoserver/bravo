@@ -12,4 +12,4 @@ def split_coords(x, z):
 def triplet_to_index(coords):
     x, y, z = coords
 
-    return x * 128 + y * 16 + z
+    return (x * 16 + z) * 128 + y
