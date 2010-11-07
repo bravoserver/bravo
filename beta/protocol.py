@@ -97,15 +97,15 @@ class AlphaProtocol(Protocol):
             self.update_chunks()
 
         for entity in self.factory.entities_near(pos[0] * 32,
-            self.player.location.y * 32, pos[2] * 32, 1):
+            self.player.location.y * 32, pos[2] * 32, 64):
 
-            packet = make_packet(17, type=ent.entity_type, quantity=1, wear=0)
+            packet = make_packet(17, type=entity.entity_type, quantity=1, wear=0)
             self.transport.write(packet)
 
-            packet = make_packet(29, id=ent.id)
+            packet = make_packet(29, id=entity.id)
             self.transport.write(packet)
 
-            self.factory.destroy_entity(ent.id)
+            self.factory.destroy_entity(entity)
 
     def digging(self, container):
         if container.state != 3:
@@ -128,21 +128,16 @@ class AlphaProtocol(Protocol):
             type=0, meta=0)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
-        entity = self.factory.create_entity(container.x * 32 + 16,container.y * 32,container.z * 32 + 16,oldblock)
-        packet = make_packet(21, entity=Container(id=entity), item=oldblock,
+        entity = self.factory.create_entity(container.x * 32 + 16,
+            container.y * 32, container.z * 32 + 16, oldblock)
+
+        packet = make_packet(21, entity=Container(id=entity.id), item=oldblock,
             count=1, x=container.x * 32 + 16, y=container.y * 32,
             z=container.z * 32 + 16, yaw=252, pitch=25, roll=12)
-
         self.transport.write(packet)
 
-        packet = make_packet(30, id=entity)
+        packet = make_packet(30, id=entity.id)
         self.transport.write(packet)
-
-        #packet = make_packet(17, type=oldblock, quantity=1, wear=0)
-        #self.transport.write(packet)
-
-        #packet = make_packet(29, id=entity)
-        #self.transport.write(packet)
 
     def build(self, container):
         print "Got build!"

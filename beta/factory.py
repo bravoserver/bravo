@@ -21,7 +21,7 @@ class AlphaFactory(Factory):
         self.players = set()
 
         self.entityid = 1
-        self.entities = dict()
+        self.entities = set()
 
         self.time = 0
         self.time_loop = LoopingCall(self.update_time)
@@ -50,11 +50,12 @@ class AlphaFactory(Factory):
 
     def create_entity(self, x = 0, y = 0, z = 0, entity_type = None):
         self.entityid += 1
-        self.entities[self.entityid] = Entity(self.entityid, x, y, z, entity_type)
-        return self.entityid
+        entity = Entity(self.entityid, x, y, z, entity_type)
+        self.entities.add(entity)
+        return entity
 
-    def destroy_entity(self, id):
-        del self.entities[id]
+    def destroy_entity(self, entity):
+        self.entities.discard(entity)
 
     def update_time(self):
         self.time += 200
@@ -76,20 +77,21 @@ class AlphaFactory(Factory):
             if (x, z) in player.chunks:
                 player.transport.write(packet)
 
-    def entities_in_radius(self, x, y, z, radius):
+    def entities_near(self, x, y, z, radius):
         """
-        Returns all entities in a radius (objects)
+        Given a coordinate and a radius, return all entities within that
+        radius of those coordinates.
+
+        All arguments should be in pixels, not blocks.
+
+        This method is lazy.
         """
-        x,y,z,radius = x, y, z, radius # Convert from block to absolute position
-        def tmp(e_old):
-            e = self.entities[e_old]
-            if e.x < x + radius and e.x > x - radius and e.y < y + radius \
-                and e.y > y - radius and e.z < z + radius and e.z > z - radius:
-                print type(e)
-                return e
-        return filter(lambda t: t is not None, map(tmp,self.entities))
+
+        for entity in self.entities:
+            if ((entity.x - x)**2 + (entity.y - y)**2 + (entity.z - z)**2 <
+                radius):
+                yield entity
 
 class Entity(object):
     def __init__(self, id, x = 0, y = 0, z = 0, entity_type = None):
         self.id, self.x, self.y, self.z, self.entity_type = id,x,y,z,entity_type
-
