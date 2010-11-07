@@ -34,6 +34,23 @@ class AlphaProtocol(Protocol):
         self.chunks = dict()
         self.chunk_lfu = collections.defaultdict(int)
 
+        self.handlers = collections.defaultdict(lambda: self.unhandled)
+        self.handlers.update({
+            0: self.ping,
+            1: self.login,
+            2: self.handshake,
+            3: self.chat,
+            5: self.inventory,
+            10: self.flying,
+            11: self.position_look,
+            12: self.position_look,
+            13: self.position_look,
+            14: self.digging,
+            15: self.build,
+            16: self.equip,
+            255: self.quit,
+        })
+
     def login(self, container):
         print "Got login: %s protocol %d" % (container.username,
             container.protocol)
@@ -42,7 +59,7 @@ class AlphaProtocol(Protocol):
         if container.protocol != 3:
             # Kick old clients.
             self.error("This server doesn't support your %s client."
-                % "ancient" if container.protocol < 3 else "newfangled")
+                % ("ancient" if container.protocol < 3 else "newfangled"))
             return
 
         self.username = container.username
@@ -191,23 +208,6 @@ class AlphaProtocol(Protocol):
         print "Unhandled but parseable packet found!"
         print container
 
-    handlers = collections.defaultdict(lambda: AlphaProtocol.unhandled)
-    handlers.update({
-        0: ping,
-        1: login,
-        2: handshake,
-        3: chat,
-        5: inventory,
-        10: flying,
-        11: position_look,
-        12: position_look,
-        13: position_look,
-        14: digging,
-        15: build,
-        16: equip,
-        255: quit,
-    })
-
     def disable_chunk(self, x, z):
         del self.chunk_lfu[x, z]
         del self.chunks[x, z]
@@ -241,7 +241,7 @@ class AlphaProtocol(Protocol):
         packets, self.buf = parse_packets(self.buf)
 
         for header, payload in packets:
-            self.handlers[header](self, payload)
+            self.handlers[header](payload)
 
     def authenticated(self):
         self.state = STATE_AUTHENTICATED

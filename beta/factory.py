@@ -25,8 +25,15 @@ class AlphaFactory(Factory):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
 
+        print "Discovering authenticators..."
         for plugin in getPlugins(IAuthenticator, beta.plugins):
-            print "Plugin: %s" % plugin
+            print " ~ Plugin: %s" % plugin.name
+
+        self.vtable = {}
+
+        # Bind the methods, old-school.
+        for k, v in self.vtable.iteritems():
+            setattr(self.protocol, k, v)
 
         print "Factory init'd"
 
