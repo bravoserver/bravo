@@ -125,8 +125,7 @@ class AlphaProtocol(Protocol):
             error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        #oldblock = chunk.get_block((smallx, container.y, smallz))
-	oldblock = 3
+        oldblock = chunk.get_block((smallx, container.y, smallz))
         chunk.set_block((smallx, container.y, smallz), 0)
 
         packet = make_packet(53, x=container.x, y=container.y, z=container.z,
