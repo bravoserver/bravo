@@ -3,7 +3,15 @@ from zope.interface import Interface, Attribute
 class IAuthenticator(Interface):
 
     def handshake(protocol, container):
-        pass
+        """
+        Handle a handshake.
+        """
 
     def login(protocol, container):
-        pass
+        """
+        Handle a login.
+        """
+
+    name = Attribute("""
+        The name of the plugin.
+        """)

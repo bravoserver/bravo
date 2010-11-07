@@ -12,3 +12,7 @@ class OfflineAuthenticator(object):
 
     def login(protocol, container):
         pass
+
+    name = "offline"
+
+offline = OfflineAuthenticator()
