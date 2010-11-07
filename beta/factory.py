@@ -1,3 +1,5 @@
+import math
+
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 from twisted.plugin import getPlugins
@@ -83,14 +85,11 @@ class AlphaFactory(Factory):
         radius of those coordinates.
 
         All arguments should be in pixels, not blocks.
-
-        This method is lazy.
         """
 
-        for entity in self.entities:
-            if ((entity.x - x)**2 + (entity.y - y)**2 + (entity.z - z)**2 <
-                radius):
-                yield entity
+        return [entity for entity in self.entities
+            if math.sqrt((entity.x - x)**2 + (entity.y - y)**2 +
+                    (entity.z - z)**2) < radius]
 
 class Entity(object):
     def __init__(self, id, x = 0, y = 0, z = 0, entity_type = None):
