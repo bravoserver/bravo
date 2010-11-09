@@ -12,6 +12,7 @@ Features
  * Pluggable architecture
 
    * Authentication
+   * Geometry generation
 
  * Login and handshake
  * Geometry ("chunk") transfer
@@ -23,13 +24,14 @@ Features
 Planned Features
 ================
 
+ * Console control
  * Seasons
  * Plugins for chat
  * Plugins for admin
+ * More terrain generators
  * Extra inventories (chests)
  * Chat commands
  * Metadata (redstone/minecarts)
- * Geometry generation
  * hey0 features
  * And whatever else we can think of!
 
