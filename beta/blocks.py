@@ -1,11 +1,22 @@
 class Block(object):
 
-    def __init__(self, slot, name):
+    def __init__(self, slot, name, drop=None):
         self.slot = slot
         self.name = name
 
+        if drop is None:
+            self.drop = slot
+        else:
+            self.drop = drop
+
 names = [""] * 256
 
-blocks = [Block(slot, name) for slot, name in zip(xrange(256), names)]
+drops = [None] * 256
+
+blocks = [
+    Block(slot, name, drop)
+    for slot, name, drop
+    in zip(xrange(256), names, drops)
+]
 
 named_blocks = dict((block.name, block) for block in blocks)

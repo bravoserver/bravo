@@ -8,6 +8,7 @@ from twisted.internet.task import coiterate, LoopingCall
 from construct import Container
 
 from beta.alpha import Player
+from beta.blocks import blocks
 from beta.packets import parse_packets, make_packet, make_error_packet
 from beta.utilities import split_coords
 
@@ -128,16 +129,19 @@ class AlphaProtocol(Protocol):
             type=0, meta=0)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
-        entity = self.factory.create_entity(container.x * 32 + 16,
-            container.y * 32, container.z * 32 + 16, oldblock)
+        dropblock = blocks[oldblock].drop
+        if dropblock is not None:
 
-        packet = make_packet(21, entity=Container(id=entity.id), item=oldblock,
-            count=1, x=container.x * 32 + 16, y=container.y * 32,
-            z=container.z * 32 + 16, yaw=252, pitch=25, roll=12)
-        self.transport.write(packet)
+            entity = self.factory.create_entity(container.x * 32 + 16,
+                container.y * 32, container.z * 32 + 16, oldblock)
 
-        packet = make_packet(30, id=entity.id)
-        self.transport.write(packet)
+            packet = make_packet(21, entity=Container(id=entity.id), item=oldblock,
+                count=1, x=container.x * 32 + 16, y=container.y * 32,
+                z=container.z * 32 + 16, yaw=252, pitch=25, roll=12)
+            self.transport.write(packet)
+
+            packet = make_packet(30, id=entity.id)
+            self.transport.write(packet)
 
     def build(self, container):
         print "Got build!"
