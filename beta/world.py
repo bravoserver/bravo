@@ -60,7 +60,7 @@ class World(object):
 
     def populate_chunk(self, chunk):
         for stage in self.pipeline:
-            stage(chunk, self.seed)
+            stage.populate(chunk, self.seed)
 
     def generate_level(self):
         self.spawn = (0, 0, 0)
