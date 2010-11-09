@@ -118,7 +118,7 @@ class AlphaProtocol(Protocol):
         try:
             chunk = self.chunks[bigx, bigz]
         except KeyError:
-            error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
+            self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
             return
 
         oldblock = chunk.get_block((smallx, container.y, smallz))
@@ -165,7 +165,7 @@ class AlphaProtocol(Protocol):
         try:
             chunk = self.chunks[bigx, bigz]
         except KeyError:
-            error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
+            self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
             return
 
         chunk.set_block((smallx, y, smallz), container.block)
