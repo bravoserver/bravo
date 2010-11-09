@@ -6,6 +6,23 @@ from zope.interface import implements
 from beta.blocks import blocks
 from beta.ibeta import ITerrainGenerator
 
+class BoringGenerator(object):
+    """
+    Generates boring slabs of flat stone.
+    """
+
+    implements(IPlugin, ITerrainGenerator)
+
+    def populate(self, chunk, seed):
+        """
+        Fill the bottom half of the chunk with stone.
+        """
+
+        for i, j, k in itertools.product(xrange(16), xrange(64), xrange(16)):
+            chunk.set_block((i, j, k), blocks["stone"].slot)
+
+    name = "boring"
+
 class SafetyGenerator(object):
     """
     Generates terrain features essential for the safety of clients.
@@ -26,4 +43,5 @@ class SafetyGenerator(object):
 
     name = "safety"
 
+boring = BoringGenerator()
 safety = SafetyGenerator()
