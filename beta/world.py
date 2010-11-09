@@ -58,6 +58,10 @@ class World(object):
             self.level = NBTFile()
             self.generate_level()
 
+    def populate_chunk(self, chunk):
+        for stage in self.pipeline:
+            stage(chunk, self.seed)
+
     def generate_level(self):
         self.spawn = (0, 0, 0)
         self.seed = random.randint(0, sys.maxint)
@@ -69,21 +73,20 @@ class World(object):
 
         self.seed = self.level["Data"]["RandomSeed"].value
 
-    def seed_for_chunk(self, x, z, seed):
-        partialx = x**2 * 4987142 + x * 5947611
-        partialz = z**2 * 4392871 + z * 389711
-        return (partialx + partialz) ^ seed
-
     def load_chunk(self, x, z):
         if (x, z) in self.chunks:
             return self.chunks[x, z]
 
         chunk = Chunk(x, z)
         self.chunks[x, z] = chunk
+
         filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
             "c.%s.%s.dat" % (base36(x), base36(z)))
-        f = NBTFile(filename)
-        chunk.load_from_tag(f)
+        try:
+            f = NBTFile(filename)
+            chunk.load_from_tag(f)
+        except IOError:
+            self.populate_chunk(chunk)
         return chunk
 
     def load_player(self, username):
