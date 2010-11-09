@@ -50,12 +50,6 @@ entity_position_look = Struct("entity_position_look",
     UBInt8("pitch")
 )
 
-items = collections.defaultdict(lambda: "unused")
-items.update({
-    4: "cobblestone",
-    20: "glass",
-})
-
 packets = {
     0: Struct("ping"),
     1: Struct("login",
