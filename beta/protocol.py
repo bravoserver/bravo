@@ -130,14 +130,15 @@ class AlphaProtocol(Protocol):
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
         dropblock = blocks[oldblock].drop
-        if dropblock is not None:
 
+        if dropblock != 0:
             entity = self.factory.create_entity(container.x * 32 + 16,
-                container.y * 32, container.z * 32 + 16, oldblock)
+                container.y * 32, container.z * 32 + 16, dropblock)
 
-            packet = make_packet(21, entity=Container(id=entity.id), item=oldblock,
-                count=1, x=container.x * 32 + 16, y=container.y * 32,
-                z=container.z * 32 + 16, yaw=252, pitch=25, roll=12)
+            packet = make_packet(21, entity=Container(id=entity.id),
+                item=dropblock, count=1, x=container.x * 32 + 16,
+                y=container.y * 32, z=container.z * 32 + 16, yaw=252,
+                pitch=25, roll=12)
             self.transport.write(packet)
 
             packet = make_packet(30, id=entity.id)
