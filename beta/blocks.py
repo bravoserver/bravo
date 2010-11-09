@@ -13,6 +13,8 @@ names = [""] * 256
 
 drops = [None] * 256
 
+drops[2] = 3 # Grass -> dirt
+
 blocks = [
     Block(slot, name, drop)
     for slot, name, drop
