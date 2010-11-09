@@ -57,6 +57,14 @@ class Chunk(object):
         self.x = int(x)
         self.z = int(z)
 
+        self.blocks = [0] * 16 * 128 * 16
+        self.heightmap = [0] * 16 * 128 * 16
+        self.lightmap = [0] * 16 * 128 * 16
+        self.metadata = [0] * 16 * 128 * 16
+        self.skylight = [0] * 16 * 128 * 16
+
+        self.tileentities = []
+
     def load_from_tag(self, tag):
         level = tag["Level"]
         self.blocks = [ord(i) for i in level["Blocks"].value]
@@ -65,7 +73,6 @@ class Chunk(object):
         self.metadata = [ord(i) for i in level["Data"].value]
         self.skylight = [ord(i) for i in level["SkyLight"].value]
 
-        self.tileentities = []
         if level["TileEntities"].value:
             for tag in level["TileEntities"].value:
                 try:
