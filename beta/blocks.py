@@ -1,6 +1,23 @@
 class Block(object):
 
-    def __init__(self, slot, name, drop=None):
+    def __init__(self, slot, name, drop=None, replace=0):
+        """
+        A block in a chunk.
+
+        :Parameters:
+            slot : int
+                The index of this block. Globally unique.
+            name : str
+                A common name for this block.
+            drop : int
+                The type of block that should be dropped when an instance of
+                this block is destroyed. Defaults to the slot value, to drop
+                instances of this same type of block.
+            replace : int
+                The type of block to place in the map when instances of this
+                block are destroyed. Defaults to air.
+        """
+
         self.slot = slot
         self.name = name
 
@@ -8,6 +25,8 @@ class Block(object):
             self.drop = slot
         else:
             self.drop = drop
+
+        self.replace = replace
 
 names = [
     "air",
@@ -112,10 +131,14 @@ drops[2] = 3 # Grass -> dirt
 drops[78] = 0 # Snow
 drops[79] = 0 # Ice
 
+replaces = [0] * 256
+
+replaces[79] = 8 # Ice -> water
+
 blocks = [
-    Block(slot, name, drop)
-    for slot, name, drop
-    in zip(xrange(256), names, drops)
+    Block(slot, name, drop, replace)
+    for slot, name, drop, replace
+    in zip(xrange(256), names, drops, replaces)
 ]
 
 named_blocks = dict((block.name, block) for block in blocks)
