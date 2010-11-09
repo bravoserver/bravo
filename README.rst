@@ -18,11 +18,14 @@ Features
  * Location updates
  * Passage of time (day/night)
  * Block construction and deconstruction
+ * Entities
 
 Planned Features
 ================
 
- * Entity registration and tracking
+ * Seasons
+ * Plugins for chat
+ * Plugins for admin
  * Extra inventories (chests)
  * Chat commands
  * Metadata (redstone/minecarts)
