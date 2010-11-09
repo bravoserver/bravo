@@ -14,6 +14,8 @@ names = [""] * 256
 drops = [None] * 256
 
 drops[2] = 3 # Grass -> dirt
+drops[78] = 0 # Snow
+drops[79] = 0 # Ice
 
 blocks = [
     Block(slot, name, drop)
