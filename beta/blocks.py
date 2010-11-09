@@ -123,22 +123,24 @@ names = [
     "jack-o-lantern",
 ]
 
-names.extend([None] * (256 - len(names)))
-
-drops = [None] * 256
+drops = {}
 
 drops[2] = 3 # Grass -> dirt
 drops[78] = 0 # Snow
 drops[79] = 0 # Ice
 
-replaces = [0] * 256
+replaces = {}
 
 replaces[79] = 8 # Ice -> water
 
-blocks = [
-    Block(slot, name, drop, replace)
-    for slot, name, drop, replace
-    in zip(xrange(256), names, drops, replaces)
-]
+blocks = {}
 
-named_blocks = dict((block.name, block) for block in blocks)
+for i, name in enumerate(names):
+    kwargs = {}
+    if i in drops:
+        kwargs["drop"] = drops[i]
+    if i in replaces:
+        kwargs["replace"] = replaces[i]
+    b = Block(i, name, **kwargs)
+    blocks[i] = b
+    blocks[name] = b
