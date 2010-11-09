@@ -123,10 +123,11 @@ class AlphaProtocol(Protocol):
             return
 
         oldblock = chunk.get_block((smallx, container.y, smallz))
-        chunk.set_block((smallx, container.y, smallz), 0)
+        newblock = blocks[oldblock].replace
+        chunk.set_block((smallx, container.y, smallz), newblock)
 
         packet = make_packet(53, x=container.x, y=container.y, z=container.z,
-            type=0, meta=0)
+            type=newblock, meta=0)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
         dropblock = blocks[oldblock].drop
