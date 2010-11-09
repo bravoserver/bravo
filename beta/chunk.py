@@ -5,7 +5,7 @@ from nbt.nbt import TAG_Int
 
 from beta.alpha import Inventory
 from beta.packets import make_packet
-from beta.utilities import triplet_to_index
+from beta.utilities import triplet_to_index, pack_nibbles, unpack_nibbles
 
 class TileEntity(object):
 
@@ -58,7 +58,7 @@ class Chunk(object):
         self.z = int(z)
 
         self.blocks = [0] * 16 * 128 * 16
-        self.heightmap = [0] * 16 * 128 * 16
+        self.heightmap = [0] * 16 * 16
         self.lightmap = [0] * 16 * 128 * 16
         self.metadata = [0] * 16 * 128 * 16
         self.skylight = [0] * 16 * 128 * 16
@@ -69,9 +69,9 @@ class Chunk(object):
         level = tag["Level"]
         self.blocks = [ord(i) for i in level["Blocks"].value]
         self.heightmap = [ord(i) for i in level["HeightMap"].value]
-        self.lightmap = [ord(i) for i in level["BlockLight"].value]
-        self.metadata = [ord(i) for i in level["Data"].value]
-        self.skylight = [ord(i) for i in level["SkyLight"].value]
+        self.lightmap = unpack_nibbles(level["BlockLight"].value)
+        self.metadata = unpack_nibbles(level["Data"].value)
+        self.skylight = unpack_nibbles(level["SkyLight"].value)
 
         if level["TileEntities"].value:
             for tag in level["TileEntities"].value:
@@ -87,10 +87,12 @@ class Chunk(object):
         Generate a chunk packet.
         """
 
-        array = "".join(chr(i) for i in
-            self.blocks + self.metadata + self.lightmap + self.skylight)
+        array = [chr(i) for i in self.blocks]
+        array += pack_nibbles(self.metadata)
+        array += pack_nibbles(self.lightmap)
+        array += pack_nibbles(self.skylight)
         packet = make_packet(51, x=self.x * 16, y=0, z=self.z * 16,
-            x_size=15, y_size=127, z_size=15, data=array)
+            x_size=15, y_size=127, z_size=15, data="".join(array))
         return packet
 
     def get_block(self, coords):
