@@ -5,7 +5,7 @@ from twisted.internet.task import LoopingCall
 from twisted.plugin import getPlugins
 
 from beta.alpha import Entity
-from beta.ibeta import IAuthenticator
+from beta.ibeta import IAuthenticator, ITerrainGenerator
 import beta.plugins
 from beta.protocol import AlphaProtocol
 from beta.world import World
@@ -14,6 +14,7 @@ from beta.world import World
     STATE_LOCATED) = range(4)
 
 authenticator = "offline"
+generator = "safety"
 
 class AlphaFactory(Factory):
 
@@ -33,7 +34,7 @@ class AlphaFactory(Factory):
         self.hooks = {}
 
         print "Discovering authenticators..."
-        authenticators = [i for i in getPlugins(IAuthenticator, beta.plugins)]
+        authenticators = list(getPlugins(IAuthenticator, beta.plugins))
         for plugin in authenticators:
             print " ~ Plugin: %s" % plugin.name
 
@@ -48,6 +49,23 @@ class AlphaFactory(Factory):
         print "Using authenticator %s" % selected.name
         self.hooks[2] = selected.handshake
         self.hooks[1] = selected.login
+
+        print "Discovering generators..."
+        generators = list(getPlugins(ITerrainGenerator, beta.plugins))
+        for plugin in generators:
+            print " ~ Plugin: %s" % plugin.name
+
+        l = []
+        for name in generator.split(","):
+            try:
+                l.append(next(i for i in generators if i.name == name))
+            except StopIteration:
+                pass
+        if not l:
+            l.append(generators[0])
+
+        print "Using generators %s" % ", ".join(i.name for i in l)
+        self.world.pipeline = l
 
         print "Factory init'd"
 
