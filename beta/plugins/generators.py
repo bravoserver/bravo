@@ -36,10 +36,10 @@ class ErosionGenerator(object):
         """
 
         for x, z in itertools.product(xrange(16), xrange(16)):
-            for i in xrange(127, 0, -1):
-                if chunk.get_block((x, i, z)) == blocks["stone"].slot:
+            for i in xrange(127, 1, -1):
+                if chunk.get_block((x, i - 1, z)) == blocks["stone"].slot:
                     for y in xrange(max(i - 4, 0), i):
-                        chunk.set_block((x, i, z), blocks["dirt"].slot)
+                        chunk.set_block((x, y, z), blocks["dirt"].slot)
                     break
 
     name = "erosion"
