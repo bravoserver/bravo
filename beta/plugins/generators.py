@@ -18,10 +18,53 @@ class BoringGenerator(object):
         Fill the bottom half of the chunk with stone.
         """
 
-        for i, j, k in itertools.product(xrange(16), xrange(64), xrange(16)):
-            chunk.set_block((i, j, k), blocks["stone"].slot)
+        for x, y, z in itertools.product(xrange(16), xrange(64), xrange(16)):
+            chunk.set_block((x, y, z), blocks["stone"].slot)
 
     name = "boring"
+
+class ErosionGenerator(object):
+    """
+    Erodes stone surfaces into dirt.
+    """
+
+    implements(IPlugin, ITerrainGenerator)
+
+    def populate(self, chunk, seed):
+        """
+        Turn the top few layers of stone into dirt.
+        """
+
+        for x, z in itertools.product(xrange(16), xrange(16)):
+            y = next(i for i in xrange(127, 0, -1)
+                if chunk.get_block((x, i, z)) == blocks["stone"].slot)
+            for i in range(y, y - 4, -1):
+                chunk.set_block((x, i, z), blocks["dirt"].slot)
+
+    name = "erosion"
+
+class GrassGenerator(object):
+    """
+    Find exposed dirt and grow grass.
+    """
+
+    implements(IPlugin, ITerrainGenerator)
+
+    def populate(self, chunk, seed):
+        """
+        Find the top dirt block in each y-level and turn it into grass.
+        """
+
+        for x, z in itertools.product(xrange(16), xrange(16)):
+            try:
+                y = next(i for i in xrange(127, 0, -1)
+                    if chunk.get_block((x, i + 1, z)) == blocks["air"].slot
+                    and chunk.get_block((x, i, z)) == blocks["dirt"].slot)
+                chunk.set_block((x, y, z), blocks["grass"].slot)
+            except StopIteration:
+                pass
+
+    name = "grass"
 
 class SafetyGenerator(object):
     """
@@ -36,12 +79,14 @@ class SafetyGenerator(object):
         top two layers to avoid players getting stuck at the top.
         """
 
-        for i, j in itertools.product(xrange(16), xrange(16)):
-            chunk.set_block((i, 0, j), blocks["bedrock"].slot)
-            chunk.set_block((i, 126, j), blocks["air"].slot)
-            chunk.set_block((i, 127, j), blocks["air"].slot)
+        for x, z in itertools.product(xrange(16), xrange(16)):
+            chunk.set_block((x, 0, z), blocks["bedrock"].slot)
+            chunk.set_block((x, 126, z), blocks["air"].slot)
+            chunk.set_block((x, 127, z), blocks["air"].slot)
 
     name = "safety"
 
 boring = BoringGenerator()
+erosion = ErosionGenerator()
+grass = GrassGenerator()
 safety = SafetyGenerator()
