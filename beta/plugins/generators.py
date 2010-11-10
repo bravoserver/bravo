@@ -36,10 +36,11 @@ class ErosionGenerator(object):
         """
 
         for x, z in itertools.product(xrange(16), xrange(16)):
-            y = next(i for i in xrange(127, 0, -1)
-                if chunk.get_block((x, i, z)) == blocks["stone"].slot)
-            for i in range(y, y - 4, -1):
-                chunk.set_block((x, i, z), blocks["dirt"].slot)
+            for i in xrange(127, 0, -1):
+                if chunk.get_block((x, i, z)) == blocks["stone"].slot:
+                    for y in xrange(max(i - 4, 0), i):
+                        chunk.set_block((x, i, z), blocks["dirt"].slot)
+                    break
 
     name = "erosion"
 
@@ -56,13 +57,11 @@ class GrassGenerator(object):
         """
 
         for x, z in itertools.product(xrange(16), xrange(16)):
-            try:
-                y = next(i for i in xrange(127, 0, -1)
-                    if chunk.get_block((x, i + 1, z)) == blocks["air"].slot
-                    and chunk.get_block((x, i, z)) == blocks["dirt"].slot)
-                chunk.set_block((x, y, z), blocks["grass"].slot)
-            except StopIteration:
-                pass
+            for i in xrange(126, 0, -1):
+                if (chunk.get_block((x, i + 1, z)) == blocks["air"].slot
+                    and chunk.get_block((x, i, z)) == blocks["dirt"].slot):
+                    chunk.set_block((x, i, z), blocks["grass"].slot)
+                    break
 
     name = "grass"
 
