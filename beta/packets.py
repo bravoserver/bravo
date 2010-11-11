@@ -1,6 +1,4 @@
-import collections
 import functools
-import sys
 
 from construct import Struct, Container, Embed
 from construct import MetaArray, If, Switch
@@ -9,8 +7,6 @@ from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt16, SBInt32
 from construct import BFloat32, BFloat64
-
-from construct.core import ArrayError, FieldError
 
 # Our tricky Java string decoder.
 # Note that Java has a weird encoding for the NULL byte which we do not
