@@ -229,6 +229,10 @@ class AlphaProtocol(Protocol):
             else:
                 self.handlers[header](payload)
 
+    def challenged(self):
+        self.state = STATE_CHALLENGED
+        self.entity = self.factory.create_entity()
+
     def authenticated(self):
         self.state = STATE_AUTHENTICATED
         self.player = Player()

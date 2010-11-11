@@ -41,15 +41,13 @@ class Authenticator(object):
 class OfflineAuthenticator(Authenticator):
 
     def handshake(self, protocol, container):
-        protocol.username = container.username
-        protocol.state = STATE_CHALLENGED
-
         packet = make_packet(2, username="-")
         protocol.transport.write(packet)
 
+        reactor.callLater(0, protocol.challenged)
+
     def login(self, protocol, container):
         protocol.username = container.username
-        protocol.entity = protocol.factory.create_entity()
 
         packet = make_packet(1, protocol=protocol.entity.id, username="",
             unused="", unknown1=0, unknown2=0)
