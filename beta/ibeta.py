@@ -29,3 +29,18 @@ class ITerrainGenerator(Interface):
     name = Attribute("""
         The name of the plugin.
         """)
+
+class ICommand(Interface):
+
+    def dispatch(self, parameters):
+        """
+        Handle a command.
+
+        Parameters are passed as a single string, with no escaping or munging.
+        """
+
+    name = Attribute("""
+        The name of the plugin.
+
+        Command names are also used as the keyword for the command.
+        """)
