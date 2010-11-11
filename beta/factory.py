@@ -2,19 +2,18 @@ import math
 
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
-from twisted.plugin import getPlugins
 
 from beta.alpha import Entity
 from beta.ibeta import IAuthenticator, ITerrainGenerator
-import beta.plugins
+from beta.plugin import retrieve_named_plugins
 from beta.protocol import AlphaProtocol
 from beta.world import World
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
 
-authenticator = "offline"
-generator = "boring,erosion,grass,safety"
+authenticator_name = "offline"
+generator_names = "boring,erosion,grass,safety".split(",")
 
 class AlphaFactory(Factory):
 
@@ -33,39 +32,18 @@ class AlphaFactory(Factory):
 
         self.hooks = {}
 
-        print "Discovering authenticators..."
-        authenticators = list(getPlugins(IAuthenticator, beta.plugins))
-        for plugin in authenticators:
-            print " ~ Plugin: %s" % plugin.name
-
-        if len(authenticators) == 1:
-            selected = authenticators[0]
-        else:
-            selected = next(i for i in authenticators
-                if i.name == authenticator)
-            if not selected:
-                selected = authenticators[0]
+        selected = retrieve_named_plugins(IAuthenticator,
+            [authenticator_name])[0]
 
         print "Using authenticator %s" % selected.name
         self.hooks[2] = selected.handshake
         self.hooks[1] = selected.login
 
-        print "Discovering generators..."
-        generators = list(getPlugins(ITerrainGenerator, beta.plugins))
-        for plugin in generators:
-            print " ~ Plugin: %s" % plugin.name
+        generators = retrieve_named_plugins(ITerrainGenerator,
+            generator_names)
 
-        l = []
-        for name in generator.split(","):
-            try:
-                l.append(next(i for i in generators if i.name == name))
-            except StopIteration:
-                pass
-        if not l:
-            l.append(generators[0])
-
-        print "Using generators %s" % ", ".join(i.name for i in l)
-        self.world.pipeline = l
+        print "Using generators %s" % ", ".join(i.name for i in generators)
+        self.world.pipeline = generators
 
         print "Factory init'd"
 
