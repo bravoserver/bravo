@@ -132,9 +132,10 @@ class Player(object):
         Players are compound tags.
         """
 
-        self.inventory.load_from_tag(tag["Inventory"])
-        self.crafting.load_from_tag(tag["Inventory"])
-        self.armor.load_from_tag(tag["Inventory"])
+        if tag["Inventory"].value:
+            self.inventory.load_from_tag(tag["Inventory"])
+            self.crafting.load_from_tag(tag["Inventory"])
+            self.armor.load_from_tag(tag["Inventory"])
 
 class Entity(object):
     """
