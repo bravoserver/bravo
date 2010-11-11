@@ -47,7 +47,7 @@ class AlphaFactory(Factory):
 
         print "Factory init'd"
 
-    def create_entity(self, x = 0, y = 0, z = 0, entity_type = None):
+    def create_entity(self, x=0, y=0, z=0, entity_type=None):
         self.entityid += 1
         entity = Entity(self.entityid, x, y, z, entity_type)
         self.entities.add(entity)
