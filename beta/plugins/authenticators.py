@@ -29,10 +29,12 @@ class Authenticator(object):
         Subclasses should call this method after their challenge succeeds.
         """
 
-        if container.protocol != 3:
+        if container.protocol < 3:
             # Kick old clients.
-            protocol.error("This server doesn't support your %s client."
-                % ("ancient" if container.protocol < 3 else "newfangled"))
+            protocol.error("This server doesn't support your ancient client.")
+        elif container.protocol > 4:
+            # Kick new clients.
+            protocol.error("This server doesn't support your newfangled client.")
         else:
             reactor.callLater(0, protocol.authenticated)
 
