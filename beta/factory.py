@@ -7,6 +7,7 @@ from beta.alpha import Entity
 from beta.ibeta import IAuthenticator, ITerrainGenerator
 from beta.plugin import retrieve_named_plugins
 from beta.protocol import AlphaProtocol
+from beta.stdio import Console
 from beta.world import World
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
@@ -44,6 +45,9 @@ class AlphaFactory(Factory):
 
         print "Using generators %s" % ", ".join(i.name for i in generators)
         self.world.pipeline = generators
+
+        console = Console()
+        console.factory = self
 
         print "Factory init'd"
 

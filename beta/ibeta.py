@@ -32,7 +32,7 @@ class ITerrainGenerator(Interface):
 
 class ICommand(Interface):
 
-    def dispatch(self, parameters):
+    def dispatch(self, factory, parameters):
         """
         Handle a command.
 
