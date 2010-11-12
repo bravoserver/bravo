@@ -125,13 +125,29 @@ names = [
 
 drops = {}
 
-drops[2] = 3 # Grass -> dirt
+# Block -> block drops.
+# If the drop block is zero, then it drops nothing.
+drops[2] = 3 # Grass -> Dirt
+# XXX should drop saplings occasionally
+drops[18] = 0 # Leaves
+drops[20] = 0 # Glass
+drops[60] = 3 # Soil -> Dirt
+drops[62] = 61 # Burning Furnace -> Furnace
 drops[78] = 0 # Snow
 drops[79] = 0 # Ice
 
+# Block -> item drops.
+drops[16] = 263 # Coal Ore Block -> Coal
+drops[56] = 264 # Diamond Ore Block -> Diamond
+drops[63] = 323 # Sign Post -> Sign Item
+drops[64] = 324 # Wooden Door -> Wooden Door Item
+drops[68] = 323 # Wall Sign -> Sign Item
+drops[71] = 330 # Iron Door -> Iron Door Item
+drops[83] = 338 # Reed -> Reed Item
+
 replaces = {}
 
-replaces[79] = 8 # Ice -> water
+replaces[79] = 8 # Ice -> Water
 
 blocks = {}
 
