@@ -237,6 +237,38 @@ def parse_packets(bytestream):
 
     return l, leftovers
 
+packets_by_name = {
+    "ping"               : 0,
+    "login"              : 1,
+    "handshake"          : 2,
+    "chat"               : 3,
+    "time"               : 4,
+    "inventory"          : 5,
+    "spawn"              : 6,
+    "flying"             : 10,
+    "position"           : 11,
+    "orientation"        : 12,
+    "location"           : 13,
+    "digging"            : 14,
+    "build"              : 15,
+    "equip"              : 16,
+    "pickup"             : 17,
+    "arm"                : 18,
+    "spawn-pickup"       : 21,
+    "collect"            : 22,
+    "destroy"            : 29,
+    "create"             : 30,
+    "entity-position"    : 31,
+    "entity-orientation" : 32,
+    "entity-location"    : 33,
+    "prechunk"           : 50,
+    "chunk"              : 51,
+    "batch"              : 52,
+    "block"              : 53,
+    "tile"               : 59,
+    "error"              : 255,
+}
+
 def make_packet(packet, **kwargs):
     """
     Constructs a packet bytestream from a packet header and payload.
@@ -244,14 +276,13 @@ def make_packet(packet, **kwargs):
     The payload should be passed as keyword arguments.
     """
 
-    header = chr(packet)
-    payload = packets[packet].build(Container(**kwargs))
-    return header + payload
+    header = packets_by_name[packet]
+    payload = packets[header].build(Container(**kwargs))
+    return chr(header) + payload
 
 def make_error_packet(message):
     """
     Convenience method to generate an error packet bytestream.
     """
 
-    return make_packet(255, message=message)
-
+    return make_packet("error", message=message)

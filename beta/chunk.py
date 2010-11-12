@@ -27,7 +27,7 @@ class TileEntity(object):
         sio = StringIO.StringIO()
         tag._render_buffer(sio)
 
-        packet = make_packet(59, x=self.x, y=self.y, z=self.z,
+        packet = make_packet("tile", x=self.x, y=self.y, z=self.z,
             nbt=sio.getvalue())
         return packet
 
@@ -91,7 +91,7 @@ class Chunk(object):
         array += pack_nibbles(self.metadata)
         array += pack_nibbles(self.lightmap)
         array += pack_nibbles(self.skylight)
-        packet = make_packet(51, x=self.x * 16, y=0, z=self.z * 16,
+        packet = make_packet("chunk", x=self.x * 16, y=0, z=self.z * 16,
             x_size=15, y_size=127, z_size=15, data="".join(array))
         return packet
 

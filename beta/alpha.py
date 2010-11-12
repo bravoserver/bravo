@@ -59,7 +59,7 @@ class Inventory(object):
                 lc.append(Container(id=item[0], damage=item[1],
                         count=item[2]))
 
-        packet = make_packet(5, unknown1=self.unknown1, length=len(lc),
+        packet = make_packet("inventory", unknown1=self.unknown1, length=len(lc),
             items=lc)
 
         return packet
@@ -108,7 +108,7 @@ class Location(object):
         look = Container(rotation=self.theta, pitch=self.pitch)
         flying = Container(flying=self.midair)
 
-        packet = make_packet(13, position=position, look=look, flying=flying)
+        packet = make_packet("location", position=position, look=look, flying=flying)
 
         return packet
 
