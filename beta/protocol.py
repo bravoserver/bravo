@@ -1,8 +1,6 @@
 import collections
 import itertools
 
-from twisted.internet import reactor
-from twisted.internet.defer import Deferred, DeferredList
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import coiterate, LoopingCall
 
@@ -13,8 +11,7 @@ from beta.blocks import blocks
 from beta.packets import parse_packets, make_packet, make_error_packet
 from beta.utilities import split_coords
 
-(STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
-    STATE_LOCATED) = range(4)
+(STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
 class AlphaProtocol(Protocol):
     """
@@ -51,19 +48,6 @@ class AlphaProtocol(Protocol):
             255: self.quit,
         })
 
-        # So annoying. The order in which packets come in is *not*
-        # deterministic, and we need to have a valid location before we do
-        # things like send the initial position, so we need to defer until we
-        # have received enough data from the client.
-        self.authenticate_deferred = Deferred()
-        self.location_deferred = Deferred()
-
-        dl = DeferredList([
-            self.authenticate_deferred,
-            self.location_deferred
-        ])
-        dl.addCallback(lambda chaff: self.located)
-
     def ping(self, container):
         print "Got ping!"
 
@@ -94,11 +78,6 @@ class AlphaProtocol(Protocol):
             self.player.location.z)
 
         self.player.location.load_from_packet(container)
-
-        if self.location_deferred:
-            print "Calling location deferred!"
-            reactor.callLater(0, self.location_deferred.callback, None)
-            self.location_deferred = None
 
         pos = (self.player.location.x, self.player.location.y,
             self.player.location.z)
@@ -246,11 +225,6 @@ class AlphaProtocol(Protocol):
         self.entity = self.factory.create_entity()
 
     def authenticated(self):
-        if self.authenticate_deferred:
-            print "Calling authenticate deferred!"
-            reactor.callLater(0, self.authenticate_deferred.callback, None)
-            self.authenticate_deferred = None
-
         self.state = STATE_AUTHENTICATED
 
         self.player = Player()
@@ -280,11 +254,6 @@ class AlphaProtocol(Protocol):
         packet = self.player.armor.save_to_packet()
         self.transport.write(packet)
 
-        packet = self.player.location.save_to_packet()
-        self.transport.write(packet)
-
-    def located(self):
-        print "Located!"
         self.send_initial_chunk_and_location()
 
         self.ping_loop = LoopingCall(self.update_ping)
@@ -294,8 +263,6 @@ class AlphaProtocol(Protocol):
         self.time_loop.start(10)
 
         self.update_chunks()
-
-        self.state = STATE_LOCATED
 
     def send_initial_chunk_and_location(self):
         bigx, smallx, bigz, smallz = split_coords(self.player.location.x,
@@ -314,9 +281,6 @@ class AlphaProtocol(Protocol):
         self.transport.write(packet)
 
     def update_chunks(self):
-        if self.state < STATE_LOCATED:
-            return
-
         print "Sending chunks..."
         x, chaff, z, chaff = split_coords(self.player.location.x,
             self.player.location.z)
