@@ -244,7 +244,6 @@ def make_packet(packet, **kwargs):
     The payload should be passed as keyword arguments.
     """
 
-    print "Making packet %d" % packet
     header = chr(packet)
     payload = packets[packet].build(Container(**kwargs))
     return header + payload

@@ -28,7 +28,7 @@ class AlphaProtocol(Protocol):
     handler = None
 
     def __init__(self):
-        print "Started new connection..."
+        print "Client connected!"
 
         self.chunks = dict()
         self.chunk_lfu = collections.defaultdict(int)
@@ -49,7 +49,7 @@ class AlphaProtocol(Protocol):
         })
 
     def ping(self, container):
-        print "Got ping!"
+        pass
 
     def chat(self, container):
         message = container.message
@@ -61,8 +61,6 @@ class AlphaProtocol(Protocol):
         self.factory.broadcast(packet)
 
     def inventory(self, container):
-        print "Got inventory %d" % container.unknown1
-
         if container.unknown1 == -1:
             self.player.inventory.load_from_packet(container)
         elif container.unknown1 == -2:
@@ -81,7 +79,6 @@ class AlphaProtocol(Protocol):
 
         pos = (self.player.location.x, self.player.location.y,
             self.player.location.z)
-        print "current position is %f, %f, %f" % pos
 
         x, chaff, z, chaff = split_coords(pos[0], pos[2])
 
@@ -102,8 +99,6 @@ class AlphaProtocol(Protocol):
     def digging(self, container):
         if container.state != 3:
             return
-
-        print "Got digging!"
 
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
 
@@ -137,8 +132,6 @@ class AlphaProtocol(Protocol):
             self.transport.write(packet)
 
     def build(self, container):
-        print "Got build!"
-
         x = container.x
         y = container.y
         z = container.z
@@ -162,7 +155,7 @@ class AlphaProtocol(Protocol):
         try:
             chunk = self.chunks[bigx, bigz]
         except KeyError:
-            self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
+            self.error("Couldn't build in chunk (%d, %d)!" % (bigx, bigz))
             return
 
         chunk.set_block((smallx, y, smallz), container.block)
@@ -171,7 +164,6 @@ class AlphaProtocol(Protocol):
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
     def equip(self, container):
-        print "Got equip!"
         self.player.equipped = container.item
 
     def quit(self, container):
