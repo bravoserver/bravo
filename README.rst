@@ -12,8 +12,10 @@ Features
  * Pluggable architecture
 
    * Authentication
+   * Commands
    * Geometry generation
 
+ * Console
  * Login and handshake
  * Geometry ("chunk") transfer
  * Location updates
@@ -24,10 +26,9 @@ Features
 Planned Features
 ================
 
- * Console control
  * Seasons
- * Plugins for chat
- * Plugins for admin
+ * More plugins for chat
+ * More lugins for admin
  * More terrain generators
  * Extra inventories (chests)
  * Chat commands
@@ -41,9 +42,9 @@ Installing
 There's currently no way to "install" Beta. The server's main method is in
 main.py, and you will need Construct (http://construct.wikispaces.com/) and
 NBT (http://github.com/twoolie/NBT) as well as the more standard Twisted
-library. Twisted is almost certainly available in your distribution, but
-Construct and NBT will need to be downloaded and installed separately. We
-recommend pip:
+library. Twisted is almost certainly available in your distribution. Construct
+is available in some distributions, as python-construct or pyconstruct. NBT
+will need to be downloaded and installed separately. We highly recommend pip:
 
 ::
 
