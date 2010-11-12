@@ -26,13 +26,14 @@ class Console(LineReceiver):
         self.transport.write(prompt)
 
     def lineReceived(self, line):
-        t = line.split(" ", 1)
+        t = line.strip().split(" ", 1)
         command = t[0].lower()
         parameters = t[1] if len(t) > 1 else ""
 
-        if command in self.commands:
-            self.commands[command].dispatch(parameters)
-        else:
-            self.sendLine("Unknown command: %s" % command)
+        if command:
+            if command in self.commands:
+                self.commands[command].dispatch(parameters)
+            else:
+                self.sendLine("Unknown command: %s" % command)
 
         self.transport.write(prompt)
