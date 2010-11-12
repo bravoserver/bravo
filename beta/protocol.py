@@ -266,6 +266,7 @@ class AlphaProtocol(Protocol):
 
         self.player.location.x = spawn[0]
         self.player.location.y = spawn[1]
+        self.player.location.stance = spawn[1]
         self.player.location.z = spawn[2]
 
         tag = self.factory.world.load_player(self.username)
@@ -279,7 +280,11 @@ class AlphaProtocol(Protocol):
         packet = self.player.armor.save_to_packet()
         self.transport.write(packet)
 
+        packet = self.player.location.save_to_packet()
+        self.transport.write(packet)
+
     def located(self):
+        print "Located!"
         self.send_initial_chunk_and_location()
 
         self.ping_loop = LoopingCall(self.update_ping)
