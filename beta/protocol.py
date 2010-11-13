@@ -112,24 +112,14 @@ class AlphaProtocol(Protocol):
         newblock = blocks[oldblock].replace
         chunk.set_block((smallx, container.y, smallz), newblock)
 
-        packet = make_packet("block", x=container.x, y=container.y, z=container.z,
-            type=newblock, meta=0)
+        packet = make_packet("block", x=container.x, y=container.y,
+            z=container.z, type=newblock, meta=0)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
         dropblock = blocks[oldblock].drop
 
         if dropblock != 0:
-            entity = self.factory.create_entity(container.x * 32 + 16,
-                container.y * 32, container.z * 32 + 16, dropblock)
-
-            packet = make_packet("spawn-pickup", entity=Container(id=entity.id),
-                item=dropblock, count=1, x=container.x * 32 + 16,
-                y=container.y * 32, z=container.z * 32 + 16, yaw=252,
-                pitch=25, roll=12)
-            self.transport.write(packet)
-
-            packet = make_packet("create", id=entity.id)
-            self.transport.write(packet)
+            self.factory.give(self, dropblock, 1)
 
     def build(self, container):
         # Ignore clients that think -1 is placeable.
@@ -225,7 +215,7 @@ class AlphaProtocol(Protocol):
         self.state = STATE_AUTHENTICATED
 
         self.player = Player()
-        self.factory.players.add(self)
+        self.factory.players[self.username] = self
 
         packet = make_packet("chat",
             message="%s is joining the game..." % self.username)
@@ -329,5 +319,5 @@ class AlphaProtocol(Protocol):
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
-        self.factory.players.discard(self)
-
+        if self.username in self.factory.players:
+            self.factory.players[self.username]
