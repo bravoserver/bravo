@@ -132,6 +132,10 @@ class AlphaProtocol(Protocol):
             self.transport.write(packet)
 
     def build(self, container):
+        # Ignore clients that think -1 is placeable.
+        if container.block == 65535:
+            return
+
         x = container.x
         y = container.y
         z = container.z
@@ -160,7 +164,8 @@ class AlphaProtocol(Protocol):
 
         chunk.set_block((smallx, y, smallz), container.block)
 
-        packet = make_packet("block", x=x, y=y, z=z, type=container.block, meta=0)
+        packet = make_packet("block", x=x, y=y, z=z, type=container.block,
+            meta=0)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
     def equip(self, container):
