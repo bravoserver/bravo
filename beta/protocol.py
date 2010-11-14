@@ -119,7 +119,9 @@ class AlphaProtocol(Protocol):
         dropblock = blocks[oldblock].drop
 
         if dropblock != 0:
-            self.factory.give(self, dropblock, 1)
+            coords = (container.x * 32 + 16, container.y * 32,
+                container.z * 32 + 16)
+            self.factory.give(coords, dropblock, 1)
 
     def build(self, container):
         # Ignore clients that think -1 is placeable.

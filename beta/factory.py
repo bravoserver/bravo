@@ -95,24 +95,20 @@ class AlphaFactory(Factory):
             if math.sqrt((entity.x - x)**2 + (entity.y - y)**2 +
                     (entity.z - z)**2) < radius]
 
-    def give(self, protocol, block, quantity):
+    def give(self, coords, block, quantity):
         """
-        Spawn a pickup in front of the player.
+        Spawn a pickup at the specified coordinates.
+
+        The coordinates need to be in pixels, not blocks.
         """
 
-        player = protocol.player
+        x, y, z = coords
 
-        x = player.location.x
-        y = player.location.y
-        z = player.location.z
+        entity = self.create_entity(x, y, z, block)
 
-        entity = self.create_entity(x * 32 + 16, y * 32, z * 32 + 16, block)
-
-        import pdb; pdb.set_trace()
         packet = make_packet("spawn-pickup", entity=Container(id=entity.id),
-            item=block, count=quantity, x=int(x * 32 + 16), y=int(y * 32),
-            z=int(z * 32 + 16), yaw=0, pitch=0, roll=0)
-        protocol.transport.write(packet)
+            item=block, count=quantity, x=x, y=y, z=z, yaw=0, pitch=0, roll=0)
+        self.broadcast(packet)
 
         packet = make_packet("create", id=entity.id)
-        protocol.transport.write(packet)
+        self.broadcast(packet)

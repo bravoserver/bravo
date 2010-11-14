@@ -1,3 +1,5 @@
+import math
+
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
@@ -69,7 +71,21 @@ class Give(object):
         block = parse_block(block)
         count = parse_int(count)
 
-        factory.give(player, block, count)
+        x = player.player.location.x
+        y = player.player.location.y
+        z = player.player.location.z
+        theta = player.player.location.theta
+
+        # Do some trig to put the pickup two blocks ahead of the player in the
+        # direction they are facing. Note that all three coordinates are
+        # "misnamed."
+        x += 2 * math.sin(theta * math.pi / 180)
+        y += 2
+        z += 2 * math.cos(theta * math.pi / 180)
+
+        coords = int(x * 32), int(y * 32), int(z * 32)
+
+        factory.give(coords, block, count)
 
     name = "give"
 
