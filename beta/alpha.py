@@ -3,6 +3,7 @@ from nbt.nbt import TAG_Compound, TAG_List
 from nbt.nbt import TAG_Short, TAG_Byte
 
 from beta.packets import make_packet
+from beta.utilities import degs_to_rads, rads_to_degs
 
 class Inventory(object):
 
@@ -94,7 +95,9 @@ class Location(object):
             # or the anti-flying code kicks the client.
             self.stance = container.position.stance
         if hasattr(container, "look"):
-            self.theta = container.look.rotation
+            # Theta is stored in radians for sanity, but the wire format uses
+            # degrees and does not modulo itself to the unit circle. Classy.
+            self.theta = degs_to_rads(container.look.rotation)
             self.pitch = container.look.pitch
         if hasattr(container, "flying"):
             self.midair = bool(container.flying)
@@ -105,7 +108,7 @@ class Location(object):
         """
 
         position = Container(x=self.x, y=self.y, z=self.z, stance=self.stance)
-        look = Container(rotation=self.theta, pitch=self.pitch)
+        look = Container(rotation=rads_to_degs(self.theta), pitch=self.pitch)
         flying = Container(flying=self.midair)
 
         packet = make_packet("location", position=position, look=look, flying=flying)
