@@ -78,9 +78,10 @@ class Give(object):
 
         # Do some trig to put the pickup two blocks ahead of the player in the
         # direction they are facing. Note that all three coordinates are
-        # "misnamed."
-        x += 2 * math.sin(theta)
-        y += 2
+        # "misnamed;" the unit circle actually starts at (0, 1) and goes
+        # *backwards* towards (-1, 0).
+        x -= 2 * math.sin(theta)
+        y += 1
         z += 2 * math.cos(theta)
 
         coords = int(x * 32), int(y * 32), int(z * 32)
