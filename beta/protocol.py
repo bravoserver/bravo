@@ -56,7 +56,7 @@ class AlphaProtocol(Protocol):
 
         print "--- %s" % message
 
-        packet = make_packet(3, message=message)
+        packet = make_packet("chat", message=message)
 
         self.factory.broadcast(packet)
 
@@ -88,10 +88,10 @@ class AlphaProtocol(Protocol):
         for entity in self.factory.entities_near(pos[0] * 32,
             self.player.location.y * 32, pos[2] * 32, 64):
 
-            packet = make_packet(17, type=entity.entity_type, quantity=1, wear=0)
+            packet = make_packet("pickup", type=entity.entity_type, quantity=1, wear=0)
             self.transport.write(packet)
 
-            packet = make_packet(29, id=entity.id)
+            packet = make_packet("destroy", id=entity.id)
             self.transport.write(packet)
 
             self.factory.destroy_entity(entity)
@@ -112,26 +112,22 @@ class AlphaProtocol(Protocol):
         newblock = blocks[oldblock].replace
         chunk.set_block((smallx, container.y, smallz), newblock)
 
-        packet = make_packet(53, x=container.x, y=container.y, z=container.z,
-            type=newblock, meta=0)
+        packet = make_packet("block", x=container.x, y=container.y,
+            z=container.z, type=newblock, meta=0)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
         dropblock = blocks[oldblock].drop
 
         if dropblock != 0:
-            entity = self.factory.create_entity(container.x * 32 + 16,
-                container.y * 32, container.z * 32 + 16, dropblock)
-
-            packet = make_packet(21, entity=Container(id=entity.id),
-                item=dropblock, count=1, x=container.x * 32 + 16,
-                y=container.y * 32, z=container.z * 32 + 16, yaw=252,
-                pitch=25, roll=12)
-            self.transport.write(packet)
-
-            packet = make_packet(30, id=entity.id)
-            self.transport.write(packet)
+            coords = (container.x * 32 + 16, container.y * 32,
+                container.z * 32 + 16)
+            self.factory.give(coords, dropblock, 1)
 
     def build(self, container):
+        # Ignore clients that think -1 is placeable.
+        if container.block == 65535:
+            return
+
         x = container.x
         y = container.y
         z = container.z
@@ -160,7 +156,8 @@ class AlphaProtocol(Protocol):
 
         chunk.set_block((smallx, y, smallz), container.block)
 
-        packet = make_packet(53, x=x, y=y, z=z, type=container.block, meta=0)
+        packet = make_packet("block", x=x, y=y, z=z, type=container.block,
+            meta=0)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
     def equip(self, container):
@@ -178,7 +175,7 @@ class AlphaProtocol(Protocol):
         del self.chunk_lfu[x, z]
         del self.chunks[x, z]
 
-        packet = make_packet(50, x=x, z=z, enabled=0)
+        packet = make_packet("prechunk", x=x, z=z, enabled=0)
         self.transport.write(packet)
 
     def enable_chunk(self, x, z):
@@ -189,7 +186,7 @@ class AlphaProtocol(Protocol):
 
         chunk = self.factory.world.load_chunk(x, z)
 
-        packet = make_packet(50, x=x, z=z, enabled=1)
+        packet = make_packet("prechunk", x=x, z=z, enabled=1)
         self.transport.write(packet)
 
         packet = chunk.save_to_packet()
@@ -220,14 +217,14 @@ class AlphaProtocol(Protocol):
         self.state = STATE_AUTHENTICATED
 
         self.player = Player()
-        self.factory.players.add(self)
+        self.factory.players[self.username] = self
 
-        packet = make_packet(3,
+        packet = make_packet("chat",
             message="%s is joining the game..." % self.username)
         self.factory.broadcast(packet)
 
         spawn = self.factory.world.spawn
-        packet = make_packet(6, x=spawn[0], y=spawn[1], z=spawn[2])
+        packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
         self.transport.write(packet)
 
         self.player.location.x = spawn[0]
@@ -312,11 +309,11 @@ class AlphaProtocol(Protocol):
                     self.disable_chunk(*victim)
 
     def update_ping(self):
-        packet = make_packet(0)
+        packet = make_packet("ping")
         self.transport.write(packet)
 
     def update_time(self):
-        packet = make_packet(4, timestamp=self.factory.time)
+        packet = make_packet("time", timestamp=self.factory.time)
         self.transport.write(packet)
 
     def error(self, message):
@@ -324,5 +321,5 @@ class AlphaProtocol(Protocol):
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
-        self.factory.players.discard(self)
-
+        if self.username in self.factory.players:
+            self.factory.players[self.username]

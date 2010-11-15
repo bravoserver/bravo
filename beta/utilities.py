@@ -1,3 +1,5 @@
+import math
+
 # Coord handling.
 
 def split_coords(x, z):
@@ -29,3 +31,12 @@ def unpack_nibbles(l):
 def pack_nibbles(l):
     it = iter(l)
     return [chr(i << 4 | j) for i, j in zip(it, it)]
+
+# Trig.
+
+def degs_to_rads(degrees):
+    degrees %= 360
+    return degrees * math.pi / 180
+
+def rads_to_degs(radians):
+    return radians * 180 / math.pi
