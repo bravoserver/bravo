@@ -144,6 +144,7 @@ drops[64] = 324 # Wooden Door       -> Wooden Door Item
 drops[68] = 323 # Wall Sign         -> Sign Item
 drops[71] = 330 # Iron Door         -> Iron Door Item
 drops[83] = 338 # Reed              -> Reed Item
+drops[89] = 348 # Lightstone        -> Lightstone Dust
 
 replaces = {}
 
