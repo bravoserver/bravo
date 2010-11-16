@@ -65,7 +65,11 @@ class Give(object):
     implements(IPlugin, ICommand)
 
     def dispatch(self, factory, parameters):
-        name, block, count = parameters.split(" ", 2)
+        try:
+            name, block, count = parameters.split(" ", 2)
+        except ValueError:
+            name, block = parameters.split(" ", 1)
+            count = 1
 
         player = parse_player(factory, name)
         block = parse_block(block)
