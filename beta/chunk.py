@@ -1,3 +1,4 @@
+from itertools import product
 import StringIO
 
 from nbt.nbt import TAG_Compound
@@ -66,7 +67,11 @@ class Chunk(object):
         self.tileentities = []
 
     def regenerate_heightmap(self):
-        pass
+        for x, z in product(xrange(16), xrange(16)):
+            for y in range(127, -1, -1):
+                if self.get_block((x, y, z)):
+                    break
+            self.heightmap[x * 16 + z] = y
 
     def regenerate_lightmap(self):
         pass
