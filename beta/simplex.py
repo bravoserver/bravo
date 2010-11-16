@@ -1,3 +1,5 @@
+from __future__ import division
+
 import math
 import random
 
@@ -25,6 +27,14 @@ def dot(u, v):
     return sum(i * j for i, j in zip(u, v))
 
 def simplex(x, y):
+    """
+    Generate simplex noise at the given coordinates.
+
+    This particular implementation has very high chaotic features at normal
+    resolution; zooming in by a factor of 16x to 256x is going to yield more
+    pleasing results for most applications.
+    """
+
     f = 0.5 * (math.sqrt(3) - 1)
     g = (3 - math.sqrt(3)) / 6
     coords = [None] * 3
@@ -42,8 +52,8 @@ def simplex(x, y):
         coords[1] = coords[0][0] + g, coords[0][1] - 1 + g
     coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g
 
-    iwrapped = i & (len(p) / 2 - 1)
-    jwrapped = j & (len(p) / 2 - 1)
+    iwrapped = i & (len(p) // 2 - 1)
+    jwrapped = j & (len(p) // 2 - 1)
     gradients[0] = p[iwrapped + p[jwrapped]] % 12
     if coords[0][0] > coords[0][1]:
         gradients[1] = p[iwrapped + 1 + p[jwrapped]] % 12
@@ -61,4 +71,16 @@ def simplex(x, y):
     # Where's this scaling factor come from?
     return n * 70
 
-octaves = simplex
+def octaves(x, y, count):
+    """
+    Generate `count` octaves of summed simplex noise at the given coordinates.
+    """
+
+    initial = len(p) // 2**count
+    sigma = 0
+    while count:
+        sigma += simplex(x / initial, y / initial)
+        sigma *= 0.5
+        initial //= 2
+        count -= 1
+    return sigma

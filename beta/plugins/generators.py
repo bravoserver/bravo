@@ -40,7 +40,7 @@ class SimplexGenerator(object):
         """
 
         for x, z in itertools.product(xrange(16), xrange(16)):
-            height = octaves(x + chunk.x, z + chunk.z)
+            height = octaves(x + chunk.x, z + chunk.z, 3)
             # Normalize to within [40, 100]
             height *= 30
             height += 70
