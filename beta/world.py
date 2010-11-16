@@ -47,8 +47,22 @@ class World(object):
             self.generate_level()
 
     def populate_chunk(self, chunk):
+        """
+        Recreate data for a chunk.
+
+        This method does arbitrary terrain generation depending on the current
+        plugins, and then regenerates the chunk metadata so that the chunk can
+        be sent to clients.
+
+        A lot of maths may be done by this method, so do not call it unless
+        absolutely necessary, e.g. when the chunk is created for the first
+        time.
+        """
+
         for stage in self.pipeline:
             stage.populate(chunk, self.seed)
+
+        chunk.regenerate()
 
     def generate_level(self):
         self.spawn = (0, 0, 0)
