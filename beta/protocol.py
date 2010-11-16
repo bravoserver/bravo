@@ -4,8 +4,6 @@ import itertools
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import coiterate, LoopingCall
 
-from construct import Container
-
 from beta.alpha import Player
 from beta.blocks import blocks
 from beta.packets import parse_packets, make_packet, make_error_packet
