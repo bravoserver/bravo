@@ -2,6 +2,7 @@ import math
 
 from twisted.plugin import IPlugin
 from zope.interface import implements
+from twisted.internet import reactor
 
 import beta.blocks
 from beta.ibeta import ICommand
@@ -96,7 +97,23 @@ class Give(object):
 
     name = "give"
 
+class Quit(object):
+    implements(IPlugin, ICommand)
+
+    def dispatch(self, factory, parameters):
+        # Do save stuff here
+
+        # Then lets shutdown!
+        print "Server shutting down."
+        message = "[Server] Server shutting down."
+        packet = make_packet("chat", message=message)
+        factory.broadcast(packet)
+        reactor.stop()
+
+    name = "quit"
+
 help = Help()
 list = List()
 say  = Say()
 give = Give()
+quit = Quit()
