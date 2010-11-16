@@ -17,7 +17,7 @@ from beta.world import World
     STATE_LOCATED) = range(4)
 
 authenticator_name = "offline"
-generator_names = "boring,erosion,grass,safety".split(",")
+generator_names = "simplex,erosion,grass,safety".split(",")
 
 class AlphaFactory(Factory):
 

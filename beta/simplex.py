@@ -1,4 +1,3 @@
-import itertools
 import math
 import random
 
@@ -61,3 +60,5 @@ def simplex(x, y):
 
     # Where's this scaling factor come from?
     return n * 70
+
+octaves = simplex

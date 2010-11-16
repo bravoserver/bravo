@@ -5,6 +5,7 @@ from zope.interface import implements
 
 from beta.blocks import blocks
 from beta.ibeta import ITerrainGenerator
+from beta.simplex import octaves
 
 class BoringGenerator(object):
     """
@@ -22,6 +23,31 @@ class BoringGenerator(object):
             chunk.set_block((x, y, z), blocks["stone"].slot)
 
     name = "boring"
+
+class SimplexGenerator(object):
+    """
+    Generates waves of stone.
+
+    This class uses a simplex noise generator to procedurally generate
+    organic-looking, continuously smooth terrain.
+    """
+
+    implements(IPlugin, ITerrainGenerator)
+
+    def populate(self, chunk, seed):
+        """
+        Make smooth waves of stone.
+        """
+
+        for x, z in itertools.product(xrange(16), xrange(16)):
+            height = octaves(x + chunk.x, z + chunk.z)
+            # Normalize to within [40, 100]
+            height *= 30
+            height += 70
+            for y in xrange(int(height)):
+                chunk.set_block((x, y, z), blocks["stone"].slot)
+
+    name = "simplex"
 
 class ErosionGenerator(object):
     """
@@ -86,6 +112,7 @@ class SafetyGenerator(object):
     name = "safety"
 
 boring = BoringGenerator()
+simplex = SimplexGenerator()
 erosion = ErosionGenerator()
 grass = GrassGenerator()
 safety = SafetyGenerator()
