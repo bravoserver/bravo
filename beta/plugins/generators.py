@@ -5,7 +5,7 @@ from zope.interface import implements
 
 from beta.blocks import blocks
 from beta.ibeta import ITerrainGenerator
-from beta.simplex import octaves
+from beta.simplex import octaves, reseed
 
 class BoringGenerator(object):
     """
@@ -38,6 +38,8 @@ class SimplexGenerator(object):
         """
         Make smooth waves of stone.
         """
+
+        reseed(seed)
 
         for x, z in itertools.product(xrange(16), xrange(16)):
             height = octaves(x + chunk.x, z + chunk.z, 3)

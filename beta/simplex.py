@@ -3,11 +3,6 @@ from __future__ import division
 import math
 import random
 
-# Must be a power of two
-p = range(256)
-random.shuffle(p)
-p = p * 2
-
 edges = [
     (1, 1, 0),
     (1, -1, 0),
@@ -24,7 +19,29 @@ edges = [
 ]
 
 def dot(u, v):
+    """
+    Dot product of two vectors.
+    """
+
     return sum(i * j for i, j in zip(u, v))
+
+def reseed(seed):
+    """
+    Reseed the simplex gradient field.
+    """
+
+    global p, current_seed
+
+    if current_seed == seed:
+        return
+
+    p = range(256)
+    random.seed(seed)
+    random.shuffle(p)
+    p *= 2
+
+p = []
+current_seed = None
 
 def simplex(x, y):
     """
