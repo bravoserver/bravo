@@ -52,12 +52,11 @@ class AlphaProtocol(Protocol):
         pass
 
     def chat(self, container):
-        message = container.message
+        message = "<%s> %s" % (self.username, container.message)
 
-        print "--- %s" % message
+        print message
 
         packet = make_packet("chat", message=message)
-
         self.factory.broadcast(packet)
 
     def inventory(self, container):
