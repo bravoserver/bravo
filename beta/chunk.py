@@ -65,6 +65,28 @@ class Chunk(object):
 
         self.tileentities = []
 
+    def regenerate_heightmap(self):
+        pass
+
+    def regenerate_lightmap(self):
+        pass
+
+    def regenerate_metadata(self):
+        pass
+
+    def regenerate_skylight(self):
+        pass
+
+    def regenerate(self):
+        """
+        Regenerate all extraneous tables.
+        """
+
+        self.regenerate_heightmap()
+        self.regenerate_lightmap()
+        self.regenerate_metadata()
+        self.regenerate_skylight()
+
     def load_from_tag(self, tag):
         level = tag["Level"]
         self.blocks = [ord(i) for i in level["Blocks"].value]
