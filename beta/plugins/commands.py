@@ -34,7 +34,9 @@ class Say(object):
     implements(IPlugin, ICommand)
 
     def dispatch(self, factory, parameters):
-        packet = make_packet("chat", message=parameters)
+        message = "[Server] %s" % parameters
+        print message
+        packet = make_packet("chat", message=message)
         factory.broadcast(packet)
 
     name = "say"
