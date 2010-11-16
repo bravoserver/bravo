@@ -32,7 +32,10 @@ class Console(LineReceiver):
 
         if command:
             if command in self.commands:
-                self.commands[command].dispatch(self.factory, parameters)
+                try:
+                    self.commands[command].dispatch(self.factory, parameters)
+                except Exception, e:
+                    self.transport.write("Error: %s\n" % e)
             else:
                 self.sendLine("Unknown command: %s" % command)
 
