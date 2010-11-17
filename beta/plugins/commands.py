@@ -105,8 +105,8 @@ class Quit(object):
 
         # Then lets shutdown!
         print "Server shutting down."
-        message = "[Server] Server shutting down."
-        packet = make_packet("chat", message=message)
+        message = "Server shutting down."
+        packet = make_packet("error", message=message)
         factory.broadcast(packet)
         reactor.stop()
 
