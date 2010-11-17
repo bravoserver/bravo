@@ -2,18 +2,28 @@ from twisted.plugin import getPlugins
 
 import beta.plugins
 
-def retrieve_plugins(interface):
+class PluginException(Exception):
+    pass
+
+def retrieve_plugins(interface, cached=True, cache={}):
     """
     Return a dict of plugins, keyed by name.
 
-    Raises an Exception if no plugins could be found.
+    If `cached` is True, do not attempt to reload plugins from disk.
+
+    Raises a `PluginException` if no plugins could be found.
     """
+
+    if cached and interface in cache:
+        return cache[interface]
 
     print "Discovering %s..." % interface
     d = {}
     for p in getPlugins(interface, beta.plugins):
         print " ~ Plugin: %s" % p.name
         d[p.name] = p
+
+    cache[interface] = d
     return d
 
 def retrieve_named_plugins(interface, names):
