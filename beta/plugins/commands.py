@@ -101,13 +101,16 @@ class Quit(object):
     implements(IPlugin, ICommand)
 
     def dispatch(self, factory, parameters):
-        # Do save stuff here
+        # XXX Do save stuff here
 
-        # Then lets shutdown!
-        print "Server shutting down."
+        # Then let's shutdown!
         message = "Server shutting down."
+        print message
+
+        # Use an error packet to kick clients cleanly.
         packet = make_packet("error", message=message)
         factory.broadcast(packet)
+
         reactor.stop()
 
     name = "quit"
