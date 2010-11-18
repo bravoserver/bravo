@@ -4,6 +4,8 @@ import StringIO
 from nbt.nbt import TAG_Compound
 from nbt.nbt import TAG_Int
 
+from twisted.python.finalize import register as register_finalizers
+
 from beta.alpha import Inventory
 from beta.packets import make_packet
 from beta.utilities import triplet_to_index, pack_nibbles, unpack_nibbles
@@ -65,6 +67,8 @@ class Chunk(object):
         self.skylight = [0] * 16 * 128 * 16
 
         self.tileentities = []
+
+        register_finalizers(self)
 
     def regenerate_heightmap(self):
         for x, z in product(xrange(16), xrange(16)):
@@ -146,3 +150,10 @@ class Chunk(object):
         """
 
         return self.heightmap[x * 16 + z]
+
+    def __finalizers__(self):
+        """
+        Return a list of callables which should be called at __del__ time.
+        """
+
+        return []
