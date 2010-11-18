@@ -25,6 +25,8 @@ class AlphaProtocol(Protocol):
     parser = None
     handler = None
 
+    chunk_generators = None
+
     def __init__(self):
         print "Client connected!"
 
@@ -273,19 +275,31 @@ class AlphaProtocol(Protocol):
         discarded = old - new
 
         # Perhaps some explanation is in order.
+        # The generator expressions are stored in the protocol instance. If we
+        # need to cancel them, we can call their close() method, which causes
+        # them to become inert. This is incredibly important because we want
+        # to cancel all previously pending chunk changes when a new set of
+        # chunk changes is requested.
         # The coiterate() function iterates over the iterable it is fed,
         # without tying up the reactor, by yielding after each iteration. The
         # inner part of the generator expression generates all of the chunks
         # around the currently needed chunk, and it sorts them by distance to
         # the current chunk. The end result is that we load chunks one-by-one,
         # nearest to furthest, without stalling other clients.
-        d = coiterate(
-            self.enable_chunk(i, j) for i, j in
-            sorted(added, key=lambda t: (t[0] - x)**2 + (t[1] - z)**2)
-        )
+        if self.chunk_generators:
+            for generator in self.chunk_generators:
+                generator.close()
 
-        # Throw away old chunks. Sorting not required.
-        d = coiterate(self.disable_chunk(i, j) for i, j in discarded)
+        self.chunk_generators = [
+            (
+                self.enable_chunk(i, j) for i, j in
+                sorted(added, key=lambda t: (t[0] - x)**2 + (t[1] - z)**2)
+            ),
+            (self.disable_chunk(i, j) for i, j in discarded)
+        ]
+
+        for generator in self.chunk_generators:
+            coiterate(generator)
 
     def update_ping(self):
         packet = make_packet("ping")
