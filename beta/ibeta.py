@@ -1,6 +1,11 @@
 from zope.interface import Interface, Attribute
 
 class IAuthenticator(Interface):
+    """
+    Interface for authenticators.
+
+    Authenticators participate in a two-step login process with a handshake.
+    """
 
     def handshake(self, protocol, container):
         """
@@ -17,6 +22,9 @@ class IAuthenticator(Interface):
         """)
 
 class ITerrainGenerator(Interface):
+    """
+    Interface for terrain generators.
+    """
 
     def populate(self, chunk, seed):
         """
@@ -31,6 +39,12 @@ class ITerrainGenerator(Interface):
         """)
 
 class ICommand(Interface):
+    """
+    Interface for commands.
+
+    Commands may be called from the console or from chat, so they must be
+    fairly stateless.
+    """
 
     def dispatch(self, factory, parameters):
         """
