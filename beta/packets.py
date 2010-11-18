@@ -5,7 +5,7 @@ from construct import MetaArray, If, Switch
 from construct import OptionalGreedyRepeater
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
-from construct import SBInt16, SBInt32
+from construct import SBInt8, SBInt16, SBInt32
 from construct import BFloat32, BFloat64
 
 # Our tricky Java string decoder.
@@ -98,7 +98,7 @@ packets = {
     15: Struct("build",
         UBInt16("block"),
         SBInt32("x"),
-        UBInt8("y"),
+        SBInt8("y"),
         SBInt32("z"),
         UBInt8("face"),
     ),
