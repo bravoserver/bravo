@@ -28,12 +28,23 @@ Planned Features
 
  * Seasons
  * More plugins for chat
- * More lugins for admin
+ * More plugins for admin
  * More terrain generators
  * Extra inventories (chests)
  * Chat commands
  * Metadata (redstone/minecarts)
- * hey0 features
+ * hey0/llama features
+
+   * MOTD and /motd
+   * Adjustable /home
+   * Ban lists
+   * /lighter
+   * Item spawn mods
+   * Named /tp
+   * /getpos
+   * /compass
+   * /time
+
  * And whatever else we can think of!
 
 Installing
