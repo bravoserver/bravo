@@ -37,7 +37,7 @@ class World(object):
 
     def __init__(self, folder):
         self.folder = folder
-        self.chunks = weakref.WeakValueDictionary()
+        self.chunk_cache = weakref.WeakValueDictionary()
 
         try:
             self.level = NBTFile(os.path.join(self.folder, "level.dat"))
@@ -76,11 +76,11 @@ class World(object):
         self.seed = self.level["Data"]["RandomSeed"].value
 
     def load_chunk(self, x, z):
-        if (x, z) in self.chunks:
-            return self.chunks[x, z]
+        if (x, z) in self.chunk_cache:
+            return self.chunk_cache[x, z]
 
         chunk = Chunk(x, z)
-        self.chunks[x, z] = chunk
+        self.chunk_cache[x, z] = chunk
 
         filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
             "c.%s.%s.dat" % (base36(x), base36(z)))
