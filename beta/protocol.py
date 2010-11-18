@@ -1,5 +1,5 @@
 import collections
-import itertools
+from itertools import product
 
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import coiterate, LoopingCall
@@ -29,7 +29,6 @@ class AlphaProtocol(Protocol):
         print "Client connected!"
 
         self.chunks = dict()
-        self.chunk_lfu = collections.defaultdict(int)
 
         self.handlers = collections.defaultdict(lambda: self.unhandled)
         self.handlers.update({
@@ -169,15 +168,12 @@ class AlphaProtocol(Protocol):
         print container
 
     def disable_chunk(self, x, z):
-        del self.chunk_lfu[x, z]
         del self.chunks[x, z]
 
         packet = make_packet("prechunk", x=x, z=z, enabled=0)
         self.transport.write(packet)
 
     def enable_chunk(self, x, z):
-        self.chunk_lfu[x, z] += 1
-
         if (x, z) in self.chunks:
             return
 
@@ -271,39 +267,25 @@ class AlphaProtocol(Protocol):
         x, chaff, z, chaff = split_coords(self.player.location.x,
             self.player.location.z)
 
+        new = set(product(xrange(x - 10, x + 10), xrange(z - 10, z + 10)))
+        old = set(self.chunks.iterkeys())
+        added = new - old
+        discarded = old - new
+
         # Perhaps some explanation is in order.
         # The coiterate() function iterates over the iterable it is fed,
         # without tying up the reactor, by yielding after each iteration. The
         # inner part of the generator expression generates all of the chunks
         # around the currently needed chunk, and it sorts them by distance to
         # the current chunk. The end result is that we load chunks one-by-one,
-        # nearest to furthest, without stalling other clients. After this is
-        # all done, we want to prune any unused chunks.
-        d = coiterate(self.enable_chunk(i, j)
-            for i, j in
-            sorted(itertools.product(
-                    xrange(x - 10, x + 10),
-                    xrange(z - 10, z + 10)
-                ),
-                key=lambda t: (t[0] - x)**2 + (t[1] - z)**2
-            )
+        # nearest to furthest, without stalling other clients.
+        d = coiterate(
+            self.enable_chunk(i, j) for i, j in
+            sorted(added, key=lambda t: (t[0] - x)**2 + (t[1] - z)**2)
         )
 
-        d.addCallback(lambda chaff: self.prune_chunks())
-
-    def prune_chunks(self):
-        if len(self.chunks) > 600:
-            print "Pruning chunks..."
-            x, chaff, z, chaff = split_coords(self.player.location.x,
-                self.player.location.z)
-            victims = sorted(self.chunks.iterkeys(),
-                key=lambda i: self.chunk_lfu[i])
-            for victim in victims:
-                if len(self.chunks) < 600:
-                    break
-                if (x - 10 < victim[0] < x + 10
-                    and z - 10 < victim[1] < z + 10):
-                    self.disable_chunk(*victim)
+        # Throw away old chunks. Sorting not required.
+        d = coiterate(self.disable_chunk(i, j) for i, j in discarded)
 
     def update_ping(self):
         packet = make_packet("ping")
