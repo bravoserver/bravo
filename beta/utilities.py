@@ -14,9 +14,18 @@ def split_coords(x, z):
     return first, second, third, fourth
 
 def triplet_to_index(coords):
+    """
+    Given an x, y, z triplet, return the index into a 16x128x16 chunk.
+    """
+
     x, y, z = coords
 
-    return (x * 16 + z) * 128 + y
+    retval = (x * 16 + z) * 128 + y
+
+    if not 0 <= retval < 16*128*16:
+        raise Exception("%d, %d, %d causes OOB index %d" % (x, y, z, retval))
+
+    return retval
 
 # Bit twiddling.
 
