@@ -51,6 +51,10 @@ class AlphaProtocol(Protocol):
         pass
 
     def chat(self, container):
+        if container.message.startswith("/"):
+            self.factory.run_command(container.message[1:])
+            return
+
         message = "<%s> %s" % (self.username, container.message)
 
         print message

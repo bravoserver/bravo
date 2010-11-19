@@ -13,6 +13,9 @@ from beta.protocol import AlphaProtocol
 from beta.stdio import Console
 from beta.world import World
 
+from beta.ibeta import ICommand
+from beta.plugin import retrieve_plugins
+
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
 
@@ -112,3 +115,26 @@ class AlphaFactory(Factory):
 
         packet = make_packet("create", id=entity.id)
         self.broadcast(packet)
+
+    def run_command(self, s):
+        """
+        Given a command string from the console or chat, execute it.
+        """
+
+        commands = retrieve_plugins(ICommand)
+
+        t = s.strip().split(" ", 1)
+        command = t[0].lower()
+        parameters = t[1] if len(t) > 1 else ""
+
+        if command and command in commands:
+            try:
+                retval = commands[command].dispatch(self, parameters)
+                if retval is None:
+                    return "Command succeeded."
+                else:
+                    return retval
+            except Exception, e:
+                return "Error: %s" % e
+        else:
+            return "Unknown command: %s"

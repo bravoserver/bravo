@@ -26,17 +26,5 @@ class Console(LineReceiver):
         self.transport.write(prompt)
 
     def lineReceived(self, line):
-        t = line.strip().split(" ", 1)
-        command = t[0].lower()
-        parameters = t[1] if len(t) > 1 else ""
-
-        if command:
-            if command in self.commands:
-                try:
-                    self.commands[command].dispatch(self.factory, parameters)
-                except Exception, e:
-                    self.transport.write("Error: %s\n" % e)
-            else:
-                self.sendLine("Unknown command: %s" % command)
-
+        self.sendLine(self.factory.run_command(line))
         self.transport.write(prompt)
