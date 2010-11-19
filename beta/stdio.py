@@ -26,5 +26,8 @@ class Console(LineReceiver):
         self.transport.write(prompt)
 
     def lineReceived(self, line):
-        self.sendLine(self.factory.run_command(line))
+        if line != "":
+            for l in self.factory.run_command(line):
+                self.sendLine(l)
+
         self.transport.write(prompt)

@@ -16,7 +16,7 @@ class Help(object):
     def dispatch(self, factory, parameters):
         plugins = retrieve_plugins(ICommand)
         for name, plugin in plugins.iteritems():
-            print "%s" % plugin.name
+            yield "%s" % plugin.name
 
     name = "help"
 
@@ -26,7 +26,7 @@ class List(object):
 
     def dispatch(self, factory, parameters):
         for player in factory.players:
-            print "%s" % player
+            yield "%s" % player
 
     name = "list"
 
@@ -36,7 +36,7 @@ class Say(object):
 
     def dispatch(self, factory, parameters):
         message = "[Server] %s" % parameters
-        print message
+        yield message
         packet = make_packet("chat", message=message)
         factory.broadcast(packet)
 
@@ -95,6 +95,9 @@ class Give(object):
 
         factory.give(coords, block, count)
 
+        # Return an empty tuple for iteration
+        return tuple()
+
     name = "give"
 
 class Quit(object):
@@ -105,7 +108,7 @@ class Quit(object):
 
         # Then let's shutdown!
         message = "Server shutting down."
-        print message
+        yield message
 
         # Use an error packet to kick clients cleanly.
         packet = make_packet("error", message=message)

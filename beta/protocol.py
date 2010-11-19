@@ -52,15 +52,16 @@ class AlphaProtocol(Protocol):
 
     def chat(self, container):
         if container.message.startswith("/"):
-            self.factory.run_command(container.message[1:])
-            return
+            coiterate(
+                self.transport.write(make_packet("chat", message=line))
+                for line in self.factory.run_command(container.message[1:])
+            )
+        else:
+            message = "<%s> %s" % (self.username, container.message)
+            print message
 
-        message = "<%s> %s" % (self.username, container.message)
-
-        print message
-
-        packet = make_packet("chat", message=message)
-        self.factory.broadcast(packet)
+            packet = make_packet("chat", message=message)
+            self.factory.broadcast(packet)
 
     def inventory(self, container):
         if container.unknown1 == -1:

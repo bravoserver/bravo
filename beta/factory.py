@@ -129,12 +129,9 @@ class AlphaFactory(Factory):
 
         if command and command in commands:
             try:
-                retval = commands[command].dispatch(self, parameters)
-                if retval is None:
-                    return "Command succeeded."
-                else:
-                    return retval
+                for line in commands[command].dispatch(self, parameters):
+                    yield line
             except Exception, e:
-                return "Error: %s" % e
+                yield "Error: %s" % e
         else:
-            return "Unknown command: %s"
+            yield "Unknown command: %s"
