@@ -59,6 +59,24 @@ class SimplexGenerator(object):
 
     name = "simplex"
 
+class WaterTableGenerator(object):
+    """
+    Create a water table.
+    """
+
+    implements(IPlugin, ITerrainGenerator)
+
+    def populate(self, chunk, seed):
+        """
+        Generate a flat water table halfway up the map.
+        """
+
+        for x, y, z in product(xrange(16), xrange(64), xrange(16)):
+            if chunk.get_block((x, y, z)) == blocks["air"].slot:
+                chunk.set_block((x, y, z), blocks["spring"].slot)
+
+    name = "watertable"
+
 class ErosionGenerator(object):
     """
     Erodes stone surfaces into dirt.
@@ -123,6 +141,7 @@ class SafetyGenerator(object):
 
 boring = BoringGenerator()
 simplex = SimplexGenerator()
+watertable = WaterTableGenerator()
 erosion = ErosionGenerator()
 grass = GrassGenerator()
 safety = SafetyGenerator()
