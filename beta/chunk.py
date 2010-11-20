@@ -78,7 +78,9 @@ class Chunk(object):
             self.heightmap[x * 16 + z] = y
 
     def regenerate_lightmap(self):
-        pass
+        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
+            index = triplet_to_index((x, y, z))
+            self.lightmap[index] = 0xf if self.blocks[index] else 0x0
 
     def regenerate_metadata(self):
         pass
