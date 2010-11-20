@@ -135,6 +135,11 @@ class AlphaProtocol(Protocol):
         y = container.y
         z = container.z
 
+        # Special case when face is -1: Update the status of the currently
+        # held block rather than placing a new block.
+        if container.face == -1:
+            return
+
         # Offset coords according to face.
         if container.face == 0:
             y -= 1
