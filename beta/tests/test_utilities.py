@@ -14,3 +14,15 @@ class TestCoordHandling(unittest.TestCase):
         }
         for x, z in cases:
             self.assertEqual(beta.utilities.split_coords(x, z), cases[x, z])
+
+    def test_triplet_to_index(self):
+        self.assertEqual(0, beta.utilities.triplet_to_index((0, 0, 0)))
+
+        cases = [
+            (17, 0, 0),
+            (-1, 255, -1),
+            (15, 255, 15),
+        ]
+        for triplet in cases:
+            self.assertRaises(Exception, beta.utilities.triplet_to_index,
+                triplet)
