@@ -134,4 +134,4 @@ class AlphaFactory(Factory):
             except Exception, e:
                 yield "Error: %s" % e
         else:
-            yield "Unknown command: %s"
+            yield "Unknown command: %s" % command
