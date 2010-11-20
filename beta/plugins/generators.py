@@ -1,6 +1,6 @@
 from __future__ import division
 
-import itertools
+from itertools import product
 
 from twisted.plugin import IPlugin
 from zope.interface import implements
@@ -21,7 +21,7 @@ class BoringGenerator(object):
         Fill the bottom half of the chunk with stone.
         """
 
-        for x, y, z in itertools.product(xrange(16), xrange(64), xrange(16)):
+        for x, y, z in product(xrange(16), xrange(64), xrange(16)):
             chunk.set_block((x, y, z), blocks["stone"].slot)
 
     name = "boring"
@@ -43,7 +43,7 @@ class SimplexGenerator(object):
 
         reseed(seed)
 
-        for x, z in itertools.product(xrange(16), xrange(16)):
+        for x, z in product(xrange(16), xrange(16)):
             height = octaves(chunk.x + x / 16, chunk.z + z / 16, 4)
             # Normalize to within [50, 90]
             height *= 20
@@ -65,7 +65,7 @@ class ErosionGenerator(object):
         Turn the top few layers of stone into dirt.
         """
 
-        for x, z in itertools.product(xrange(16), xrange(16)):
+        for x, z in product(xrange(16), xrange(16)):
             for i in xrange(127, 1, -1):
                 if chunk.get_block((x, i - 1, z)) == blocks["stone"].slot:
                     for y in xrange(max(i - 4, 0), i):
@@ -86,7 +86,7 @@ class GrassGenerator(object):
         Find the top dirt block in each y-level and turn it into grass.
         """
 
-        for x, z in itertools.product(xrange(16), xrange(16)):
+        for x, z in product(xrange(16), xrange(16)):
             for i in xrange(126, 0, -1):
                 if (chunk.get_block((x, i + 1, z)) == blocks["air"].slot
                     and chunk.get_block((x, i, z)) == blocks["dirt"].slot):
@@ -108,7 +108,7 @@ class SafetyGenerator(object):
         top two layers to avoid players getting stuck at the top.
         """
 
-        for x, z in itertools.product(xrange(16), xrange(16)):
+        for x, z in product(xrange(16), xrange(16)):
             chunk.set_block((x, 0, z), blocks["bedrock"].slot)
             chunk.set_block((x, 126, z), blocks["air"].slot)
             chunk.set_block((x, 127, z), blocks["air"].slot)
