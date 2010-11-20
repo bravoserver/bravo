@@ -22,6 +22,7 @@ class TestCoordHandling(unittest.TestCase):
             (17, 0, 0),
             (-1, 255, -1),
             (15, 255, 15),
+            (-1, -1, -1),
         ]
         for triplet in cases:
             self.assertRaises(Exception, beta.utilities.triplet_to_index,
