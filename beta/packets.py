@@ -104,7 +104,7 @@ packets = {
         SBInt32("x"),
         SBInt8("y"),
         SBInt32("z"),
-        UBInt8("face"),
+        SBInt8("face"),
     ),
     16: Struct("equip",
         UBInt32("entity"),
