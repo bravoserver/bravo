@@ -1,3 +1,5 @@
+from __future__ import division
+
 import math
 
 # Coord handling.
@@ -49,3 +51,18 @@ def degs_to_rads(degrees):
 
 def rads_to_degs(radians):
     return radians * 180 / math.pi
+
+def rotated_cosine(x, y, theta, lambd):
+    """
+    Evaluate a rotated 3D sinusoidal wave at a given point, angle, and
+    wavelength.
+
+    The function used is:
+
+    f(x, y) = -cos((x * cos(theta) - y * sin(theta)) / lambda) / 2 + 1
+
+    This function has a handful of useful properties; it has a local minimum
+    at f(0, 0) and oscillates infinitely betwen 0 and 1.
+    """
+
+    return -math.cos((x * math.cos(theta) - y * math.sin(theta)) / lambd) / 2 + 1

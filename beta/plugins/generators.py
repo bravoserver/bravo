@@ -8,6 +8,7 @@ from zope.interface import implements
 from beta.blocks import blocks
 from beta.ibeta import ITerrainGenerator
 from beta.simplex import octaves, reseed
+from beta.utilities import rotated_cosine
 
 class BoringGenerator(object):
     """
@@ -44,9 +45,14 @@ class SimplexGenerator(object):
         reseed(seed)
 
         for x, z in product(xrange(16), xrange(16)):
-            height = octaves(chunk.x + x / 16, chunk.z + z / 16, 4)
-            # Normalize to within [50, 90]
-            height *= 20
+            magx = chunk.x + (x * 0.0625)
+            magz = chunk.z + (z * 0.0625)
+
+            height = octaves(magx, magz, 4)
+            # Normalize around 70. Normalization is scaled according to a
+            # rotated cosine.
+            scale = rotated_cosine(magx, magz, seed, 16 * 10)
+            height *= scale * 30
             height += 70
             for y in xrange(int(height)):
                 chunk.set_block((x, y, z), blocks["stone"].slot)
