@@ -1,3 +1,5 @@
+from __future__ import division
+
 import itertools
 
 from twisted.plugin import IPlugin
@@ -42,9 +44,9 @@ class SimplexGenerator(object):
         reseed(seed)
 
         for x, z in itertools.product(xrange(16), xrange(16)):
-            height = octaves(x + chunk.x * 16, z + chunk.z * 16, 3)
-            # Normalize to within [40, 100]
-            height *= 30
+            height = octaves(chunk.x + x / 16, chunk.z + z / 16, 4)
+            # Normalize to within [50, 90]
+            height *= 20
             height += 70
             for y in xrange(int(height)):
                 chunk.set_block((x, y, z), blocks["stone"].slot)
