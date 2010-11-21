@@ -51,6 +51,23 @@ class List(object):
 
     name = "list"
 
+class Time(object):
+
+    implements(IPlugin, ICommand)
+
+    def dispatch(self, factory, parameters):
+        # 24000 ticks to the day
+        hours, minutes = divmod(factory.time, 1000)
+        # 0000 is noon, not midnight
+        hours = hours + 12 % 24
+        minutes = minutes * 6 / 100
+        season, date = divmod(factory.day, 90)
+        # Quick hack for season names
+        season = ["Winter", "Spring", "Summer", "Fall"][season]
+        yield "%02d:%02d, %d (%s)" % (hours, minutes, date, season)
+
+    name = "time"
+
 class Say(object):
 
     implements(IPlugin, ICommand)
@@ -120,6 +137,7 @@ class Quit(object):
 
 help = Help()
 list = List()
+time = Time()
 say  = Say()
 give = Give()
 quit = Quit()
