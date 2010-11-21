@@ -70,3 +70,22 @@ class ICommand(Interface):
     info = Attribute("""
         String explaining what this command does and returns.
         """)
+
+class ISeason(Interface):
+    """
+    Seasons are transformational stages run during certain days to emulate an
+    environment.
+    """
+
+    def transform(self, chunk):
+        """
+        Apply the season to the given chunk.
+        """
+
+    name = Attribute("""
+        Name of the season.
+        """)
+
+    day = Attribute("""
+        Day of the year on which to switch to this season.
+        """)
