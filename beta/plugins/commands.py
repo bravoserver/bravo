@@ -43,6 +43,10 @@ class Help(object):
 
     aliases = tuple()
 
+    usage = "help"
+
+    info = "Prints this message"
+
 class List(object):
 
     implements(IPlugin, ICommand)
@@ -54,6 +58,10 @@ class List(object):
     name = "list"
 
     aliases = tuple()
+
+    usage = "list"
+
+    info = "Lists the currently connected players"
 
 class Time(object):
 
@@ -74,6 +82,10 @@ class Time(object):
 
     aliases = ("date",)
 
+    usage = "time"
+
+    info = "Gives the current in-game time and date"
+
 class Say(object):
 
     implements(IPlugin, ICommand)
@@ -87,6 +99,10 @@ class Say(object):
     name = "say"
 
     aliases = tuple()
+
+    usage = "say <message>"
+
+    info = "Broadcasts a message to everybody"
 
 class Give(object):
 
@@ -127,6 +143,10 @@ class Give(object):
 
     aliases = tuple()
 
+    usage = "give <player> <block> <quantity>"
+
+    info = "Gives a number of blocks or items to a certain player"
+
 class Quit(object):
     implements(IPlugin, ICommand)
 
@@ -146,6 +166,10 @@ class Quit(object):
     name = "quit"
 
     aliases = ("exit",)
+
+    usage = "quit"
+
+    info = "Quits the server"
 
 help = Help()
 list = List()

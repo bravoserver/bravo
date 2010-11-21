@@ -56,9 +56,17 @@ class ICommand(Interface):
     name = Attribute("""
         The name of the plugin.
 
-        Command names are also used as the keyword for the command.
+        Command names are also used as the keyword for this command.
         """)
 
     aliases = Attribute("""
         Additional keywords which may be used to alias this command.
+        """)
+
+    usage = Attribute("""
+        String explaining how to use this command.
+        """)
+
+    info = Attribute("""
+        String explaining what this command does and returns.
         """)
