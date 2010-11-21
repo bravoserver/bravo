@@ -1,4 +1,5 @@
-import math
+from math import sqrt
+from time import time
 
 from construct import Container
 
@@ -26,6 +27,10 @@ class AlphaFactory(Factory):
 
     protocol = AlphaProtocol
 
+    timestamp = None
+    time = 0
+    day = 0
+
     def __init__(self):
         self.world = World("world")
         self.players = dict()
@@ -33,10 +38,8 @@ class AlphaFactory(Factory):
         self.entityid = 1
         self.entities = set()
 
-        self.time = 0
-        self.day = 0
         self.time_loop = LoopingCall(self.update_time)
-        self.time_loop.start(10)
+        self.time_loop.start(2)
 
         self.hooks = {}
 
@@ -72,15 +75,22 @@ class AlphaFactory(Factory):
         Update the in-game timer.
 
         The timer goes from 0 to 24000, both of which are high noon. The clock
-        increments by 20 every second; this method increments by 200 and
-        should be called every 10 seconds. Days are 20 minutes long.
+        increments by 20 every second. Days are 20 minutes long.
 
         The day clock is incremented every in-game day, which is every 20
         minutes. The day clock goes from 0 to 360, which works out to a reset
         once every 5 days. This is a Babylonian in-game year.
         """
 
-        self.time += 200
+        if self.timestamp is None:
+            # First run since the start of the factory; re-init everything.
+            self.timestamp = time()
+            self.update_season()
+
+        t = time()
+        self.time += 20 * (t - self.timestamp)
+        self.timestamp = t
+
         while self.time > 24000:
             self.time -= 24000
 
@@ -88,9 +98,16 @@ class AlphaFactory(Factory):
             while self.day > 360:
                 self.day -= 360
 
-            for plugin in retrieve_plugins(ISeason):
-                if plugin.day == self.day:
-                    self.world.season = plugin
+                self.update_season()
+
+    def update_season(self):
+        """
+        Update the world's season.
+        """
+
+        for plugin in retrieve_plugins(ISeason).itervalues():
+            if plugin.day == self.day:
+                self.world.season = plugin
 
     def broadcast(self, packet):
         for player in self.players.itervalues():
@@ -116,7 +133,7 @@ class AlphaFactory(Factory):
         """
 
         return [entity for entity in self.entities
-            if math.sqrt((entity.x - x)**2 + (entity.y - y)**2 +
+            if sqrt((entity.x - x)**2 + (entity.y - y)**2 +
                     (entity.z - z)**2) < radius]
 
     def give(self, coords, block, quantity):

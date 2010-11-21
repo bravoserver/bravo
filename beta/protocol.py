@@ -316,7 +316,7 @@ class AlphaProtocol(Protocol):
         self.transport.write(packet)
 
     def update_time(self):
-        packet = make_packet("time", timestamp=self.factory.time)
+        packet = make_packet("time", timestamp=int(self.factory.time))
         self.transport.write(packet)
 
     def error(self, message):
