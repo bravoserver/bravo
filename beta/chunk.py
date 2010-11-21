@@ -100,10 +100,7 @@ class Chunk(object):
         The height map must be valid for this method to produce valid results.
         """
 
-        for x, z in product(xrange(16), xrange(16)):
-            y = self.height_at(x, z)
-            index = triplet_to_index((x, y, z))
-            self.lightmap[index] = 0xf
+        self.lightmap = [0xf] * 16 * 128 * 16
 
     def regenerate(self):
         """
