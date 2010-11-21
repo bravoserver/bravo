@@ -41,6 +41,8 @@ class Help(object):
 
     name = "help"
 
+    aliases = tuple()
+
 class List(object):
 
     implements(IPlugin, ICommand)
@@ -50,6 +52,8 @@ class List(object):
                 player for player in factory.players))
 
     name = "list"
+
+    aliases = tuple()
 
 class Time(object):
 
@@ -68,6 +72,8 @@ class Time(object):
 
     name = "time"
 
+    aliases = tuple()
+
 class Say(object):
 
     implements(IPlugin, ICommand)
@@ -79,6 +85,8 @@ class Say(object):
         factory.broadcast(packet)
 
     name = "say"
+
+    aliases = tuple()
 
 class Give(object):
 
@@ -117,6 +125,8 @@ class Give(object):
 
     name = "give"
 
+    aliases = tuple()
+
 class Quit(object):
     implements(IPlugin, ICommand)
 
@@ -134,6 +144,8 @@ class Quit(object):
         reactor.stop()
 
     name = "quit"
+
+    aliases = tuple()
 
 help = Help()
 list = List()

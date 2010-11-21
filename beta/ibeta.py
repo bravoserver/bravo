@@ -58,3 +58,7 @@ class ICommand(Interface):
 
         Command names are also used as the keyword for the command.
         """)
+
+    aliases = Attribute("""
+        Additional keywords which may be used to alias this command.
+        """)

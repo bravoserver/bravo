@@ -20,4 +20,6 @@ class Meliae(object):
 
     name = "dump_memory"
 
+    aliases = tuple()
+
 meliae = Meliae()
