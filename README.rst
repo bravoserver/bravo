@@ -28,8 +28,7 @@ Extended Features
    * Authentication
    * Commands
    * Geometry generation
-
- * Seasons
+   * Seasons
 
 Planned Features
 ================
