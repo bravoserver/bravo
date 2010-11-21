@@ -71,6 +71,13 @@ class Chunk(object):
         register_finalizers(self)
 
     def regenerate_heightmap(self):
+        """
+        Regenerate the height map.
+
+        The height map is merely the position of the tallest block in any
+        xz-column.
+        """
+
         for x, z in product(xrange(16), xrange(16)):
             for y in range(127, -1, -1):
                 if self.get_block((x, y, z)):
@@ -78,15 +85,25 @@ class Chunk(object):
             self.heightmap[x * 16 + z] = y
 
     def regenerate_lightmap(self):
-        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
-            index = triplet_to_index((x, y, z))
-            self.lightmap[index] = 0xf if self.blocks[index] else 0x0
+        pass
 
     def regenerate_metadata(self):
         pass
 
     def regenerate_skylight(self):
-        pass
+        """
+        Regenerate the ambient light map.
+
+        Each block's individual light comes from two sources. The ambient
+        light comes from the sky.
+
+        The height map must be valid for this method to produce valid results.
+        """
+
+        for x, z in product(xrange(16), xrange(16)):
+            y = self.height_at(x, z)
+            index = triplet_to_index((x, y, z))
+            self.lightmap[index] = 0xf
 
     def regenerate(self):
         """
@@ -148,7 +165,7 @@ class Chunk(object):
 
     def height_at(self, x, z):
         """
-        Get the height of an x-z column of blocks.
+        Get the height of an xz-column of blocks.
         """
 
         return self.heightmap[x * 16 + z]
