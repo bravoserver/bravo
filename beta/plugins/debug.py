@@ -26,4 +26,24 @@ class Meliae(object):
 
     info = "Dump a snapshot of memory usage using Meliae"
 
+class Status(object):
+
+    implements(IPlugin, ICommand)
+
+    def dispatch(self, factory, parameters):
+        protocol_count = len(factory.players)
+        yield "%s protocols connected" % protocol_count
+
+        chunk_count = len(factory.world.chunk_cache)
+        yield "%s chunks currently in cache" % chunk_count
+
+    name = "status"
+
+    aliases = tuple()
+
+    usage = "status"
+
+    info = "Print a quick summary of the server's status"
+
 meliae = Meliae()
+status = Status()
