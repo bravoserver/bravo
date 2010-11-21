@@ -324,9 +324,14 @@ class AlphaProtocol(Protocol):
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
+        self.ping_loop.stop()
+        self.time_loop.stop()
+
         if self.chunk_generators:
             for generator in self.chunk_generators:
                 generator.close()
+
+        del self.chunks
 
         if self.username in self.factory.players:
             del self.factory.players[self.username]
