@@ -34,6 +34,7 @@ class AlphaFactory(Factory):
         self.entities = set()
 
         self.time = 0
+        self.day = 0
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
 
@@ -67,9 +68,25 @@ class AlphaFactory(Factory):
         self.entities.discard(entity)
 
     def update_time(self):
+        """
+        Update the in-game timer.
+
+        The timer goes from 0 to 24000, both of which are high noon. The clock
+        increments by 20 every second; this method increments by 200 and
+        should be called every 10 seconds. Days are 20 minutes long.
+
+        The day clock is incremented every in-game day, which is every 20
+        minutes. The day clock goes from 0 to 360, which works out to a reset
+        once every 5 days. This is a Babylonian in-game year.
+        """
+
         self.time += 200
         while self.time > 24000:
             self.time -= 24000
+
+            self.day += 1
+            while self.day > 360:
+                self.day -= 360
 
     def broadcast(self, packet):
         for player in self.players.itervalues():
