@@ -1,3 +1,5 @@
+from itertools import product
+
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
@@ -10,7 +12,11 @@ class Winter(object):
 
     def transform(self, chunk):
         chunk.sed(blocks["spring"].slot, blocks["ice"].slot)
-        pass
+
+        for x, z in product(xrange(16), xrange(16)):
+            y = chunk.height_at(x, z)
+            if chunk.get_block((x, y, z)) != blocks["ice"].slot:
+                chunk.set_block((x, y + 1, z), blocks["snow"].slot)
 
     name = "winter"
 
