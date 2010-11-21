@@ -153,6 +153,18 @@ class Chunk(object):
 
         return self.heightmap[x * 16 + z]
 
+    def sed(self, search, replace):
+        """
+        Execute a search and replace on all blocks in this chunk.
+
+        Named after the ubiquitous Unix tool. Does a semantic
+        s/search/replace/g on this chunk's blocks.
+        """
+
+        for i, block in enumerate(self.blocks):
+            if block == search:
+                self.blocks[i] = replace
+
     def __finalizers__(self):
         """
         Return a list of callables which should be called at __del__ time.
