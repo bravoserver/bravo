@@ -36,8 +36,26 @@ class Help(object):
 
     def dispatch(self, factory, parameters):
         plugins = retrieve_plugins(ICommand)
-        for name, plugin in plugins.iteritems():
-            yield "%s" % plugin.name
+        l = []
+
+        # This is fairly brute-force and inelegant. I'm very open to
+        # suggestions on improving it.
+        for plugin in set(plugins.itervalues()):
+            l.append((plugin.name, plugin.usage, plugin.info))
+            for alias in plugin.aliases:
+                usage = plugin.usage.replace(plugin.name, alias)
+                info = "Alias for %s" % plugin.name
+                l.append((alias, usage, info))
+
+        name_pad = max(len(i[0]) for i in l) + 1
+        usage_pad = max(len(i[1]) for i in l) + 1
+
+        yield "%s %s %s" % ("Name:".ljust(name_pad),
+            "Usage:".ljust(usage_pad), "Info:")
+
+        for name, usage, info in sorted(l):
+            yield "%s %s %s" % (name.ljust(name_pad), usage.ljust(usage_pad),
+                info)
 
     name = "help"
 

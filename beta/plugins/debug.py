@@ -22,4 +22,8 @@ class Meliae(object):
 
     aliases = tuple()
 
+    usage = "dump_memory"
+
+    info = "Dump a snapshot of memory usage using Meliae"
+
 meliae = Meliae()
