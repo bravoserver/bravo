@@ -46,8 +46,8 @@ class List(object):
     implements(IPlugin, ICommand)
 
     def dispatch(self, factory, parameters):
-        for player in factory.players:
-            yield "%s" % player
+        yield "Connected players: %s" % (", ".join(
+                player for player in factory.players))
 
     name = "list"
 
