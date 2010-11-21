@@ -9,6 +9,27 @@ from beta.ibeta import ICommand
 from beta.plugin import retrieve_plugins
 from beta.packets import make_packet
 
+def parse_player(factory, name):
+    if name in factory.players:
+        return factory.players[name]
+    else:
+        raise Exception("Couldn't find player %s" % name)
+
+def parse_block(block):
+    try:
+        return int(block)
+    except ValueError:
+        try:
+            return beta.blocks.names[block]
+        except IndexError:
+            raise Exception("Couldn't parse block %s!" % block)
+
+def parse_int(i):
+    try:
+        return int(i)
+    except ValueError:
+        raise Exception("Couldn't parse quantity %s!" % i)
+
 class Help(object):
 
     implements(IPlugin, ICommand)
@@ -41,27 +62,6 @@ class Say(object):
         factory.broadcast(packet)
 
     name = "say"
-
-def parse_player(factory, name):
-    if name in factory.players:
-        return factory.players[name]
-    else:
-        raise Exception("Couldn't find player %s" % name)
-
-def parse_block(block):
-    try:
-        return int(block)
-    except ValueError:
-        try:
-            return beta.blocks.names[block]
-        except IndexError:
-            raise Exception("Couldn't parse block %s!" % block)
-
-def parse_int(i):
-    try:
-        return int(i)
-    except ValueError:
-        raise Exception("Couldn't parse quantity %s!" % i)
 
 class Give(object):
 
