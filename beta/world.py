@@ -35,6 +35,8 @@ def base36(i):
 
 class World(object):
 
+    season = None
+
     def __init__(self, folder):
         self.folder = folder
         self.chunk_cache = weakref.WeakValueDictionary()
@@ -89,6 +91,11 @@ class World(object):
             chunk.load_from_tag(f)
         except IOError:
             self.populate_chunk(chunk)
+
+        # Apply the current season to the chunk.
+        if self.season:
+            self.season.transform(chunk)
+
         return chunk
 
     def load_player(self, username):

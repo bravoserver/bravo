@@ -6,7 +6,7 @@ from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 
 from beta.alpha import Entity
-from beta.ibeta import IAuthenticator, ITerrainGenerator
+from beta.ibeta import IAuthenticator, ISeason, ITerrainGenerator
 from beta.packets import make_packet
 from beta.plugin import retrieve_named_plugins
 from beta.protocol import AlphaProtocol
@@ -87,6 +87,10 @@ class AlphaFactory(Factory):
             self.day += 1
             while self.day > 360:
                 self.day -= 360
+
+            for plugin in retrieve_plugins(ISeason):
+                if plugin.day == self.day:
+                    self.world.season = plugin
 
     def broadcast(self, packet):
         for player in self.players.itervalues():
