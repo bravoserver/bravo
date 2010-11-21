@@ -72,7 +72,7 @@ class Time(object):
 
     name = "time"
 
-    aliases = tuple()
+    aliases = ("date",)
 
 class Say(object):
 
@@ -145,7 +145,7 @@ class Quit(object):
 
     name = "quit"
 
-    aliases = tuple()
+    aliases = ("exit",)
 
 help = Help()
 list = List()
