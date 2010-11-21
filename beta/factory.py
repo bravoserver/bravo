@@ -139,6 +139,10 @@ class AlphaFactory(Factory):
         """
 
         commands = retrieve_plugins(ICommand)
+        # Register aliases.
+        for plugin in commands.values():
+            for alias in plugin.aliases:
+                commands[alias] = plugin
 
         t = s.strip().split(" ", 1)
         command = t[0].lower()
