@@ -45,5 +45,23 @@ class Status(object):
 
     info = "Print a quick summary of the server's status"
 
+class PDB(object):
+
+    implements(IPlugin, ICommand)
+
+    def dispatch(self, factory, parameters):
+        import pdb; pdb.set_trace()
+
+        return []
+
+    name = "pdb"
+
+    aliases = tuple()
+
+    usage = "pdb"
+
+    info = "Drop into a PDB shell"
+
 meliae = Meliae()
 status = Status()
+pdb = PDB()
