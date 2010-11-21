@@ -9,11 +9,8 @@ Minecraft Alpha wire protocol.
 Features
 ========
 
- * Pluggable architecture
-
-   * Authentication
-   * Commands
-   * Geometry generation
+Standard Features
+-----------------
 
  * Console
  * Login and handshake
@@ -23,10 +20,20 @@ Features
  * Block construction and deconstruction
  * Entities
 
+Extended Features
+-----------------
+
+ * Pluggable architecture
+
+   * Authentication
+   * Commands
+   * Geometry generation
+
+ * Seasons
+
 Planned Features
 ================
 
- * Seasons
  * More plugins for chat
  * More plugins for admin
  * More terrain generators
