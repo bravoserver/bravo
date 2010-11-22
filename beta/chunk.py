@@ -53,6 +53,7 @@ tileentity_names = {
 
 class Chunk(object):
 
+    dirty = True
     populated = False
     tag = None
 
@@ -67,6 +68,11 @@ class Chunk(object):
         self.skylight = [0] * 16 * 128 * 16
 
         self.tileentities = []
+
+    def __repr__(self):
+        return "Chunk(%d, %d)" % (self.x, self.z)
+
+    __str__ = __repr__
 
     def regenerate_heightmap(self):
         """
@@ -110,6 +116,8 @@ class Chunk(object):
         self.regenerate_metadata()
         self.regenerate_skylight()
 
+        self.dirty = True
+
     def set_tag(self, tag):
         self.tag = tag
         if "Level" in self.tag:
@@ -134,6 +142,8 @@ class Chunk(object):
                 except:
                     print "Unknown tile entity %s" % tag["id"].value
 
+        self.dirty = not self.populated
+
     def save_to_tag(self):
         level = TAG_Compound()
 
@@ -152,6 +162,19 @@ class Chunk(object):
         level["TerrainPopulated"] = TAG_Byte(self.populated)
 
         self.tag["Level"] = level
+
+    def flush(self):
+        """
+        Write the chunk's data out to disk.
+        """
+
+        if self.dirty and self.tag is not None:
+            self.save_to_tag()
+            self.tag.name = ""
+            self.tag.write_file()
+            self.tag.file.flush()
+
+        self.dirty = False
 
     def save_to_packet(self):
         """
@@ -182,7 +205,9 @@ class Chunk(object):
 
         index = triplet_to_index(coords)
 
-        self.blocks[index] = block
+        if self.blocks[index] != block:
+            self.blocks[index] = block
+            self.dirty = True
 
     def height_at(self, x, z):
         """
@@ -202,17 +227,7 @@ class Chunk(object):
         for i, block in enumerate(self.blocks):
             if block == search:
                 self.blocks[i] = replace
+                self.dirty = True
 
     def __del__(self):
-        """
-        Write the chunk's data out to disk.
-
-        This has to be a wrapper for binding reasons, since this method will
-        nearly certainly need to be called in the finalizer.
-        """
-
-        if self.tag is not None:
-            self.save_to_tag()
-            self.tag.name = ""
-            self.tag.write_file()
-            self.tag.file.flush()
+        self.flush()

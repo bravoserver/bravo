@@ -111,6 +111,7 @@ class World(object):
         if not chunk.populated:
             self.populate_chunk(chunk)
             chunk.populated = True
+            chunk.dirty = True
 
         # Apply the current season to the chunk.
         if self.season:
