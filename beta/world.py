@@ -105,11 +105,12 @@ class World(object):
 
         filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
             "c.%s.%s.dat" % (base36(x), base36(z)))
-        try:
-            f = NBTFile(filename)
-            chunk.load_from_tag(f)
-        except IOError:
+        tag = retrieve_nbt(filename)
+        chunk.set_tag(tag)
+
+        if not chunk.populated:
             self.populate_chunk(chunk)
+            chunk.populated = True
 
         # Apply the current season to the chunk.
         if self.season:

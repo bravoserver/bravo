@@ -1,10 +1,7 @@
 from itertools import product
 import StringIO
 
-from nbt.nbt import TAG_Compound
-from nbt.nbt import TAG_Int
-
-from twisted.python.finalize import register as register_finalizers
+from nbt.nbt import TAG_Compound, TAG_Int, TAG_Byte_Array, TAG_Byte
 
 from beta.alpha import Inventory
 from beta.packets import make_packet
@@ -56,6 +53,9 @@ tileentity_names = {
 
 class Chunk(object):
 
+    populated = False
+    tag = None
+
     def __init__(self, x, z):
         self.x = int(x)
         self.z = int(z)
@@ -67,8 +67,6 @@ class Chunk(object):
         self.skylight = [0] * 16 * 128 * 16
 
         self.tileentities = []
-
-        register_finalizers(self)
 
     def regenerate_heightmap(self):
         """
@@ -112,13 +110,20 @@ class Chunk(object):
         self.regenerate_metadata()
         self.regenerate_skylight()
 
-    def load_from_tag(self, tag):
-        level = tag["Level"]
+    def set_tag(self, tag):
+        self.tag = tag
+        if "Level" in self.tag:
+            self.load_from_tag(tag)
+
+    def load_from_tag(self):
+        level = self.tag["Level"]
         self.blocks = [ord(i) for i in level["Blocks"].value]
         self.heightmap = [ord(i) for i in level["HeightMap"].value]
         self.lightmap = unpack_nibbles(level["BlockLight"].value)
         self.metadata = unpack_nibbles(level["Data"].value)
         self.skylight = unpack_nibbles(level["SkyLight"].value)
+
+        self.populated = bool(level["TerrainPopulated"])
 
         if level["TileEntities"].value:
             for tag in level["TileEntities"].value:
@@ -128,6 +133,25 @@ class Chunk(object):
                     self.tileentities.append(te)
                 except:
                     print "Unknown tile entity %s" % tag["id"].value
+
+    def save_to_tag(self):
+        level = TAG_Compound()
+
+        level["Blocks"] = TAG_Byte_Array()
+        level["HeightMap"] = TAG_Byte_Array()
+        level["BlockLight"] = TAG_Byte_Array()
+        level["Data"] = TAG_Byte_Array()
+        level["SkyLight"] = TAG_Byte_Array()
+
+        level["Blocks"].value = "".join(chr(i) for i in self.blocks)
+        level["HeightMap"].value = "".join(chr(i) for i in self.heightmap)
+        level["BlockLight"].value = "".join(pack_nibbles(self.lightmap))
+        level["Data"].value = "".join(pack_nibbles(self.metadata))
+        level["SkyLight"].value = "".join(pack_nibbles(self.skylight))
+
+        level["TerrainPopulated"] = TAG_Byte(self.populated)
+
+        self.tag["Level"] = level
 
     def save_to_packet(self):
         """
@@ -179,9 +203,15 @@ class Chunk(object):
             if block == search:
                 self.blocks[i] = replace
 
-    def __finalizers__(self):
+    def __del__(self):
         """
-        Return a list of callables which should be called at __del__ time.
+        Write the chunk's data out to disk.
+
+        This has to be a wrapper for binding reasons, since this method will
+        nearly certainly need to be called in the finalizer.
         """
 
-        return []
+        if self.tag:
+            self.save_to_tag()
+            self.tag.write_file()
+            self.tag.file.flush()
