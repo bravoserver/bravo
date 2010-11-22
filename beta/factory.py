@@ -98,7 +98,7 @@ class AlphaFactory(Factory):
             while self.day > 360:
                 self.day -= 360
 
-                self.update_season()
+            self.update_season()
 
     def update_season(self):
         """
