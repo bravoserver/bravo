@@ -13,9 +13,11 @@ class Winter(object):
     def transform(self, chunk):
         chunk.sed(blocks["spring"].slot, blocks["ice"].slot)
 
+        # Lay snow over anything not already snowed and not ice.
         for x, z in product(xrange(16), xrange(16)):
             y = chunk.height_at(x, z)
-            if chunk.get_block((x, y, z)) != blocks["ice"].slot:
+            if chunk.get_block((x, y, z)) not in (blocks["snow"].slot,
+                    blocks["ice"].slot):
                 chunk.set_block((x, y + 1, z), blocks["snow"].slot)
 
     name = "winter"
@@ -35,3 +37,4 @@ class Spring(object):
     day = 90
 
 winter = Winter()
+spring = Spring()
