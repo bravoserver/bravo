@@ -3,9 +3,10 @@ import random
 import sys
 import weakref
 
-from nbt.nbt import NBTFile
+from nbt.nbt import NBTFile, TAG_Compound, TAG_Long, TAG_Int
 
 from beta.chunk import Chunk
+from beta.utilities import retrieve_nbt
 
 def base36(i):
     """
@@ -41,12 +42,12 @@ class World(object):
         self.folder = folder
         self.chunk_cache = weakref.WeakValueDictionary()
 
-        try:
-            self.level = NBTFile(os.path.join(self.folder, "level.dat"))
+        self.level = retrieve_nbt(os.path.join(self.folder, "level.dat"))
+        if "Data" in self.level:
             self.load_level_data()
-        except IOError:
-            self.level = NBTFile()
+        else:
             self.generate_level()
+            self.level.write_file()
 
     def populate_chunk(self, chunk):
         """
@@ -67,8 +68,21 @@ class World(object):
         chunk.regenerate()
 
     def generate_level(self):
+        """
+        Generate the level metadata.
+
+        This method currently does not generate all of Alpha's metadata, just
+        the data used by Beta.
+        """
+
         self.spawn = (0, 0, 0)
         self.seed = random.randint(0, sys.maxint)
+
+        self.level["Data"] = TAG_Compound()
+        self.level["Data"]["RandomSeed"] = TAG_Long(self.seed)
+        self.level["Data"]["SpawnX"] = TAG_Int(self.spawn[0])
+        self.level["Data"]["SpawnY"] = TAG_Int(self.spawn[1])
+        self.level["Data"]["SpawnZ"] = TAG_Int(self.spawn[2])
 
     def load_level_data(self):
         self.spawn = (self.level["Data"]["SpawnX"].value,
