@@ -93,7 +93,6 @@ def retrieve_nbt(filename):
     except IOError:
         # The hard way, huh? Wise guy...
         tag = NBTFile()
-        tag.name = ""
         tag.filename = filename
 
         try:

@@ -43,11 +43,11 @@ class World(object):
         self.chunk_cache = weakref.WeakValueDictionary()
 
         self.level = retrieve_nbt(os.path.join(self.folder, "level.dat"))
+
         if "Data" in self.level:
             self.load_level_data()
         else:
             self.generate_level()
-            self.level.write_file()
 
     def populate_chunk(self, chunk):
         """
@@ -78,11 +78,16 @@ class World(object):
         self.spawn = (0, 0, 0)
         self.seed = random.randint(0, sys.maxint)
 
+        self.level.name = ""
         self.level["Data"] = TAG_Compound()
         self.level["Data"]["RandomSeed"] = TAG_Long(self.seed)
         self.level["Data"]["SpawnX"] = TAG_Int(self.spawn[0])
         self.level["Data"]["SpawnY"] = TAG_Int(self.spawn[1])
         self.level["Data"]["SpawnZ"] = TAG_Int(self.spawn[2])
+
+        # At least one of these should stop being necessary at some point.
+        self.level.write_file()
+        self.level.file.flush()
 
     def load_level_data(self):
         self.spawn = (self.level["Data"]["SpawnX"].value,
