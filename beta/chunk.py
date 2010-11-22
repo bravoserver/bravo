@@ -113,7 +113,7 @@ class Chunk(object):
     def set_tag(self, tag):
         self.tag = tag
         if "Level" in self.tag:
-            self.load_from_tag(tag)
+            self.load_from_tag()
 
     def load_from_tag(self):
         level = self.tag["Level"]
@@ -125,7 +125,7 @@ class Chunk(object):
 
         self.populated = bool(level["TerrainPopulated"])
 
-        if level["TileEntities"].value:
+        if "TileEntities" in level and level["TileEntities"].value:
             for tag in level["TileEntities"].value:
                 try:
                     te = tileentity_names[tag["id"].value]()
@@ -211,7 +211,8 @@ class Chunk(object):
         nearly certainly need to be called in the finalizer.
         """
 
-        if self.tag:
+        if self.tag is not None:
             self.save_to_tag()
+            self.tag.name = ""
             self.tag.write_file()
             self.tag.file.flush()
