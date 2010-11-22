@@ -1,6 +1,10 @@
 from __future__ import division
 
+from errno import EEXIST
 import math
+import os.path
+
+from nbt.nbt import NBTFile
 
 # Coord handling.
 
@@ -66,3 +70,37 @@ def rotated_cosine(x, y, theta, lambd):
     """
 
     return -math.cos((x * math.cos(theta) - y * math.sin(theta)) / lambd) / 2 + 1
+
+# File handling.
+
+def retrieve_nbt(filename):
+    """
+    Attempt to read an NBT blob from the file with the given filename.
+
+    If the requested file does not exist, then the returned tag will be empty
+    and will be saved to that file when write_file() is called on the tag.
+
+    This function can and will make a good effort to create intermediate
+    directories as needed.
+
+    XXX should handle corner cases
+    XXX should mmap() when possible
+    XXX should use Twisted's VFS
+    """
+
+    try:
+        tag = NBTFile(filename)
+    except IOError:
+        # The hard way, huh? Wise guy...
+        tag = NBTFile()
+        tag.name = ""
+        tag.filename = filename
+
+        try:
+            # Make the directory holding this file.
+            os.makedirs(os.path.normpath(os.path.split(filename)[0]))
+        except OSError, e:
+            if e.errno != EEXIST:
+                raise
+
+    return tag
