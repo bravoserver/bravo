@@ -22,4 +22,16 @@ class Winter(object):
 
     day = 0
 
+class Spring(object):
+
+    implements(IPlugin, ISeason)
+
+    def transform(self, chunk):
+        chunk.sed(blocks["ice"].slot, blocks["spring"].slot)
+        chunk.sed(blocks["snow"].slot, blocks["air"].slot)
+
+    name = "spring"
+
+    day = 90
+
 winter = Winter()
