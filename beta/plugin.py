@@ -3,15 +3,22 @@ from twisted.plugin import getPlugins
 import beta.plugins
 
 class PluginException(Exception):
-    pass
+    """
+    Signal an error encountered during plugin handling.
+    """
 
 def retrieve_plugins(interface, cached=True, cache={}):
     """
-    Return a dict of plugins, keyed by name.
+    Look up all plugins for a certain interface.
 
-    If `cached` is True, do not attempt to reload plugins from disk.
+    If the plugin cache is enabled, this function will not attempt to reload
+    plugins from disk or discover new plugins.
 
-    Raises a `PluginException` if no plugins could be found.
+    :param interface interface: the interface to use
+    :param bool cached: whether to use the in-memory plugin cache
+
+    :returns: a dict of plugins, keyed by name
+    :raises PluginException: no plugins could be found for the given interface
     """
 
     if cached and interface in cache:
@@ -28,10 +35,15 @@ def retrieve_plugins(interface, cached=True, cache={}):
 
 def retrieve_named_plugins(interface, names):
     """
-    Given a list of names, return the plugins with those names.
+    Look up a list of plugins by name.
 
-    Order counts for some plugin interfaces, so order is preserved by this
-    function.
+    Plugins are returned in the same order as their names.
+
+    :param interface interface: the interface to use
+    :param list names: plugins to find
+
+    :returns: a list of plugins
+    :raises PluginException: no plugins could be found for the given interface
     """
 
     d = retrieve_plugins(interface)
