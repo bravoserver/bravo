@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    core
+   aux
    noise
 
 Indices and tables
