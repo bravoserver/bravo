@@ -35,10 +35,27 @@ def base36(i):
     return s
 
 class World(object):
+    """
+    Object representing a world on disk.
+
+    Worlds are composed of levels and chunks, each of which corresponds to
+    exactly one file on disk. Worlds also contain saved player data.
+    """
 
     season = None
+    """
+    The current `ISeason`.
+    """
 
     def __init__(self, folder):
+        """
+        Load a world from disk.
+
+        :Parameters:
+            folder : str
+                The directory containing the world.
+        """
+
         self.folder = folder
         self.chunk_cache = weakref.WeakValueDictionary()
 
@@ -90,6 +107,10 @@ class World(object):
         self.level.file.flush()
 
     def load_level_data(self):
+        """
+        Load level data.
+        """
+
         self.spawn = (self.level["Data"]["SpawnX"].value,
             self.level["Data"]["SpawnY"].value,
             self.level["Data"]["SpawnZ"].value)
@@ -97,6 +118,13 @@ class World(object):
         self.seed = self.level["Data"]["RandomSeed"].value
 
     def load_chunk(self, x, z):
+        """
+        Retrieve a `Chunk`.
+
+        This method does lots of automatic caching of chunks to ensure that
+        disk I/O is kept to a minimum.
+        """
+
         if (x, z) in self.chunk_cache:
             return self.chunk_cache[x, z]
 
@@ -120,6 +148,10 @@ class World(object):
         return chunk
 
     def load_player(self, username):
+        """
+        Retrieve player data.
+        """
+
         filename = os.path.join(self.folder, "players", "%s.dat" % username)
         try:
             return NBTFile(filename)
