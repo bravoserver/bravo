@@ -10,8 +10,12 @@ from nbt.nbt import NBTFile
 
 def split_coords(x, z):
     """
-    Given an absolute coordinate pair, return the split chunk and subchunk
-    coordinates.
+    Split a pair of coordinates into chunk and subchunk coordinates.
+
+    :param int x: the X coordinate
+    :param int z: the Z coordinate
+
+    :returns: a tuple of the X chunk, X subchunk, Z chunk, and Z subchunk
     """
 
     first, second = divmod(int(x), 16)
@@ -21,7 +25,12 @@ def split_coords(x, z):
 
 def triplet_to_index(coords):
     """
-    Given an x, y, z triplet, return the index into a 16x128x16 chunk.
+    Calculate the index for a set of subchunk coordinates.
+
+    :param tuple coords: X, Y, Z coordinates
+
+    :returns: integer index into chunk data
+    :raises Exception: the coordinates are out-of-bounds
     """
 
     x, y, z = coords
@@ -36,6 +45,22 @@ def triplet_to_index(coords):
 # Bit twiddling.
 
 def unpack_nibbles(l):
+    """
+    Unpack bytes into pairs of nibbles.
+
+    Nibbles are half-byte quantities. The nibbles unpacked by this function
+    are returned as unsigned numeric values.
+
+    >>> unpack_nibbles(["a"])
+    [6, 1]
+    >>> unpack_nibbles("nibbles")
+    [6, 14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 7, 3]
+
+    :param list l: bytes
+
+    :returns: list of nibbles
+    """
+
     retval = []
     for i in l:
         i = ord(i)
@@ -44,16 +69,42 @@ def unpack_nibbles(l):
     return retval
 
 def pack_nibbles(l):
+    """
+    Pack pairs of nibbles into bytes.
+
+    Bytes are returned as characters.
+
+    :param list l: nibbles to pack
+
+    :returns: list of bytes
+    """
+
     it = iter(l)
     return [chr(i << 4 | j) for i, j in zip(it, it)]
 
 # Trig.
 
 def degs_to_rads(degrees):
+    """
+    Convert degrees to radians.
+
+    :param float degrees: degrees
+
+    :returns: float in radians
+    """
+
     degrees %= 360
     return degrees * math.pi / 180
 
 def rads_to_degs(radians):
+    """
+    Convert radians to degrees.
+
+    :param float radians: radians
+
+    :returns: float in degrees
+    """
+
     return radians * 180 / math.pi
 
 def rotated_cosine(x, y, theta, lambd):
@@ -69,6 +120,13 @@ def rotated_cosine(x, y, theta, lambd):
 
     This function has a handful of useful properties; it has a local minimum
     at f(0, 0) and oscillates infinitely betwen 0 and 1.
+
+    :param float x: X coordinate
+    :param float y: Y coordinate
+    :param float theta: angle of rotation
+    :param float lambda: wavelength
+
+    :returns: float of f(x, y)
     """
 
     return -math.cos((x * math.cos(theta) - y * math.sin(theta)) / lambd) / 2 + 1
@@ -88,6 +146,10 @@ def retrieve_nbt(filename):
     XXX should handle corner cases
     XXX should mmap() when possible
     XXX should use Twisted's VFS
+
+    :param str filename: NBT file to load
+
+    :returns: `NBTFile`
     """
 
     try:
