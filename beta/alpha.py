@@ -146,11 +146,14 @@ class Entity(object):
     Class representing an entity.
 
     Entities are simply dynamic in-game objects.
+
+    XXX this class is balls
     """
 
-    def __init__(self, id, x, y, z, entity_type):
+    def __init__(self, id, x, y, z, entity_type, quantity):
         self.id = id
         self.x = x
         self.y = y
         self.z = z
         self.entity_type = entity_type
+        self.quantity = quantity

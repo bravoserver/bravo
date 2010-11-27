@@ -61,9 +61,9 @@ class AlphaFactory(Factory):
 
         print "Factory init'd"
 
-    def create_entity(self, x=0, y=0, z=0, entity_type=None):
+    def create_entity(self, x, y, z, entity_type=None, quantity=1):
         self.entityid += 1
-        entity = Entity(self.entityid, x, y, z, entity_type)
+        entity = Entity(self.entityid, x, y, z, entity_type, quantity)
         self.entities.add(entity)
         return entity
 
@@ -145,7 +145,7 @@ class AlphaFactory(Factory):
 
         x, y, z = coords
 
-        entity = self.create_entity(x, y, z, block)
+        entity = self.create_entity(x, y, z, block, quantity)
 
         packet = make_packet("spawn-pickup", entity=Container(id=entity.id),
             item=block, count=quantity, x=x, y=y, z=z, yaw=0, pitch=0, roll=0)
