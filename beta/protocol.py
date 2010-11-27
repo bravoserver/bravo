@@ -27,6 +27,9 @@ class AlphaProtocol(Protocol):
 
     chunk_generators = None
 
+    time_loop = None
+    ping_loop = None
+
     def __init__(self):
         print "Client connected!"
 
@@ -325,8 +328,10 @@ class AlphaProtocol(Protocol):
         self.transport.loseConnection()
 
     def connectionLost(self, reason):
-        self.ping_loop.stop()
-        self.time_loop.stop()
+        if self.ping_loop:
+            self.ping_loop.stop()
+        if self.time_loop:
+            self.time_loop.stop()
 
         if self.chunk_generators:
             for generator in self.chunk_generators:
