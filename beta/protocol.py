@@ -6,7 +6,9 @@ from twisted.internet.task import coiterate, LoopingCall
 
 from beta.alpha import Player
 from beta.blocks import blocks
+from beta.ibeta import IDigHook
 from beta.packets import parse_packets, make_packet, make_error_packet
+from beta.plugin import retrieve_named_plugins
 from beta.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
@@ -49,6 +51,10 @@ class AlphaProtocol(Protocol):
             16: self.equip,
             255: self.quit,
         })
+
+        print "Registering client hooks..."
+        names = ["nofloatingsnow"]
+        self.dig_hooks = retrieve_named_plugins(IDigHook, names)
 
     def ping(self, container):
         pass
@@ -115,6 +121,10 @@ class AlphaProtocol(Protocol):
             self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
             return
 
+        # XXX something to consider: All of this handler's functionality is
+        # based on the chunk, the coords, and the block type, which means that
+        # it could all be implemented as IDigHooks. Hmm....
+
         oldblock = chunk.get_block((smallx, container.y, smallz))
         newblock = blocks[oldblock].replace
         chunk.set_block((smallx, container.y, smallz), newblock)
@@ -129,6 +139,9 @@ class AlphaProtocol(Protocol):
             coords = (container.x * 32 + 16, container.y * 32,
                 container.z * 32 + 16)
             self.factory.give(coords, dropblock, 1)
+
+        for hook in self.dig_hooks:
+            hook.dig_hook(chunk, smallx, container.y, smallz, oldblock)
 
     def build(self, container):
         # Ignore clients that think -1 is placeable.
