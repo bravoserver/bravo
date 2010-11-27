@@ -89,3 +89,17 @@ class ISeason(Interface):
     day = Attribute("""
         Day of the year on which to switch to this season.
         """)
+
+class IDigHook(Interface):
+    """
+    Hook for actions to be taken after a block is dug up.
+    """
+
+    def hook(self, chunk, x, y, z, block):
+        """
+        Do things.
+        """
+
+    name = Attribute("""
+        Name of the hook.
+        """)
