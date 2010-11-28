@@ -58,6 +58,17 @@ class Chunk(object):
     tag = None
 
     def __init__(self, x, z):
+        """
+        Set up the internal data structures for tracking and representing a
+        chunk.
+
+        Chunks are large pieces of block data, always measured 16x128x16 and
+        aligned on 16x16 boundaries in the xz-plane.
+
+        :param int x: X coordinate in chunk coords
+        :param int z: Z coordinate in chunk coords
+        """
+
         self.x = int(x)
         self.z = int(z)
 
@@ -68,6 +79,8 @@ class Chunk(object):
         self.skylight = [0] * 16 * 128 * 16
 
         self.tileentities = []
+
+        self.damaged = set()
 
     def __repr__(self):
         return "Chunk(%d, %d)" % (self.x, self.z)
@@ -163,6 +176,67 @@ class Chunk(object):
 
         self.tag["Level"] = level
 
+    def is_damaged(self):
+        """
+        Determine whether any damage is pending on this chunk.
+
+        :returns: bool
+        """
+
+        return bool(len(self.damaged))
+
+    def get_damage_packet(self):
+        """
+        Make a packet representing the current damage on this chunk.
+
+        This method is not private, but some care should be taken with it,
+        since it wraps some fairly cryptic internal data structures.
+
+        If this chunk is currently undamaged, this method will return an empty
+        string, which should be safe to treat as a packet. Please check with
+        `is_damaged()` before doing this if you need to optimize this case.
+
+        To avoid extra overhead, this method should really be used in
+        conjunction with `Factory.broadcast_for_chunk()`.
+
+        Do not forget to clear this chunk's damage! Callers are responsible
+        for doing this.
+
+        >>> packet = chunk.get_damage_packet()
+        >>> factory.broadcast_for_chunk(packet, chunk.x, chunk.z)
+        >>> chunk.clear_damage()
+
+        :returns: str representing a packet
+        """
+
+        if len(self.damaged) == 0:
+            return ""
+        elif len(self.damaged) == 1:
+            # Use a single block update packet.
+            x, y, z = next(iter(self.damaged))
+            index = triplet_to_index((x, y, z))
+            return make_packet("block", x=x, y=y, z=z,
+                type=self.blocks[index], meta=self.metadata[index])
+        else:
+            # Use a batch update.
+            coords = []
+            types = []
+            metadata = []
+            for x, y, z in self.damaged:
+                index = triplet_to_index((x, y, z))
+                coords.append(index)
+                types.append(self.blocks[index])
+                metadata.append(self.metadata[index])
+            return make_packet("batch", x=self.x, z=self.z, coords=coords,
+                types=types, metadata=metadata)
+
+    def clear_damage(self):
+        """
+        Clear this chunk's damage.
+        """
+
+        self.damaged.clear()
+
     def flush(self):
         """
         Write the chunk's data out to disk.
@@ -207,7 +281,9 @@ class Chunk(object):
 
         if self.blocks[index] != block:
             self.blocks[index] = block
+
             self.dirty = True
+            self.damaged.add(coords)
 
     def height_at(self, x, z):
         """
