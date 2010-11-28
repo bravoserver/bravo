@@ -215,6 +215,8 @@ class Chunk(object):
             # Use a single block update packet.
             x, y, z = next(iter(self.damaged))
             index = triplet_to_index((x, y, z))
+            x += self.x * 16
+            z += self.z * 16
             return make_packet("block", x=x, y=y, z=z,
                 type=self.blocks[index], meta=self.metadata[index])
         else:
