@@ -129,10 +129,6 @@ class AlphaProtocol(Protocol):
         newblock = blocks[oldblock].replace
         chunk.set_block((smallx, container.y, smallz), newblock)
 
-        packet = make_packet("block", x=container.x, y=container.y,
-            z=container.z, type=newblock, meta=0)
-        self.factory.broadcast_for_chunk(packet, bigx, bigz)
-
         dropblock = blocks[oldblock].drop
 
         if dropblock != 0:
@@ -142,6 +138,11 @@ class AlphaProtocol(Protocol):
 
         for hook in self.dig_hooks:
             hook.dig_hook(chunk, smallx, container.y, smallz, oldblock)
+
+        if chunk.is_damaged():
+            packet = chunk.get_damage_packet()
+            self.factory.broadcast_for_chunk(packet, bigx, bigz)
+            chunk.clear_damage()
 
     def build(self, container):
         # Ignore clients that think -1 is placeable.
@@ -181,9 +182,10 @@ class AlphaProtocol(Protocol):
 
         chunk.set_block((smallx, y, smallz), container.block)
 
-        packet = make_packet("block", x=x, y=y, z=z, type=container.block,
-            meta=0)
-        self.factory.broadcast_for_chunk(packet, bigx, bigz)
+        if chunk.is_damaged():
+            packet = chunk.get_damage_packet()
+            self.factory.broadcast_for_chunk(packet, bigx, bigz)
+            chunk.clear_damage()
 
     def equip(self, container):
         self.player.equipped = container.item
