@@ -30,6 +30,8 @@ Extended Features
    * Geometry generation
    * Seasons
 
+ * Chat commands
+
 Planned Features
 ================
 
@@ -37,7 +39,6 @@ Planned Features
  * More plugins for admin
  * More terrain generators
  * Extra inventories (chests)
- * Chat commands
  * Metadata (redstone/minecarts)
  * hey0/llama features
 
@@ -98,8 +99,14 @@ Are you going to make an open-source client? That would be awesome!
 
 Where did the docs go?
  We contribute to the Minecraft Collective's wiki at
- http://mc.kev009.com/wiki/ now, since it allows us to share data faster. If
- ReST documentation is really important to you, let us know.
+ http://mc.kev009.com/wiki/ now, since it allows us to share data faster. All
+ general Minecraft data goes to that wiki. Beta-specific docs are shipped in
+ ReST form, and a processed Sphinx version is available online at
+ http://mostawesomedude.github.com/beta/.
+
+Why did you make design decision <X>?
+ There's an entire page dedicated to this in the documentation. Look at
+ docs/philosophy.rst or http://mostawesomedude.github.com/beta/philosophy.rst.
 
 Who are you guys, anyway?
  Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
