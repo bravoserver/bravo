@@ -189,9 +189,70 @@ class Quit(object):
 
     info = "Quits the server"
 
+class SaveAll(object):
+
+    implements(IPlugin, ICommand)
+
+    def dispatch(self, factory, parameters):
+        yield "Flushing all chunks..."
+
+        for chunk in factory.world.chunk_cache:
+            chunk.flush()
+
+        yield "Save complete!"
+
+    name = "save-all"
+
+    aliases = tuple()
+
+    usage = "save-all"
+
+    info = "Saves all world data to disk"
+
+class SaveOff(object):
+
+    implements(IPlugin, ICommand)
+
+    def dispatch(self, factory, parameters):
+        yield "Disabling saving..."
+
+        factory.world.save_off()
+
+        yield "Saving disabled. Currently running in memory."
+
+    name = "save-off"
+
+    aliases = tuple()
+
+    usage = "save-off"
+
+    info = "Disables saving of world data to disk"
+
+class SaveOn(object):
+
+    implements(IPlugin, ICommand)
+
+    def dispatch(self, factory, parameters):
+        yield "Enabling saving (this could take a bit)..."
+
+        factory.world.save_on()
+
+        yield "Saving enabled."
+
+    name = "save-on"
+
+    aliases = tuple()
+
+    usage = "save-on"
+
+    info = "Enables saving of world data to disk"
+
 help = Help()
 list = List()
 time = Time()
 say  = Say()
 give = Give()
 quit = Quit()
+save_all = SaveAll()
+save_off = SaveOff()
+save_on = SaveOn()

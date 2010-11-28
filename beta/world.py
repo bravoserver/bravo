@@ -47,6 +47,11 @@ class World(object):
     The current `ISeason`.
     """
 
+    saving = True
+    """
+    Whether objects belonging to this world may be written out to disk.
+    """
+
     def __init__(self, folder):
         """
         Load a world from disk.
@@ -65,6 +70,33 @@ class World(object):
             self.load_level_data()
         else:
             self.generate_level()
+
+    def save_off(self):
+        """
+        Disable saving to disk.
+
+        This is useful for accessing the world on disk without Beta
+        interfering, for backing up the world.
+        """
+
+        if not self.saving:
+            return
+
+        d = dict(self.chunk_cache)
+        self.chunk_cache = d
+        self.saving = False
+
+    def save_on(self):
+        """
+        Enable saving to disk.
+        """
+
+        if self.saving:
+            return
+
+        d = weakref.WeakValueDictionary(self.chunk_cache)
+        self.chunk_cache = d
+        self.saving = True
 
     def populate_chunk(self, chunk):
         """
