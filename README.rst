@@ -19,6 +19,7 @@ Standard Features
  * Passage of time (day/night)
  * Block construction and deconstruction
  * Entities
+ * Save controls
 
 Extended Features
 -----------------
@@ -106,7 +107,7 @@ Where did the docs go?
 
 Why did you make design decision <X>?
  There's an entire page dedicated to this in the documentation. Look at
- docs/philosophy.rst or http://mostawesomedude.github.com/beta/philosophy.rst.
+ docs/philosophy.rst or http://mostawesomedude.github.com/beta/philosophy.html.
 
 Who are you guys, anyway?
  Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
