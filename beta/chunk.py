@@ -224,11 +224,18 @@ class Chunk(object):
             metadata = []
             for x, y, z in self.damaged:
                 index = triplet_to_index((x, y, z))
-                coords.append(index)
+                # Coordinates are not quite packed in the same system as the
+                # indices for chunk data structures.
+                # Chunk data structures are ((x * 16) + z) * 128) + y, or in
+                # bit-twiddler's parlance, x << 11 | z << 7 | y. However, for
+                # this, we need x << 12 | z << 8 | y, so repack accordingly.
+                packed = x << 12 | z << 8 | y
+                coords.append(packed)
                 types.append(self.blocks[index])
                 metadata.append(self.metadata[index])
-            return make_packet("batch", x=self.x, z=self.z, coords=coords,
-                types=types, metadata=metadata)
+            return make_packet("batch", x=self.x, z=self.z,
+                length=len(coords), coords=coords, types=types,
+                metadata=metadata)
 
     def clear_damage(self):
         """
