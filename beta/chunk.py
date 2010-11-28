@@ -286,10 +286,20 @@ class Chunk(object):
         Update a block value.
         """
 
+        x, y, z = coords
         index = triplet_to_index(coords)
 
         if self.blocks[index] != block:
             self.blocks[index] = block
+
+            # Regenerate heightmap at this coordinate. Honestly not sure
+            # whether or not this is cheaper than the set of conditional
+            # statements required to update it in relative terms instead of
+            # absolute terms. Revisit this later, maybe?
+            for y in range(127, -1, -1):
+                if self.get_block((x, y, z)):
+                    break
+            self.heightmap[x * 16 + z] = y
 
             self.dirty = True
             self.damaged.add(coords)
