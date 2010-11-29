@@ -1,8 +1,9 @@
-=====
-Chunk
-=====
+==================================
+``chunk`` -- Chunk data structures
+==================================
 
-Hurp. Fill out later.
+The ``chunk`` module holds the data structures required to track and update
+block data in chunks.
 
 Main Classes
 ============

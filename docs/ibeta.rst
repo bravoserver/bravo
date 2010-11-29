@@ -1,8 +1,12 @@
-=====
-IBeta
-=====
+=======================
+``ibeta`` -- Interfaces
+=======================
 
-Hurp interfaces hurp.
+The ``ibeta`` module holds the interfaces required to implement plugins and
+hooks.
+
+Plugins
+=======
 
 .. autoclass:: beta.ibeta.IAuthenticator
    :members:
@@ -14,4 +18,10 @@ Hurp interfaces hurp.
    :members:
 
 .. autoclass:: beta.ibeta.ITerrainGenerator
+   :members:
+
+Hooks
+=====
+
+.. autoclass:: beta.ibeta.IDigHook
    :members:

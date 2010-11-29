@@ -1,8 +1,8 @@
-======
-Blocks
-======
+================================
+``blocks`` -- Block descriptions
+================================
 
-This module contains block-related stuff. Or something. Dunno.
+The ``blocks`` module contains descriptions of blocks.
 
 .. autoclass:: beta.blocks.Block
    :members:
