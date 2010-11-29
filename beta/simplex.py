@@ -90,14 +90,20 @@ def simplex(x, y):
 
 def octaves(x, y, count):
     """
-    Generate `count` octaves of summed simplex noise at the given coordinates.
+    Generate fractal octaves of noise.
+
+    Summing increasingly scaled amounts of noise with itself creates fractal
+    clouds of noise.
+
+    :param int x: X coordinate
+    :param int y: Y coordinate
+    :param int count: number of octaves
     """
 
-    initial = len(p) // 2**count
     sigma = 0
+    divisor = 1
     while count:
-        sigma += simplex(x / initial, y / initial)
-        sigma *= 0.5
-        initial //= 2
+        sigma += simplex(x * divisor, y * divisor) / divisor
+        divisor *= 2
         count -= 1
     return sigma
