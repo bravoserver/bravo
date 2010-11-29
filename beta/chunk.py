@@ -54,8 +54,19 @@ tileentity_names = {
 class Chunk(object):
 
     dirty = True
+    """
+    Whether this chunk needs to be flushed to disk.
+    """
+
     populated = False
+    """
+    Whether this chunk has had its initial block data filled out.
+    """
+
     tag = None
+    """
+    The file backing this chunk.
+    """
 
     def __init__(self, x, z):
         """
@@ -280,6 +291,10 @@ class Chunk(object):
     def get_block(self, coords):
         """
         Look up a block value.
+
+        :param tuple coords: coordinate triplet
+
+        :returns: int representing block type
         """
 
         index = triplet_to_index(coords)
@@ -289,6 +304,9 @@ class Chunk(object):
     def set_block(self, coords, block):
         """
         Update a block value.
+
+        :param tuple coords: coordinate triplet
+        :param int block: block type
         """
 
         x, y, z = coords
@@ -312,6 +330,10 @@ class Chunk(object):
     def height_at(self, x, z):
         """
         Get the height of an xz-column of blocks.
+
+        :param int x: X coordinate
+        :param int z: Z coordinate
+        :returns: int representing height
         """
 
         return self.heightmap[x * 16 + z]
@@ -322,6 +344,9 @@ class Chunk(object):
 
         Named after the ubiquitous Unix tool. Does a semantic
         s/search/replace/g on this chunk's blocks.
+
+        :param int search: block to find
+        :param int replace: block to use as a replacement
         """
 
         for i, block in enumerate(self.blocks):
