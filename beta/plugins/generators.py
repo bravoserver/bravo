@@ -48,17 +48,18 @@ class SimplexGenerator(object):
         # from a piece of fairy cake, and into the other end he plugged his
         # wife: so that when he turned it on she saw in one instant the whole
         # infinity of creation and herself in relation to it.
-        factor = 1 / 1024
+
+        factor = 1 / 256
 
         for x, z in product(xrange(16), xrange(16)):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
-            height = octaves(magx, magz, 5)
+            height = octaves(magx, magz, 6)
             # Normalize around 70. Normalization is scaled according to a
             # rotated cosine.
-            scale = rotated_cosine(magx, magz, seed, 16 * 10)
-            height *= scale * 30
+            #scale = rotated_cosine(magx, magz, seed, 16 * 10)
+            height *= 15
             height += 70
             for y in xrange(int(height)):
                 chunk.set_block((x, y, z), blocks["stone"].slot)
