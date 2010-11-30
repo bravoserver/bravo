@@ -185,7 +185,6 @@ class World(object):
         """
 
         filename = os.path.join(self.folder, "players", "%s.dat" % username)
-        try:
-            return NBTFile(filename)
-        except IOError:
-            return None
+        tag = retrieve_nbt(filename)
+
+        return tag

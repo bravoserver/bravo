@@ -20,7 +20,7 @@ class Inventory(object):
         These tags are always lists of items.
         """
 
-        for item in tag.value:
+        for item in tag.tags:
             slot = item["Slot"].value - self.offset
             if 0 <= slot < len(self.items):
                 self.items[slot] = (item["id"].value, item["Damage"].value,
@@ -37,7 +37,7 @@ class Inventory(object):
                 d["Damage"] = TAG_Short(damage)
                 d["Count"] = TAG_Byte(count)
                 d["Slot"] = TAG_Byte(i)
-            tag.value.append(d)
+            tag.tags.append(d)
 
         return tag
 
@@ -130,17 +130,36 @@ class Player(object):
 
         self.location = Location()
 
-    def load_from_tag(self, tag):
+    def set_tag(self, tag):
+        self.tag = tag
+        self.load_from_tag()
+
+    def load_from_tag(self):
         """
         Load data from a Player tag.
 
         Players are compound tags.
         """
 
-        if tag["Inventory"].value:
-            self.inventory.load_from_tag(tag["Inventory"])
-            self.crafting.load_from_tag(tag["Inventory"])
-            self.armor.load_from_tag(tag["Inventory"])
+        if "Inventory" in self.tag:
+            self.inventory.load_from_tag(self.tag["Inventory"])
+            self.crafting.load_from_tag(self.tag["Inventory"])
+            self.armor.load_from_tag(self.tag["Inventory"])
+
+    def save_to_tag(self):
+
+        if "Inventory" not in self.tag:
+            self.tag["Inventory"] = TAG_List(type=TAG_Compound)
+
+        l = self.inventory.save_to_tag().tags
+        l += self.crafting.save_to_tag().tags
+        l += self.armor.save_to_tag().tags
+
+        self.tag["Items"] = TAG_List(type=TAG_Compound)
+        self.tag["Items"].tags = l
+
+        self.tag.name = ""
+        self.tag.write_file()
 
 class Entity(object):
     """

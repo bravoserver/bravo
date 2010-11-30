@@ -257,8 +257,7 @@ class AlphaProtocol(Protocol):
         self.player.location.z = spawn[2]
 
         tag = self.factory.world.load_player(self.username)
-        if tag:
-            self.player.load_from_tag(tag)
+        self.player.set_tag(tag)
 
         packet = self.player.inventory.save_to_packet()
         self.transport.write(packet)
@@ -353,6 +352,8 @@ class AlphaProtocol(Protocol):
                 generator.close()
 
         del self.chunks
+
+        self.player.save_to_tag()
 
         if self.username in self.factory.players:
             del self.factory.players[self.username]
