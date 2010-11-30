@@ -50,7 +50,19 @@ def simplex(x, y):
     This particular implementation has very high chaotic features at normal
     resolution; zooming in by a factor of 16x to 256x is going to yield more
     pleasing results for most applications.
+
+    The gradient field must be seeded prior to calling this function; call
+    `reseed()` first.
+
+    :param int x: X coordinate
+    :param int y: Y coordinate
+
+    :returns: simplex noise
+    :raises Exception: the gradient field is not seeded
     """
+
+    if not p:
+        raise Exception("The gradient field is unseeded!")
 
     f = 0.5 * (math.sqrt(3) - 1)
     g = (3 - math.sqrt(3)) / 6
@@ -98,6 +110,8 @@ def octaves(x, y, count):
     :param int x: X coordinate
     :param int y: Y coordinate
     :param int count: number of octaves
+
+    :returns: Scaled fractal noise
     """
 
     sigma = 0
