@@ -18,6 +18,7 @@ if len(sys.argv) < 6:
 x, y, w, h, depth = (int(i) for i in sys.argv[1:6])
 
 image = Image.new("L", (WIDTH, HEIGHT))
+pbo = image.load()
 
 reseed(0)
 
@@ -29,6 +30,6 @@ for i, j in itertools.product(xrange(WIDTH), xrange(HEIGHT)):
     # Get noise and scale from [-1, 1] to [0, 255]
     noise = (octaves(xcoord, ycoord, depth) + 1) * 127.5
 
-    image.putpixel((i, j), noise)
+    pbo[i, j] = noise
 
 image.save("noise.png")
