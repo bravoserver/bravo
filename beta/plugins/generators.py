@@ -44,11 +44,17 @@ class SimplexGenerator(object):
 
         reseed(seed)
 
-        for x, z in product(xrange(16), xrange(16)):
-            magx = chunk.x + (x * 0.0625)
-            magz = chunk.z + (z * 0.0625)
+        # And into one end he plugged the whole of reality as extrapolated
+        # from a piece of fairy cake, and into the other end he plugged his
+        # wife: so that when he turned it on she saw in one instant the whole
+        # infinity of creation and herself in relation to it.
+        factor = 1 / 1024
 
-            height = octaves(magx, magz, 4)
+        for x, z in product(xrange(16), xrange(16)):
+            magx = (chunk.x * 16 + x) * factor
+            magz = (chunk.z * 16 + z) * factor
+
+            height = octaves(magx, magz, 5)
             # Normalize around 70. Normalization is scaled according to a
             # rotated cosine.
             scale = rotated_cosine(magx, magz, seed, 16 * 10)

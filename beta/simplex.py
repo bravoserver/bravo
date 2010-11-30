@@ -3,6 +3,8 @@ from __future__ import division
 import math
 import random
 
+SIZE = 2**10
+
 edges = [
     (1, 1, 0),
     (1, -1, 0),
@@ -35,7 +37,7 @@ def reseed(seed):
     if current_seed == seed:
         return
 
-    p = range(256)
+    p = range(SIZE)
     random.seed(seed)
     random.shuffle(p)
     p *= 2
