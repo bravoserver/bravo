@@ -7,6 +7,7 @@ from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 
 from beta.alpha import Entity
+from beta.config import configuration
 from beta.ibeta import IAuthenticator, ISeason, ITerrainGenerator
 from beta.packets import make_packet
 from beta.plugin import retrieve_named_plugins
@@ -20,7 +21,6 @@ from beta.plugin import retrieve_plugins
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
 
-authenticator_name = "offline"
 generator_names = "simplex,erosion,watertable,grass,safety".split(",")
 
 class AlphaFactory(Factory):
@@ -43,8 +43,8 @@ class AlphaFactory(Factory):
 
         self.hooks = {}
 
-        selected = retrieve_named_plugins(IAuthenticator,
-            [authenticator_name])[0]
+        authenticator = configuration.get("beta", "authenticator")
+        selected = retrieve_named_plugins(IAuthenticator, [authenticator])[0]
 
         print "Using authenticator %s" % selected.name
         self.hooks[2] = selected.handshake
