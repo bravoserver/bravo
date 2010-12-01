@@ -84,29 +84,6 @@ def pack_nibbles(l):
 
 # Trig.
 
-def degs_to_rads(degrees):
-    """
-    Convert degrees to radians.
-
-    :param float degrees: degrees
-
-    :returns: float in radians
-    """
-
-    degrees %= 360
-    return degrees * math.pi / 180
-
-def rads_to_degs(radians):
-    """
-    Convert radians to degrees.
-
-    :param float radians: radians
-
-    :returns: float in degrees
-    """
-
-    return radians * 180 / math.pi
-
 def rotated_cosine(x, y, theta, lambd):
     r"""
     Evaluate a rotated 3D sinusoidal wave at a given point, angle, and

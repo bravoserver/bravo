@@ -23,8 +23,6 @@ More affectionately known as "bit-twiddling."
 Trigonometry
 ============
 
-.. autofunction:: beta.utilities.degs_to_rads
-.. autofunction:: beta.utilities.rads_to_degs
 .. autofunction:: beta.utilities.rotated_cosine
 
 File Handling
