@@ -6,3 +6,6 @@ defaults = {
 
 configuration = ConfigParser.SafeConfigParser(defaults)
 configuration.add_section("beta")
+
+# XXX improve on this
+configuration.read(["beta.ini"])

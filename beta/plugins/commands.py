@@ -5,6 +5,7 @@ from zope.interface import implements
 from twisted.internet import reactor
 
 import beta.blocks
+from beta.config import configuration
 from beta.ibeta import ICommand
 from beta.plugin import retrieve_plugins
 from beta.packets import make_packet
@@ -247,6 +248,23 @@ class SaveOn(object):
 
     info = "Enables saving of world data to disk"
 
+class WriteConfig(object):
+
+    implements(IPlugin, ICommand)
+
+    def dispatch(self, factory, parameters):
+        with open(parameters, "w") as f:
+            configuration.write(f)
+        yield "Configuration saved."
+
+    name = "write-config"
+
+    aliases = tuple()
+
+    usage = "write-config"
+
+    info = "Saves configuration to disk"
+
 help = Help()
 list = List()
 time = Time()
@@ -256,3 +274,4 @@ quit = Quit()
 save_all = SaveAll()
 save_off = SaveOff()
 save_on = SaveOn()
+write_config = WriteConfig()
