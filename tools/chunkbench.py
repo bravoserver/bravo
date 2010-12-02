@@ -2,9 +2,10 @@
 
 import time
 
+from beta.config import configuration
 from beta.chunk import Chunk
 from beta.ibeta import ITerrainGenerator
-from beta.plugin import retrieve_plugins
+from beta.plugin import retrieve_plugins, retrieve_named_plugins
 
 def empty_chunk():
 
@@ -41,6 +42,22 @@ def repeated_seeds(p):
 
     return after - before
 
+def pipeline():
+
+    generators = configuration.get("beta", "generators").split(",")
+    generators = retrieve_named_plugins(ITerrainGenerator, generators)
+
+    before = time.time()
+
+    for i in range(10):
+        chunk = Chunk(i, i)
+        for generator in generators:
+            generator.populate(chunk, 0)
+
+    after = time.time()
+
+    return after - before
+
 plugins = retrieve_plugins(ITerrainGenerator)
 
 t = empty_chunk()
@@ -51,3 +68,6 @@ for name, plugin in plugins.iteritems():
     print "Sequential %s: %f seconds" % (name, t)
     t = repeated_seeds(plugin)
     print "Repeated %s: %f seconds" % (name, t)
+
+t = pipeline()
+print "Total pipeline: %f seconds" % t
