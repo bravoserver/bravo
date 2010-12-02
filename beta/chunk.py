@@ -297,7 +297,7 @@ class Chunk(object):
             # statements required to update it in relative terms instead of
             # absolute terms. Revisit this later, maybe?
             for y in range(127, -1, -1):
-                if self.get_block((x, y, z)):
+                if self.blocks[index]:
                     break
             self.heightmap[x * 16 + z] = y
 
