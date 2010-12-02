@@ -2,6 +2,7 @@ import ConfigParser
 
 defaults = {
     "authenticator": "offline",
+    "generators": "simplex,erosion,watertable,grass,safety",
 }
 
 configuration = ConfigParser.SafeConfigParser(defaults)

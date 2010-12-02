@@ -21,8 +21,6 @@ from beta.plugin import retrieve_plugins
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
 
-generator_names = "simplex,erosion,watertable,grass,safety".split(",")
-
 class AlphaFactory(Factory):
 
     protocol = AlphaProtocol
@@ -50,8 +48,8 @@ class AlphaFactory(Factory):
         self.hooks[2] = selected.handshake
         self.hooks[1] = selected.login
 
-        generators = retrieve_named_plugins(ITerrainGenerator,
-            generator_names)
+        generators = configuration.get("beta", "generators").split(",")
+        generators = retrieve_named_plugins(ITerrainGenerator, generators)
 
         print "Using generators %s" % ", ".join(i.name for i in generators)
         self.world.pipeline = generators
