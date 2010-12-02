@@ -96,9 +96,14 @@ class Chunk(object):
         """
 
         for x, z in product(xrange(16), xrange(16)):
+            # Get the index for the top of the column, and then exploit the
+            # nature of indices to avoid calling triplet_to_index()
+            # repeatedly.
+            index = triplet_to_index((x, 0, z))
             for y in range(127, -1, -1):
-                if self.get_block((x, y, z)):
+                if self.blocks[index + y]:
                     break
+
             self.heightmap[x * 16 + z] = y
 
     def regenerate_lightmap(self):
