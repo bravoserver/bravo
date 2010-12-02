@@ -32,7 +32,7 @@ class Authenticator(object):
         if container.protocol < 3:
             # Kick old clients.
             protocol.error("This server doesn't support your ancient client.")
-        elif container.protocol > 5:
+        elif container.protocol > 6:
             # Kick new clients.
             protocol.error("This server doesn't support your newfangled client.")
         else:
