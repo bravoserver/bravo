@@ -14,6 +14,7 @@ Contents:
    philosophy
    core
    aux
+   tools
    noise
 
 Indices and tables
