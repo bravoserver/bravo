@@ -40,7 +40,7 @@ class Status(object):
             yield "%s: %d chunks (%d dirty)" % (name, count, dirty)
 
         chunk_count = len(factory.world.chunk_cache)
-        dirty = len([i for i in factory.world.chunk_cache.values() if i.dirty])
+        dirty = len(factory.world.dirty_chunk_cache)
         yield "World cache: %d chunks (%d dirty)" % (chunk_count, dirty)
 
     name = "status"

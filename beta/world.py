@@ -3,7 +3,9 @@ import random
 import sys
 import weakref
 
-from nbt.nbt import NBTFile, TAG_Compound, TAG_Long, TAG_Int
+from twisted.internet.task import LoopingCall
+
+from nbt.nbt import TAG_Compound, TAG_Long, TAG_Int
 
 from beta.chunk import Chunk
 from beta.utilities import retrieve_nbt
@@ -63,6 +65,7 @@ class World(object):
 
         self.folder = folder
         self.chunk_cache = weakref.WeakValueDictionary()
+        self.dirty_chunk_cache = dict()
 
         self.level = retrieve_nbt(os.path.join(self.folder, "level.dat"))
 
@@ -70,6 +73,33 @@ class World(object):
             self.load_level_data()
         else:
             self.generate_level()
+
+        self.chunk_management_loop = LoopingCall(self.sort_chunks)
+        self.chunk_management_loop.start(1)
+
+    def sort_chunks(self):
+        """
+        Sort out the internal caches.
+
+        This method will always block when there are dirty chunks.
+        """
+
+        first = True
+
+        all_chunks = dict(self.dirty_chunk_cache)
+        all_chunks.update(self.chunk_cache)
+        self.chunk_cache.clear()
+        self.dirty_chunk_cache.clear()
+        for coords, chunk in all_chunks.iteritems():
+            if chunk.dirty:
+                if first:
+                    first = False
+                    chunk.flush()
+                    self.chunk_cache[coords] = chunk
+                else:
+                    self.dirty_chunk_cache[coords] = chunk
+            else:
+                self.chunk_cache[coords] = chunk
 
     def save_off(self):
         """
@@ -159,19 +189,24 @@ class World(object):
 
         if (x, z) in self.chunk_cache:
             return self.chunk_cache[x, z]
+        elif (x, z) in self.dirty_chunk_cache:
+            return self.dirty_chunk_cache[x, z]
 
         chunk = Chunk(x, z)
-        self.chunk_cache[x, z] = chunk
 
         filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
             "c.%s.%s.dat" % (base36(x), base36(z)))
         tag = retrieve_nbt(filename)
         chunk.set_tag(tag)
 
-        if not chunk.populated:
+        if chunk.populated:
+            self.chunk_cache[x, z] = chunk
+        else:
             self.populate_chunk(chunk)
             chunk.populated = True
             chunk.dirty = True
+
+            self.dirty_chunk_cache[x, z] = chunk
 
         # Apply the current season to the chunk.
         if self.season:
