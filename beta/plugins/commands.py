@@ -197,7 +197,7 @@ class SaveAll(object):
     def dispatch(self, factory, parameters):
         yield "Flushing all chunks..."
 
-        for chunk in factory.world.chunk_cache:
+        for chunk in factory.world.chunk_cache.itervalues():
             chunk.flush()
 
         yield "Save complete!"
