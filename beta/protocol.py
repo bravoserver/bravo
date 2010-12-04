@@ -6,6 +6,7 @@ from twisted.internet.task import coiterate, LoopingCall
 
 from beta.alpha import Player
 from beta.blocks import blocks
+from beta.config import configuration
 from beta.ibeta import IDigHook
 from beta.packets import parse_packets, make_packet, make_error_packet
 from beta.plugin import retrieve_named_plugins
@@ -53,7 +54,7 @@ class AlphaProtocol(Protocol):
         })
 
         print "Registering client hooks..."
-        names = ["nofloatingsnow"]
+        names = configuration.get("beta", "dig_hooks").split(",")
         self.dig_hooks = retrieve_named_plugins(IDigHook, names)
 
     def ping(self, container):
