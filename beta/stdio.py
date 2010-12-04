@@ -28,6 +28,7 @@ class Console(LineReceiver):
     def lineReceived(self, line):
         if line != "":
             for l in self.factory.run_command(line):
-                self.sendLine(l)
+                # Encode to UTF-8 because stdio is not Unicode-safe.
+                self.sendLine(l.encode("utf8"))
 
         self.transport.write(prompt)
