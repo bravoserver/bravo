@@ -170,9 +170,7 @@ class Quit(object):
     implements(IPlugin, ICommand)
 
     def dispatch(self, factory, parameters):
-        # XXX Do save stuff here
-
-        # Then let's shutdown!
+        # Let's shutdown!
         message = "Server shutting down."
         yield message
 
@@ -180,6 +178,11 @@ class Quit(object):
         packet = make_packet("error", message=message)
         factory.broadcast(packet)
 
+        yield "Saving all chunks to disk..."
+        for chunk in factory.world.dirty_chunk_cache.itervalues():
+            chunk.flush()
+
+        yield "Halting."
         reactor.stop()
 
     name = "quit"
