@@ -14,6 +14,17 @@ from beta.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
+circle = [(i, j)
+    for i, j in sorted(
+        product(xrange(-10, 10), xrange(-10, 10)),
+        key=lambda t: t[0]**2 + t[1]**2)
+    if i**2 + j**2 <= 100
+]
+"""
+A list of points in a filled circle of radius 10, sorted according to distance
+from the center.
+"""
+
 class AlphaProtocol(Protocol):
     """
     The Minecraft Alpha protocol.
@@ -310,7 +321,7 @@ class AlphaProtocol(Protocol):
         x, chaff, z, chaff = split_coords(self.player.location.x,
             self.player.location.z)
 
-        new = set(product(xrange(x - 10, x + 10), xrange(z - 10, z + 10)))
+        new = set((i + x, j + z) for i, j in circle)
         old = set(self.chunks.iterkeys())
         added = new - old
         discarded = old - new
