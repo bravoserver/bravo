@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from beta.blocks import blocks
-from beta.ibeta import IDigHook
+from beta.ibeta import IBuildHook, IDigHook
 
 class AlphaSnow(object):
     """
@@ -29,9 +29,19 @@ class Fallables(object):
     Sometimes things should fall.
     """
 
-    implements(IPlugin, IDigHook)
+    implements(IPlugin, IBuildHook, IDigHook)
 
     fallables = tuple()
+
+    def build_hook(self, chunk, x, y, z, block):
+        while y < 127:
+            if chunk.get_block((x, y - 1, z)):
+                break
+            above = chunk.get_block((x, y, z))
+            if above in self.fallables:
+                chunk.set_block((x, y - 1, z), above)
+                chunk.set_block((x, y, z), blocks["air"].slot)
+            y += 1
 
     def dig_hook(self, chunk, x, y, z, block):
         while y < 127:

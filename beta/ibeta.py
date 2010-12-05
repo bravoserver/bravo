@@ -90,6 +90,26 @@ class ISeason(Interface):
         Day of the year on which to switch to this season.
         """)
 
+class IBuildHook(Interface):
+    """
+    Hook for actions to be taken after a block is placed.
+    """
+
+    def build_hook(self, chunk, x, y, z, block):
+        """
+        Do things.
+
+        :param `Chunk` chunk: digging location
+        :param int x: X coordinate
+        :param int y: Y coordinate
+        :param int z: Z coordinate
+        :param int block: block type
+        """
+
+    name = Attribute("""
+        Name of the hook.
+        """)
+
 class IDigHook(Interface):
     """
     Hook for actions to be taken after a block is dug up.
