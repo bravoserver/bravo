@@ -32,26 +32,35 @@ class Fallables(object):
     implements(IPlugin, IBuildHook, IDigHook)
 
     fallables = tuple()
+    whitespace = (blocks["air"].slot,)
 
     def build_hook(self, chunk, x, y, z, block):
+        column = chunk.get_column(x, z)
+        y = min(y - 1, 0)
+
         while y < 127:
-            if chunk.get_block((x, y - 1, z)):
-                break
-            above = chunk.get_block((x, y, z))
-            if above in self.fallables:
-                chunk.set_block((x, y - 1, z), above)
-                chunk.set_block((x, y, z), blocks["air"].slot)
+            # Find whitespace...
+            if column[y] in self.whitespace:
+                above = y + 1
+                # ...find end of whitespace...
+                while column[above] in self.whitespace and above < 127:
+                    above += 1
+                if column[above] in self.fallables:
+                    # ...move fallables.
+                    column[y] = column[above]
+                    column[above] = blocks["air"].slot
+                else:
+                    # Not fallable; reset stack search here.
+                    # y is reset to above, not above - 1, because
+                    # column[above] is neither fallable nor whitespace, so the
+                    # next spot to check is above + 1, which will be y on the
+                    # next line.
+                    y = above
             y += 1
 
-    def dig_hook(self, chunk, x, y, z, block):
-        while y < 127:
-            above = chunk.get_block((x, y + 1, z))
-            if above in self.fallables and not chunk.get_block((x, y, z)):
-                chunk.set_block((x, y, z), above)
-                chunk.set_block((x, y + 1, z), blocks["air"].slot)
-            elif not above:
-                break
-            y += 1
+        chunk.set_column(x, z, column)
+
+    dig_hook = build_hook
 
     name = "fallables"
 
@@ -61,6 +70,7 @@ class AlphaSandGravel(Fallables):
     """
 
     fallables = (blocks["sand"].slot, blocks["gravel"].slot)
+    whitespace = (blocks["air"].slot, blocks["snow"].slot)
 
     name = "alpha_sand_gravel"
 
@@ -71,6 +81,7 @@ class BetaSnowSandGravel(Fallables):
 
     fallables = (blocks["snow"].slot, blocks["sand"].slot,
         blocks["gravel"].slot)
+    whitespace = (blocks["air"].slot, blocks["snow"].slot)
 
     name = "beta_snow_sand_gravel"
 
