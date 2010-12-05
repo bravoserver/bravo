@@ -33,6 +33,9 @@ class AlphaProtocol(Protocol):
     time_loop = None
     ping_loop = None
 
+    player = None
+    username = None
+
     def __init__(self):
         print "Client connected!"
 
@@ -354,7 +357,8 @@ class AlphaProtocol(Protocol):
 
         del self.chunks
 
-        self.player.save_to_tag()
+        if self.player:
+            self.player.save_to_tag()
 
         if self.username in self.factory.players:
             del self.factory.players[self.username]
