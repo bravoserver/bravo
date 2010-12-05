@@ -41,6 +41,7 @@ class Status(object):
 
         chunk_count = len(factory.world.chunk_cache)
         dirty = len(factory.world.dirty_chunk_cache)
+        chunk_count += dirty
         yield "World cache: %d chunks (%d dirty)" % (chunk_count, dirty)
 
     name = "status"
