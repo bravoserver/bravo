@@ -1,6 +1,6 @@
 from __future__ import division
 
-from itertools import product
+from itertools import izip, product, tee
 
 from twisted.plugin import IPlugin
 from zope.interface import implements
@@ -9,6 +9,15 @@ from beta.blocks import blocks
 from beta.ibeta import ITerrainGenerator
 from beta.simplex import octaves, reseed
 from beta.utilities import rotated_cosine
+
+def pairwise(iterable):
+    """
+    From itertools recipes.
+    """
+
+    a, b = tee(iterable)
+    next(b, None)
+    return izip(a, b)
 
 class BoringGenerator(object):
     """
@@ -22,8 +31,10 @@ class BoringGenerator(object):
         Fill the bottom half of the chunk with stone.
         """
 
-        for x, y, z in product(xrange(16), xrange(64), xrange(16)):
-            chunk.set_block((x, y, z), blocks["stone"].slot)
+        for x, z in product(xrange(16), xrange(16)):
+            column = chunk.get_column(x, z)
+            column[0:64] = [blocks["stone"].slot] * 64
+            chunk.set_column(x, z, column)
 
     name = "boring"
 
@@ -60,9 +71,11 @@ class SimplexGenerator(object):
             # rotated cosine.
             #scale = rotated_cosine(magx, magz, seed, 16 * 10)
             height *= 15
-            height += 70
-            for y in xrange(int(height)):
-                chunk.set_block((x, y, z), blocks["stone"].slot)
+            height = int(height + 70)
+
+            column = chunk.get_column(x, z)
+            column[0:height] = [blocks["stone"].slot] * height
+            chunk.set_column(x, z, column)
 
     name = "simplex"
 
@@ -78,9 +91,11 @@ class WaterTableGenerator(object):
         Generate a flat water table halfway up the map.
         """
 
-        for x, y, z in product(xrange(16), xrange(64), xrange(16)):
-            if chunk.get_block((x, y, z)) == blocks["air"].slot:
-                chunk.set_block((x, y, z), blocks["spring"].slot)
+        for x, z in product(xrange(16), xrange(16)):
+            column = chunk.get_column(x, z)[:64]
+            for y, block in enumerate(column):
+                if block ==  blocks["air"].slot:
+                    chunk.set_block((x, y, z), blocks["spring"].slot)
 
     name = "watertable"
 
@@ -97,10 +112,13 @@ class ErosionGenerator(object):
         """
 
         for x, z in product(xrange(16), xrange(16)):
-            for i in xrange(127, 1, -1):
-                if chunk.get_block((x, i - 1, z)) == blocks["stone"].slot:
-                    for y in xrange(max(i - 4, 0), i):
-                        chunk.set_block((x, y, z), blocks["dirt"].slot)
+            column = chunk.get_column(x, z)
+            for i, block in enumerate(reversed(column)):
+                if block == blocks["stone"].slot:
+                    top = len(column) - i
+                    bottom = max(top - 4, 0)
+                    column[bottom:top] = [blocks["dirt"].slot] * (top - bottom)
+                    chunk.set_column(x, z, column)
                     break
 
     name = "erosion"
@@ -118,11 +136,15 @@ class GrassGenerator(object):
         """
 
         for x, z in product(xrange(16), xrange(16)):
-            for i in xrange(126, 0, -1):
-                if (chunk.get_block((x, i + 1, z)) == blocks["air"].slot
-                    and chunk.get_block((x, i, z)) == blocks["dirt"].slot):
-                    chunk.set_block((x, i, z), blocks["grass"].slot)
-                    break
+            # We're using the column getter here, but we're writing back
+            # single blocks, because typically there will only be one or two
+            # grass blocks per column and we want to avoid dirtying an entire
+            # column for want of one block.
+            column = chunk.get_column(x, z)
+            for first, second in pairwise(enumerate(column)):
+                if (first[1] == blocks["dirt"].slot
+                    and second[1] == blocks["air"].slot):
+                    chunk.set_block((x, first[0], z), blocks["grass"].slot)
 
     name = "grass"
 
