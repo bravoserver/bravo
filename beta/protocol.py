@@ -7,7 +7,7 @@ from twisted.internet.task import coiterate, LoopingCall
 from beta.alpha import Player
 from beta.blocks import blocks
 from beta.config import configuration
-from beta.ibeta import IDigHook
+from beta.ibeta import IBuildHook, IDigHook
 from beta.packets import parse_packets, make_packet, make_error_packet
 from beta.plugin import retrieve_named_plugins
 from beta.utilities import split_coords
@@ -57,6 +57,8 @@ class AlphaProtocol(Protocol):
         })
 
         print "Registering client hooks..."
+        names = configuration.get("beta", "build_hooks").split(",")
+        self.build_hooks = retrieve_named_plugins(IBuildHook, names)
         names = configuration.get("beta", "dig_hooks").split(",")
         self.dig_hooks = retrieve_named_plugins(IDigHook, names)
 
@@ -185,6 +187,9 @@ class AlphaProtocol(Protocol):
             return
 
         chunk.set_block((smallx, y, smallz), container.block)
+
+        for hook in self.build_hooks:
+            hook.build_hook(chunk, smallx, container.y, smallz, container.block)
 
         if chunk.is_damaged():
             packet = chunk.get_damage_packet()
