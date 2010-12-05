@@ -24,6 +24,46 @@ class AlphaSnow(object):
 
     name = "alpha_snow"
 
+class Fallables(object):
+    """
+    Sometimes things should fall.
+    """
+
+    implements(IPlugin, IDigHook)
+
+    fallables = tuple()
+
+    def dig_hook(self, chunk, x, y, z, block):
+        while y < 127:
+            above = chunk.get_block((x, y + 1, z))
+            if above in self.fallables and not chunk.get_block((x, y, z)):
+                chunk.set_block((x, y, z), above)
+                chunk.set_block((x, y + 1, z), blocks["air"].slot)
+            elif not above:
+                break
+            y += 1
+
+    name = "fallables"
+
+class AlphaSandGravel(Fallables):
+    """
+    Notch-style falling sand and gravel.
+    """
+
+    fallables = (blocks["sand"].slot, blocks["gravel"].slot)
+
+    name = "alpha_sand_gravel"
+
+class BetaSnowSandGravel(Fallables):
+    """
+    Beta falling snow, sand, and gravel.
+    """
+
+    fallables = (blocks["snow"].slot, blocks["sand"].slot,
+        blocks["gravel"].slot)
+
+    name = "beta_snow_sand_gravel"
+
 class BetaSnow(object):
     """
     Snow dig hooks that make snow behave like sand and gravel.
@@ -43,4 +83,7 @@ class BetaSnow(object):
     name = "beta_snow"
 
 alpha_snow = AlphaSnow()
+alpha_sand_gravel = AlphaSandGravel()
+
 beta_snow = BetaSnow()
+beta_snow_sand_gravel = BetaSnowSandGravel()
