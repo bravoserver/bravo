@@ -354,5 +354,27 @@ class Chunk(object):
                 self.blocks[i] = replace
                 self.dirty = True
 
+    def get_column(self, x, z):
+        """
+        Return a slice of the block data at the given xz-column.
+        """
+
+        index = triplet_to_index((x, 0, z))
+
+        return self.blocks[index:index + 128]
+
+    def set_column(self, x, z, column):
+        """
+        Atomically set an entire xz-column's block data.
+        """
+
+        index = triplet_to_index((x, 0, z))
+
+        self.blocks[index:index + 128] = column[:128]
+
+        self.dirty = True
+        for y in range(128):
+            self.damaged.add((x, y, z))
+
     def __del__(self):
         self.flush()
