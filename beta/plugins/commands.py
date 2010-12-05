@@ -4,7 +4,7 @@ from twisted.plugin import IPlugin
 from zope.interface import implements
 from twisted.internet import reactor
 
-import beta.blocks
+from beta.blocks import blocks
 from beta.config import configuration
 from beta.ibeta import ICommand
 from beta.plugin import retrieve_plugins
@@ -21,7 +21,7 @@ def parse_block(block):
         return int(block)
     except ValueError:
         try:
-            return beta.blocks.names[block]
+            return blocks[block].slot
         except IndexError:
             raise Exception("Couldn't parse block %s!" % block)
 
