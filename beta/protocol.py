@@ -53,6 +53,7 @@ class AlphaProtocol(Protocol):
             14: self.digging,
             15: self.build,
             16: self.equip,
+            18: self.animate,
             255: self.quit,
         })
 
@@ -198,6 +199,9 @@ class AlphaProtocol(Protocol):
 
     def equip(self, container):
         self.player.equipped = container.item
+
+    def animate(self, container):
+        pass
 
     def quit(self, container):
         print "Client is quitting: %s" % container.message
