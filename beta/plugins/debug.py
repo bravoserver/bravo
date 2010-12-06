@@ -22,9 +22,9 @@ class Meliae(object):
 
     aliases = tuple()
 
-    usage = "dump_memory"
+    usage = "dump_memory <filename>"
 
-    info = "Dump a snapshot of memory usage using Meliae"
+    info = "Dump a JSON snapshot of memory usage using Meliae"
 
 class Status(object):
 
