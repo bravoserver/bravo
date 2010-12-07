@@ -3,22 +3,21 @@ from __future__ import division
 import math
 import random
 
+from itertools import chain, permutations
+
 SIZE = 2**10
 
-edges = [
-    (1, 1, 0),
-    (1, -1, 0),
-    (-1, 1, 0),
-    (-1, -1, 0),
-    (1, 0, 1),
-    (1, 0, -1),
-    (-1, 0, 1),
-    (-1, 0, -1),
-    (0, 1, 1),
-    (0, 1, -1),
-    (0, -1, 1),
-    (0, -1, -1),
-]
+edges = list(
+    set(
+        chain(
+            permutations((0, 1, 1), 3),
+            permutations((0, 1, -1), 3),
+            permutations((0, -1, -1), 3),
+        )
+    )
+)
+
+edges.sort()
 
 def dot(u, v):
     """
