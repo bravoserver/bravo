@@ -55,7 +55,7 @@ def reseed(seed):
 p = []
 current_seed = None
 
-def simplex(x, y):
+def simplex2(x, y):
     """
     Generate simplex noise at the given coordinates.
 
@@ -111,6 +111,12 @@ def simplex(x, y):
 
     # Where's this scaling factor come from?
     return n * 70
+
+def simplex(*args):
+    if len(args) == 2:
+        return simplex2(*args)
+    else:
+        raise Exception("Don't know how to do %dD noise!" % len(args))
 
 def octaves(x, y, count):
     """
