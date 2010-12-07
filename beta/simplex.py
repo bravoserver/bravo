@@ -7,7 +7,7 @@ from itertools import chain, permutations
 
 SIZE = 2**10
 
-edges = list(
+edges2 = list(
     set(
         chain(
             permutations((0, 1, 1), 3),
@@ -16,8 +16,19 @@ edges = list(
         )
     )
 )
+edges2.sort()
 
-edges.sort()
+edges3 = list(
+    set(
+        chain(
+            permutations((0, 1, 1, 1), 4),
+            permutations((0, 1, 1, -1), 4),
+            permutations((0, 1, -1, -1), 4),
+            permutations((0, -1, -1, -1), 4),
+        )
+    )
+)
+edges3.sort()
 
 def dot(u, v):
     """
@@ -96,7 +107,7 @@ def simplex(x, y):
         t = 0.5 - coord[0] * coord[0] - coord[1] * coord[1]
         if t >= 0:
             t *= t
-            n += t * t * dot(edges[gradient], coord)
+            n += t * t * dot(edges2[gradient], coord)
 
     # Where's this scaling factor come from?
     return n * 70
