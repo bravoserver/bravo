@@ -117,6 +117,78 @@ def simplex2(x, y):
     # Where's this scaling factor come from?
     return n * 70
 
+def simplex3(x, y, z):
+    """
+    Generate simplex noise at the given coordinates.
+
+    This particular implementation has very high chaotic features at normal
+    resolution; zooming in by a factor of 16x to 256x is going to yield more
+    pleasing results for most applications.
+
+    The gradient field must be seeded prior to calling this function; call
+    `reseed()` first.
+
+    :param int x: X coordinate
+    :param int y: Y coordinate
+
+    :returns: simplex noise
+    :raises Exception: the gradient field is not seeded
+    """
+
+    if not p:
+        raise Exception("The gradient field is unseeded!")
+
+    f = 1 / 3
+    g = 1 / 6
+    coords = [None] * 4
+    gradients = [None] * 4
+
+    s = (x + y + z) * f
+    i = int(math.floor(x + s))
+    j = int(math.floor(y + s))
+    k = int(math.floor(z + s))
+    t = (i + j + k) * g
+    unskewed = i - t, j - t, k - t
+
+    i = i % SIZE
+    j = j % SIZE
+    k = k % SIZE
+
+    coords[0] = x - unskewed[0], y - unskewed[1], z - unskewed[2]
+    gradients[0] = p[i + p[j + p[k]]] % 12
+    if coords[0][0] > coords[0][1] > coords[0][2]:
+        coords[1] = coords[0][0] - 1 + g, coords[0][1] + g, coords[0][2] + g
+        coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
+    elif coords[0][0] > coords[0][2] > coords[0][1]:
+        coords[1] = coords[0][0] - 1 + g, coords[0][1] + g, coords[0][2] + g
+        coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] + 2 * g, coords[0][2] - 1 + 2 * g
+    elif coords[0][2] > coords[0][0] > coords[0][1]:
+        coords[1] = coords[0][0] + g, coords[0][1] + g, coords[0][2] - 1 + g
+        coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
+    elif coords[0][2] > coords[0][1] > coords[0][0]:
+        coords[1] = coords[0][0] + g, coords[0][1] + g, coords[0][2] - 1 + g
+        coords[2] = coords[0][0] + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] - 1 + 2 * g
+    elif coords[0][1] > coords[0][2] > coords[0][0]:
+        coords[1] = coords[0][0] + g, coords[0][1] - 1 + g, coords[0][2] + g
+        coords[2] = coords[0][0] + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] - 1 + 2 * g
+    elif coords[0][1] > coords[0][0] > coords[0][2]:
+        coords[1] = coords[0][0] + g, coords[0][1] - 1 + g, coords[0][2] + g
+        coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
+    else:
+        raise Exception("You broke maths. Good work.")
+    coords[3] = coords[0][0] - 1 + 3 * g, coords[0][1] - 1 + 3 * g, coords[0][2] - 1 + 3 * g
+    gradients[3] = p[i + 1 + p[j + 1 + p[k + 1]]] % 12
+
+    n = 0
+    for coord, gradient in zip(coords, gradients):
+        t = 0.6 - coord[0] * coord[0] - coord[1] * coord[1] - coord[2] * coord[2]
+        if t >= 0:
+            t *= t
+            n += t * t * dot(edges2[gradient], coord)
+
+    # Where's this scaling factor come from?
+    return n * 32
+
 def simplex(*args):
     if len(args) == 2:
         return simplex2(*args)
