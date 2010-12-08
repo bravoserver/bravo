@@ -175,7 +175,7 @@ def simplex3(x, y, z):
         gradients[2] = p[i + 1 + p[j     + p[k + 1]]] % 12
     elif z >= x >= y:
         coords[1] = x     + g, y     + g, z - 1 + g
-        coords[2] = x - 1 + f, y - 1 + f, z     + f
+        coords[2] = x - 1 + f, y     + f, z - 1 + f
 
         gradients[1] = p[i     + p[j     + p[k + 1]]] % 12
         gradients[2] = p[i + 1 + p[j     + p[k + 1]]] % 12
