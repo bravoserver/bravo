@@ -7,7 +7,7 @@ from zope.interface import implements
 
 from beta.blocks import blocks
 from beta.ibeta import ITerrainGenerator
-from beta.simplex import octaves, reseed
+from beta.simplex import octaves2, octaves3, reseed
 from beta.utilities import rotated_cosine
 
 def pairwise(iterable):
@@ -66,7 +66,7 @@ class SimplexGenerator(object):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
-            height = octaves(magx, magz, 6)
+            height = octaves2(magx, magz, 6)
             # Normalize around 70. Normalization is scaled according to a
             # rotated cosine.
             #scale = rotated_cosine(magx, magz, seed, 16 * 10)

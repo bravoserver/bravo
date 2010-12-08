@@ -7,7 +7,7 @@ import sys
 
 import Image
 
-from beta.simplex import reseed, octaves
+from beta.simplex import reseed, octaves2
 
 WIDTH, HEIGHT = 800, 800
 
@@ -28,7 +28,7 @@ for i, j in itertools.product(xrange(WIDTH), xrange(HEIGHT)):
     ycoord = y + h * j / HEIGHT
 
     # Get noise and scale from [-1, 1] to [0, 255]
-    noise = (octaves(xcoord, ycoord, depth) + 1) * 127.5
+    noise = (octaves2(xcoord, ycoord, depth) + 1) * 127.5
 
     pbo[i, j] = noise
 

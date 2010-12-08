@@ -1,6 +1,6 @@
 import unittest
 
-from beta.simplex import reseed, simplex, octaves
+from beta.simplex import reseed, simplex, octaves2
 
 class TestNoise(unittest.TestCase):
 
@@ -23,4 +23,4 @@ class TestOctaves(unittest.TestCase):
 
     def test_identity(self):
         for i in range(512):
-            self.assertEqual(simplex(i, i), octaves(i, i, 1))
+            self.assertEqual(simplex(i, i), octaves2(i, i, 1))
