@@ -156,22 +156,22 @@ def simplex3(x, y, z):
 
     coords[0] = x - unskewed[0], y - unskewed[1], z - unskewed[2]
     gradients[0] = p[i + p[j + p[k]]] % 12
-    if coords[0][0] > coords[0][1] > coords[0][2]:
+    if coords[0][0] >= coords[0][1] >= coords[0][2]:
         coords[1] = coords[0][0] - 1 + g, coords[0][1] + g, coords[0][2] + g
         coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
-    elif coords[0][0] > coords[0][2] > coords[0][1]:
+    elif coords[0][0] >= coords[0][2] >= coords[0][1]:
         coords[1] = coords[0][0] - 1 + g, coords[0][1] + g, coords[0][2] + g
         coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] + 2 * g, coords[0][2] - 1 + 2 * g
-    elif coords[0][2] > coords[0][0] > coords[0][1]:
+    elif coords[0][2] >= coords[0][0] >= coords[0][1]:
         coords[1] = coords[0][0] + g, coords[0][1] + g, coords[0][2] - 1 + g
         coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
-    elif coords[0][2] > coords[0][1] > coords[0][0]:
+    elif coords[0][2] >= coords[0][1] >= coords[0][0]:
         coords[1] = coords[0][0] + g, coords[0][1] + g, coords[0][2] - 1 + g
         coords[2] = coords[0][0] + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] - 1 + 2 * g
-    elif coords[0][1] > coords[0][2] > coords[0][0]:
+    elif coords[0][1] >= coords[0][2] >= coords[0][0]:
         coords[1] = coords[0][0] + g, coords[0][1] - 1 + g, coords[0][2] + g
         coords[2] = coords[0][0] + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] - 1 + 2 * g
-    elif coords[0][1] > coords[0][0] > coords[0][2]:
+    elif coords[0][1] >= coords[0][0] >= coords[0][2]:
         coords[1] = coords[0][0] + g, coords[0][1] - 1 + g, coords[0][2] + g
         coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
     else:
