@@ -159,21 +159,33 @@ def simplex3(x, y, z):
     if coords[0][0] >= coords[0][1] >= coords[0][2]:
         coords[1] = coords[0][0] - 1 + g, coords[0][1] + g, coords[0][2] + g
         coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
+        gradients[1] = p[i + 1 + p[j + p[k]]] % 12
+        gradients[2] = p[i + 1 + p[j + 1 + p[k]]] % 12
     elif coords[0][0] >= coords[0][2] >= coords[0][1]:
         coords[1] = coords[0][0] - 1 + g, coords[0][1] + g, coords[0][2] + g
         coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] + 2 * g, coords[0][2] - 1 + 2 * g
+        gradients[1] = p[i + 1 + p[j + p[k]]] % 12
+        gradients[2] = p[i + 1 + p[j + p[k + 1]]] % 12
     elif coords[0][2] >= coords[0][0] >= coords[0][1]:
         coords[1] = coords[0][0] + g, coords[0][1] + g, coords[0][2] - 1 + g
         coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
+        gradients[1] = p[i + p[j + p[k + 1]]] % 12
+        gradients[2] = p[i + 1 + p[j + p[k + 1]]] % 12
     elif coords[0][2] >= coords[0][1] >= coords[0][0]:
         coords[1] = coords[0][0] + g, coords[0][1] + g, coords[0][2] - 1 + g
         coords[2] = coords[0][0] + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] - 1 + 2 * g
+        gradients[1] = p[i + p[j + p[k + 1]]] % 12
+        gradients[2] = p[i + p[j + 1 + p[k + 1]]] % 12
     elif coords[0][1] >= coords[0][2] >= coords[0][0]:
         coords[1] = coords[0][0] + g, coords[0][1] - 1 + g, coords[0][2] + g
         coords[2] = coords[0][0] + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] - 1 + 2 * g
+        gradients[1] = p[i + p[j + 1 + p[k]]] % 12
+        gradients[2] = p[i + p[j + 1 + p[k + 1]]] % 12
     elif coords[0][1] >= coords[0][0] >= coords[0][2]:
         coords[1] = coords[0][0] + g, coords[0][1] - 1 + g, coords[0][2] + g
         coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
+        gradients[1] = p[i + p[j + 1 + p[k]]] % 12
+        gradients[2] = p[i + 1 + p[j + 1 + p[k]]] % 12
     else:
         raise Exception("You broke maths. Good work.")
     coords[3] = coords[0][0] - 1 + 3 * g, coords[0][1] - 1 + 3 * g, coords[0][2] - 1 + 3 * g
