@@ -76,32 +76,37 @@ def simplex2(x, y):
     if not p:
         raise Exception("The gradient field is unseeded!")
 
+    # Set up our scalers and arrays.
     f = 0.5 * (math.sqrt(3) - 1)
     g = (3 - math.sqrt(3)) / 6
     coords = [None] * 3
     gradients = [None] * 3
 
+    # XXX ???
     s = (x + y) * f
     i = int(math.floor(x + s))
     j = int(math.floor(y + s))
     t = (i + j) * g
     unskewed = i - t, j - t
-    coords[0] = x - unskewed[0], y - unskewed[1]
-    if coords[0][0] > coords[0][1]:
-        coords[1] = coords[0][0] - 1 + g, coords[0][1] + g
-    else:
-        coords[1] = coords[0][0] + g, coords[0][1] - 1 + g
-    coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g
 
+    # Clamp to the size of the simplex array.
     i = i % SIZE
     j = j % SIZE
+
+    # Look up coordinates and gradients for each contributing point in the
+    # simplex space.
+    coords[0] = x - unskewed[0], y - unskewed[1]
     gradients[0] = p[i + p[j]] % 12
     if coords[0][0] > coords[0][1]:
+        coords[1] = coords[0][0] - 1 + g, coords[0][1] + g
         gradients[1] = p[i + 1 + p[j]] % 12
     else:
+        coords[1] = coords[0][0] + g, coords[0][1] - 1 + g
         gradients[1] = p[i + p[j + 1]] % 12
+    coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g
     gradients[2] = p[i + 1 + p[j + 1]] % 12
 
+    # Do our summation.
     n = 0
     for coord, gradient in zip(coords, gradients):
         t = 0.5 - coord[0] * coord[0] - coord[1] * coord[1]
