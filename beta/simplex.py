@@ -192,10 +192,12 @@ def simplex3(x, y, z):
 def simplex(*args):
     if len(args) == 2:
         return simplex2(*args)
+    if len(args) == 3:
+        return simplex3(*args)
     else:
         raise Exception("Don't know how to do %dD noise!" % len(args))
 
-def octaves(x, y, count):
+def octaves2(x, y, count):
     """
     Generate fractal octaves of noise.
 
@@ -212,7 +214,29 @@ def octaves(x, y, count):
     sigma = 0
     divisor = 1
     while count:
-        sigma += simplex(x * divisor, y * divisor) / divisor
+        sigma += simplex2(x * divisor, y * divisor) / divisor
+        divisor *= 2
+        count -= 1
+    return sigma
+
+def octaves3(x, y, z, count):
+    """
+    Generate fractal octaves of noise.
+
+    Summing increasingly scaled amounts of noise with itself creates fractal
+    clouds of noise.
+
+    :param int x: X coordinate
+    :param int y: Y coordinate
+    :param int count: number of octaves
+
+    :returns: Scaled fractal noise
+    """
+
+    sigma = 0
+    divisor = 1
+    while count:
+        sigma += simplex3(x * divisor, y * divisor, z * divisor) / divisor
         divisor *= 2
         count -= 1
     return sigma
