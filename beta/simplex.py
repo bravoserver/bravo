@@ -97,13 +97,15 @@ def simplex2(x, y):
     # simplex space.
     coords[0] = x - unskewed[0], y - unskewed[1]
     gradients[0] = p[i + p[j]] % 12
-    if coords[0][0] > coords[0][1]:
-        coords[1] = coords[0][0] - 1 + g, coords[0][1] + g
-        gradients[1] = p[i + 1 + p[j]] % 12
+
+    x, y = coords[0]
+    if x > y:
+        coords[1] = x - 1 + g, y     + g
+        gradients[1] = p[i + 1 + p[j    ]] % 12
     else:
-        coords[1] = coords[0][0] + g, coords[0][1] - 1 + g
-        gradients[1] = p[i + p[j + 1]] % 12
-    coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g
+        coords[1] = x     + g, y - 1 + g
+        gradients[1] = p[i     + p[j + 1]] % 12
+    coords[2] = x - 1 + 2 * g, y - 1 + 2 * g
     gradients[2] = p[i + 1 + p[j + 1]] % 12
 
     # Do our summation.
@@ -130,9 +132,11 @@ def simplex3(x, y, z):
 
     :param int x: X coordinate
     :param int y: Y coordinate
+    :param int z: Z coordinate
 
     :returns: simplex noise
-    :raises Exception: the gradient field is not seeded
+    :raises Exception: the gradient field is not seeded or you broke the
+    function somehow
     """
 
     if not p:
