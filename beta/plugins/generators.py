@@ -79,6 +79,50 @@ class SimplexGenerator(object):
 
     name = "simplex"
 
+class ComplexGenerator(object):
+    """
+    Generates waves of stone.
+
+    This class uses a simplex noise generator to procedurally generate
+    organic-looking, continuously smooth terrain.
+    """
+
+    implements(IPlugin, ITerrainGenerator)
+
+    def populate(self, chunk, seed):
+        """
+        Make smooth waves of stone.
+        """
+
+        reseed(seed)
+
+        # And into one end he plugged the whole of reality as extrapolated
+        # from a piece of fairy cake, and into the other end he plugged his
+        # wife: so that when he turned it on she saw in one instant the whole
+        # infinity of creation and herself in relation to it.
+
+        factor = 1 / 256
+
+        for x, z in product(xrange(16), xrange(16)):
+            column = chunk.get_column(x, z)
+            magx = (chunk.x * 16 + x) * factor
+            magz = (chunk.z * 16 + z) * factor
+
+            for y in range(len(column)):
+                height = octaves3(magx, y, magz, 6)
+                # Normalize around 70. Normalization is scaled according to a
+                # rotated cosine.
+                #scale = rotated_cosine(magx, magz, seed, 16 * 10)
+                height *= 15
+                height = int(height + 70)
+
+                column[y] = blocks["stone"].slot if y > 0 else blocks["air"].slot
+
+            chunk.set_column(x, z, column)
+
+    name = "complex"
+
+
 class WaterTableGenerator(object):
     """
     Create a water table.
@@ -170,6 +214,7 @@ class SafetyGenerator(object):
 
 boring = BoringGenerator()
 simplex = SimplexGenerator()
+complex = ComplexGenerator()
 watertable = WaterTableGenerator()
 erosion = ErosionGenerator()
 grass = GrassGenerator()
