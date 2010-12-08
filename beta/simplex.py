@@ -156,39 +156,51 @@ def simplex3(x, y, z):
 
     coords[0] = x - unskewed[0], y - unskewed[1], z - unskewed[2]
     gradients[0] = p[i + p[j + p[k]]] % 12
-    if coords[0][0] >= coords[0][1] >= coords[0][2]:
-        coords[1] = coords[0][0] - 1 + g, coords[0][1] + g, coords[0][2] + g
-        coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
-        gradients[1] = p[i + 1 + p[j + p[k]]] % 12
-        gradients[2] = p[i + 1 + p[j + 1 + p[k]]] % 12
-    elif coords[0][0] >= coords[0][2] >= coords[0][1]:
-        coords[1] = coords[0][0] - 1 + g, coords[0][1] + g, coords[0][2] + g
-        coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] + 2 * g, coords[0][2] - 1 + 2 * g
-        gradients[1] = p[i + 1 + p[j + p[k]]] % 12
-        gradients[2] = p[i + 1 + p[j + p[k + 1]]] % 12
-    elif coords[0][2] >= coords[0][0] >= coords[0][1]:
-        coords[1] = coords[0][0] + g, coords[0][1] + g, coords[0][2] - 1 + g
-        coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
-        gradients[1] = p[i + p[j + p[k + 1]]] % 12
-        gradients[2] = p[i + 1 + p[j + p[k + 1]]] % 12
-    elif coords[0][2] >= coords[0][1] >= coords[0][0]:
-        coords[1] = coords[0][0] + g, coords[0][1] + g, coords[0][2] - 1 + g
-        coords[2] = coords[0][0] + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] - 1 + 2 * g
-        gradients[1] = p[i + p[j + p[k + 1]]] % 12
-        gradients[2] = p[i + p[j + 1 + p[k + 1]]] % 12
-    elif coords[0][1] >= coords[0][2] >= coords[0][0]:
-        coords[1] = coords[0][0] + g, coords[0][1] - 1 + g, coords[0][2] + g
-        coords[2] = coords[0][0] + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] - 1 + 2 * g
-        gradients[1] = p[i + p[j + 1 + p[k]]] % 12
-        gradients[2] = p[i + p[j + 1 + p[k + 1]]] % 12
-    elif coords[0][1] >= coords[0][0] >= coords[0][2]:
-        coords[1] = coords[0][0] + g, coords[0][1] - 1 + g, coords[0][2] + g
-        coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g, coords[0][2] + 2 * g
-        gradients[1] = p[i + p[j + 1 + p[k]]] % 12
-        gradients[2] = p[i + 1 + p[j + 1 + p[k]]] % 12
+
+    # Do the coord and gradient lookups. Unrolled for speed and clarity.
+    # These should be + 2 * g, but instead we do + f because we already have
+    # it calculated. (2g == 2/6 == 1/3 == f)
+    x, y, z = coords[0]
+    if x >= y >= z:
+        coords[1] = x - 1 + g, y     + g, z     + g
+        coords[2] = x - 1 + f, y - 1 + f, z     + f
+
+        gradients[1] = p[i + 1 + p[j     + p[k    ]]] % 12
+        gradients[2] = p[i + 1 + p[j + 1 + p[k    ]]] % 12
+    elif x >= z >= y:
+        coords[1] = x - 1 + g, y     + g, z     + g
+        coords[2] = x - 1 + f, y     + f, z - 1 + f
+
+        gradients[1] = p[i + 1 + p[j     + p[k    ]]] % 12
+        gradients[2] = p[i + 1 + p[j     + p[k + 1]]] % 12
+    elif z >= x >= y:
+        coords[1] = x     + g, y     + g, z - 1 + g
+        coords[2] = x - 1 + f, y - 1 + f, z     + f
+
+        gradients[1] = p[i     + p[j     + p[k + 1]]] % 12
+        gradients[2] = p[i + 1 + p[j     + p[k + 1]]] % 12
+    elif z >= y >= x:
+        coords[1] = x     + g, y     + g, z - 1 + g
+        coords[2] = x     + f, y - 1 + f, z - 1 + f
+
+        gradients[1] = p[i     + p[j     + p[k + 1]]] % 12
+        gradients[2] = p[i     + p[j + 1 + p[k + 1]]] % 12
+    elif y >= z >= x:
+        coords[1] = x     + g, y - 1 + g, z     + g
+        coords[2] = x     + f, y - 1 + f, z - 1 + f
+
+        gradients[1] = p[i     + p[j + 1 + p[k    ]]] % 12
+        gradients[2] = p[i     + p[j + 1 + p[k + 1]]] % 12
+    elif y >= x >= z:
+        coords[1] = x     + g, y - 1 + g, z     + g
+        coords[2] = x - 1 + f, y - 1 + f, z     + f
+
+        gradients[1] = p[i     + p[j + 1 + p[k    ]]] % 12
+        gradients[2] = p[i + 1 + p[j + 1 + p[k    ]]] % 12
     else:
         raise Exception("You broke maths. Good work.")
-    coords[3] = coords[0][0] - 1 + 3 * g, coords[0][1] - 1 + 3 * g, coords[0][2] - 1 + 3 * g
+
+    coords[3] = x - 1 + 0.5, y - 1 + 0.5, z - 1 + 0.5
     gradients[3] = p[i + 1 + p[j + 1 + p[k + 1]]] % 12
 
     n = 0
