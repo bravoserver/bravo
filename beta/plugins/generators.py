@@ -81,7 +81,7 @@ class SimplexGenerator(object):
 
 class ComplexGenerator(object):
     """
-    Generates waves of stone.
+    Generate islands of stone.
 
     This class uses a simplex noise generator to procedurally generate
     organic-looking, continuously smooth terrain.
@@ -91,15 +91,10 @@ class ComplexGenerator(object):
 
     def populate(self, chunk, seed):
         """
-        Make smooth waves of stone.
+        Make smooth islands of stone.
         """
 
         reseed(seed)
-
-        # And into one end he plugged the whole of reality as extrapolated
-        # from a piece of fairy cake, and into the other end he plugged his
-        # wife: so that when he turned it on she saw in one instant the whole
-        # infinity of creation and herself in relation to it.
 
         factor = 1 / 256
 
@@ -109,14 +104,10 @@ class ComplexGenerator(object):
             magz = (chunk.z * 16 + z) * factor
 
             for y in range(len(column)):
-                height = octaves3(magx, y, magz, 6)
-                # Normalize around 70. Normalization is scaled according to a
-                # rotated cosine.
-                #scale = rotated_cosine(magx, magz, seed, 16 * 10)
-                height *= 15
-                height = int(height + 70)
+                sample = octaves3(magx, y * factor, magz, 6)
 
-                column[y] = blocks["stone"].slot if y > 0 else blocks["air"].slot
+                if sample > 0:
+                    column[y] = blocks["stone"].slot
 
             chunk.set_column(x, z, column)
 
