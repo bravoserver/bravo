@@ -93,14 +93,14 @@ def simplex2(x, y):
         coords[1] = coords[0][0] + g, coords[0][1] - 1 + g
     coords[2] = coords[0][0] - 1 + 2 * g, coords[0][1] - 1 + 2 * g
 
-    iwrapped = i & (len(p) // 2 - 1)
-    jwrapped = j & (len(p) // 2 - 1)
-    gradients[0] = p[iwrapped + p[jwrapped]] % 12
+    i = i % SIZE
+    j = j % SIZE
+    gradients[0] = p[i + p[j]] % 12
     if coords[0][0] > coords[0][1]:
-        gradients[1] = p[iwrapped + 1 + p[jwrapped]] % 12
+        gradients[1] = p[i + 1 + p[j]] % 12
     else:
-        gradients[1] = p[iwrapped + p[jwrapped + 1]] % 12
-    gradients[2] = p[iwrapped + 1 + p[jwrapped + 1]] % 12
+        gradients[1] = p[i + p[j + 1]] % 12
+    gradients[2] = p[i + 1 + p[j + 1]] % 12
 
     n = 0
     for coord, gradient in zip(coords, gradients):
