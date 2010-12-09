@@ -27,3 +27,11 @@ class TestCoordHandling(unittest.TestCase):
         for triplet in cases:
             self.assertRaises(Exception, beta.utilities.triplet_to_index,
                 triplet)
+
+    def test_index_to_triplet(self):
+        self.assertEqual(0, beta.utilities.triplet_to_index((0, 0, 0)))
+
+        cases = [-1, 65536]
+        for index in cases:
+            self.assertRaises(Exception, beta.utilities.triplet_to_index,
+                index)
