@@ -106,8 +106,10 @@ class ComplexGenerator(object):
             for y in range(len(column)):
                 sample = octaves3(magx, y * factor, magz, 6)
 
-                if sample > 0:
+                if sample > 0.1:
                     column[y] = blocks["stone"].slot
+                elif sample > 0:
+                    column[y] = blocks["dirt"].slot
 
             chunk.set_column(x, z, column)
 
