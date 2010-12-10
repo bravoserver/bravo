@@ -136,7 +136,7 @@ def simplex3(x, y, z):
 
     :returns: simplex noise
     :raises Exception: the gradient field is not seeded or you broke the
-    function somehow
+                       function somehow
     """
 
     if not p:
