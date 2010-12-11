@@ -168,6 +168,10 @@ class AlphaProtocol(Protocol):
         if container.block == 65535:
             return
 
+        # Ignore right-click with items for now.
+        if not 0 <= container.block <= 255:
+            return
+
         x = container.x
         y = container.y
         z = container.z
