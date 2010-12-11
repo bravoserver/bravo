@@ -5,11 +5,9 @@ import weakref
 
 from twisted.internet.task import LoopingCall
 
-from nbt.nbt import TAG_Compound, TAG_Long, TAG_Int
-
 from beta.alpha import Player
 from beta.chunk import Chunk
-from beta.serialize import PlayerSerializer
+from beta.serialize import LevelSerializer, PlayerSerializer
 from beta.utilities import retrieve_nbt
 
 def base36(i):
@@ -69,12 +67,14 @@ class World(object):
         self.chunk_cache = weakref.WeakValueDictionary()
         self.dirty_chunk_cache = dict()
 
-        self.level = retrieve_nbt(os.path.join(self.folder, "level.dat"))
+        self.spawn = (0, 0, 0)
+        self.seed = random.randint(0, sys.maxint)
 
-        if "Data" in self.level:
-            self.load_level_data()
-        else:
-            self.generate_level()
+        filename = os.path.join(self.folder, "level.dat")
+
+        LevelSerializer.load_from_tag(self, retrieve_nbt(filename))
+        tag = LevelSerializer.save_to_tag(self)
+        tag.write_file(filename)
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
@@ -147,39 +147,6 @@ class World(object):
             stage.populate(chunk, self.seed)
 
         chunk.regenerate()
-
-    def generate_level(self):
-        """
-        Generate the level metadata.
-
-        This method currently does not generate all of Alpha's metadata, just
-        the data used by Beta.
-        """
-
-        self.spawn = (0, 0, 0)
-        self.seed = random.randint(0, sys.maxint)
-
-        self.level.name = ""
-        self.level["Data"] = TAG_Compound()
-        self.level["Data"]["RandomSeed"] = TAG_Long(self.seed)
-        self.level["Data"]["SpawnX"] = TAG_Int(self.spawn[0])
-        self.level["Data"]["SpawnY"] = TAG_Int(self.spawn[1])
-        self.level["Data"]["SpawnZ"] = TAG_Int(self.spawn[2])
-
-        # At least one of these should stop being necessary at some point.
-        self.level.write_file()
-        self.level.file.flush()
-
-    def load_level_data(self):
-        """
-        Load level data.
-        """
-
-        self.spawn = (self.level["Data"]["SpawnX"].value,
-            self.level["Data"]["SpawnY"].value,
-            self.level["Data"]["SpawnZ"].value)
-
-        self.seed = self.level["Data"]["RandomSeed"].value
 
     def load_chunk(self, x, z):
         """

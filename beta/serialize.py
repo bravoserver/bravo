@@ -1,4 +1,29 @@
-from nbt.nbt import NBTFile, TAG_Compound, TAG_List
+from nbt.nbt import NBTFile, TAG_Compound, TAG_List, TAG_Long, TAG_Int
+
+class LevelSerializer(object):
+
+    @staticmethod
+    def load_from_tag(level, tag):
+
+        level.spawn = (tag["Data"]["SpawnX"].value,
+            tag["Data"]["SpawnY"].value,
+            tag["Data"]["SpawnZ"].value)
+
+        level.seed = tag["Data"]["RandomSeed"].value
+
+    @staticmethod
+    def save_to_tag(level):
+
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["Data"] = TAG_Compound()
+        tag["Data"]["RandomSeed"] = TAG_Long(level.seed)
+        tag["Data"]["SpawnX"] = TAG_Int(level.spawn[0])
+        tag["Data"]["SpawnY"] = TAG_Int(level.spawn[1])
+        tag["Data"]["SpawnZ"] = TAG_Int(level.spawn[2])
+
+        return tag
 
 class PlayerSerializer(object):
 
