@@ -180,7 +180,7 @@ class Quit(object):
 
         yield "Saving all chunks to disk..."
         for chunk in factory.world.dirty_chunk_cache.itervalues():
-            factory.save_chunk(chunk)
+            factory.world.save_chunk(chunk)
 
         yield "Halting."
         reactor.stop()
@@ -201,7 +201,7 @@ class SaveAll(object):
         yield "Flushing all chunks..."
 
         for chunk in factory.world.chunk_cache.itervalues():
-            factory.save_chunk(chunk)
+            factory.world.save_chunk(chunk)
 
         yield "Save complete!"
 

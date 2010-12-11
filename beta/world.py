@@ -1,14 +1,15 @@
-import os
 import random
 import sys
 import weakref
 
 from twisted.internet.task import LoopingCall
+from twisted.python.filepath import FilePath
+
+from nbt.nbt import NBTFile
 
 from beta.alpha import Player
 from beta.chunk import Chunk
 from beta.serialize import ChunkSerializer, LevelSerializer, PlayerSerializer
-from beta.utilities import retrieve_nbt
 
 def base36(i):
     """
@@ -63,18 +64,23 @@ class World(object):
                 The directory containing the world.
         """
 
-        self.folder = folder
+        self.folder = FilePath(folder)
+        if not self.folder.exists():
+            self.folder.makedirs()
+
         self.chunk_cache = weakref.WeakValueDictionary()
         self.dirty_chunk_cache = dict()
 
         self.spawn = (0, 0, 0)
         self.seed = random.randint(0, sys.maxint)
 
-        filename = os.path.join(self.folder, "level.dat")
+        level = self.folder.child("level.dat")
+        if level.exists():
+            LevelSerializer.load_from_tag(self,
+                NBTFile(fileobj=level.open("r")))
 
-        LevelSerializer.load_from_tag(self, retrieve_nbt(filename))
         tag = LevelSerializer.save_to_tag(self)
-        tag.write_file(filename)
+        tag.write_file(fileobj=level.open("w"))
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
@@ -163,11 +169,13 @@ class World(object):
 
         chunk = Chunk(x, z)
 
-        filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
-            "c.%s.%s.dat" % (base36(x), base36(z)))
-        tag = retrieve_nbt(filename)
-
-        ChunkSerializer.load_from_tag(chunk, tag)
+        f = self.folder.child(base36(x & 63)).child(base36(z & 63))
+        if not f.exists():
+            f.makedirs()
+        f = f.child("c.%s.%s.dat" % (base36(x), base36(z)))
+        if f.exists():
+            tag = NBTFile(fileobj=f.open("r"))
+            ChunkSerializer.load_from_tag(chunk, tag)
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
@@ -190,27 +198,35 @@ class World(object):
             return
 
         x, z = chunk.x, chunk.z
-        filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
-            "c.%s.%s.dat" % (base36(x), base36(z)))
+        f = self.folder.child(base36(x & 63)).child(base36(z & 63))
+        if not f.exists():
+            f.makedirs()
+        f = f.child("c.%s.%s.dat" % (base36(x), base36(z)))
         tag = ChunkSerializer.save_to_tag(chunk)
-        tag.write_file(filename)
+        tag.write_file(fileobj=f.open("w"))
 
     def load_player(self, username):
         """
         Retrieve player data.
         """
 
-        filename = os.path.join(self.folder, "players", "%s.dat" % username)
-        tag = retrieve_nbt(filename)
-
         player = Player()
-        PlayerSerializer.load_from_tag(player, tag)
+
+        f = self.folder.child("players")
+        if not f.exists():
+            f.makedirs()
+        f = f.child("%s.dat" % username)
+        if f.exists():
+            tag = NBTFile(fileobj=f.open("r"))
+            PlayerSerializer.load_from_tag(player, tag)
 
         return player
 
     def save_player(self, username, player):
 
-        filename = os.path.join(self.folder, "players", "%s.dat" % username)
+        f = self.folder.child("players")
+        if not f.exists():
+            f.makedirs()
+        f = f.child("%s.dat" % username)
         tag = PlayerSerializer.save_to_tag(player)
-
-        tag.write_file(filename)
+        tag.write_file(fileobj=f.open("w"))
