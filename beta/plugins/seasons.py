@@ -1,8 +1,7 @@
-from itertools import product
-
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
+from beta.compat import product
 from beta.ibeta import ISeason
 from beta.blocks import blocks
 

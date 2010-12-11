@@ -2,11 +2,11 @@
 
 from __future__ import division
 
-import itertools
 import sys
 
 import Image
 
+from beta.compat import product
 from beta.simplex import reseed, octaves3
 
 WIDTH, HEIGHT = 800, 800
@@ -22,7 +22,7 @@ pbo = image.load()
 
 reseed(0)
 
-for i, j in itertools.product(xrange(WIDTH), xrange(HEIGHT)):
+for i, j in product(xrange(WIDTH), xrange(HEIGHT)):
     # Get our scaled coords
     xcoord = x + w * i / WIDTH
     ycoord = y + h * j / HEIGHT

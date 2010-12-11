@@ -1,9 +1,9 @@
-from itertools import product
 import StringIO
 
 from nbt.nbt import TAG_Compound, TAG_Int, TAG_Byte_Array, TAG_Byte
 
 from beta.alpha import Inventory
+from beta.compat import product
 from beta.packets import make_packet
 from beta.utilities import triplet_to_index, pack_nibbles, unpack_nibbles
 

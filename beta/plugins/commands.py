@@ -256,8 +256,9 @@ class WriteConfig(object):
     implements(IPlugin, ICommand)
 
     def dispatch(self, factory, parameters):
-        with open(parameters, "w") as f:
-            configuration.write(f)
+        f = open(parameters, "w")
+        configuration.write(f)
+        f.close()
         yield "Configuration saved."
 
     name = "write-config"

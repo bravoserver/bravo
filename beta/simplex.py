@@ -3,7 +3,7 @@ from __future__ import division
 import math
 import random
 
-from itertools import chain, permutations
+from beta.compat import chain, permutations
 
 SIZE = 2**10
 

@@ -1,11 +1,11 @@
 import collections
-from itertools import product
 
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import coiterate, LoopingCall
 
 from beta.alpha import Player
 from beta.blocks import blocks
+from beta.compat import product
 from beta.config import configuration
 from beta.ibeta import IBuildHook, IDigHook
 from beta.packets import parse_packets, make_packet, make_error_packet
