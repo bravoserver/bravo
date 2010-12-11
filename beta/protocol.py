@@ -1,7 +1,8 @@
 import collections
 
+from twisted.internet import reactor
 from twisted.internet.protocol import Protocol
-from twisted.internet.task import coiterate, LoopingCall
+from twisted.internet.task import coiterate, deferLater, LoopingCall
 
 from beta.blocks import blocks
 from beta.compat import product
@@ -228,12 +229,26 @@ class AlphaProtocol(Protocol):
         self.transport.write(packet)
 
     def enable_chunk(self, x, z):
+        """
+        Request a chunk.
+
+        This function will asynchronously obtain the chunk, and send it on the
+        wire.
+
+        :returns: `Deferred` that will be fired when the chunk is obtained,
+                  with no arguments
+        """
+
         if (x, z) in self.chunks:
             return
 
-        chunk = self.factory.world.load_chunk(x, z)
+        d = deferLater(reactor, 0, self.factory.world.load_chunk, x, z)
+        d.addCallback(self.send_chunk)
 
-        packet = make_packet("prechunk", x=x, z=z, enabled=1)
+        return d
+
+    def send_chunk(self, chunk):
+        packet = make_packet("prechunk", x=chunk.x, z=chunk.z, enabled=1)
         self.transport.write(packet)
 
         packet = chunk.save_to_packet()
@@ -243,7 +258,7 @@ class AlphaProtocol(Protocol):
             packet = entity.save_to_packet()
             #self.transport.write(packet)
 
-        self.chunks[x, z] = chunk
+        self.chunks[chunk.x, chunk.z] = chunk
 
     def dataReceived(self, data):
         self.buf += data
@@ -295,18 +310,23 @@ class AlphaProtocol(Protocol):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
 
-        self.update_chunks()
-
     def send_initial_chunk_and_location(self):
         bigx, smallx, bigz, smallz = split_coords(self.player.location.x,
             self.player.location.z)
 
-        self.enable_chunk(bigx, bigz)
+        d = self.enable_chunk(bigx, bigz)
+
+        # Don't dare send more chunks beyond the initial one until we've
+        # spawned.
+        d.addCallback(lambda none: self.update_location())
+        d.addCallback(lambda none: self.update_chunks())
+
+    def update_location(self):
+        bigx, smallx, bigz, smallz = split_coords(self.player.location.x,
+            self.player.location.z)
+
         chunk = self.chunks[bigx, bigz]
 
-        # This may not play well with recent Alpha clients, which have an
-        # unfortunate bug at maximum heights. We have yet to ascertain whether
-        # the bug is server-side or client-side.
         height = chunk.height_at(smallx, smallz) + 2
         self.player.location.y = height
 
