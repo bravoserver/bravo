@@ -1,8 +1,6 @@
 from math import degrees, radians
 
 from construct import Container, ListContainer
-from nbt.nbt import TAG_Compound, TAG_List
-from nbt.nbt import TAG_Short, TAG_Byte
 
 from beta.packets import make_packet
 
@@ -12,34 +10,6 @@ class Inventory(object):
         self.unknown1 = unknown1
         self.offset = offset
         self.items = [None] * length
-
-    def load_from_tag(self, tag):
-        """
-        Load data from an Inventory tag.
-
-        These tags are always lists of items.
-        """
-
-        for item in tag.tags:
-            slot = item["Slot"].value - self.offset
-            if 0 <= slot < len(self.items):
-                self.items[slot] = (item["id"].value, item["Damage"].value,
-                    item["Count"].value)
-
-    def save_to_tag(self):
-        tag = TAG_List(name="Items", type=TAG_Compound)
-
-        for i, item in enumerate(self.items):
-            d = TAG_Compound()
-            if item is not None:
-                id, damage, count = item
-                d["id"] = TAG_Short(id)
-                d["Damage"] = TAG_Short(damage)
-                d["Count"] = TAG_Byte(count)
-                d["Slot"] = TAG_Byte(i)
-            tag.tags.append(d)
-
-        return tag
 
     def load_from_packet(self, container):
         """
