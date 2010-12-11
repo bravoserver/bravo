@@ -229,7 +229,7 @@ class Chunk(object):
             return ""
         elif len(self.damaged) == 1:
             # Use a single block update packet.
-            x, y, z = next(iter(self.damaged))
+            x, y, z = iter(self.damaged).next()
             index = triplet_to_index((x, y, z))
             x += self.x * 16
             z += self.z * 16
