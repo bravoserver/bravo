@@ -1,10 +1,6 @@
 from __future__ import division
 
-from errno import EEXIST
 import math
-import os.path
-
-from nbt.nbt import NBTFile
 
 # Coord handling.
 

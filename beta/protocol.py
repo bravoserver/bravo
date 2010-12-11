@@ -3,7 +3,6 @@ import collections
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import coiterate, LoopingCall
 
-from beta.alpha import Player
 from beta.blocks import blocks
 from beta.compat import product
 from beta.config import configuration
