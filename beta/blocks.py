@@ -1,5 +1,12 @@
 class Block(object):
 
+    __slots__ = (
+        "drop",
+        "name",
+        "replace",
+        "slot",
+    )
+
     def __init__(self, slot, name, drop=None, replace=0):
         """
         A block in a chunk.
