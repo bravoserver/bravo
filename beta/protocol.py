@@ -1,6 +1,7 @@
 import collections
 
 from twisted.internet import reactor
+from twisted.internet.defer import succeed
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import coiterate, deferLater, LoopingCall
 
@@ -240,7 +241,7 @@ class AlphaProtocol(Protocol):
         """
 
         if (x, z) in self.chunks:
-            return
+            return succeed(None)
 
         d = deferLater(reactor, 0, self.factory.world.load_chunk, x, z)
         d.addCallback(self.send_chunk)
