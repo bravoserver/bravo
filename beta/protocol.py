@@ -264,7 +264,6 @@ class AlphaProtocol(Protocol):
     def authenticated(self):
         self.state = STATE_AUTHENTICATED
 
-        self.player = Player()
         self.factory.players[self.username] = self
 
         packet = make_packet("chat",
@@ -275,13 +274,12 @@ class AlphaProtocol(Protocol):
         packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
         self.transport.write(packet)
 
+        self.player = self.factory.world.load_player(self.username)
+
         self.player.location.x = spawn[0]
         self.player.location.y = spawn[1]
         self.player.location.stance = spawn[1]
         self.player.location.z = spawn[2]
-
-        tag = self.factory.world.load_player(self.username)
-        self.player.set_tag(tag)
 
         packet = self.player.inventory.save_to_packet()
         self.transport.write(packet)
@@ -378,7 +376,7 @@ class AlphaProtocol(Protocol):
         del self.chunks
 
         if self.player:
-            self.player.save_to_tag()
+            self.factory.world.save_player(self.username, self.player)
 
         if self.username in self.factory.players:
             del self.factory.players[self.username]

@@ -7,7 +7,9 @@ from twisted.internet.task import LoopingCall
 
 from nbt.nbt import TAG_Compound, TAG_Long, TAG_Int
 
+from beta.alpha import Player
 from beta.chunk import Chunk
+from beta.serialize import PlayerSerializer
 from beta.utilities import retrieve_nbt
 
 def base36(i):
@@ -222,4 +224,14 @@ class World(object):
         filename = os.path.join(self.folder, "players", "%s.dat" % username)
         tag = retrieve_nbt(filename)
 
-        return tag
+        player = Player()
+        PlayerSerializer.load_from_tag(player, tag)
+
+        return player
+
+    def save_player(self, username, player):
+
+        filename = os.path.join(self.folder, "players", "%s.dat" % username)
+        tag = PlayerSerializer.save_to_tag(player)
+
+        tag.write_file(filename)
