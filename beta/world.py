@@ -7,7 +7,7 @@ from twisted.internet.task import LoopingCall
 
 from beta.alpha import Player
 from beta.chunk import Chunk
-from beta.serialize import LevelSerializer, PlayerSerializer
+from beta.serialize import ChunkSerializer, LevelSerializer, PlayerSerializer
 from beta.utilities import retrieve_nbt
 
 def base36(i):
@@ -96,7 +96,7 @@ class World(object):
             if chunk.dirty:
                 if first:
                     first = False
-                    chunk.flush()
+                    self.save_chunk(chunk)
                     self.chunk_cache[coords] = chunk
                 else:
                     self.dirty_chunk_cache[coords] = chunk
@@ -166,7 +166,8 @@ class World(object):
         filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
             "c.%s.%s.dat" % (base36(x), base36(z)))
         tag = retrieve_nbt(filename)
-        chunk.set_tag(tag)
+
+        ChunkSerializer.load_from_tag(chunk, tag)
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
@@ -182,6 +183,17 @@ class World(object):
             self.season.transform(chunk)
 
         return chunk
+
+    def save_chunk(self, chunk):
+
+        if not chunk.dirty:
+            return
+
+        x, z = chunk.x, chunk.z
+        filename = os.path.join(self.folder, base36(x & 63), base36(z & 63),
+            "c.%s.%s.dat" % (base36(x), base36(z)))
+        tag = ChunkSerializer.save_to_tag(chunk)
+        tag.write_file(filename)
 
     def load_player(self, username):
         """

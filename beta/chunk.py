@@ -147,51 +147,6 @@ class Chunk(object):
 
         self.dirty = True
 
-    def set_tag(self, tag):
-        self.tag = tag
-        if "Level" in self.tag:
-            self.load_from_tag()
-
-    def load_from_tag(self):
-        level = self.tag["Level"]
-        self.blocks = [ord(i) for i in level["Blocks"].value]
-        self.heightmap = [ord(i) for i in level["HeightMap"].value]
-        self.lightmap = unpack_nibbles(level["BlockLight"].value)
-        self.metadata = unpack_nibbles(level["Data"].value)
-        self.skylight = unpack_nibbles(level["SkyLight"].value)
-
-        self.populated = bool(level["TerrainPopulated"])
-
-        if "TileEntities" in level and level["TileEntities"].value:
-            for tag in level["TileEntities"].value:
-                try:
-                    te = tileentity_names[tag["id"].value]()
-                    te.load_from_tag(tag)
-                    self.tileentities.append(te)
-                except:
-                    print "Unknown tile entity %s" % tag["id"].value
-
-        self.dirty = not self.populated
-
-    def save_to_tag(self):
-        level = TAG_Compound()
-
-        level["Blocks"] = TAG_Byte_Array()
-        level["HeightMap"] = TAG_Byte_Array()
-        level["BlockLight"] = TAG_Byte_Array()
-        level["Data"] = TAG_Byte_Array()
-        level["SkyLight"] = TAG_Byte_Array()
-
-        level["Blocks"].value = "".join(chr(i) for i in self.blocks)
-        level["HeightMap"].value = "".join(chr(i) for i in self.heightmap)
-        level["BlockLight"].value = "".join(pack_nibbles(self.lightmap))
-        level["Data"].value = "".join(pack_nibbles(self.metadata))
-        level["SkyLight"].value = "".join(pack_nibbles(self.skylight))
-
-        level["TerrainPopulated"] = TAG_Byte(self.populated)
-
-        self.tag["Level"] = level
-
     def is_damaged(self):
         """
         Determine whether any damage is pending on this chunk.
@@ -261,19 +216,6 @@ class Chunk(object):
         """
 
         self.damaged.clear()
-
-    def flush(self):
-        """
-        Write the chunk's data out to disk.
-        """
-
-        if self.dirty and self.tag is not None:
-            self.save_to_tag()
-            self.tag.name = ""
-            self.tag.write_file()
-            self.tag.file.flush()
-
-        self.dirty = False
 
     def save_to_packet(self):
         """
@@ -375,6 +317,3 @@ class Chunk(object):
         self.dirty = True
         for y in range(128):
             self.damaged.add((x, y, z))
-
-    def __del__(self):
-        self.flush()
