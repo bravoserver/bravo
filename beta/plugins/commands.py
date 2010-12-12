@@ -175,7 +175,7 @@ class Give(object):
         return tuple()
 
     def console_command(self, factory, parameters):
-        for i in self.chat_command(factory, parameters[1], parameters[1:]):
+        for i in self.chat_command(factory, parameters[0], parameters[1:]):
             yield i
 
     name = "give"
