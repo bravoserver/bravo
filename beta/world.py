@@ -212,6 +212,11 @@ class World(object):
 
         player = Player()
 
+        player.location.x = self.spawn[0]
+        player.location.y = self.spawn[1]
+        player.location.stance = self.spawn[1]
+        player.location.z = self.spawn[2]
+
         f = self.folder.child("players")
         if not f.exists():
             f.makedirs()

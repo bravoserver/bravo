@@ -1,5 +1,7 @@
+from math import degrees, radians
+
 from nbt.nbt import NBTFile, TAG_Compound, TAG_List, TAG_Byte_Array
-from nbt.nbt import TAG_Long, TAG_Short, TAG_Int, TAG_Byte
+from nbt.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 
 from beta.utilities import unpack_nibbles, pack_nibbles
 
@@ -85,6 +87,11 @@ class PlayerSerializer(object):
     @staticmethod
     def load_from_tag(player, tag):
 
+        player.location.x, player.location.y, player.location.z = [
+            i.value for i in tag["Pos"].tags]
+
+        player.location.theta = radians(tag["Rotation"].tags[0].value)
+
         if "Inventory" in tag:
             for inventory in (player.inventory, player.crafting,
                     player.armor):
@@ -99,6 +106,14 @@ class PlayerSerializer(object):
 
         tag = NBTFile()
         tag.name = ""
+
+        tag["Pos"] = TAG_List(type=TAG_Double)
+        tag["Pos"].tags = [TAG_Double(i)
+            for i in (player.location.x, player.location.y, player.location.z)]
+
+        tag["Rotation"] = TAG_List(type=TAG_Double)
+        tag["Rotation"].tags = [TAG_Double(i)
+            for i in (degrees(player.location.theta), 0)]
 
         tag["Inventory"] = TAG_List(type=TAG_Compound)
 

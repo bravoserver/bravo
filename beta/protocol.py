@@ -295,11 +295,6 @@ class AlphaProtocol(Protocol):
 
         self.player = self.factory.world.load_player(self.username)
 
-        self.player.location.x = spawn[0]
-        self.player.location.y = spawn[1]
-        self.player.location.stance = spawn[1]
-        self.player.location.z = spawn[2]
-
         packet = self.player.inventory.save_to_packet()
         self.transport.write(packet)
         packet = self.player.crafting.save_to_packet()
