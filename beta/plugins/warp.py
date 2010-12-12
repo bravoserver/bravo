@@ -28,9 +28,17 @@ class Warp(object):
         if location in warps:
             yield "Teleporting you to %s" % location
             protocol = factory.players[username]
+            # An explanation might be necessary.
+            # We are changing the location of the player, but we must
+            # immediately send a new location packet in order to force the
+            # player to appear at the new location. However, before we can do
+            # that, we need to get the chunk loaded for them. This ends up
+            # being the same sequence of events as the initial chunk and
+            # location setup, so we call send_initial_chunk_and_location()
+            # instead of update_location().
             l = protocol.player.location
             (l.x, l.y, l.z, l.theta, l.pitch) = warps[location]
-            protocol.update_location()
+            protocol.send_initial_chunk_and_location()
             yield "Teleportation successful!"
         else:
             yield "No warp location %s available" % parameters
