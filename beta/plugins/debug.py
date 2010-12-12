@@ -1,13 +1,13 @@
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
-from beta.ibeta import ICommand
+from beta.ibeta import IConsoleCommand
 
 class Meliae(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
+    def console_command(self, factory, parameters):
         try:
             import meliae.scanner
             meliae.scanner.dump_all_objects(parameters)
@@ -18,19 +18,16 @@ class Meliae(object):
 
         return tuple()
 
-    name = "dump_memory"
-
+    name = "dump-memory"
     aliases = tuple()
-
-    usage = "dump_memory <filename>"
-
+    usage = "<filename>"
     info = "Dump a JSON snapshot of memory usage using Meliae"
 
 class Status(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
+    def console_command(self, factory, parameters):
         protocol_count = len(factory.players)
         yield "%d protocols connected" % protocol_count
 
@@ -45,28 +42,22 @@ class Status(object):
         yield "World cache: %d chunks (%d dirty)" % (chunk_count, dirty)
 
     name = "status"
-
     aliases = tuple()
-
-    usage = "status"
-
+    usage = ""
     info = "Print a quick summary of the server's status"
 
 class PDB(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IConsoleCommand)
 
     def dispatch(self, factory, parameters):
         import pdb; pdb.set_trace()
 
-        return []
+        return tuple()
 
     name = "pdb"
-
     aliases = tuple()
-
-    usage = "pdb"
-
+    usage = ""
     info = "Drop into a PDB shell"
 
 meliae = Meliae()
