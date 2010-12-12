@@ -11,7 +11,10 @@ Plugins
 .. autoclass:: beta.ibeta.IAuthenticator
    :members:
 
-.. autoclass:: beta.ibeta.ICommand
+.. autoclass:: beta.ibeta.IChatCommand
+   :members:
+
+.. autoclass:: beta.ibeta.IConsoleCommand
    :members:
 
 .. autoclass:: beta.ibeta.ISeason
