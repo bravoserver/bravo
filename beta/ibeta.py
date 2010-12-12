@@ -39,19 +39,6 @@ class ITerrainGenerator(Interface):
         """)
 
 class ICommand(Interface):
-    """
-    Interface for commands.
-
-    Commands may be called from the console or from chat, so they must be
-    fairly stateless.
-    """
-
-    def dispatch(self, factory, parameters):
-        """
-        Handle a command.
-
-        Parameters are passed as a single string, with no escaping or munging.
-        """
 
     name = Attribute("""
         The name of the plugin.
@@ -70,6 +57,44 @@ class ICommand(Interface):
     info = Attribute("""
         String explaining what this command does and returns.
         """)
+
+class IChatCommand(ICommand):
+    """
+    Interface for chat commands.
+
+    Chat commands are invoked from the chat inside clients, so they are always
+    called by a specific client.
+
+    This interface is specifically designed to exist comfortably side-by-side
+    with `IConsoleCommand`.
+    """
+
+    def chat_command(self, factory, username, parameters):
+        """
+        Handle a command from the chat interface.
+
+        :param `AlphaFactory` factory: factory for this world
+        :param str username: username of player
+        :param list parameters: additional parameters passed to the command
+        """
+
+class IConsoleCommand(ICommand):
+    """
+    Interface for console commands.
+
+    Console commands are invoked from a console or some other location with
+    two defining attributes: Access restricted to superusers, and no user
+    issuing the command. As such, no access control list applies to them, but
+    they must be given usernames to operate on explicitly.
+    """
+
+    def console_command(self, factory, parameters):
+        """
+        Handle a command.
+
+        :param `AlphaFactory` factory: factory for this world
+        :param list parameters: additional parameters passed to the command
+        """
 
 class ISeason(Interface):
     """
