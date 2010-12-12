@@ -6,7 +6,7 @@ from twisted.internet import reactor
 
 from beta.blocks import blocks
 from beta.config import configuration
-from beta.ibeta import ICommand
+from beta.ibeta import IChatCommand, IConsoleCommand
 from beta.plugin import retrieve_plugins
 from beta.packets import make_packet
 
@@ -33,20 +33,20 @@ def parse_int(i):
 
 class Help(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IChatCommand, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
-        plugins = retrieve_plugins(ICommand)
+    def dispatch(self, plugins):
         l = []
 
         # This is fairly brute-force and inelegant. I'm very open to
         # suggestions on improving it.
         for plugin in set(plugins.itervalues()):
-            l.append((plugin.name, plugin.usage, plugin.info))
+            usage = "%s %s" % (plugin.name, plugin.usage)
+            l.append((plugin.name, usage, plugin.info))
             for alias in plugin.aliases:
-                usage = plugin.usage.replace(plugin.name, alias)
+                alias_usage = usage.replace(plugin.name, alias)
                 info = "Alias for %s" % plugin.name
-                l.append((alias, usage, info))
+                l.append((alias, alias_usage, info))
 
         name_pad = max(len(i[0]) for i in l) + 1
         usage_pad = max(len(i[1]) for i in l) + 1
@@ -58,35 +58,45 @@ class Help(object):
             yield "%s %s %s" % (name.ljust(name_pad), usage.ljust(usage_pad),
                 info)
 
+    def chat_command(self, factory, username, parameters):
+        for i in self.dispatch(retrieve_plugins(IChatCommand)):
+            yield i
+
+    def console_command(self, factory, parameters):
+        for i in self.dispatch(retrieve_plugins(IConsoleCommand)):
+            yield i
+
     name = "help"
-
     aliases = tuple()
-
-    usage = "help"
-
+    usage = ""
     info = "Prints this message"
 
 class List(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IChatCommand, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
+    def dispatch(self, factory):
         yield "Connected players: %s" % (", ".join(
                 player for player in factory.players))
 
+    def chat_command(self, factory, username, parameters):
+        for i in self.dispatch(factory):
+            yield i
+
+    def console_command(self, factory, parameters):
+        for i in self.dispatch(factory):
+            yield i
+
     name = "list"
-
     aliases = tuple()
-
-    usage = "list"
-
+    usage = ""
     info = "Lists the currently connected players"
 
 class Time(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IChatCommand, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
+    def dispatch(self, factory):
         # 24000 ticks to the day
         hours, minutes = divmod(factory.time, 1000)
         # 0000 is noon, not midnight
@@ -97,44 +107,50 @@ class Time(object):
         season = ["Winter", "Spring", "Summer", "Fall"][season]
         yield "%02d:%02d, %d (%s)" % (hours, minutes, date, season)
 
+    def chat_command(self, factory, username, parameters):
+        for i in self.dispatch(factory):
+            yield i
+
+    def console_command(self, factory, parameters):
+        for i in self.dispatch(factory):
+            yield i
+
     name = "time"
-
     aliases = ("date",)
-
-    usage = "time"
-
+    usage = ""
     info = "Gives the current in-game time and date"
 
 class Say(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
-        message = "[Server] %s" % parameters
+    def console_command(self, factory, parameters):
+        message = "[Server] %s" % " ".join(parameters)
         yield message
         packet = make_packet("chat", message=message)
         factory.broadcast(packet)
 
     name = "say"
-
     aliases = tuple()
-
-    usage = "say <message>"
-
+    usage = "<message>"
     info = "Broadcasts a message to everybody"
 
 class Give(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IChatCommand, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
-        try:
-            name, block, count = parameters.split(" ", 2)
-        except ValueError:
-            name, block = parameters.split(" ", 1)
+    def chat_command(self, factory, username, parameters):
+        if len(parameters) == 1:
+            block = parameters[0]
             count = 1
+        elif len(parameters) == 2:
+            block = parameters[0]
+            count = parameters[1]
+        else:
+            block = " ".join(parameters[:-1])
+            count = parameters[-1]
 
-        player = parse_player(factory, name)
+        player = parse_player(factory, username)
         block = parse_block(block)
         count = parse_int(count)
 
@@ -158,18 +174,19 @@ class Give(object):
         # Return an empty tuple for iteration
         return tuple()
 
+    def console_command(self, factory, parameters):
+        for i in self.chat_command(factory, parameters[1], parameters[1:]):
+            yield i
+
     name = "give"
-
     aliases = tuple()
-
-    usage = "give <player> <block> <quantity>"
-
+    usage = "<block> <quantity>"
     info = "Gives a number of blocks or items to a certain player"
 
 class Quit(object):
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
+    def console_command(self, factory, parameters):
         # Let's shutdown!
         message = "Server shutting down."
         yield message
@@ -186,18 +203,15 @@ class Quit(object):
         reactor.stop()
 
     name = "quit"
-
     aliases = ("exit",)
-
-    usage = "quit"
-
+    usage = ""
     info = "Quits the server"
 
 class SaveAll(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
+    def console_command(self, factory, parameters):
         yield "Flushing all chunks..."
 
         for chunk in factory.world.chunk_cache.itervalues():
@@ -206,18 +220,15 @@ class SaveAll(object):
         yield "Save complete!"
 
     name = "save-all"
-
     aliases = tuple()
-
-    usage = "save-all"
-
+    usage = ""
     info = "Saves all world data to disk"
 
 class SaveOff(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
+    def console_command(self, factory, parameters):
         yield "Disabling saving..."
 
         factory.world.save_off()
@@ -225,16 +236,13 @@ class SaveOff(object):
         yield "Saving disabled. Currently running in memory."
 
     name = "save-off"
-
     aliases = tuple()
-
-    usage = "save-off"
-
+    usage = ""
     info = "Disables saving of world data to disk"
 
 class SaveOn(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IConsoleCommand)
 
     def dispatch(self, factory, parameters):
         yield "Enabling saving (this could take a bit)..."
@@ -244,16 +252,13 @@ class SaveOn(object):
         yield "Saving enabled."
 
     name = "save-on"
-
     aliases = tuple()
-
-    usage = "save-on"
-
+    usage = ""
     info = "Enables saving of world data to disk"
 
 class WriteConfig(object):
 
-    implements(IPlugin, ICommand)
+    implements(IPlugin, IConsoleCommand)
 
     def dispatch(self, factory, parameters):
         f = open(parameters, "w")
@@ -262,11 +267,8 @@ class WriteConfig(object):
         yield "Configuration saved."
 
     name = "write-config"
-
     aliases = tuple()
-
-    usage = "write-config"
-
+    usage = ""
     info = "Saves configuration to disk"
 
 help = Help()
