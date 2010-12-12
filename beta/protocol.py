@@ -8,9 +8,9 @@ from twisted.internet.task import coiterate, deferLater, LoopingCall
 from beta.blocks import blocks
 from beta.compat import product
 from beta.config import configuration
-from beta.ibeta import IBuildHook, IDigHook
+from beta.ibeta import IChatCommand, IBuildHook, IDigHook
 from beta.packets import parse_packets, make_packet, make_error_packet
-from beta.plugin import retrieve_named_plugins
+from beta.plugin import retrieve_plugins, retrieve_named_plugins
 from beta.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
@@ -80,10 +80,30 @@ class AlphaProtocol(Protocol):
 
     def chat(self, container):
         if container.message.startswith("/"):
-            coiterate(
-                self.transport.write(make_packet("chat", message=line))
-                for line in self.factory.run_command(container.message[1:])
-            )
+
+            commands = retrieve_plugins(IChatCommand)
+            # Register aliases.
+            for plugin in commands.values():
+                for alias in plugin.aliases:
+                    commands[alias] = plugin
+
+            params = container.message[1:].split(" ")
+            command = params.pop(0).lower()
+
+            if command and command in commands:
+                try:
+                    for line in commands[command].chat_command(self.factory,
+                        self.username, params):
+                        self.transport.write(
+                            make_packet("chat", message=line))
+                except Exception, e:
+                    self.transport.write(
+                        make_packet("chat", message="Error: %s" % e))
+            else:
+                self.transport.write(
+                    make_packet("chat",
+                        message="Unknown command: %s" % command)
+                )
         else:
             message = "<%s> %s" % (self.username, container.message)
             print message

@@ -15,7 +15,7 @@ from beta.protocol import AlphaProtocol
 from beta.stdio import Console
 from beta.world import World
 
-from beta.ibeta import ICommand
+from beta.ibeta import IChatCommand
 from beta.plugin import retrieve_plugins
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
@@ -151,27 +151,3 @@ class AlphaFactory(Factory):
 
         packet = make_packet("create", id=entity.id)
         self.broadcast(packet)
-
-    def run_command(self, s):
-        """
-        Given a command string from the console or chat, execute it.
-        """
-
-        commands = retrieve_plugins(ICommand)
-        # Register aliases.
-        for plugin in commands.values():
-            for alias in plugin.aliases:
-                commands[alias] = plugin
-
-        t = s.strip().split(" ", 1)
-        command = t[0].lower()
-        parameters = t[1] if len(t) > 1 else ""
-
-        if command and command in commands:
-            try:
-                for line in commands[command].dispatch(self, parameters):
-                    yield line
-            except Exception, e:
-                yield "Error: %s" % e
-        else:
-            yield "Unknown command: %s" % command

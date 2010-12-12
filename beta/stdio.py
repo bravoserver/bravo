@@ -3,7 +3,7 @@ import os
 from twisted.internet.stdio import StandardIO
 from twisted.protocols.basic import LineReceiver
 
-from beta.ibeta import ICommand
+from beta.ibeta import IConsoleCommand
 from beta.plugin import retrieve_plugins
 
 greeting = """
@@ -17,7 +17,11 @@ class Console(LineReceiver):
     delimiter = os.linesep
 
     def __init__(self):
-        self.commands = retrieve_plugins(ICommand)
+        self.commands = retrieve_plugins(IConsoleCommand)
+        # Register aliases.
+        for plugin in self.commands.values():
+            for alias in plugin.aliases:
+                self.commands[alias] = plugin
 
         StandardIO(self)
 
@@ -27,8 +31,17 @@ class Console(LineReceiver):
 
     def lineReceived(self, line):
         if line != "":
-            for l in self.factory.run_command(line):
-                # Encode to UTF-8 because stdio is not Unicode-safe.
-                self.sendLine(l.encode("utf8"))
+            params = line.split(" ")
+            command = params.pop(0).lower()
+            if command in self.commands:
+                try:
+                    for l in self.commands[command].console_command(
+                        self.factory, params):
+                        # Encode to UTF-8 because stdio is not Unicode-safe.
+                        self.sendLine(l.encode("utf8"))
+                except Exception, e:
+                    self.sendLine("Error: %s" % e)
+            else:
+                self.sendLine("Unknown command: %s" % command)
 
         self.transport.write(prompt)
