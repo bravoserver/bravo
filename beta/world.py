@@ -9,7 +9,7 @@ from nbt.nbt import NBTFile
 
 from beta.alpha import Player
 from beta.chunk import Chunk
-from beta.serialize import ChunkSerializer, LevelSerializer, PlayerSerializer
+from beta.serialize import LevelSerializer
 
 def base36(i):
     """
@@ -37,7 +37,7 @@ def base36(i):
 
     return s
 
-class World(object):
+class World(LevelSerializer):
     """
     Object representing a world on disk.
 
@@ -76,10 +76,9 @@ class World(object):
 
         level = self.folder.child("level.dat")
         if level.exists():
-            LevelSerializer.load_from_tag(self,
-                NBTFile(fileobj=level.open("r")))
+            self.load_from_tag(NBTFile(fileobj=level.open("r")))
 
-        tag = LevelSerializer.save_to_tag(self)
+        tag = self.save_to_tag()
         tag.write_file(fileobj=level.open("w"))
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
@@ -175,7 +174,7 @@ class World(object):
         f = f.child("c.%s.%s.dat" % (base36(x), base36(z)))
         if f.exists():
             tag = NBTFile(fileobj=f.open("r"))
-            ChunkSerializer.load_from_tag(chunk, tag)
+            chunk.load_from_tag(tag)
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
@@ -202,7 +201,7 @@ class World(object):
         if not f.exists():
             f.makedirs()
         f = f.child("c.%s.%s.dat" % (base36(x), base36(z)))
-        tag = ChunkSerializer.save_to_tag(chunk)
+        tag = chunk.save_to_tag()
         tag.write_file(fileobj=f.open("w"))
 
     def load_player(self, username):
@@ -223,7 +222,7 @@ class World(object):
         f = f.child("%s.dat" % username)
         if f.exists():
             tag = NBTFile(fileobj=f.open("r"))
-            PlayerSerializer.load_from_tag(player, tag)
+            player.load_from_tag(tag)
 
         return player
 
@@ -233,5 +232,5 @@ class World(object):
         if not f.exists():
             f.makedirs()
         f = f.child("%s.dat" % username)
-        tag = PlayerSerializer.save_to_tag(player)
+        tag = player.save_to_tag()
         tag.write_file(fileobj=f.open("w"))

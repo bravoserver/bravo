@@ -3,8 +3,9 @@ from math import degrees, radians
 from construct import Container, ListContainer
 
 from beta.packets import make_packet
+from beta.serialize import InventorySerializer, PlayerSerializer
 
-class Inventory(object):
+class Inventory(InventorySerializer):
 
     def __init__(self, name, offset, length):
         self.name = name
@@ -86,7 +87,7 @@ class Location(object):
 
         return packet
 
-class Player(object):
+class Player(PlayerSerializer):
 
     def __init__(self):
         # There are three inventories. -1 is the main inventory, of 36 slots

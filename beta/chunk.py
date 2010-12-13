@@ -1,8 +1,10 @@
 from beta.compat import product
+from beta.entity import tile_entities
 from beta.packets import make_packet
+from beta.serialize import ChunkSerializer
 from beta.utilities import triplet_to_index, pack_nibbles
 
-class Chunk(object):
+class Chunk(ChunkSerializer):
 
     dirty = True
     """
@@ -17,6 +19,15 @@ class Chunk(object):
     tag = None
     """
     The file backing this chunk.
+    """
+
+    known_tile_entities = tile_entities
+    """
+    Dirty hack to work around mutual recursion during serialization.
+
+    Odds are good that you don't actually want to know why this is necessary.
+    Ask me in person if you like, and then you can have some of my brain
+    bleach later.
     """
 
     def __init__(self, x, z):

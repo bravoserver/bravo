@@ -7,7 +7,7 @@ from beta.serialize import ChestSerializer
 class TileEntity(object):
 
     def save_to_packet(self):
-        tag = self.serializer.save_to_tag(self)
+        tag = self.save_to_tag(self)
         sio = StringIO.StringIO()
         tag._render_buffer(sio)
 
@@ -15,9 +15,7 @@ class TileEntity(object):
             nbt=sio.getvalue())
         return packet
 
-class Chest(TileEntity):
-
-    serializer = ChestSerializer
+class Chest(TileEntity, ChestSerializer):
 
     def __init__(self):
 
