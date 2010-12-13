@@ -6,8 +6,8 @@ from beta.packets import make_packet
 
 class Inventory(object):
 
-    def __init__(self, unknown1, offset, length):
-        self.unknown1 = unknown1
+    def __init__(self, name, offset, length):
+        self.name = name
         self.offset = offset
         self.items = [None] * length
 
@@ -31,7 +31,7 @@ class Inventory(object):
                 lc.append(Container(id=item[0], damage=item[1],
                         count=item[2]))
 
-        packet = make_packet("inventory", unknown1=self.unknown1, length=len(lc),
+        packet = make_packet("inventory", name=self.name, length=len(lc),
             items=lc)
 
         return packet

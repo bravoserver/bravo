@@ -112,11 +112,11 @@ class AlphaProtocol(Protocol):
             self.factory.broadcast(packet)
 
     def inventory(self, container):
-        if container.unknown1 == -1:
+        if container.name == -1:
             self.player.inventory.load_from_packet(container)
-        elif container.unknown1 == -2:
+        elif container.name == -2:
             self.player.crafting.load_from_packet(container)
-        elif container.unknown1 == -3:
+        elif container.name == -3:
             self.player.armor.load_from_packet(container)
 
     def flying(self, container):
