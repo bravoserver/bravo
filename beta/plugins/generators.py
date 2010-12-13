@@ -1,7 +1,5 @@
 from __future__ import division
 
-from itertools import izip, tee
-
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
@@ -9,19 +7,7 @@ from beta.blocks import blocks
 from beta.compat import product
 from beta.ibeta import ITerrainGenerator
 from beta.simplex import octaves2, octaves3, reseed
-from beta.utilities import rotated_cosine
-
-def pairwise(iterable):
-    """
-    From itertools recipes.
-    """
-
-    a, b = tee(iterable)
-    try:
-        b.next()
-    except StopIteration:
-        pass
-    return izip(a, b)
+from beta.utilities import pairwise, rotated_cosine
 
 class BoringGenerator(object):
     """

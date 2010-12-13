@@ -1,9 +1,10 @@
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
+from beta.blocks import blocks
 from beta.compat import product
 from beta.ibeta import ISeason
-from beta.blocks import blocks
+from beta.utilities import pairwise
 
 snow_resistant = set([
     blocks["air"].slot,

@@ -186,6 +186,8 @@ class World(LevelSerializer):
             self.dirty_chunk_cache[x, z] = chunk
 
         # Apply the current season to the chunk.
+        # XXX Food for thought: This might massively dirty the chunk and cause
+        # lots of damage. Is this an acceptable overhead?
         if self.season:
             self.season.transform(chunk)
 

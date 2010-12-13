@@ -2,6 +2,7 @@ from __future__ import division
 
 import math
 from functools import wraps
+from itertools import izip, tee
 from time import time
 
 # Coord handling.
@@ -144,3 +145,17 @@ def timed(f):
         timers[f] = (count, average)
         return retval
     return deco
+
+# Itertools.
+
+def pairwise(iterable):
+    """
+    From itertools recipes.
+    """
+
+    a, b = tee(iterable)
+    try:
+        b.next()
+    except StopIteration:
+        pass
+    return izip(a, b)
