@@ -5,6 +5,64 @@ from nbt.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 
 from beta.utilities import unpack_nibbles, pack_nibbles
 
+class Chest(object):
+
+    def __init__(self):
+
+        self.inventory = Inventory(0, 0, 36)
+
+class InventorySerializer(object):
+
+    @staticmethod
+    def load_from_tag(inventory, tag):
+
+        for item in tag.tags:
+            slot = item["Slot"].value - inventory.offset
+            if 0 <= slot < len(inventory.items):
+                inventory.items[slot] = (item["id"].value,
+                    item["Damage"].value, item["Count"].value)
+
+    @staticmethod
+    def save_to_tag(inventory):
+
+        tag = TAG_Compound()
+
+        for i, item in enumerate(inventory.items):
+            if item is not None:
+                d = TAG_Compound()
+                id, damage, count = item
+                d["id"] = TAG_Short(id)
+                d["Damage"] = TAG_Short(damage)
+                d["Count"] = TAG_Byte(count)
+                d["Slot"] = TAG_Byte(i)
+                tag.tags.append(d)
+
+        return tag
+
+class ChestSerializer(object):
+
+    @staticmethod
+    def load_from_tag(chest, tag):
+
+        chest.x = tag["x"].value
+        chest.y = tag["y"].value
+        chest.z = tag["z"].value
+
+        InventorySerializer.load_from_tag(chest.inventory, tag["Items"])
+
+    @staticmethod
+    def save_to_tag(chest):
+
+        tag = TAG_Compound()
+
+        tag["x"] = TAG_Int(chest.x)
+        tag["y"] = TAG_Int(chest.y)
+        tag["z"] = TAG_Int(chest.z)
+
+        tag["Items"] = InventorySerializer.save_to_tag(chest.inventory)
+
+        return tag
+
 class ChunkSerializer(object):
 
     @staticmethod
@@ -95,11 +153,7 @@ class PlayerSerializer(object):
         if "Inventory" in tag:
             for inventory in (player.inventory, player.crafting,
                     player.armor):
-                for item in tag["Inventory"].tags:
-                    slot = item["Slot"].value - inventory.offset
-                    if 0 <= slot < len(inventory.items):
-                        inventory.items[slot] = (item["id"].value,
-                            item["Damage"].value, item["Count"].value)
+                InventorySerializer.load_from_tag(inventory, tag["Inventory"])
 
     @staticmethod
     def save_to_tag(player):
@@ -118,14 +172,7 @@ class PlayerSerializer(object):
         tag["Inventory"] = TAG_List(type=TAG_Compound)
 
         for inventory in (player.inventory, player.crafting, player.armor):
-            for i, item in enumerate(inventory.items):
-                if item is not None:
-                    d = TAG_Compound()
-                    id, damage, count = item
-                    d["id"] = TAG_Short(id)
-                    d["Damage"] = TAG_Short(damage)
-                    d["Count"] = TAG_Byte(count)
-                    d["Slot"] = TAG_Byte(i)
-                    tag["Inventory"].tags.append(d)
+            tag["Inventory"].tags.extend(
+                InventorySerializer.save_to_tag(inventory).tags)
 
         return tag
