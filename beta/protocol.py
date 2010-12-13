@@ -1,5 +1,7 @@
 import collections
 
+from construct import Container
+
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
 from twisted.internet.protocol import Protocol
@@ -145,7 +147,9 @@ class AlphaProtocol(Protocol):
                 quantity=entity.quantity, wear=0)
             self.transport.write(packet)
 
-            # XXX collect
+            packet = make_packet("collect", entity=Container(id=entity.eid),
+                destination=self.player.eid)
+            self.transport.write(packet)
 
             packet = make_packet("destroy", id=entity.eid)
             self.transport.write(packet)
