@@ -8,8 +8,10 @@ from beta.utilities import pairwise
 
 snow_resistant = set([
     blocks["air"].slot,
+    blocks["flower"].slot,
     blocks["glass"].slot,
     blocks["ice"].slot,
+    blocks["rose"].slot,
     blocks["snow"].slot,
 ])
 
