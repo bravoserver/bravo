@@ -50,7 +50,7 @@ class PDB(object):
 
     implements(IPlugin, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
+    def console_command(self, factory, parameters):
         import pdb; pdb.set_trace()
 
         return tuple()
