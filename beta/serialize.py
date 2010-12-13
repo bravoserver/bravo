@@ -3,13 +3,8 @@ from math import degrees, radians
 from nbt.nbt import NBTFile, TAG_Compound, TAG_List, TAG_Byte_Array
 from nbt.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 
+from beta.entity import tile_entities
 from beta.utilities import unpack_nibbles, pack_nibbles
-
-class Chest(object):
-
-    def __init__(self):
-
-        self.inventory = Inventory(0, 0, 36)
 
 class InventorySerializer(object):
 
@@ -81,10 +76,9 @@ class ChunkSerializer(object):
         if "TileEntities" in level and level["TileEntities"].value:
             for tag in level["TileEntities"].value:
                 try:
-                    #te = tileentity_names[tag["id"].value]()
-                    #te.load_from_tag(tag)
-                    #chunk.tileentities.append(te)
-                    pass
+                    te = tile_entities[tag["id"].value]()
+                    te.serializer.load_from_tag(te)
+                    chunk.tile_entities.append(te)
                 except:
                     print "Unknown tile entity %s" % tag["id"].value
 

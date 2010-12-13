@@ -279,9 +279,9 @@ class AlphaProtocol(Protocol):
         packet = chunk.save_to_packet()
         self.transport.write(packet)
 
-        for entity in chunk.tileentities:
+        for entity in chunk.tile_entities:
             packet = entity.save_to_packet()
-            #self.transport.write(packet)
+            self.transport.write(packet)
 
         self.chunks[chunk.x, chunk.z] = chunk
 
