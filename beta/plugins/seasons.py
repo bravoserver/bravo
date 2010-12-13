@@ -22,9 +22,19 @@ class Winter(object):
 
         # Lay snow over anything not already snowed and not snow-resistant.
         for x, z in product(xrange(16), xrange(16)):
-            y = chunk.height_at(x, z)
-            if chunk.get_block((x, y, z)) not in snow_resistant and y < 127:
-                chunk.set_block((x, y + 1, z), blocks["snow"].slot)
+            column = chunk.get_column(x, z)
+
+            for first, second in pairwise(enumerate(reversed(column))):
+                if second[1] not in snow_resistant:
+                    if first[1] == blocks["snow"].slot:
+                        # Already snowed; just go to the next column.
+                        break
+                    elif first[1] == blocks["air"].slot:
+                        # A good candidate for snow, I think!
+                        # Undo the pairwise(enumerate(reversed())). :3
+                        y = len(column) - first[0]
+                        chunk.set_block((x, y, z), blocks["snow"].slot)
+                        break
 
     name = "winter"
 
