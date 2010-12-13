@@ -306,12 +306,24 @@ class AlphaProtocol(Protocol):
 
     def challenged(self):
         self.state = STATE_CHALLENGED
-        self.player = self.factory.world.load_player(self.username)
+
+        # Maybe the ugliest hack written thus far.
+        # We need an entity ID which will persist for the entire lifetime of
+        # this client. However, that entity ID is normally tied to an entity,
+        # which won't be allocated until after we get our username from the
+        # client. This is far too late to be able to look things up in a nice,
+        # orderly way, so for now (and maybe forever) we will allocate and
+        # increment the entity ID manually.
+        self.eid = self.factory.eid + 1
+        self.factory.eid += 1
 
     def authenticated(self):
         self.state = STATE_AUTHENTICATED
 
         self.factory.players[self.username] = self
+
+        self.player = self.factory.world.load_player(self.username)
+        self.player.eid = self.eid
 
         packet = make_packet("chat",
             message="%s is joining the game..." % self.username)

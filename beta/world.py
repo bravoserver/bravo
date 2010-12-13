@@ -8,7 +8,6 @@ from twisted.python.filepath import FilePath
 from nbt.nbt import NBTFile
 
 from beta.chunk import Chunk
-from beta.entity import Player
 from beta.serialize import LevelSerializer
 
 def base36(i):
