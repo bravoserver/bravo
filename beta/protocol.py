@@ -138,12 +138,16 @@ class AlphaProtocol(Protocol):
 
         for entity in self.factory.entities_near(pos[0] * 32,
             self.player.location.y * 32, pos[2] * 32, 64):
+            if entity.name != "Pickup":
+                continue
 
-            packet = make_packet("pickup", type=entity.entity_type,
+            packet = make_packet("pickup", type=entity.block,
                 quantity=entity.quantity, wear=0)
             self.transport.write(packet)
 
-            packet = make_packet("destroy", id=entity.id)
+            # XXX collect
+
+            packet = make_packet("destroy", id=entity.eid)
             self.transport.write(packet)
 
             self.factory.destroy_entity(entity)
@@ -298,7 +302,7 @@ class AlphaProtocol(Protocol):
 
     def challenged(self):
         self.state = STATE_CHALLENGED
-        self.entity = self.factory.create_entity(0, 0, 0, None)
+        self.player = self.factory.world.load_player(self.username)
 
     def authenticated(self):
         self.state = STATE_AUTHENTICATED
@@ -312,8 +316,6 @@ class AlphaProtocol(Protocol):
         spawn = self.factory.world.spawn
         packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
         self.transport.write(packet)
-
-        self.player = self.factory.world.load_player(self.username)
 
         packet = self.player.inventory.save_to_packet()
         self.transport.write(packet)

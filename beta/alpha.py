@@ -3,7 +3,7 @@ from math import degrees, radians
 from construct import Container, ListContainer
 
 from beta.packets import make_packet
-from beta.serialize import InventorySerializer, PlayerSerializer
+from beta.serialize import InventorySerializer
 
 class Inventory(InventorySerializer):
 
@@ -86,34 +86,3 @@ class Location(object):
         packet = make_packet("location", position=position, look=look, flying=flying)
 
         return packet
-
-class Player(PlayerSerializer):
-
-    def __init__(self):
-        # There are three inventories. -1 is the main inventory, of 36 slots
-        # plus one additional slot for the currently equipped item.  The first
-        # ten slots [0-9] of the main inventory are the current item and the
-        # slots accessible from number keys, 1-9. -2 is the crafting
-        # inventory, and -3 is the equipped armor.
-        self.inventory = Inventory(-1, 0, 37)
-        self.crafting = Inventory(-2, 80, 4)
-        self.armor = Inventory(-3, 100, 4)
-
-        self.location = Location()
-
-class Entity(object):
-    """
-    Class representing an entity.
-
-    Entities are simply dynamic in-game objects.
-
-    XXX this class is balls
-    """
-
-    def __init__(self, id, x, y, z, entity_type, quantity):
-        self.id = id
-        self.x = x
-        self.y = y
-        self.z = z
-        self.entity_type = entity_type
-        self.quantity = quantity

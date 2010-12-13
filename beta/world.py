@@ -7,8 +7,8 @@ from twisted.python.filepath import FilePath
 
 from nbt.nbt import NBTFile
 
-from beta.alpha import Player
 from beta.chunk import Chunk
+from beta.entity import Player
 from beta.serialize import LevelSerializer
 
 def base36(i):
@@ -211,12 +211,10 @@ class World(LevelSerializer):
         Retrieve player data.
         """
 
-        player = Player()
+        player = self.factory.create_entity(self.spawn[0], self.spawn[1],
+            self.spawn[2], "Player")
 
-        player.location.x = self.spawn[0]
-        player.location.y = self.spawn[1]
         player.location.stance = self.spawn[1]
-        player.location.z = self.spawn[2]
 
         f = self.folder.child("players")
         if not f.exists():

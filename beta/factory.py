@@ -6,8 +6,8 @@ from construct import Container
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 
-from beta.alpha import Entity
 from beta.config import configuration
+from beta.entity import Pickup, Player
 from beta.ibeta import IAuthenticator, ISeason, ITerrainGenerator
 from beta.packets import make_packet
 from beta.plugin import retrieve_named_plugins
@@ -15,7 +15,6 @@ from beta.protocol import AlphaProtocol
 from beta.stdio import Console
 from beta.world import World
 
-from beta.ibeta import IChatCommand
 from beta.plugin import retrieve_plugins
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
@@ -31,9 +30,10 @@ class AlphaFactory(Factory):
 
     def __init__(self):
         self.world = World("world")
+        self.world.factory = self
         self.players = dict()
 
-        self.entityid = 1
+        self.eid = 1
         self.entities = set()
 
         self.time_loop = LoopingCall(self.update_time)
@@ -59,9 +59,16 @@ class AlphaFactory(Factory):
 
         print "Factory init'd"
 
-    def create_entity(self, x, y, z, entity_type=None, quantity=1):
-        self.entityid += 1
-        entity = Entity(self.entityid, x, y, z, entity_type, quantity)
+    def create_entity(self, x, y, z, name):
+        self.eid += 1
+        # XXX use a dispatch dict
+        if name == "Pickup":
+            entity = Pickup(self.eid)
+        elif name == "Player":
+            entity = Player(self.eid)
+        entity.location.x = x
+        entity.location.y = y
+        entity.location.z = z
         self.entities.add(entity)
         return entity
 
@@ -131,8 +138,11 @@ class AlphaFactory(Factory):
         """
 
         return [entity for entity in self.entities
-            if sqrt((entity.x - x)**2 + (entity.y - y)**2 +
-                    (entity.z - z)**2) < radius]
+            if sqrt(
+                (entity.location.x - x)**2 +
+                (entity.location.y - y)**2 +
+                (entity.location.z - z)**2
+            ) < radius]
 
     def give(self, coords, block, quantity):
         """
@@ -143,11 +153,13 @@ class AlphaFactory(Factory):
 
         x, y, z = coords
 
-        entity = self.create_entity(x, y, z, block, quantity)
+        entity = self.create_entity(x, y, z, "Pickup")
+        entity.block = block
+        entity.quantity = quantity
 
-        packet = make_packet("spawn-pickup", entity=Container(id=entity.id),
+        packet = make_packet("spawn-pickup", entity=Container(id=entity.eid),
             item=block, count=quantity, x=x, y=y, z=z, yaw=0, pitch=0, roll=0)
         self.broadcast(packet)
 
-        packet = make_packet("create", id=entity.id)
+        packet = make_packet("create", id=entity.eid)
         self.broadcast(packet)

@@ -1,4 +1,5 @@
 from twisted.internet import reactor
+from twisted.internet.task import deferLater
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
@@ -41,15 +42,24 @@ class Authenticator(object):
 class OfflineAuthenticator(Authenticator):
 
     def handshake(self, protocol, container):
-        packet = make_packet("handshake", username="-")
-        protocol.transport.write(packet)
+        """
+        Handle a handshake with an offline challenge.
 
-        reactor.callLater(0, protocol.challenged)
+        This will authenticate just about anybody.
+        """
+
+        packet = make_packet("handshake", username="-")
+
+        # Order is important here; the challenged callback *must* fire before
+        # we send anything back to the client, because otherwise we won't have
+        # a valid entity ready to use.
+        d = deferLater(reactor, 0, protocol.challenged)
+        d.addCallback(lambda none: protocol.transport.write(packet))
 
     def login(self, protocol, container):
         protocol.username = container.username
 
-        packet = make_packet("login", protocol=protocol.entity.id, username="",
+        packet = make_packet("login", protocol=protocol.player.eid, username="",
             unused="", unknown1=0, unknown2=0)
         protocol.transport.write(packet)
 
