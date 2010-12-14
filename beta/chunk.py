@@ -54,6 +54,18 @@ class Chunk(ChunkSerializer):
         self.tile_entities = []
 
         self.damaged = set()
+        """
+        Set for tracking damaged coordinates.
+        """
+
+        self.all_damaged = False
+        """
+        Flag for forcing the entire chunk to be damaged.
+
+        This is for efficiency; past a certain point, it is not efficient to
+        batch block updates or track damage. Heavily damaged chunks have their
+        damage represented as a complete resend of the entire chunk.
+        """
 
     def __repr__(self):
         return "Chunk(%d, %d)" % (self.x, self.z)
@@ -109,6 +121,20 @@ class Chunk(ChunkSerializer):
 
         self.dirty = True
 
+    def damage(self, coords):
+        """
+        Record damage on this chunk.
+        """
+
+        if self.all_damaged:
+            return
+
+        self.damaged.add(coords)
+
+        if len(self.damaged) > 176:
+            self.damaged.clear()
+            self.all_damaged = True
+
     def is_damaged(self):
         """
         Determine whether any damage is pending on this chunk.
@@ -142,7 +168,10 @@ class Chunk(ChunkSerializer):
         :returns: str representing a packet
         """
 
-        if len(self.damaged) == 0:
+        if self.all_damaged:
+            # Resend the entire chunk!
+            return self.save_to_packet()
+        elif len(self.damaged) == 0:
             return ""
         elif len(self.damaged) == 1:
             # Use a single block update packet.
@@ -178,6 +207,7 @@ class Chunk(ChunkSerializer):
         """
 
         self.damaged.clear()
+        self.all_damaged = False
 
     def save_to_packet(self):
         """
@@ -229,7 +259,7 @@ class Chunk(ChunkSerializer):
             self.heightmap[x * 16 + z] = y
 
             self.dirty = True
-            self.damaged.add(coords)
+            self.damage(coords)
 
     def height_at(self, x, z):
         """
@@ -258,6 +288,8 @@ class Chunk(ChunkSerializer):
                 self.blocks[i] = replace
                 self.dirty = True
 
+        self.all_damaged = True
+
     def get_column(self, x, z):
         """
         Return a slice of the block data at the given xz-column.
@@ -278,4 +310,4 @@ class Chunk(ChunkSerializer):
 
         self.dirty = True
         for y in range(128):
-            self.damaged.add((x, y, z))
+            self.damage((x, y, z))
