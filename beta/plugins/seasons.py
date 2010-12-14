@@ -7,12 +7,10 @@ from beta.ibeta import ISeason
 from beta.utilities import pairwise
 
 snow_resistant = set([
-    blocks["air"].slot,
     blocks["flower"].slot,
     blocks["glass"].slot,
     blocks["ice"].slot,
     blocks["rose"].slot,
-    blocks["snow"].slot,
 ])
 
 class Winter(object):
@@ -26,17 +24,15 @@ class Winter(object):
         for x, z in product(xrange(16), xrange(16)):
             column = chunk.get_column(x, z)
 
+            # First is above second.
             for first, second in pairwise(enumerate(reversed(column))):
-                if second[1] not in snow_resistant:
-                    if first[1] == blocks["snow"].slot:
-                        # Already snowed; just go to the next column.
-                        break
-                    elif first[1] == blocks["air"].slot:
-                        # A good candidate for snow, I think!
-                        # Undo the pairwise(enumerate(reversed())). :3
-                        y = len(column) - first[0]
+                if second[1] not in (blocks["snow"].slot, blocks["air"].slot):
+                    # Solid ground! Is it snowable?
+                    if second[1] not in snow_resistant:
+                        # Yay!
+                        y = len(column) - 1 - first[0]
                         chunk.set_block((x, y, z), blocks["snow"].slot)
-                        break
+                    break
 
     name = "winter"
 
