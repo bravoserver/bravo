@@ -8,9 +8,10 @@ class Meliae(object):
     implements(IPlugin, IConsoleCommand)
 
     def console_command(self, factory, parameters):
+        out = "".join(parameters)
         try:
             import meliae.scanner
-            meliae.scanner.dump_all_objects(parameters)
+            meliae.scanner.dump_all_objects(out)
         except ImportError:
             raise Exception("Couldn't import meliae!")
         except IOError:
