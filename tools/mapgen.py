@@ -4,6 +4,7 @@ from __future__ import division
 
 import os.path
 import sys
+import time
 
 from beta.compat import product
 from beta.ibeta import ITerrainGenerator
@@ -34,10 +35,19 @@ counts = [1, 2, 4, 5, 8]
 count = 0
 total = size ** 2
 
+cpu = 0
+before = time.time()
 for i, j in product(xrange(size), repeat=2):
+    start = time.time()
     chunk = world.load_chunk(i, j)
+    cpu += (time.time() - start)
     world.save_chunk(chunk)
     count += 1
     if count >= counts[0]:
         print "Status: %d/%d (%.2f%%)" % (count, total, count * 100 / total)
         counts.append(counts.pop(0) * 10)
+taken = time.time() - before
+print "Finished!"
+print "Took %.2f seconds to generate (%dms/chunk)" % (taken,
+    taken * 1000 / size)
+print "Spent %.2f seconds on CPU (%dms/chunk)" % (cpu, cpu * 1000 / size)
