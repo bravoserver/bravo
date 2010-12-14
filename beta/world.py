@@ -188,6 +188,12 @@ class World(LevelSerializer):
         if self.season:
             self.season.transform(chunk)
 
+        # Since this chunk hasn't been given to any player yet, there's no
+        # conceivable way that any meaningful damage has been accumulated;
+        # anybody loading any part of this chunk will want the entire thing.
+        # Thus, it should start out undamaged.
+        chunk.clear_damage()
+
         return chunk
 
     def save_chunk(self, chunk):

@@ -142,7 +142,7 @@ class Chunk(ChunkSerializer):
         :returns: bool
         """
 
-        return bool(len(self.damaged))
+        return self.all_damaged or bool(len(self.damaged))
 
     def get_damage_packet(self):
         """
