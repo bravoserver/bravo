@@ -35,3 +35,16 @@ class TestCoordHandling(unittest.TestCase):
         for index in cases:
             self.assertRaises(Exception, beta.utilities.triplet_to_index,
                 index)
+
+class TestBitTwiddling(unittest.TestCase):
+
+    def test_unpack_nibbles(self):
+        self.assertEqual(beta.utilities.unpack_nibbles(["a"]), [6, 1])
+        self.assertEqual(beta.utilities.unpack_nibbles("nibbles"),
+            [6, 14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 7, 3])
+
+    def test_pack_nibbles(self):
+        self.assertEqual(beta.utilities.pack_nibbles([6, 1]), ["a"])
+        self.assertEqual(
+            beta.utilities.pack_nibbles([6, 14, 6, 9, 6, 2, 7, 3]),
+            list("nibs"))
