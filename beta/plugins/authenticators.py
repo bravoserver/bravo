@@ -93,17 +93,19 @@ class OnlineAuthenticator(Authenticator):
         d.addCallback(lambda none: protocol.transport.write(packet))
 
     def login(self, protocol, container):
+        if protocol not in self.challenges:
+            protocol.error("Didn't see your handshake.")
+            return
 
         protocol.username = container.username
-        url = server % (container.username, self.challenges[protocol])
+        challenge = self.challenges.pop(protocol)
+        url = server % (container.username, challenge)
 
         d = getPage(url.encode("utf8"))
         d.addCallback(self.success, protocol, container)
         d.addErrback(self.error, protocol)
 
     def success(self, response, protocol, container):
-
-        del self.challenges[protocol]
 
         if response != "YES":
             protocol.error("Authentication server didn't like you.")
@@ -113,11 +115,10 @@ class OnlineAuthenticator(Authenticator):
             unused="", unknown1=0, unknown2=0)
         protocol.transport.write(packet)
 
-        super(OfflineAuthenticator, self).login(protocol, container)
+        super(OnlineAuthenticator, self).login(protocol, container)
 
     def error(self, description, protocol):
 
-        del self.challenges[protocol]
         protocol.error("Couldn't authenticate: %s" % description)
 
     name = "online"
