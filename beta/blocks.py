@@ -148,7 +148,7 @@ drops = {}
 # If the drop block is zero, then it drops nothing.
 drops[1]  = 4  # Stone           -> Cobblestone
 drops[2]  = 3  # Grass           -> Dirt
-drops[18] = 0  # Leaves          -> Sapling
+drops[18] = 6  # Leaves          -> Sapling
 drops[20] = 0  # Glass
 drops[60] = 3  # Soil            -> Dirt
 drops[62] = 61 # Burning Furnace -> Furnace
@@ -171,8 +171,9 @@ replaces = {}
 
 replaces[79] = 8 # Ice -> Water
 
-# XXX should drop saplings occasionally
 ratios = {}
+
+ratios[18] = Fraction(1, 9) # Leaves
 
 quantities = {}
 
