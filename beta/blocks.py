@@ -1,13 +1,18 @@
+from fractions import Fraction
+
 class Block(object):
 
     __slots__ = (
         "drop",
         "name",
+        "quantity",
+        "ratio",
         "replace",
         "slot",
     )
 
-    def __init__(self, slot, name, drop=None, replace=0):
+    def __init__(self, slot, name, drop=None, replace=0, ratio=None,
+            quantity=1):
         """
         A block in a chunk.
 
@@ -23,6 +28,11 @@ class Block(object):
             replace : int
                 The type of block to place in the map when instances of this
                 block are destroyed. Defaults to air.
+            ratio : `Fraction`
+                The probability of this block dropping a block on destruction,
+                or None if this block always drops a block when destroyed.
+            quantity : int
+                The number of blocks dropped when this block is destroyed.
         """
 
         self.slot = slot
@@ -34,6 +44,8 @@ class Block(object):
             self.drop = drop
 
         self.replace = replace
+        self.ratio = ratio
+        self.quantity = quantity
 
 names = [
     "air",
@@ -157,6 +169,10 @@ replaces = {}
 
 replaces[79] = 8 # Ice -> Water
 
+ratios = {}
+
+quantities = {}
+
 blocks = {}
 
 for i, name in enumerate(names):
@@ -165,6 +181,10 @@ for i, name in enumerate(names):
         kwargs["drop"] = drops[i]
     if i in replaces:
         kwargs["replace"] = replaces[i]
+    if i in ratios:
+        kwargs["ratio"] = ratios[i]
+    if i in quantities:
+        kwargs["quantity"] = quantities[i]
     b = Block(i, name, **kwargs)
     blocks[i] = b
     blocks[name] = b

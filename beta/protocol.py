@@ -1,4 +1,5 @@
 import collections
+import random
 
 from construct import Container
 
@@ -172,16 +173,17 @@ class AlphaProtocol(Protocol):
         # based on the chunk, the coords, and the block type, which means that
         # it could all be implemented as IDigHooks. Hmm....
 
-        oldblock = chunk.get_block((smallx, container.y, smallz))
-        newblock = blocks[oldblock].replace
+        oldblock = blocks[chunk.get_block((smallx, container.y, smallz))]
+        newblock = oldblock.replace
         chunk.set_block((smallx, container.y, smallz), newblock)
 
-        dropblock = blocks[oldblock].drop
-
-        if dropblock != 0:
+        if (oldblock != blocks["air"].slot and
+                (oldblock.ratio is None or
+                random.randint(1, oldblock.ratio.denominator) <=
+                oldblock.ratio.numerator)):
             coords = (container.x * 32 + 16, container.y * 32,
                 container.z * 32 + 16)
-            self.factory.give(coords, dropblock, 1)
+            self.factory.give(coords, oldblock.drop, oldblock.quantity)
 
         for hook in self.dig_hooks:
             hook.dig_hook(chunk, smallx, container.y, smallz, oldblock)
