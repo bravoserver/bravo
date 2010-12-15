@@ -1,7 +1,7 @@
 from __future__ import division
 
 import math
-import random
+from random import Random
 
 from beta.compat import chain, permutations
 
@@ -48,8 +48,9 @@ def reseed(seed):
         return
 
     p = range(SIZE)
-    random.seed(seed)
-    random.shuffle(p)
+    r = Random()
+    r.seed(seed)
+    r.shuffle(p)
     p *= 2
 
 p = []
