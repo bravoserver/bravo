@@ -209,6 +209,8 @@ class World(LevelSerializer):
         tag = chunk.save_to_tag()
         tag.write_file(fileobj=f.open("w"))
 
+        chunk.dirty = False
+
     def load_player(self, username):
         """
         Retrieve player data.
