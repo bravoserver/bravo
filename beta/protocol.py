@@ -178,7 +178,7 @@ class AlphaProtocol(Protocol):
         newblock = oldblock.replace
         chunk.set_block((smallx, container.y, smallz), newblock)
 
-        if (oldblock != blocks["air"].slot and
+        if (oldblock.drop != blocks["air"].slot and
                 (oldblock.ratio is None or
                 random.randint(1, oldblock.ratio.denominator) <=
                 oldblock.ratio.numerator)):
