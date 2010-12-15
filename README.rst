@@ -69,6 +69,25 @@ will need to be downloaded and installed separately. We highly recommend pip:
 
  $ pip install construct NBT
 
+Debian/Ubuntu
+-------------
+
+Construct and NBT are not available in Debian or Ubuntu, so they must be
+installed manually.
+
+::
+
+ $ sudo aptitude install python-twisted python-twisted-web
+
+Gentoo
+------
+
+NBT is not available in Gentoo, so it must be installed manually.
+
+::
+
+ $ sudo emerge pyconstruct twisted twisted-web
+
 FAQ
 ===
 
