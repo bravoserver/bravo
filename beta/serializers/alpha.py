@@ -67,12 +67,12 @@ class ChunkSerializer(object):
 
         chunk.populated = bool(level["TerrainPopulated"])
 
-        if "TileEntities" in level and level["TileEntities"].value:
-            for tag in level["TileEntities"].value:
+        if "TileEntities" in level:
+            for tag in level["TileEntities"].tags:
                 try:
                     tile = chunk.known_tile_entities[tag["id"].value]()
                     tile.load_from_tag(tag)
-                    chunk.tile_entities.append(tile)
+                    chunk.tiles[tile.x, tile.y, tile.z] = tile
                 except:
                     print "Unknown tile entity %s" % tag["id"].value
 
@@ -101,7 +101,7 @@ class ChunkSerializer(object):
         level["TerrainPopulated"] = TAG_Byte(chunk.populated)
 
         level["TileEntities"] = TAG_List(type=TAG_Compound)
-        for tile in chunk.tile_entities:
+        for tile in chunk.tiles.itervalues():
             level["TileEntities"].tags.append(tile.save_to_tag())
 
         return tag

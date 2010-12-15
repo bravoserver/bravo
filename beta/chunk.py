@@ -51,7 +51,7 @@ class Chunk(ChunkSerializer):
         self.metadata = [0] * 16 * 128 * 16
         self.skylight = [0] * 16 * 128 * 16
 
-        self.tile_entities = []
+        self.tiles = {}
 
         self.damaged = set()
         """

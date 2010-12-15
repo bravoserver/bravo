@@ -262,9 +262,7 @@ class AlphaProtocol(Protocol):
                 bigz))
             return
 
-        tiles = chunk.tile_entities
-        if any(tile.x == smallx and tile.y == container.y and tile.z ==
-            container.z for tile in tiles):
+        if (smallx, container.y, smallz) in chunk.tiles:
             print "Found tile!"
         else:
             print "Couldn't find tile."
@@ -309,7 +307,7 @@ class AlphaProtocol(Protocol):
         packet = chunk.save_to_packet()
         self.transport.write(packet)
 
-        for entity in chunk.tile_entities:
+        for entity in chunk.tiles.itervalues():
             packet = entity.save_to_packet()
             self.transport.write(packet)
 
