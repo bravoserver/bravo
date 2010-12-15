@@ -244,7 +244,7 @@ class SaveOn(object):
 
     implements(IPlugin, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
+    def console_command(self, factory, parameters):
         yield "Enabling saving (this could take a bit)..."
 
         factory.world.save_on()
@@ -260,7 +260,7 @@ class WriteConfig(object):
 
     implements(IPlugin, IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
+    def console_command(self, factory, parameters):
         f = open(parameters, "w")
         configuration.write(f)
         f.close()
