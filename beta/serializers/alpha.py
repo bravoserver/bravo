@@ -57,6 +57,37 @@ class ChestSerializer(object):
 
         return tag
 
+class SignSerializer(object):
+
+    def load_from_tag(sign, tag):
+
+        sign.x = tag["x"].value
+        sign.y = tag["y"].value
+        sign.z = tag["z"].value
+
+        sign.text1 = tag["Text1"].value
+        sign.text2 = tag["Text2"].value
+        sign.text3 = tag["Text3"].value
+        sign.text4 = tag["Text4"].value
+
+    def save_to_tag(sign):
+
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["id"] = TAG_String("Sign")
+
+        tag["x"] = TAG_Int(sign.x)
+        tag["y"] = TAG_Int(sign.y)
+        tag["z"] = TAG_Int(sign.z)
+
+        tag["Text1"] = TAG_String(sign.text1)
+        tag["Text2"] = TAG_String(sign.text2)
+        tag["Text3"] = TAG_String(sign.text3)
+        tag["Text4"] = TAG_String(sign.text4)
+
+        return tag
+
 class ChunkSerializer(object):
 
     def load_from_tag(chunk, tag):

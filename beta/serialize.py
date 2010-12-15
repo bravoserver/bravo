@@ -6,4 +6,5 @@ __all__ = (
     "InventorySerializer",
     "LevelSerializer",
     "PlayerSerializer",
+    "SignSerializer",
 )

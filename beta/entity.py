@@ -4,7 +4,7 @@ from nbt.nbt import NBTFile
 
 from beta.alpha import Inventory, Location
 from beta.packets import make_packet
-from beta.serialize import ChestSerializer, PlayerSerializer
+from beta.serialize import ChestSerializer, PlayerSerializer, SignSerializer
 
 class Entity(object):
     """
@@ -86,6 +86,16 @@ class Chest(TileEntity, ChestSerializer):
 
         self.inventory = Inventory(0, 0, 36)
 
+class Sign(TileEntity, SignSerializer):
+
+    def __init__(self):
+
+        self.text1 = ""
+        self.text2 = ""
+        self.text3 = ""
+        self.text4 = ""
+
 tile_entities = {
     "Chest": Chest,
+    "Sign": Sign,
 }
