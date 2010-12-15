@@ -1,6 +1,10 @@
+import random
+import sys
+
 from twisted.internet import reactor
 from twisted.internet.task import deferLater
 from twisted.plugin import IPlugin
+from twisted.web.client import getPage
 from zope.interface import implements
 
 from beta.ibeta import IAuthenticator
@@ -67,4 +71,56 @@ class OfflineAuthenticator(Authenticator):
 
     name = "offline"
 
+server = "http://www.minecraft.net/game/checkserver.jsp?user=%s&serverId=%s"
+
+class OnlineAuthenticator(Authenticator):
+
+    def __init__(self):
+
+        self.challenges = {}
+
+    def handshake(self, protocol, container):
+        """
+        Handle a handshake with an online challenge.
+        """
+
+        challenge = "%x" % random.randint(0, sys.maxint)
+        self.challenges[protocol] = challenge
+
+        packet = make_packet("handshake", username=challenge)
+
+        d = deferLater(reactor, 0, protocol.challenged)
+        d.addCallback(lambda none: protocol.transport.write(packet))
+
+    def login(self, protocol, container):
+
+        protocol.username = container.username
+        url = server % (container.username, self.challenges[protocol])
+
+        d = getPage(url.encode("utf8"))
+        d.addCallback(self.success, protocol, container)
+        d.addErrback(self.error, protocol)
+
+    def success(self, response, protocol, container):
+
+        del self.challenges[protocol]
+
+        if response != "YES":
+            protocol.error("Authentication server didn't like you.")
+            return
+
+        packet = make_packet("login", protocol=protocol.eid, username="",
+            unused="", unknown1=0, unknown2=0)
+        protocol.transport.write(packet)
+
+        super(OfflineAuthenticator, self).login(protocol, container)
+
+    def error(self, description, protocol):
+
+        del self.challenges[protocol]
+        protocol.error("Couldn't authenticate: %s" % description)
+
+    name = "online"
+
 offline = OfflineAuthenticator()
+online = OnlineAuthenticator()
