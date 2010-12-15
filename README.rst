@@ -27,9 +27,21 @@ Extended Features
  * Pluggable architecture
 
    * Authentication
+
+     * Offline
+     * Online
+
    * Commands
    * Geometry generation
+
+     * Erosion
+     * Simplex noise, 2D and 3D
+     * Water table
+
    * Seasons
+
+     * Spring
+     * Winter
 
  * Chat commands
 
