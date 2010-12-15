@@ -146,6 +146,7 @@ drops = {}
 
 # Block -> block drops.
 # If the drop block is zero, then it drops nothing.
+drops[1]  = 4  # Stone           -> Cobblestone
 drops[2]  = 3  # Grass           -> Dirt
 drops[18] = 0  # Leaves          -> Sapling
 drops[20] = 0  # Glass
