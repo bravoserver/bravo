@@ -140,15 +140,16 @@ class IDigHook(Interface):
     Hook for actions to be taken after a block is dug up.
     """
 
-    def dig_hook(self, chunk, x, y, z, block):
+    def dig_hook(self, factory, chunk, x, y, z, block):
         """
         Do things.
 
+        :param `Factory` factory: factory
         :param `Chunk` chunk: digging location
         :param int x: X coordinate
         :param int y: Y coordinate
         :param int z: Z coordinate
-        :param int block: block type
+        :param `Block` block: dug block
         """
 
     name = Attribute("""

@@ -170,24 +170,11 @@ class AlphaProtocol(Protocol):
             self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        # XXX something to consider: All of this handler's functionality is
-        # based on the chunk, the coords, and the block type, which means that
-        # it could all be implemented as IDigHooks. Hmm....
-
         oldblock = blocks[chunk.get_block((smallx, container.y, smallz))]
-        newblock = oldblock.replace
-        chunk.set_block((smallx, container.y, smallz), newblock)
-
-        if (oldblock.drop != blocks["air"].slot and
-                (oldblock.ratio is None or
-                random.randint(1, oldblock.ratio.denominator) <=
-                oldblock.ratio.numerator)):
-            coords = (container.x * 32 + 16, container.y * 32,
-                container.z * 32 + 16)
-            self.factory.give(coords, oldblock.drop, oldblock.quantity)
 
         for hook in self.dig_hooks:
-            hook.dig_hook(chunk, smallx, container.y, smallz, oldblock)
+            hook.dig_hook(self.factory, chunk, smallx, container.y, smallz,
+                oldblock)
 
         if chunk.is_damaged():
             packet = chunk.get_damage_packet()
