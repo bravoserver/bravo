@@ -1,5 +1,7 @@
 import StringIO
 
+from nbt.nbt import NBTFile
+
 from beta.alpha import Inventory, Location
 from beta.packets import make_packet
 from beta.serialize import ChestSerializer, PlayerSerializer
@@ -58,10 +60,20 @@ class Pickup(Entity):
 
 class TileEntity(object):
 
+    def load_from_packet(self, container):
+
+        self.x = container.x
+        self.y = container.y
+        self.z = container.z
+
+        tag = NBTFile(fileobj=container.nbt)
+        self.load_from_tag(tag)
+
     def save_to_packet(self):
+
         tag = self.save_to_tag(self)
         sio = StringIO.StringIO()
-        tag._render_buffer(sio)
+        tag.write_file(fileobj=sio)
 
         packet = make_packet("tile", x=self.x, y=self.y, z=self.z,
             nbt=sio.getvalue())
