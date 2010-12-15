@@ -1,6 +1,7 @@
 from math import degrees, radians
 
-from nbt.nbt import NBTFile, TAG_Compound, TAG_List, TAG_Byte_Array
+from nbt.nbt import NBTFile
+from nbt.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from nbt.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 
 from beta.utilities import unpack_nibbles, pack_nibbles
@@ -45,6 +46,8 @@ class ChestSerializer(object):
 
         tag = NBTFile()
         tag.name = ""
+
+        tag["id"] = TAG_String("Chest")
 
         tag["x"] = TAG_Int(chest.x)
         tag["y"] = TAG_Int(chest.y)
