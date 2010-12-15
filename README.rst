@@ -91,6 +91,16 @@ installed manually.
 
  $ sudo aptitude install python-twisted python-twisted-web
 
+Fedora
+------
+
+Construct and NBT are not available in Fedora, so they must be installed
+manually.
+
+::
+
+ $ sudo yum install python-twisted-core python-twisted-web
+
 Gentoo
 ------
 
