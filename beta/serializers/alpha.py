@@ -17,7 +17,7 @@ class InventorySerializer(object):
 
     def save_to_tag(inventory):
 
-        tag = TAG_Compound()
+        tag = TAG_List(type=TAG_Compound)
 
         for i, item in enumerate(inventory.items):
             if item is not None:
@@ -43,7 +43,8 @@ class ChestSerializer(object):
 
     def save_to_tag(chest):
 
-        tag = TAG_Compound()
+        tag = NBTFile()
+        tag.name = ""
 
         tag["x"] = TAG_Int(chest.x)
         tag["y"] = TAG_Int(chest.y)

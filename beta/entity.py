@@ -71,8 +71,9 @@ class TileEntity(object):
 
     def save_to_packet(self):
 
-        tag = self.save_to_tag(self)
+        tag = self.save_to_tag()
         sio = StringIO.StringIO()
+        sio.mode = "wb"
         tag.write_file(fileobj=sio)
 
         packet = make_packet("tile", x=self.x, y=self.y, z=self.z,
