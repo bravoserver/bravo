@@ -147,8 +147,7 @@ drops = {}
 # Block -> block drops.
 # If the drop block is zero, then it drops nothing.
 drops[2]  = 3  # Grass           -> Dirt
-# XXX should drop saplings occasionally
-drops[18] = 0  # Leaves
+drops[18] = 0  # Leaves          -> Sapling
 drops[20] = 0  # Glass
 drops[60] = 3  # Soil            -> Dirt
 drops[62] = 61 # Burning Furnace -> Furnace
@@ -162,6 +161,8 @@ drops[63] = 323 # Sign Post         -> Sign Item
 drops[64] = 324 # Wooden Door       -> Wooden Door Item
 drops[68] = 323 # Wall Sign         -> Sign Item
 drops[71] = 330 # Iron Door         -> Iron Door Item
+drops[73] = 331 # Redstone Ore      -> Redstone Dust
+drops[74] = 331 # Redstone Ore      -> Redstone Dust
 drops[83] = 338 # Reed              -> Reed Item
 drops[89] = 348 # Lightstone        -> Lightstone Dust
 
@@ -169,9 +170,13 @@ replaces = {}
 
 replaces[79] = 8 # Ice -> Water
 
+# XXX should drop saplings occasionally
 ratios = {}
 
 quantities = {}
+
+quantities[73] = 5 # Redstone Ore -> Redstone Dust
+quantities[74] = 5 # Redstone Ore -> Redstone Dust
 
 blocks = {}
 
