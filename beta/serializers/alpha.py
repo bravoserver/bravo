@@ -70,9 +70,9 @@ class ChunkSerializer(object):
         if "TileEntities" in level and level["TileEntities"].value:
             for tag in level["TileEntities"].value:
                 try:
-                    te = chunk.known_tile_entities[tag["id"].value]()
-                    te.load_from_tag()
-                    chunk.tile_entities.append(te)
+                    tile = chunk.known_tile_entities[tag["id"].value]()
+                    tile.load_from_tag(tag)
+                    chunk.tile_entities.append(tile)
                 except:
                     print "Unknown tile entity %s" % tag["id"].value
 
@@ -99,6 +99,10 @@ class ChunkSerializer(object):
         level["SkyLight"].value = "".join(pack_nibbles(chunk.skylight))
 
         level["TerrainPopulated"] = TAG_Byte(chunk.populated)
+
+        level["TileEntities"] = TAG_List(type=TAG_Compound)
+        for tile in chunk.tile_entities:
+            level["TileEntities"].tags.append(tile.save_to_tag())
 
         return tag
 

@@ -69,6 +69,7 @@ class AlphaProtocol(Protocol):
             15: self.build,
             16: self.equip,
             18: self.animate,
+            59: self.tile,
             255: self.quit,
         })
 
@@ -248,6 +249,25 @@ class AlphaProtocol(Protocol):
 
     def animate(self, container):
         pass
+
+    def tile(self, container):
+        print "Tiling!"
+
+        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
+
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't access tiles in chunk (%d, %d)!" % (bigx,
+                bigz))
+            return
+
+        tiles = chunk.tile_entities
+        if any(tile.x == smallx and tile.y == container.y and tile.z ==
+            container.z for tile in tiles):
+            print "Found tile!"
+        else:
+            print "Couldn't find tile."
 
     def quit(self, container):
         print "Client is quitting: %s" % container.message
