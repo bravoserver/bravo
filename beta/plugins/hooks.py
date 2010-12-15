@@ -74,32 +74,12 @@ class AlphaSandGravel(Fallables):
 
     name = "alpha_sand_gravel"
 
-class BetaSnowSandGravel(Fallables):
-    """
-    Beta falling snow, sand, and gravel.
-    """
-
-    fallables = (blocks["snow"].slot, blocks["sand"].slot,
-        blocks["gravel"].slot)
-    whitespace = (blocks["air"].slot, blocks["snow"].slot)
-
-    name = "beta_snow_sand_gravel"
-
-class BetaSnow(object):
+class BetaSnow(Fallables):
     """
     Snow dig hooks that make snow behave like sand and gravel.
     """
 
-    implements(IPlugin, IDigHook)
-
-    def dig_hook(self, chunk, x, y, z, block):
-        if y == 127:
-            # Can't possibly have snow above the highest Y-level...
-            return
-
-        if chunk.get_block((x, y + 1, z)) == blocks["snow"].slot:
-            chunk.set_block((x, y + 1, z), blocks["air"].slot)
-            chunk.set_block((x, y, z), blocks["snow"].slot)
+    fallables = (blocks["snow"].slot,)
 
     name = "beta_snow"
 
@@ -107,4 +87,3 @@ alpha_snow = AlphaSnow()
 alpha_sand_gravel = AlphaSandGravel()
 
 beta_snow = BetaSnow()
-beta_snow_sand_gravel = BetaSnowSandGravel()
