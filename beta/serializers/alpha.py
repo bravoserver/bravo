@@ -128,11 +128,13 @@ class ChunkSerializer(object):
         level["Data"] = TAG_Byte_Array()
         level["SkyLight"] = TAG_Byte_Array()
 
-        level["Blocks"].value = "".join(chr(i) for i in chunk.blocks)
-        level["HeightMap"].value = "".join(chr(i) for i in chunk.heightmap)
-        level["BlockLight"].value = "".join(pack_nibbles(chunk.lightmap))
-        level["Data"].value = "".join(pack_nibbles(chunk.metadata))
-        level["SkyLight"].value = "".join(pack_nibbles(chunk.skylight))
+        level["Blocks"].value = "".join(chr(i) for i in chunk.blocks.ravel())
+        level["HeightMap"].value = "".join(chr(i)
+                for i in chunk.heightmap.ravel())
+        level["BlockLight"].value = "".join(
+                pack_nibbles(chunk.lightmap.ravel()))
+        level["Data"].value = "".join(pack_nibbles(chunk.metadata.ravel()))
+        level["SkyLight"].value = "".join(pack_nibbles(chunk.skylight.ravel()))
 
         level["TerrainPopulated"] = TAG_Byte(chunk.populated)
 

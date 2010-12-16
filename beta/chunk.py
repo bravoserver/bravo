@@ -1,5 +1,5 @@
 from numpy import uint8
-from numpy import empty, zeros
+from numpy import empty, where, zeros
 
 from beta.compat import product
 from beta.entity import tile_entities
@@ -216,7 +216,7 @@ class Chunk(ChunkSerializer):
         Generate a chunk packet.
         """
 
-        array = [chr(i) for i in self.blocks]
+        array = [chr(i) for i in self.blocks.ravel()]
         array += pack_nibbles(self.metadata)
         array += pack_nibbles(self.lightmap)
         array += pack_nibbles(self.skylight)
@@ -283,12 +283,10 @@ class Chunk(ChunkSerializer):
         :param int replace: block to use as a replacement
         """
 
-        for i, block in enumerate(self.blocks):
-            if block == search:
-                self.blocks.ravel()[i] = replace
-                self.dirty = True
-
-        self.all_damaged = True
+        for coords in where(self.blocks == search):
+            self.blocks[coords] = replace
+            self.all_damaged = True
+            self.dirty = True
 
     def get_column(self, x, z):
         """
