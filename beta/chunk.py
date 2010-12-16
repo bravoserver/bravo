@@ -49,7 +49,7 @@ class Chunk(ChunkSerializer):
         self.heightmap = [0] * 16 * 16
         self.lightmap = [0] * 16 * 128 * 16
         self.metadata = [0] * 16 * 128 * 16
-        self.skylight = [0] * 16 * 128 * 16
+        self.lightmap = [0xf] * 16 * 128 * 16
 
         self.tiles = {}
 
@@ -107,7 +107,7 @@ class Chunk(ChunkSerializer):
         The height map must be valid for this method to produce valid results.
         """
 
-        self.lightmap = [0xf] * 16 * 128 * 16
+        pass
 
     def regenerate(self):
         """
