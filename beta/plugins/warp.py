@@ -8,36 +8,32 @@ from beta.ibeta import IChatCommand, IConsoleCommand
 
 csv.register_dialect("hey0", delimiter=":")
 
-homes = {}
-
-for line in csv.reader(open("world/homes.txt", "rb"), "hey0"):
-    name, x, y, z, theta, pitch = line[:6]
-    x = float(x)
-    y = float(y)
-    z = float(z)
-    theta = radians(float(theta))
-    pitch = float(pitch)
-    homes[name] = (x, y, z, theta, pitch)
-
-warps = {}
-
-for line in csv.reader(open("world/warps.txt", "rb"), "hey0"):
-    name, x, y, z, theta, pitch = line[:6]
-    x = float(x)
-    y = float(y)
-    z = float(z)
-    theta = radians(float(theta))
-    pitch = float(pitch)
-    warps[name] = (x, y, z, theta, pitch)
+def get_locations(handle):
+    d = {}
+    for line in csv.reader(handle, "hey0"):
+        name, x, y, z, theta, pitch = line[:6]
+        x = float(x)
+        y = float(y)
+        z = float(z)
+        theta = radians(float(theta))
+        pitch = float(pitch)
+        d[name] = (x, y, z, theta, pitch)
+    return d
 
 class Home(object):
 
     implements(IPlugin, IChatCommand, IConsoleCommand)
 
     def chat_command(self, factory, username, parameters):
+        handle = factory.world.folder.child("homes.txt")
+        if not handle.exists():
+            handle.touch()
+
+        homes = get_locations(handle.open("rb"))
+
         protocol = factory.players[username]
         l = protocol.player.location
-        if username in warps:
+        if username in homes:
             yield "Teleporting %s home" % username
             (l.x, l.y, l.z, l.theta, l.pitch) = homes[username]
         else:
@@ -61,6 +57,12 @@ class Warp(object):
     implements(IPlugin, IChatCommand, IConsoleCommand)
 
     def chat_command(self, factory, username, parameters):
+        handle = factory.world.folder.child("warps.txt")
+        if not handle.exists():
+            handle.touch()
+
+        warps = get_locations(handle.open("rb"))
+
         location = parameters[0]
         if location in warps:
             yield "Teleporting you to %s" % location
