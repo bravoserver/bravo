@@ -7,7 +7,7 @@ from beta.blocks import blocks
 from beta.compat import product
 from beta.ibeta import ITerrainGenerator
 from beta.simplex import octaves2, octaves3, reseed
-from beta.utilities import pairwise, rotated_cosine
+from beta.utilities import pairwise
 
 class BoringGenerator(object):
     """
@@ -23,8 +23,7 @@ class BoringGenerator(object):
 
         for x, z in product(xrange(16), xrange(16)):
             column = chunk.get_column(x, z)
-            column[0:64] = [blocks["stone"].slot] * 64
-            chunk.set_column(x, z, column)
+            column[0:64].fill([blocks["stone"].slot])
 
     name = "boring"
 
@@ -64,8 +63,7 @@ class SimplexGenerator(object):
             height = int(height + 70)
 
             column = chunk.get_column(x, z)
-            column[0:height] = [blocks["stone"].slot] * height
-            chunk.set_column(x, z, column)
+            column[0:height].fill([blocks["stone"].slot])
 
     name = "simplex"
 

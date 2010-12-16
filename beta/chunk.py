@@ -283,14 +283,18 @@ class Chunk(ChunkSerializer):
         :param int replace: block to use as a replacement
         """
 
-        for coords in where(self.blocks == search):
-            self.blocks[coords] = replace
+        if (self.blocks == search).any():
             self.all_damaged = True
             self.dirty = True
+
+            self.blocks = where(self.blocks == search, replace, self.blocks)
 
     def get_column(self, x, z):
         """
         Return a slice of the block data at the given xz-column.
+
+        The slice is a numpy array, so you do not have to set it again if you
+        are modifying it in-place.
         """
 
         return self.blocks[x, ..., z]
