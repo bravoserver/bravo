@@ -1,3 +1,6 @@
+from numpy import uint8
+from numpy import array
+
 from beta.compat import product
 from beta.entity import tile_entities
 from beta.packets import make_packet
@@ -45,11 +48,11 @@ class Chunk(ChunkSerializer):
         self.x = int(x)
         self.z = int(z)
 
-        self.blocks = [0] * 16 * 128 * 16
-        self.heightmap = [0] * 16 * 16
-        self.lightmap = [0] * 16 * 128 * 16
-        self.metadata = [0] * 16 * 128 * 16
-        self.lightmap = [0xf] * 16 * 128 * 16
+        self.blocks = array([0] * 16 * 128 * 16, dtype=uint8)
+        self.heightmap = array([0] * 16 * 16, dtype=uint8)
+        self.lightmap = array([0] * 16 * 128 * 16, dtype=uint8)
+        self.metadata = array([0] * 16 * 128 * 16, dtype=uint8)
+        self.lightmap = array([0xf] * 16 * 128 * 16, dtype=uint8)
 
         self.tiles = {}
 
