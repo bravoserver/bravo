@@ -1,5 +1,5 @@
 from numpy import uint8
-from numpy import array
+from numpy import array, zeros
 
 from beta.compat import product
 from beta.entity import tile_entities
@@ -49,10 +49,10 @@ class Chunk(ChunkSerializer):
         self.z = int(z)
 
         self.blocks = array([0] * 16 * 128 * 16, dtype=uint8)
-        self.heightmap = array([0] * 16 * 16, dtype=uint8)
+        self.heightmap = zeros((16, 16), dtype=uint8)
         self.lightmap = array([0] * 16 * 128 * 16, dtype=uint8)
         self.metadata = array([0] * 16 * 128 * 16, dtype=uint8)
-        self.lightmap = array([0xf] * 16 * 128 * 16, dtype=uint8)
+        self.skylight = array([0xf] * 16 * 128 * 16, dtype=uint8)
 
         self.tiles = {}
 
@@ -83,7 +83,7 @@ class Chunk(ChunkSerializer):
         xz-column.
         """
 
-        for x, z in product(xrange(16), xrange(16)):
+        for x, z in product(xrange(16), repeat=2):
             # Get the index for the top of the column, and then exploit the
             # nature of indices to avoid calling triplet_to_index()
             # repeatedly.
@@ -92,7 +92,7 @@ class Chunk(ChunkSerializer):
                 if self.blocks[index + y]:
                     break
 
-            self.heightmap[x * 16 + z] = y
+            self.heightmap[x, z] = y
 
     def regenerate_lightmap(self):
         pass
@@ -256,10 +256,11 @@ class Chunk(ChunkSerializer):
             # whether or not this is cheaper than the set of conditional
             # statements required to update it in relative terms instead of
             # absolute terms. Revisit this later, maybe?
+            # XXX definitely re-examine this later!
             for y in range(127, -1, -1):
                 if self.blocks[index]:
                     break
-            self.heightmap[x * 16 + z] = y
+            self.heightmap[x, z] = y
 
             self.dirty = True
             self.damage(coords)
@@ -273,7 +274,7 @@ class Chunk(ChunkSerializer):
         :returns: int representing height
         """
 
-        return self.heightmap[x * 16 + z]
+        return self.heightmap[x, z]
 
     def sed(self, search, replace):
         """

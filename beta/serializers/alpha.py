@@ -94,11 +94,12 @@ class ChunkSerializer(object):
 
         level = tag["Level"]
 
-        chunk.blocks = [ord(i) for i in level["Blocks"].value]
-        chunk.heightmap = [ord(i) for i in level["HeightMap"].value]
-        chunk.lightmap = unpack_nibbles(level["BlockLight"].value)
-        chunk.metadata = unpack_nibbles(level["Data"].value)
-        chunk.skylight = unpack_nibbles(level["SkyLight"].value)
+        chunk.blocks.ravel()[:] = [ord(i) for i in level["Blocks"].value]
+        chunk.heightmap.ravel()[:] = [ord(i)
+                for i in level["HeightMap"].value]
+        chunk.lightmap.ravel()[:] = unpack_nibbles(level["BlockLight"].value)
+        chunk.metadata.ravel()[:] = unpack_nibbles(level["Data"].value)
+        chunk.skylight.ravel()[:] = unpack_nibbles(level["SkyLight"].value)
 
         chunk.populated = bool(level["TerrainPopulated"])
 
