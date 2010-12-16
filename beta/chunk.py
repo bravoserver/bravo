@@ -1,11 +1,11 @@
 from numpy import uint8
-from numpy import array, empty, zeros
+from numpy import empty, zeros
 
 from beta.compat import product
 from beta.entity import tile_entities
 from beta.packets import make_packet
 from beta.serialize import ChunkSerializer
-from beta.utilities import triplet_to_index, pack_nibbles
+from beta.utilities import pack_nibbles
 
 class Chunk(ChunkSerializer):
 
@@ -48,10 +48,10 @@ class Chunk(ChunkSerializer):
         self.x = int(x)
         self.z = int(z)
 
-        self.blocks = array([0] * 16 * 128 * 16, dtype=uint8)
+        self.blocks = zeros((16, 128, 16), dtype=uint8)
         self.heightmap = zeros((16, 16), dtype=uint8)
         self.lightmap = zeros((16, 128, 16), dtype=uint8)
-        self.metadata = array([0] * 16 * 128 * 16, dtype=uint8)
+        self.metadata = zeros((16, 128, 16), dtype=uint8)
         self.skylight = empty((16, 128, 16), dtype=uint8)
         self.skylight.fill(0xf)
 
@@ -85,12 +85,8 @@ class Chunk(ChunkSerializer):
         """
 
         for x, z in product(xrange(16), repeat=2):
-            # Get the index for the top of the column, and then exploit the
-            # nature of indices to avoid calling triplet_to_index()
-            # repeatedly.
-            index = triplet_to_index((x, 0, z))
             for y in range(127, -1, -1):
-                if self.blocks[index + y]:
+                if self.blocks[x, y, z]:
                     break
 
             self.heightmap[x, z] = y
@@ -180,18 +176,20 @@ class Chunk(ChunkSerializer):
         elif len(self.damaged) == 1:
             # Use a single block update packet.
             x, y, z = iter(self.damaged).next()
-            index = triplet_to_index((x, y, z))
             x += self.x * 16
             z += self.z * 16
-            return make_packet("block", x=x, y=y, z=z,
-                type=self.blocks[index], meta=self.metadata[index])
+            return make_packet("block",
+                    x=x + self.x * 16,
+                    y=y,
+                    z=z + self.x * 16,
+                    type=self.blocks[x, y, z],
+                    meta=self.metadata[x, y, z])
         else:
             # Use a batch update.
             coords = []
             types = []
             metadata = []
             for x, y, z in self.damaged:
-                index = triplet_to_index((x, y, z))
                 # Coordinates are not quite packed in the same system as the
                 # indices for chunk data structures.
                 # Chunk data structures are ((x * 16) + z) * 128) + y, or in
@@ -199,8 +197,8 @@ class Chunk(ChunkSerializer):
                 # this, we need x << 12 | z << 8 | y, so repack accordingly.
                 packed = x << 12 | z << 8 | y
                 coords.append(packed)
-                types.append(self.blocks[index])
-                metadata.append(self.metadata[index])
+                types.append(self.blocks[x, y, z])
+                metadata.append(self.metadata[x, y, z])
             return make_packet("batch", x=self.x, z=self.z,
                 length=len(coords), coords=coords, types=types,
                 metadata=metadata)
@@ -235,9 +233,7 @@ class Chunk(ChunkSerializer):
         :returns: int representing block type
         """
 
-        index = triplet_to_index(coords)
-
-        return self.blocks[index]
+        return self.blocks[coords]
 
     def set_block(self, coords, block):
         """
@@ -248,10 +244,9 @@ class Chunk(ChunkSerializer):
         """
 
         x, y, z = coords
-        index = triplet_to_index(coords)
 
-        if self.blocks[index] != block:
-            self.blocks[index] = block
+        if self.blocks[coords] != block:
+            self.blocks[coords] = block
 
             # Regenerate heightmap at this coordinate. Honestly not sure
             # whether or not this is cheaper than the set of conditional
@@ -259,7 +254,7 @@ class Chunk(ChunkSerializer):
             # absolute terms. Revisit this later, maybe?
             # XXX definitely re-examine this later!
             for y in range(127, -1, -1):
-                if self.blocks[index]:
+                if self.blocks[coords]:
                     break
             self.heightmap[x, z] = y
 
@@ -290,7 +285,7 @@ class Chunk(ChunkSerializer):
 
         for i, block in enumerate(self.blocks):
             if block == search:
-                self.blocks[i] = replace
+                self.blocks.ravel()[i] = replace
                 self.dirty = True
 
         self.all_damaged = True
@@ -300,18 +295,14 @@ class Chunk(ChunkSerializer):
         Return a slice of the block data at the given xz-column.
         """
 
-        index = triplet_to_index((x, 0, z))
-
-        return self.blocks[index:index + 128]
+        return self.blocks[x, ..., z]
 
     def set_column(self, x, z, column):
         """
         Atomically set an entire xz-column's block data.
         """
 
-        index = triplet_to_index((x, 0, z))
-
-        self.blocks[index:index + 128] = column[:128]
+        self.blocks[x, ..., z] = column
 
         self.dirty = True
         for y in range(128):
