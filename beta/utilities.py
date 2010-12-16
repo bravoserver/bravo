@@ -85,19 +85,19 @@ def unpack_nibbles(l):
         retval.append(i & 15)
     return retval
 
-def pack_nibbles(l):
+def pack_nibbles(a):
     """
     Pack pairs of nibbles into bytes.
 
     Bytes are returned as characters.
 
-    :param list l: nibbles to pack
+    :param `ndarray` a: nibbles to pack
 
-    :returns: list of bytes
+    :returns: iterable yielding bytes
     """
 
-    it = iter(l)
-    return [chr(i << 4 | j) for i, j in zip(it, it)]
+    for i, j in a.reshape(-1, 2):
+        yield chr(i << 4 | j)
 
 # Trig.
 

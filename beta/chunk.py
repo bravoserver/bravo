@@ -1,5 +1,5 @@
 from numpy import uint8
-from numpy import array, zeros
+from numpy import array, empty, zeros
 
 from beta.compat import product
 from beta.entity import tile_entities
@@ -50,9 +50,10 @@ class Chunk(ChunkSerializer):
 
         self.blocks = array([0] * 16 * 128 * 16, dtype=uint8)
         self.heightmap = zeros((16, 16), dtype=uint8)
-        self.lightmap = array([0] * 16 * 128 * 16, dtype=uint8)
+        self.lightmap = zeros((16, 128, 16), dtype=uint8)
         self.metadata = array([0] * 16 * 128 * 16, dtype=uint8)
-        self.skylight = array([0xf] * 16 * 128 * 16, dtype=uint8)
+        self.skylight = empty((16, 128, 16), dtype=uint8)
+        self.skylight.fill(0xf)
 
         self.tiles = {}
 
