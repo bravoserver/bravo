@@ -133,7 +133,7 @@ class Chunk(ChunkSerializer):
 
         self.damaged[x, z, y] = True
 
-        if self.damaged.nonzero()[0].size > 176:
+        if self.damaged.sum() > 176:
             self.all_damaged = True
 
     def is_damaged(self):
@@ -174,11 +174,9 @@ class Chunk(ChunkSerializer):
             return self.save_to_packet()
         elif not self.damaged.any():
             return ""
-        elif self.damaged.nonzero()[0].size == 1:
+        elif self.damaged.sum() == 1:
             # Use a single block update packet.
-            x, y, z = iter(self.damaged).next()
-            x += self.x * 16
-            z += self.z * 16
+            x, z, y = zip(*self.damaged.nonzero())[0]
             return make_packet("block",
                     x=x + self.x * 16,
                     y=y,

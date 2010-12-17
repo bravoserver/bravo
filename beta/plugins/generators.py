@@ -1,6 +1,6 @@
 from __future__ import division
 
-from numpy import where
+from numpy import array, where
 
 from twisted.plugin import IPlugin
 from zope.interface import implements
@@ -74,7 +74,7 @@ class ComplexGenerator(object):
     Generate islands of stone.
 
     This class uses a simplex noise generator to procedurally generate
-    organic-looking, continuously smooth terrain.
+    ridiculous things.
     """
 
     implements(IPlugin, ITerrainGenerator)
@@ -88,18 +88,18 @@ class ComplexGenerator(object):
 
         factor = 1 / 256
 
-        for x, z in product(xrange(16), xrange(16)):
+        for x, z in product(xrange(16), repeat=2):
             column = chunk.get_column(x, z)
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
-            for y in range(len(column)):
-                sample = octaves3(magx, y * factor, magz, 6)
+            samples = array([octaves3(magx, y * factor, magz, 6)
+                    for y in xrange(column.size)])
 
-                if sample > 0.1:
-                    column[y] = blocks["stone"].slot
-                elif sample > 0:
-                    column[y] = blocks["dirt"].slot
+            column = where(samples > 0, blocks["dirt"].slot, column)
+            column = where(samples > 0.1, blocks["stone"].slot, column)
+
+            chunk.set_column(x, z, column)
 
     name = "complex"
 
