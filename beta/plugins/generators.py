@@ -1,5 +1,7 @@
 from __future__ import division
 
+from numpy import where
+
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
@@ -51,7 +53,7 @@ class SimplexGenerator(object):
 
         factor = 1 / 256
 
-        for x, z in product(xrange(16), xrange(16)):
+        for x, z in product(xrange(16), repeat=2):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
@@ -114,11 +116,11 @@ class WaterTableGenerator(object):
         Generate a flat water table halfway up the map.
         """
 
-        for x, z in product(xrange(16), xrange(16)):
-            column = chunk.get_column(x, z)[:64]
-            for y, block in enumerate(column):
-                if block == blocks["air"].slot:
-                    chunk.set_block((x, y, z), blocks["spring"].slot)
+        for x, z in product(xrange(16), repeat=2):
+            column = chunk.get_column(x, z)
+
+            column[:64] = where(column[:64] == blocks["air"].slot,
+                    blocks["spring"].slot, column[:64])
 
     name = "watertable"
 
