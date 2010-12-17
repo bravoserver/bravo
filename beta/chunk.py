@@ -57,9 +57,9 @@ class Chunk(ChunkSerializer):
 
         self.tiles = {}
 
-        self.damaged = set()
+        self.damaged = zeros((16, 16, 128), dtype=bool)
         """
-        Set for tracking damaged coordinates.
+        Array for tracking damaged coordinates.
         """
 
         self.all_damaged = False
@@ -126,13 +126,14 @@ class Chunk(ChunkSerializer):
         Record damage on this chunk.
         """
 
+        x, y, z = coords
+
         if self.all_damaged:
             return
 
-        self.damaged.add(coords)
+        self.damaged[x, z, y] = True
 
-        if len(self.damaged) > 176:
-            self.damaged.clear()
+        if self.damaged.nonzero()[0].size > 176:
             self.all_damaged = True
 
     def is_damaged(self):
@@ -142,7 +143,7 @@ class Chunk(ChunkSerializer):
         :returns: bool
         """
 
-        return self.all_damaged or bool(len(self.damaged))
+        return self.all_damaged or self.damaged.any()
 
     def get_damage_packet(self):
         """
@@ -171,9 +172,9 @@ class Chunk(ChunkSerializer):
         if self.all_damaged:
             # Resend the entire chunk!
             return self.save_to_packet()
-        elif len(self.damaged) == 0:
+        elif not self.damaged.any():
             return ""
-        elif len(self.damaged) == 1:
+        elif self.damaged.nonzero()[0].size == 1:
             # Use a single block update packet.
             x, y, z = iter(self.damaged).next()
             x += self.x * 16
@@ -186,19 +187,16 @@ class Chunk(ChunkSerializer):
                     meta=self.metadata[x, z, y])
         else:
             # Use a batch update.
-            coords = []
-            types = []
-            metadata = []
-            for x, y, z in self.damaged:
-                # Coordinates are not quite packed in the same system as the
-                # indices for chunk data structures.
-                # Chunk data structures are ((x * 16) + z) * 128) + y, or in
-                # bit-twiddler's parlance, x << 11 | z << 7 | y. However, for
-                # this, we need x << 12 | z << 8 | y, so repack accordingly.
-                packed = x << 12 | z << 8 | y
-                coords.append(packed)
-                types.append(self.blocks[x, z, y])
-                metadata.append(self.metadata[x, z, y])
+            damaged = self.damaged.nonzero()
+            # Coordinates are not quite packed in the same system as the
+            # indices for chunk data structures.
+            # Chunk data structures are ((x * 16) + z) * 128) + y, or in
+            # bit-twiddler's parlance, x << 11 | z << 7 | y. However, for
+            # this, we need x << 12 | z << 8 | y, so repack accordingly.
+            coords = [x << 12 | z << 8 | y for x, z, y in zip(*damaged)]
+            types = self.blocks[damaged]
+            metadata = self.metadata[damaged]
+
             return make_packet("batch", x=self.x, z=self.z,
                 length=len(coords), coords=coords, types=types,
                 metadata=metadata)
@@ -208,7 +206,7 @@ class Chunk(ChunkSerializer):
         Clear this chunk's damage.
         """
 
-        self.damaged.clear()
+        self.damaged.fill(False)
         self.all_damaged = False
 
     def save_to_packet(self):
