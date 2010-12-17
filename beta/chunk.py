@@ -48,11 +48,11 @@ class Chunk(ChunkSerializer):
         self.x = int(x)
         self.z = int(z)
 
-        self.blocks = zeros((16, 128, 16), dtype=uint8)
+        self.blocks = zeros((16, 16, 128), dtype=uint8)
         self.heightmap = zeros((16, 16), dtype=uint8)
-        self.lightmap = zeros((16, 128, 16), dtype=uint8)
-        self.metadata = zeros((16, 128, 16), dtype=uint8)
-        self.skylight = empty((16, 128, 16), dtype=uint8)
+        self.lightmap = zeros((16, 16, 128), dtype=uint8)
+        self.metadata = zeros((16, 16, 128), dtype=uint8)
+        self.skylight = empty((16, 16, 128), dtype=uint8)
         self.skylight.fill(0xf)
 
         self.tiles = {}
@@ -86,7 +86,7 @@ class Chunk(ChunkSerializer):
 
         for x, z in product(xrange(16), repeat=2):
             for y in range(127, -1, -1):
-                if self.blocks[x, y, z]:
+                if self.blocks[x, z, y]:
                     break
 
             self.heightmap[x, z] = y
@@ -182,8 +182,8 @@ class Chunk(ChunkSerializer):
                     x=x + self.x * 16,
                     y=y,
                     z=z + self.x * 16,
-                    type=self.blocks[x, y, z],
-                    meta=self.metadata[x, y, z])
+                    type=self.blocks[x, z, y],
+                    meta=self.metadata[x, z, y])
         else:
             # Use a batch update.
             coords = []
@@ -197,8 +197,8 @@ class Chunk(ChunkSerializer):
                 # this, we need x << 12 | z << 8 | y, so repack accordingly.
                 packed = x << 12 | z << 8 | y
                 coords.append(packed)
-                types.append(self.blocks[x, y, z])
-                metadata.append(self.metadata[x, y, z])
+                types.append(self.blocks[x, z, y])
+                metadata.append(self.metadata[x, z, y])
             return make_packet("batch", x=self.x, z=self.z,
                 length=len(coords), coords=coords, types=types,
                 metadata=metadata)
@@ -233,7 +233,9 @@ class Chunk(ChunkSerializer):
         :returns: int representing block type
         """
 
-        return self.blocks[coords]
+        x, y, z = coords
+
+        return self.blocks[x, z, y]
 
     def set_block(self, coords, block):
         """
@@ -245,8 +247,8 @@ class Chunk(ChunkSerializer):
 
         x, y, z = coords
 
-        if self.blocks[coords] != block:
-            self.blocks[coords] = block
+        if self.blocks[x, z, y] != block:
+            self.blocks[x, z, y] = block
 
             # Regenerate heightmap at this coordinate. Honestly not sure
             # whether or not this is cheaper than the set of conditional
@@ -254,7 +256,7 @@ class Chunk(ChunkSerializer):
             # absolute terms. Revisit this later, maybe?
             # XXX definitely re-examine this later!
             for y in range(127, -1, -1):
-                if self.blocks[coords]:
+                if self.blocks[x, z, y]:
                     break
             self.heightmap[x, z] = y
 
@@ -297,14 +299,14 @@ class Chunk(ChunkSerializer):
         are modifying it in-place.
         """
 
-        return self.blocks[x, ..., z]
+        return self.blocks[x, z]
 
     def set_column(self, x, z, column):
         """
         Atomically set an entire xz-column's block data.
         """
 
-        self.blocks[x, ..., z] = column
+        self.blocks[x, z] = column
 
         self.dirty = True
         for y in range(128):
