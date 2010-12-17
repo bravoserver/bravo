@@ -1,5 +1,4 @@
 import collections
-import random
 
 from construct import Container
 
@@ -69,6 +68,7 @@ class AlphaProtocol(Protocol):
             15: self.build,
             16: self.equip,
             18: self.animate,
+            21: self.pickup,
             59: self.tile,
             255: self.quit,
         })
@@ -236,6 +236,11 @@ class AlphaProtocol(Protocol):
 
     def animate(self, container):
         pass
+
+    def pickup(self, container):
+
+        self.factory.give((container.x, container.y, container.z),
+            container.item, container.count)
 
     def tile(self, container):
         print "Tiling!"
