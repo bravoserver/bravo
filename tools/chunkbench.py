@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import time
+import sys
 
 from beta.config import configuration
 from beta.chunk import Chunk
@@ -59,6 +60,9 @@ def pipeline():
     return after - before
 
 plugins = retrieve_plugins(ITerrainGenerator)
+
+if len(sys.argv) > 1:
+    plugins = {sys.argv[1]: plugins[sys.argv[1]]}
 
 t = empty_chunk()
 print "Baseline: %f seconds" % t
