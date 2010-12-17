@@ -31,7 +31,7 @@ class AlphaFactory(Factory):
     def __init__(self):
         self.world = World("world")
         self.world.factory = self
-        self.players = dict()
+        self.protocols = dict()
 
         self.eid = 1
         self.entities = set()
@@ -115,7 +115,7 @@ class AlphaFactory(Factory):
                 self.world.season = plugin
 
     def broadcast(self, packet):
-        for player in self.players.itervalues():
+        for player in self.protocols.itervalues():
             player.transport.write(packet)
 
     def broadcast_for_chunk(self, packet, x, z):
@@ -125,7 +125,7 @@ class AlphaFactory(Factory):
         `x` and `z` are chunk coordinates, not block coordinates.
         """
 
-        for player in self.players.itervalues():
+        for player in self.protocols.itervalues():
             if (x, z) in player.chunks:
                 player.transport.write(packet)
 

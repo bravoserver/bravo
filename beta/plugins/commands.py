@@ -11,8 +11,8 @@ from beta.plugin import retrieve_plugins
 from beta.packets import make_packet
 
 def parse_player(factory, name):
-    if name in factory.players:
-        return factory.players[name]
+    if name in factory.protocols:
+        return factory.protocols[name]
     else:
         raise Exception("Couldn't find player %s" % name)
 
@@ -77,7 +77,7 @@ class List(object):
 
     def dispatch(self, factory):
         yield "Connected players: %s" % (", ".join(
-                player for player in factory.players))
+                player for player in factory.protocols))
 
     def chat_command(self, factory, username, parameters):
         for i in self.dispatch(factory):

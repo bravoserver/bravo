@@ -29,10 +29,10 @@ class Status(object):
     implements(IPlugin, IConsoleCommand)
 
     def console_command(self, factory, parameters):
-        protocol_count = len(factory.players)
+        protocol_count = len(factory.protocols)
         yield "%d protocols connected" % protocol_count
 
-        for name, protocol in factory.players.iteritems():
+        for name, protocol in factory.protocols.iteritems():
             count = len(protocol.chunks)
             dirty = len([i for i in protocol.chunks.values() if i.dirty])
             yield "%s: %d chunks (%d dirty)" % (name, count, dirty)

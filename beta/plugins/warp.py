@@ -32,7 +32,7 @@ class Home(object):
 
         homes = get_locations(handle.open("rb"))
 
-        protocol = factory.players[username]
+        protocol = factory.protocols[username]
         l = protocol.player.location
         if username in homes:
             yield "Teleporting %s home" % username
@@ -64,7 +64,7 @@ class SetHome(object):
         if not handle.exists():
             handle.touch()
 
-        protocol = factory.players[username]
+        protocol = factory.protocols[username]
         x = protocol.player.location.x
         y = protocol.player.location.y
         z = protocol.player.location.z
@@ -94,7 +94,7 @@ class Warp(object):
         location = parameters[0]
         if location in warps:
             yield "Teleporting you to %s" % location
-            protocol = factory.players[username]
+            protocol = factory.protocols[username]
             # An explanation might be necessary.
             # We are changing the location of the player, but we must
             # immediately send a new location packet in order to force the
@@ -160,7 +160,7 @@ class SetWarp(object):
         if not handle.exists():
             handle.touch()
 
-        protocol = factory.players[username]
+        protocol = factory.protocols[username]
         x = protocol.player.location.x
         y = protocol.player.location.y
         z = protocol.player.location.z

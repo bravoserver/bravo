@@ -332,7 +332,7 @@ class AlphaProtocol(Protocol):
     def authenticated(self):
         self.state = STATE_AUTHENTICATED
 
-        self.factory.players[self.username] = self
+        self.factory.protocols[self.username] = self
 
         self.player = self.factory.world.load_player(self.username)
         self.player.eid = self.eid
@@ -447,5 +447,5 @@ class AlphaProtocol(Protocol):
         if self.player:
             self.factory.world.save_player(self.username, self.player)
 
-        if self.username in self.factory.players:
-            del self.factory.players[self.username]
+        if self.username in self.factory.protocols:
+            del self.factory.protocols[self.username]
