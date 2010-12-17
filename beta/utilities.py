@@ -22,43 +22,6 @@ def split_coords(x, z):
 
     return first, second, third, fourth
 
-def triplet_to_index(coords):
-    """
-    Calculate the index for a set of subchunk coordinates.
-
-    :param tuple coords: X, Y, Z coordinates
-
-    :returns: integer index into chunk data
-    :raises Exception: the coordinates are out-of-bounds
-    """
-
-    x, y, z = coords
-
-    retval = (x * 16 + z) * 128 + y
-
-    if not 0 <= retval < 16 * 128 * 16:
-        raise Exception("%d, %d, %d causes OOB index %d" % (x, y, z, retval))
-
-    return retval
-
-def index_to_triplet(index):
-    """
-    Calculate the subchunk coordinates for an index.
-
-    :param int index: index
-
-    :returns: tuple of subchunk coordinates
-    :raises Exception: the index is out-of-bounds
-    """
-
-    if not 0 <= index < 16 * 128 * 16:
-        raise Exception("%d is an OOB index" % index)
-
-    xz, y = divmod(index, 128)
-    x, z = divmod(xz, 16)
-
-    return (x, y, z)
-
 # Bit twiddling.
 
 def unpack_nibbles(l):
