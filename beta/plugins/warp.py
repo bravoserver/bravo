@@ -1,5 +1,6 @@
 import csv
-from math import radians
+from math import degrees, radians
+from StringIO import StringIO
 
 from twisted.plugin import IPlugin
 from zope.interface import implements
@@ -52,6 +53,35 @@ class Home(object):
     usage = ""
     info = "Warps player home"
 
+class SetHome(object):
+
+    implements(IPlugin, IChatCommand)
+
+    def chat_command(self, factory, username, parameters):
+        name = "".join(parameters)
+
+        yield "Saving home %s..." % name
+
+        handle = factory.world.folder.child("homes.txt")
+        if not handle.exists():
+            handle.touch()
+
+        protocol = factory.players[username]
+        x = protocol.player.location.x
+        y = protocol.player.location.y
+        z = protocol.player.location.z
+        yaw = degrees(protocol.player.location.theta)
+        pitch = protocol.player.location.pitch
+
+        csv.writer(handle.open("ab"), "hey0").writerow([name, x, y, z, yaw, pitch])
+
+        yield "Saved %s!" % name
+
+    name = "sethome"
+    aliases = tuple()
+    usage = "<name>"
+    info = "Set home"
+
 class Warp(object):
 
     implements(IPlugin, IChatCommand, IConsoleCommand)
@@ -95,17 +125,23 @@ class ListWarps(object):
 
     implements(IPlugin, IChatCommand, IConsoleCommand)
 
-    def dispatch(self):
+    def dispatch(self, factory):
+        handle = factory.world.folder.child("warps.txt")
+        if not handle.exists():
+            handle.touch()
+
+        warps = get_locations(handle.open("rb"))
+
         yield "Warp locations:"
         for key in sorted(warps.iterkeys()):
             yield "~ %s" % key
 
     def chat_command(self, factory, username, parameters):
-        for i in self.dispatch():
+        for i in self.dispatch(factory):
             yield i
 
     def console_command(self, factory, parameters):
-        for i in self.dispatch():
+        for i in self.dispatch(factory):
             yield i
 
     name = "listwarps"
@@ -113,6 +149,71 @@ class ListWarps(object):
     usage = ""
     info = "List warps"
 
+class SetWarp(object):
+
+    implements(IPlugin, IChatCommand)
+
+    def chat_command(self, factory, username, parameters):
+        name = "".join(parameters)
+
+        yield "Saving warp %s..." % name
+
+        handle = factory.world.folder.child("warps.txt")
+        if not handle.exists():
+            handle.touch()
+
+        protocol = factory.players[username]
+        x = protocol.player.location.x
+        y = protocol.player.location.y
+        z = protocol.player.location.z
+        yaw = degrees(protocol.player.location.theta)
+        pitch = protocol.player.location.pitch
+
+        csv.writer(handle.open("ab"), "hey0").writerow([name, x, y, z, yaw, pitch])
+
+        yield "Saved %s!" % name
+
+    name = "setwarp"
+    aliases = tuple()
+    usage = "<name>"
+    info = "Set warp"
+
+class RemoveWarp(object):
+
+    implements(IPlugin, IChatCommand)
+
+    def chat_command(self, factory, username, parameters):
+        name = "".join(parameters)
+
+        yield "Removing warp %s..." % name
+
+        handle = factory.world.folder.child("warps.txt")
+        if not handle.exists():
+            handle.touch()
+
+        rows = get_locations(handle.open("rb"))
+        if name in rows:
+            del rows[name]
+
+        sio = StringIO()
+        writer = csv.writer(sio, "hey0")
+        writer.writerows([name] + list(data)
+            for name, data in rows.itervalues())
+
+        yield "Saving warps..."
+
+        handle.setContent(sio.getvalue())
+
+        yield "Removed %s!" % name
+
+    name = "removewarp"
+    aliases = tuple()
+    usage = "<name>"
+    info = "Remove warp"
+
 home = Home()
+sethome = SetHome()
 warp = Warp()
 listwarps = ListWarps()
+setwarp = SetWarp()
+removewarp = RemoveWarp()
