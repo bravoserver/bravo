@@ -259,6 +259,35 @@ class Chunk(ChunkSerializer):
             self.dirty = True
             self.damage(coords)
 
+    def get_metadata(self, coords):
+        """
+        Look up metadata.
+
+        :param tuple coords: coordinate triplet
+
+        :returns: int
+        """
+
+        x, y, z = coords
+
+        return self.metadata[x, z, y]
+
+    def set_metadata(self, coords, metadata):
+        """
+        Update metadata.
+
+        :param tuple coords: coordinate triplet
+        :param int metadata:
+        """
+
+        x, y, z = coords
+
+        if self.metadata[x, z, y] != metadata:
+            self.metadata[x, z, y] = metadata
+
+            self.dirty = True
+            self.damage(coords)
+
     def height_at(self, x, z):
         """
         Get the height of an xz-column of blocks.
