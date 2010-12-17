@@ -56,6 +56,9 @@ def reseed(seed):
 p = []
 current_seed = None
 
+f2 = 0.5 * (math.sqrt(3) - 1)
+g2 = (3 - math.sqrt(3)) / 6
+
 def simplex2(x, y):
     """
     Generate simplex noise at the given coordinates.
@@ -78,16 +81,14 @@ def simplex2(x, y):
         raise Exception("The gradient field is unseeded!")
 
     # Set up our scalers and arrays.
-    f = 0.5 * (math.sqrt(3) - 1)
-    g = (3 - math.sqrt(3)) / 6
     coords = [None] * 3
     gradients = [None] * 3
 
     # XXX ???
-    s = (x + y) * f
+    s = (x + y) * f2
     i = int(math.floor(x + s))
     j = int(math.floor(y + s))
-    t = (i + j) * g
+    t = (i + j) * g2
     unskewed = i - t, j - t
 
     # Clamp to the size of the simplex array.
@@ -101,12 +102,12 @@ def simplex2(x, y):
 
     x, y = coords[0]
     if x > y:
-        coords[1] = x - 1 + g, y     + g
+        coords[1] = x - 1 + g2, y     + g2
         gradients[1] = p[i + 1 + p[j    ]] % 12
     else:
-        coords[1] = x     + g, y - 1 + g
+        coords[1] = x     + g2, y - 1 + g2
         gradients[1] = p[i     + p[j + 1]] % 12
-    coords[2] = x - 1 + 2 * g, y - 1 + 2 * g
+    coords[2] = x - 1 + 2 * g2, y - 1 + 2 * g2
     gradients[2] = p[i + 1 + p[j + 1]] % 12
 
     # Do our summation.
