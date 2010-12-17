@@ -58,9 +58,7 @@ class SetHome(object):
     implements(IPlugin, IChatCommand)
 
     def chat_command(self, factory, username, parameters):
-        name = "".join(parameters)
-
-        yield "Saving home %s..." % name
+        yield "Saving %s's home..." % username
 
         handle = factory.world.folder.child("homes.txt")
         if not handle.exists():
@@ -73,13 +71,13 @@ class SetHome(object):
         yaw = degrees(protocol.player.location.theta)
         pitch = protocol.player.location.pitch
 
-        csv.writer(handle.open("ab"), "hey0").writerow([name, x, y, z, yaw, pitch])
+        csv.writer(handle.open("ab"), "hey0").writerow([username, x, y, z, yaw, pitch])
 
-        yield "Saved %s!" % name
+        yield "Saved %s!" % username
 
     name = "sethome"
     aliases = tuple()
-    usage = "<name>"
+    usage = ""
     info = "Set home"
 
 class Warp(object):
