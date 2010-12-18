@@ -1,5 +1,4 @@
 import csv
-from math import degrees, radians
 from StringIO import StringIO
 
 from twisted.plugin import IPlugin
@@ -12,13 +11,13 @@ csv.register_dialect("hey0", delimiter=":")
 def get_locations(handle):
     d = {}
     for line in csv.reader(handle, "hey0"):
-        name, x, y, z, theta, pitch = line[:6]
+        name, x, y, z, yaw, pitch = line[:6]
         x = float(x)
         y = float(y)
         z = float(z)
-        theta = radians(float(theta))
+        yaw = float(yaw)
         pitch = float(pitch)
-        d[name] = (x, y, z, theta, pitch)
+        d[name] = (x, y, z, yaw, pitch)
     return d
 
 class Home(object):
@@ -36,11 +35,11 @@ class Home(object):
         l = protocol.player.location
         if username in homes:
             yield "Teleporting %s home" % username
-            (l.x, l.y, l.z, l.theta, l.pitch) = homes[username]
+            (l.x, l.y, l.z, l.yaw, l.pitch) = homes[username]
         else:
             yield "Teleporting %s to spawn" % username
             l.x, l.y, l.z = factory.world.spawn
-            l.theta, l.pitch = 0, 0
+            l.yaw, l.pitch = 0, 0
         protocol.send_initial_chunk_and_location()
         yield "Teleportation successful!"
 
@@ -68,7 +67,7 @@ class SetHome(object):
         x = protocol.player.location.x
         y = protocol.player.location.y
         z = protocol.player.location.z
-        yaw = degrees(protocol.player.location.theta)
+        yaw = protocol.player.location.yaw
         pitch = protocol.player.location.pitch
 
         csv.writer(handle.open("ab"), "hey0").writerow([username, x, y, z, yaw, pitch])
@@ -104,7 +103,7 @@ class Warp(object):
             # location setup, so we call send_initial_chunk_and_location()
             # instead of update_location().
             l = protocol.player.location
-            (l.x, l.y, l.z, l.theta, l.pitch) = warps[location]
+            (l.x, l.y, l.z, l.yaw, l.pitch) = warps[location]
             protocol.send_initial_chunk_and_location()
             yield "Teleportation successful!"
         else:
@@ -164,7 +163,7 @@ class SetWarp(object):
         x = protocol.player.location.x
         y = protocol.player.location.y
         z = protocol.player.location.z
-        yaw = degrees(protocol.player.location.theta)
+        yaw = protocol.player.location.yaw
         pitch = protocol.player.location.pitch
 
         csv.writer(handle.open("ab"), "hey0").writerow([name, x, y, z, yaw, pitch])

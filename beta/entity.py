@@ -1,4 +1,3 @@
-from math import degrees
 import StringIO
 
 from construct import Container
@@ -62,7 +61,7 @@ class Player(Entity, PlayerSerializer):
                 x=self.location.x,
                 y=self.location.y,
                 z=self.location.z,
-                yaw=degrees(self.location.theta),
+                yaw=self.location.yaw,
                 pitch=self.location.pitch,
                 item=self.inventory.items[0]
             )
