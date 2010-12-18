@@ -1,4 +1,7 @@
+from math import degrees
 import StringIO
+
+from construct import Container
 
 from nbt.nbt import NBTFile
 
@@ -50,6 +53,19 @@ class Player(Entity, PlayerSerializer):
         self.inventory = Inventory(-1, 0, 37)
         self.crafting = Inventory(-2, 80, 4)
         self.armor = Inventory(-3, 100, 4)
+
+    def save_to_packet(self):
+
+        return make_packet("player",
+                entity=Container(entity=self.eid),
+                username=self.username,
+                x=self.location.x,
+                y=self.location.y,
+                z=self.location.z,
+                yaw=degrees(self.location.theta),
+                pitch=self.location.pitch,
+                item=self.inventory.items[0]
+            )
 
 class Pickup(Entity):
     """

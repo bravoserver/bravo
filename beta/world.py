@@ -220,6 +220,7 @@ class World(LevelSerializer):
             self.spawn[2], "Player")
 
         player.location.stance = self.spawn[1]
+        player.username = username
 
         f = self.folder.child("players")
         if not f.exists():
