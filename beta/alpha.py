@@ -43,13 +43,35 @@ class Location(object):
     """
 
     def __init__(self):
+        # Position in pixels.
         self.x = 0
         self.y = 0
         self.stance = 0
         self.z = 0
+
+        # Orientation, in radians.
+        # Theta and phi are like the theta and phi of spherical coordinates.
         self.theta = 0
-        self.pitch = 0
+        self.phi = 0
+
+        # Whether we are in the air.
         self.midair = False
+
+    @property
+    def yaw(self):
+        return degrees(self.theta)
+
+    @yaw.setter
+    def yaw(self, value):
+        self.theta = radians(value)
+
+    @property
+    def pitch(self):
+        return degrees(self.phi)
+
+    @pitch.setter
+    def pitch(self, value):
+        self.phi = radians(value)
 
     def load_from_packet(self, container):
         """
@@ -67,9 +89,7 @@ class Location(object):
             # or the anti-flying code kicks the client.
             self.stance = container.position.stance
         if hasattr(container, "look"):
-            # Theta is stored in radians for sanity, but the wire format uses
-            # degrees and does not modulo itself to the unit circle. Classy.
-            self.theta = radians(container.look.rotation)
+            self.yaw = container.look.rotation
             self.pitch = container.look.pitch
         if hasattr(container, "flying"):
             self.midair = bool(container.flying)
@@ -80,7 +100,7 @@ class Location(object):
         """
 
         position = Container(x=self.x, y=self.y, z=self.z, stance=self.stance)
-        look = Container(rotation=degrees(self.theta), pitch=self.pitch)
+        look = Container(rotation=self.yaw, pitch=self.pitch)
         flying = Container(flying=self.midair)
 
         packet = make_packet("location", position=position, look=look, flying=flying)
