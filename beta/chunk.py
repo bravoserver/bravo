@@ -1,11 +1,22 @@
-from numpy import uint8
-from numpy import empty, where, zeros
+from numpy import int8, uint8, uint32
+from numpy import cast, empty, where, zeros
 
 from beta.compat import product
 from beta.entity import tile_entities
 from beta.packets import make_packet
 from beta.serialize import ChunkSerializer
 from beta.utilities import pack_nibbles
+
+# Set up glow tables.
+# These tables provide glow maps for illuminated points.
+glow = [None] * 15
+for i in range(15):
+    dim = 2 * i + 1
+    glow[i] = zeros((dim, dim, dim), dtype=int8)
+    for x, y, z in product(xrange(dim), repeat=3):
+        distance = abs(x - i) + abs(y - i) + abs(z - i)
+        glow[i][ x,  y,  z] = i + 1 - distance
+    glow[i] = cast[uint8](glow[i].clip(0, 15))
 
 class Chunk(ChunkSerializer):
 
@@ -107,7 +118,45 @@ class Chunk(ChunkSerializer):
         The height map must be valid for this method to produce valid results.
         """
 
-        pass
+        ambient = glow[14]
+        lightmap = zeros((16, 16, 128), dtype=uint32)
+
+        for x, z in product(xrange(16), repeat=2):
+            y = self.heightmap[x, z]
+
+            sx = x - 14
+            sy = y - 14
+            sz = z - 14
+
+            ex = x + 14
+            ey = y + 14
+            ez = z + 14
+
+            si, sj, sk = 0, 0, 0
+            ei, ej, ek = 28, 28, 28
+
+            if sx < 0:
+                sx, si = 0, -sx
+
+            if sy < 0:
+                sy, sj = 0, -sy
+
+            if sz < 0:
+                sz, sk = 0, -sz
+
+            if ex > 15:
+                ex, ei = 15, ei - ex + 15
+
+            if ey > 127:
+                ey, ej = 127, ej - ey + 127
+
+            if ez > 15:
+                ez, ek = 15, ek - ez + 15
+
+            # Blit!
+            lightmap[sx:ex, sz:ez, sy:ey] = ambient[si:ei, sk:ek, sj:ej]
+
+        self.lightmap = cast[uint8](lightmap.clip(0, 15))
 
     def regenerate(self):
         """
