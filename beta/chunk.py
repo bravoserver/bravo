@@ -19,6 +19,12 @@ for i in range(15):
     glow[i] = cast[uint8](glow[i].clip(0, 15))
 
 class Chunk(ChunkSerializer):
+    """
+    A chunk of blocks.
+
+    Chunks are large pieces of world geometry. The blocks, light maps, and
+    associated metadata are stored in chunks.
+    """
 
     dirty = True
     """
