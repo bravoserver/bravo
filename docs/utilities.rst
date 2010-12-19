@@ -10,7 +10,6 @@ Coordinate Handling
 ===================
 
 .. autofunction:: beta.utilities.split_coords
-.. autofunction:: beta.utilities.triplet_to_index
 
 Data Packing
 ============
@@ -24,8 +23,3 @@ Trigonometry
 ============
 
 .. autofunction:: beta.utilities.rotated_cosine
-
-File Handling
-=============
-
-.. autofunction:: beta.utilities.retrieve_nbt

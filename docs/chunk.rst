@@ -13,9 +13,3 @@ Main Classes
 
 Other Classes
 =============
-
-.. autoclass:: beta.chunk.Chest
-   :members:
-
-.. autoclass:: beta.chunk.TileEntity
-   :members:

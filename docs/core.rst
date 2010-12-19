@@ -9,6 +9,7 @@ These modules comprise the core functionality of Beta.
    alpha
    blocks
    chunk
+   entity
    factory
    ibeta
    plugin
