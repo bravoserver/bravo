@@ -74,7 +74,7 @@ class World(LevelSerializer):
         self.seed = random.randint(0, sys.maxint)
 
         level = self.folder.child("level.dat")
-        if level.exists():
+        if level.exists() and level.getsize():
             self.load_from_tag(NBTFile(fileobj=level.open("r")))
 
         tag = self.save_to_tag()
@@ -171,7 +171,7 @@ class World(LevelSerializer):
         if not f.exists():
             f.makedirs()
         f = f.child("c.%s.%s.dat" % (base36(x), base36(z)))
-        if f.exists():
+        if f.exists() and f.getsize():
             tag = NBTFile(fileobj=f.open("r"))
             chunk.load_from_tag(tag)
 
@@ -226,7 +226,7 @@ class World(LevelSerializer):
         if not f.exists():
             f.makedirs()
         f = f.child("%s.dat" % username)
-        if f.exists():
+        if f.exists() and f.getsize():
             tag = NBTFile(fileobj=f.open("r"))
             player.load_from_tag(tag)
 
