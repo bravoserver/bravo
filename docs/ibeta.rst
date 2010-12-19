@@ -9,22 +9,16 @@ Plugins
 =======
 
 .. autoclass:: beta.ibeta.IAuthenticator
-   :members:
 
 .. autoclass:: beta.ibeta.IChatCommand
-   :members:
 
 .. autoclass:: beta.ibeta.IConsoleCommand
-   :members:
 
 .. autoclass:: beta.ibeta.ISeason
-   :members:
 
 .. autoclass:: beta.ibeta.ITerrainGenerator
-   :members:
 
 Hooks
 =====
 
 .. autoclass:: beta.ibeta.IDigHook
-   :members:

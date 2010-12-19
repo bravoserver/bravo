@@ -9,7 +9,6 @@ Main Classes
 ============
 
 .. autoclass:: beta.chunk.Chunk
-   :members:
 
 Other Classes
 =============

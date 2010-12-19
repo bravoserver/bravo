@@ -3,4 +3,3 @@
 ===================
 
 .. autoclass:: beta.world.World
-   :members:

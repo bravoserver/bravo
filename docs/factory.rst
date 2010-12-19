@@ -3,4 +3,3 @@
 ==============================
 
 .. autoclass:: beta.factory.AlphaFactory
-   :members:
