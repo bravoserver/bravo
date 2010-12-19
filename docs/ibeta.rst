@@ -21,4 +21,6 @@ Plugins
 Hooks
 =====
 
+.. autoclass:: beta.ibeta.IBuildHook
+
 .. autoclass:: beta.ibeta.IDigHook

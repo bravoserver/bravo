@@ -2,4 +2,4 @@
 ``protocol`` -- Twisted protocol
 ================================
 
-.. autoclass:: beta.protocol.AlphaProtocol
+.. automodule:: beta.protocol

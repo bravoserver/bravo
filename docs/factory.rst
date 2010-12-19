@@ -2,4 +2,4 @@
 ``factory`` -- Twisted factory
 ==============================
 
-.. autoclass:: beta.factory.AlphaFactory
+.. automodule:: beta.factory
