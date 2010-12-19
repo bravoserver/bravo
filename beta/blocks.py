@@ -1,6 +1,13 @@
 from fractions import Fraction
 
 class Block(object):
+    """
+    A model for a block.
+
+    There are lots of rule and properties specific to different types of
+    blocks. This class encapsulates those properties in a singleton-style
+    interface, allowing many blocks to be referenced in one location.
+    """
 
     __slots__ = (
         "drop",
@@ -181,6 +188,11 @@ quantities[73] = 5 # Redstone Ore -> Redstone Dust
 quantities[74] = 5 # Redstone Ore -> Redstone Dust
 
 blocks = {}
+"""
+A dictionary of ``Block`` objects.
+
+This dictionary can be indexed by slot number or block name.
+"""
 
 for i, name in enumerate(names):
     kwargs = {}
