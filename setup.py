@@ -8,6 +8,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "numpy",
+        "reconstruct",
         "Twisted",
     ],
     author="Corbin Simpson",
@@ -16,4 +17,9 @@ setup(
     long_description=open("README.rst").read(),
     license="MIT/X11",
     url="http://github.com/MostAwesomeDude/beta",
+    entry_points={
+        "console_scripts": [
+            "beta = beta.main:main",
+        ],
+    },
 )

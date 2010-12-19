@@ -77,45 +77,24 @@ Planned Features
 Installing
 ==========
 
-There's currently no way to "install" Beta. The server's main method is in
-main.py, and you will need Construct (http://construct.wikispaces.com/) and
-NBT (http://github.com/twoolie/NBT) as well as the more standard Twisted
-library. Twisted is almost certainly available in your distribution. Construct
-is available in some distributions, as python-construct or pyconstruct. NBT
-will need to be downloaded and installed separately. We highly recommend pip:
+Beta ships with a standard setup.py. You will need setuptools/distribute, but
+most distributions already provide it for you. Beta depends on the following
+external libraries from PyPI:
+
+ * construct or reconstruct
+ * numpy
+ * Twisted
+
+Beta also uses the external NBT library (http://github.com/twoolie/NBT) for
+reading and saving MC Alpha worlds. Since this library is in flux, a version
+that works with Beta has been bundled.
+
+We highly recommend pip for installing Beta, since it handles all dependencies
+for you.
 
 ::
 
- $ pip install construct NBT
-
-Debian/Ubuntu
--------------
-
-Construct and NBT are not available in Debian or Ubuntu, so they must be
-installed manually.
-
-::
-
- $ sudo aptitude install python-twisted python-twisted-web
-
-Fedora
-------
-
-Construct and NBT are not available in Fedora, so they must be installed
-manually.
-
-::
-
- $ sudo yum install python-twisted-core python-twisted-web
-
-Gentoo
-------
-
-NBT is not available in Gentoo, so it must be installed manually.
-
-::
-
- $ sudo emerge pyconstruct twisted twisted-web
+ $ pip install Beta
 
 FAQ
 ===
