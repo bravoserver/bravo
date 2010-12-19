@@ -12,6 +12,7 @@ These modules comprise the core functionality of Beta.
    entity
    factory
    ibeta
+   packets
    plugin
    protocol
    stdio
