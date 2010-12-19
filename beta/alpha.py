@@ -6,6 +6,9 @@ from beta.packets import make_packet
 from beta.serialize import InventorySerializer
 
 class Inventory(InventorySerializer):
+    """
+    A collection of items.
+    """
 
     def __init__(self, name, offset, length):
         self.name = name
