@@ -13,6 +13,9 @@ Welcome to Beta!
 prompt = "Beta> "
 
 class Console(LineReceiver):
+    """
+    A console for TTYs.
+    """
 
     delimiter = os.linesep
 
