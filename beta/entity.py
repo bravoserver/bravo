@@ -32,6 +32,9 @@ class Entity(object):
         self.location = Location()
 
 class Player(Entity, PlayerSerializer):
+    """
+    A player entity.
+    """
 
     name = "Player"
 
@@ -74,6 +77,15 @@ class Pickup(Entity):
     name = "Pickup"
 
 class TileEntity(object):
+    """
+    A block that is also an entity.
+
+    Tiles have a separate serialization and saving step because they are
+    stored in two places in the protocol.
+
+    Upstream states that, at some point, tiles do eventually get specialized
+    into either blocks or entities.
+    """
 
     def load_from_packet(self, container):
 
@@ -96,12 +108,18 @@ class TileEntity(object):
         return packet
 
 class Chest(TileEntity, ChestSerializer):
+    """
+    A tile that holds items.
+    """
 
     def __init__(self):
 
         self.inventory = Inventory(0, 0, 36)
 
 class Sign(TileEntity, SignSerializer):
+    """
+    A tile that stores text.
+    """
 
     def __init__(self):
 
