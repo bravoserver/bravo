@@ -19,6 +19,14 @@ Standard Features
  * Passage of time (day/night)
  * Block construction and deconstruction
  * Entities
+
+   * Players
+   * Tiles
+
+     * Chests
+     * Signs
+
+ * Lighting
  * Save controls
 
 Extended Features
@@ -51,7 +59,6 @@ Planned Features
  * More plugins for chat
  * More plugins for admin
  * More terrain generators
- * Extra inventories (chests)
  * Metadata (redstone/minecarts)
  * hey0/llama features
 
