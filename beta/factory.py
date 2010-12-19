@@ -21,6 +21,9 @@ from beta.plugin import retrieve_plugins
     STATE_LOCATED) = range(4)
 
 class AlphaFactory(Factory):
+    """
+    A ``Factory`` that creates ``AlphaProtocol`` objects when connected to.
+    """
 
     protocol = AlphaProtocol
 
