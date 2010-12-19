@@ -68,7 +68,7 @@ def simplex2(x, y):
     pleasing results for most applications.
 
     The gradient field must be seeded prior to calling this function; call
-    `reseed()` first.
+    ``reseed()`` first.
 
     :param int x: X coordinate
     :param int y: Y coordinate
@@ -125,12 +125,11 @@ def simplex3(x, y, z):
     """
     Generate simplex noise at the given coordinates.
 
-    This particular implementation has very high chaotic features at normal
-    resolution; zooming in by a factor of 16x to 256x is going to yield more
-    pleasing results for most applications.
+    This is a 3-dimensional flavor of ``simplex2()``; all of the same caveats
+    apply.
 
     The gradient field must be seeded prior to calling this function; call
-    `reseed()` first.
+    ``reseed()`` first.
 
     :param int x: X coordinate
     :param int y: Y coordinate
@@ -253,11 +252,9 @@ def octaves3(x, y, z, count):
     """
     Generate fractal octaves of noise.
 
-    Summing increasingly scaled amounts of noise with itself creates fractal
-    clouds of noise.
-
     :param int x: X coordinate
     :param int y: Y coordinate
+    :param int z: Z coordinate
     :param int count: number of octaves
 
     :returns: Scaled fractal noise
