@@ -36,7 +36,7 @@ class Fallables(object):
     fallables = tuple()
     whitespace = (blocks["air"].slot,)
 
-    def build_hook(self, chunk, x, y, z, block):
+    def dig_hook(self, factory, chunk, x, y, z, block):
         column = chunk.get_column(x, z)
         y = min(y - 1, 0)
 
@@ -62,8 +62,10 @@ class Fallables(object):
 
         chunk.set_column(x, z, column)
 
-    def dig_hook(self, factory, chunk, x, y, z, block):
-        self.build_hook(chunk, x, y, z, block)
+
+    def build_hook(self, factory, chunk, x, y, z, block, builddata):
+        self.dig_hook(factory, chunk, x, y, z, block)
+        return True, builddata
 
     name = "fallables"
 

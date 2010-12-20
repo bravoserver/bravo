@@ -120,15 +120,32 @@ class IBuildHook(Interface):
     Hook for actions to be taken after a block is placed.
     """
 
-    def build_hook(self, chunk, x, y, z, block):
+    def build_hook(self, factory, chunk, x, y, z, block, builddata):
         """
         Do things.
 
+        ``builddata`` needs to be passed to the next hook in sequence, but it
+        can be modified in passing in order to modify the way blocks are
+        placed.
+
+        The second variable in the return value indicates whether processing
+        of building should continue after this hook runs. Use it to halt build
+        hook processing, if needed.
+
+        A trivial do-nothing build hook looks like the following:
+
+        >>> def build_hook(self, factory, chunk, x, y, z, block, builddata):
+        ...     return True, builddata
+
+        :param `Factory` factory: factory
         :param `Chunk` chunk: digging location
         :param int x: X coordinate
         :param int y: Y coordinate
         :param int z: Z coordinate
-        :param int block: block type
+        :param `Block` block: block to build
+        :param namedtuple builddata: permanent building location
+
+        :returns: tuple of build data and whether subsequent hooks will run
         """
 
     name = Attribute("""

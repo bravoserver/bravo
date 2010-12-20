@@ -8,7 +8,7 @@ from twisted.internet.protocol import Protocol
 from twisted.internet.task import coiterate, deferLater, LoopingCall
 
 from beta.blocks import blocks
-from beta.compat import product
+from beta.compat import namedtuple, product
 from beta.config import configuration
 from beta.ibeta import IChatCommand, IBuildHook, IDigHook
 from beta.packets import parse_packets, make_packet, make_error_packet
@@ -27,6 +27,8 @@ circle = [(i, j)
 A list of points in a filled circle of radius 10, sorted according to distance
 from the center.
 """
+
+BuildData = namedtuple("BuildData", "")
 
 class AlphaProtocol(Protocol):
     """
@@ -223,8 +225,13 @@ class AlphaProtocol(Protocol):
 
         chunk.set_block((smallx, y, smallz), container.block)
 
+        builddata = BuildData()
+
         for hook in self.build_hooks:
-            hook.build_hook(chunk, smallx, container.y, smallz, container.block)
+            cont, builddata = hook.build_hook(self.factory, chunk, smallx,
+                container.y, smallz, container.block, builddata)
+            if not cont:
+                break
 
         if chunk.is_damaged():
             packet = chunk.get_damage_packet()
