@@ -28,7 +28,7 @@ A list of points in a filled circle of radius 10, sorted according to distance
 from the center.
 """
 
-BuildData = namedtuple("BuildData", "")
+BuildData = namedtuple("BuildData", "block, x, y, z, face")
 
 class AlphaProtocol(Protocol):
     """
@@ -192,51 +192,33 @@ class AlphaProtocol(Protocol):
         if not 0 <= container.block <= 255:
             return
 
-        x = container.x
-        y = container.y
-        z = container.z
-
         # Special case when face is -1: Update the status of the currently
         # held block rather than placing a new block.
         if container.face == -1:
             return
-
-        # Offset coords according to face.
-        if container.face == 0:
-            y -= 1
-        elif container.face == 1:
-            y += 1
-        elif container.face == 2:
-            z -= 1
-        elif container.face == 3:
-            z += 1
-        elif container.face == 4:
-            x -= 1
-        elif container.face == 5:
-            x += 1
-
-        bigx, smallx, bigz, smallz = split_coords(x, z)
-
-        try:
-            chunk = self.chunks[bigx, bigz]
-        except KeyError:
-            self.error("Couldn't build in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        chunk.set_block((smallx, y, smallz), container.block)
+        try:
+            block = blocks[container.block]
+        except KeyError:
+            print ("Ignoring request to place unknown block %d" %
+                container.block)
+            return
 
-        builddata = BuildData()
+        builddata = BuildData(block, container.x, container.y, container.z,
+            container.face)
 
         for hook in self.build_hooks:
-            cont, builddata = hook.build_hook(self.factory, chunk, smallx,
-                container.y, smallz, container.block, builddata)
+            print builddata
+            cont, builddata = hook.build_hook(self.factory, builddata)
             if not cont:
                 break
 
-        if chunk.is_damaged():
-            packet = chunk.get_damage_packet()
-            self.factory.broadcast_for_chunk(packet, bigx, bigz)
-            chunk.clear_damage()
+        for chunk in self.chunks.itervalues():
+            if chunk.is_damaged():
+                packet = chunk.get_damage_packet()
+                self.factory.broadcast_for_chunk(packet, chunk.x, chunk.z)
+                chunk.clear_damage()
 
     def equip(self, container):
         self.player.equipped = container.item

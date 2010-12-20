@@ -5,6 +5,7 @@ from zope.interface import implements
 
 from beta.blocks import blocks
 from beta.ibeta import IBuildHook, IDigHook
+from beta.utilities import split_coords
 
 class AlphaSnow(object):
     """
@@ -63,8 +64,11 @@ class Fallables(object):
         chunk.set_column(x, z, column)
 
 
-    def build_hook(self, factory, chunk, x, y, z, block, builddata):
-        self.dig_hook(factory, chunk, x, y, z, block)
+    def build_hook(self, factory, builddata):
+        bigx, smallx, bigz, smallz = split_coords(builddata.x, builddata.z)
+        chunk = factory.world.load_chunk(bigx, bigz)
+        self.dig_hook(factory, chunk, smallx, builddata.y, smallz,
+            builddata.block)
         return True, builddata
 
     name = "fallables"
@@ -132,6 +136,41 @@ class Give(object):
 
     name = "give"
 
+class Build(object):
+    """
+    Place a block in a given location.
+
+    You almost certainly want to enable this plugin.
+    """
+
+    implements(IPlugin, IBuildHook)
+
+    def build_hook(self, factory, builddata):
+        block, x, y, z, face = builddata
+        # Offset coords according to face.
+        if face == 0:
+            y -= 1
+        elif face == 1:
+            y += 1
+        elif face == 2:
+            z -= 1
+        elif face == 3:
+            z += 1
+        elif face == 4:
+            x -= 1
+        elif face == 5:
+            x += 1
+
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+
+        chunk = factory.world.load_chunk(bigx, bigz)
+
+        chunk.set_block((smallx, y, smallz), block.slot)
+
+        return True, builddata
+
+    name = "build"
+
 alpha_snow = AlphaSnow()
 alpha_sand_gravel = AlphaSandGravel()
 
@@ -139,3 +178,5 @@ beta_snow = BetaSnow()
 
 replace = Replace()
 give = Give()
+
+build = Build()
