@@ -13,7 +13,7 @@ Contents:
 
    philosophy
    core
-   aux
+   auxiliary
    tools
    noise
 
