@@ -30,7 +30,7 @@ from the center.
 
 BuildData = namedtuple("BuildData", "block, x, y, z, face")
 
-class AlphaProtocol(Protocol):
+class BetaProtocol(Protocol):
     """
     The Minecraft Alpha protocol.
     """

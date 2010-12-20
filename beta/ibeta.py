@@ -73,7 +73,7 @@ class IChatCommand(ICommand):
         """
         Handle a command from the chat interface.
 
-        :param `AlphaFactory` factory: factory for this world
+        :param `BetaFactory` factory: factory for this world
         :param str username: username of player
         :param list parameters: additional parameters passed to the command
         """
@@ -92,7 +92,7 @@ class IConsoleCommand(ICommand):
         """
         Handle a command.
 
-        :param `AlphaFactory` factory: factory for this world
+        :param `BetaFactory` factory: factory for this world
         :param list parameters: additional parameters passed to the command
         """
 

@@ -11,7 +11,7 @@ from beta.entity import Pickup, Player
 from beta.ibeta import IAuthenticator, ISeason, ITerrainGenerator
 from beta.packets import make_packet
 from beta.plugin import retrieve_named_plugins
-from beta.protocol import AlphaProtocol
+from beta.protocol import BetaProtocol
 from beta.stdio import Console
 from beta.world import World
 
@@ -20,12 +20,12 @@ from beta.plugin import retrieve_plugins
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
 
-class AlphaFactory(Factory):
+class BetaFactory(Factory):
     """
-    A ``Factory`` that creates ``AlphaProtocol`` objects when connected to.
+    A ``Factory`` that creates ``BetaProtocol`` objects when connected to.
     """
 
-    protocol = AlphaProtocol
+    protocol = BetaProtocol
 
     timestamp = None
     time = 0
