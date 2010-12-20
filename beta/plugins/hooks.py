@@ -162,7 +162,6 @@ class Build(object):
             x += 1
 
         bigx, smallx, bigz, smallz = split_coords(x, z)
-
         chunk = factory.world.load_chunk(bigx, bigz)
 
         chunk.set_block((smallx, y, smallz), block.slot)
@@ -170,6 +169,29 @@ class Build(object):
         return True, builddata
 
     name = "build"
+
+class BuildSnow(object):
+    """
+    Makes building on snow behave correctly.
+
+    You almost certainly want to enable this plugin.
+    """
+
+    implements(IPlugin, IBuildHook)
+
+    def build_hook(self, factory, builddata):
+        bigx, smallx, bigz, smallz = split_coords(builddata.x, builddata.z)
+        chunk = factory.world.load_chunk(bigx, bigz)
+        block = chunk.get_block((smallx, builddata.y, smallz))
+
+        if block == blocks["snow"].slot:
+            # Building any block on snow causes snow to get replaced.
+            builddata = builddata._replace(face=1, y=builddata.y - 1)
+
+        return True, builddata
+
+    name = "build_snow"
+
 
 alpha_snow = AlphaSnow()
 alpha_sand_gravel = AlphaSandGravel()
@@ -180,3 +202,4 @@ replace = Replace()
 give = Give()
 
 build = Build()
+build_snow = BuildSnow()

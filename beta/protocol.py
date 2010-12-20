@@ -196,7 +196,6 @@ class AlphaProtocol(Protocol):
         # held block rather than placing a new block.
         if container.face == -1:
             return
-            return
 
         try:
             block = blocks[container.block]
@@ -209,7 +208,6 @@ class AlphaProtocol(Protocol):
             container.face)
 
         for hook in self.build_hooks:
-            print builddata
             cont, builddata = hook.build_hook(self.factory, builddata)
             if not cont:
                 break
