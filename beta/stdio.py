@@ -27,13 +27,15 @@ class BetaInterpreter(object):
 
     def __init__(self, handler):
         self.handler = handler
-        self.factory = handler.factory
 
         self.commands = retrieve_plugins(IConsoleCommand)
         # Register aliases.
         for plugin in self.commands.values():
             for alias in plugin.aliases:
                 self.commands[alias] = plugin
+
+    def resetBuffer(self):
+        pass
 
     def push(self, line):
         """
@@ -46,9 +48,9 @@ class BetaInterpreter(object):
             if command in self.commands:
                 try:
                     for l in self.commands[command].console_command(
-                        self.factory, params):
-                        # Encode to UTF-8 because stdio is not Unicode-safe.
-                        self.handler.addOutput("%s\n" % l)
+                        self.handler.factory, params):
+                        # Have to encode to keep Unicode off the wire.
+                        self.handler.addOutput(("%s\n" % l).encode("utf8"))
                 except Exception, e:
                     self.handler.addOutput("Error: %s\n" % e)
             else:
@@ -63,6 +65,8 @@ class BetaInterpreter(object):
             except ValueError:
                 if token in self.commands:
                     s.append(typeToColor["keyword"] + token)
+                elif token in self.factory.protocols:
+                    s.append(typeToColor["identifier"] + token)
                 else:
                     s.append(normalColor + token)
         return normalColor + " ".join(s)
