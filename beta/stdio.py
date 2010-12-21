@@ -10,27 +10,17 @@ from twisted.conch.manhole import Manhole
 from beta.ibeta import IConsoleCommand
 from beta.plugin import retrieve_plugins
 
-greeting = """
-Welcome to Beta!
-"""
-
-prompt = "Beta> "
-
 class BetaInterpreter(object):
 
     def __init__(self, handler):
         self.handler = handler
         self.factory = handler.factory
 
-        handler.addOutput(greeting)
-
         self.commands = retrieve_plugins(IConsoleCommand)
         # Register aliases.
         for plugin in self.commands.values():
             for alias in plugin.aliases:
                 self.commands[alias] = plugin
-
-        handler.addOutput(prompt)
 
     def push(self, line):
         """
@@ -51,12 +41,12 @@ class BetaInterpreter(object):
             else:
                 self.handler.addOutput("Unknown command: %s\n" % command)
 
-        self.handler.addOutput(prompt)
-
 class BetaManhole(Manhole):
     """
     A console for TTYs.
     """
+
+    ps = ("Beta> ", "... ")
 
     def connectionMade(self):
         # Manhole.connectionMade(self)
