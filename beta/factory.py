@@ -12,7 +12,6 @@ from beta.ibeta import IAuthenticator, ISeason, ITerrainGenerator
 from beta.packets import make_packet
 from beta.plugin import retrieve_named_plugins
 from beta.protocol import BetaProtocol
-from beta.stdio import Console
 from beta.world import World
 
 from beta.plugin import retrieve_plugins
@@ -56,9 +55,6 @@ class BetaFactory(Factory):
 
         print "Using generators %s" % ", ".join(i.name for i in generators)
         self.world.pipeline = generators
-
-        console = Console()
-        console.factory = self
 
         print "Factory init'd"
 
