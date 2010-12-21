@@ -10,6 +10,19 @@ from twisted.conch.manhole import Manhole
 from beta.ibeta import IConsoleCommand
 from beta.plugin import retrieve_plugins
 
+
+typeToColor = {
+    'identifier': '\x1b[31m',
+    'keyword': '\x1b[32m',
+    'parameter': '\x1b[33m',
+    'variable': '\x1b[1;33m',
+    'string': '\x1b[35m',
+    'number': '\x1b[36m',
+    'op': '\x1b[37m'
+}
+
+normalColor = '\x1b[0m'
+
 class BetaInterpreter(object):
 
     def __init__(self, handler):
@@ -41,12 +54,22 @@ class BetaInterpreter(object):
             else:
                 self.handler.addOutput("Unknown command: %s\n" % command)
 
+    def lastColorizedLine(self, line):
+        s = []
+        for token in line.split():
+            try:
+                int(token)
+                s.append(typeToColor["number"] + token)
+            except ValueError:
+                s.append(normalColor + token)
+        return normalColor + " ".join(s)
+
 class BetaManhole(Manhole):
     """
     A console for TTYs.
     """
 
-    ps = ("Beta> ", "... ")
+    ps = ("\x1b[1;37mBeta \x1b[37m>\x1b[0m ", "... ")
 
     def connectionMade(self):
         # Manhole.connectionMade(self)
@@ -62,6 +85,47 @@ class BetaManhole(Manhole):
         self.keyHandlers["\x04"] = self.handle_EOF
         self.keyHandlers["\x0c"] = self.handle_FF
         self.keyHandlers["\x1c"] = self.handle_QUIT
+
+    # Borrowed from ColoredManhole, this colorizes input.
+    def characterReceived(self, ch, moreCharactersComing):
+        if self.mode == 'insert':
+            self.lineBuffer.insert(self.lineBufferIndex, ch)
+        else:
+            self.lineBuffer[self.lineBufferIndex:self.lineBufferIndex+1] = [ch]
+        self.lineBufferIndex += 1
+
+        if moreCharactersComing:
+            # Skip it all, we'll get called with another character in like 2
+            # femtoseconds.
+            return
+
+        if ch == ' ':
+            # Don't bother to try to color whitespace
+            self.terminal.write(ch)
+            return
+
+        source = ''.join(self.lineBuffer)
+
+        # Try to write some junk
+        try:
+            coloredLine = self.interpreter.lastColorizedLine(source)
+        except:
+            # We couldn't do it.  Strange.  Oh well, just add the character.
+            self.terminal.write(ch)
+        else:
+            # Success!  Clear the source on this line.
+            self.terminal.eraseLine()
+            self.terminal.cursorBackward(len(self.lineBuffer) +
+                    len(self.ps[self.pn]) - 1)
+
+            # And write a new, colorized one.
+            self.terminal.write(self.ps[self.pn] + coloredLine)
+
+            # And move the cursor to where it belongs
+            n = len(self.lineBuffer) - self.lineBufferIndex
+            if n:
+                self.terminal.cursorBackward(n)
+
 
 # Cribbed from Twisted. This version doesn't try to start the reactor.
 oldSettings = None
