@@ -8,8 +8,8 @@ from twisted.conch.recvline import HistoricRecvLine
 from twisted.conch.insults.insults import ServerProtocol
 from twisted.conch.manhole import Manhole
 
-from beta.ibeta import IConsoleCommand
-from beta.plugin import retrieve_plugins
+from bravo.ibravo import IConsoleCommand
+from bravo.plugin import retrieve_plugins
 
 
 typeToColor = {
@@ -24,7 +24,7 @@ typeToColor = {
 
 normalColor = '\x1b[0m'
 
-class BetaInterpreter(object):
+class BravoInterpreter(object):
 
     def __init__(self, handler):
         self.handler = handler
@@ -73,12 +73,12 @@ class BetaInterpreter(object):
                     s.append(normalColor + token)
         return normalColor + " ".join(s)
 
-class BetaManhole(Manhole):
+class BravoManhole(Manhole):
     """
     A console for TTYs.
     """
 
-    ps = ("\x1b[1;37mBeta \x1b[0;37m>\x1b[0;0m ", "... ")
+    ps = ("\x1b[1;37mBravo \x1b[0;37m>\x1b[0;0m ", "... ")
 
     def connectionMade(self):
         # Manhole.connectionMade(self)
@@ -88,7 +88,7 @@ class BetaManhole(Manhole):
         # small...
         HistoricRecvLine.connectionMade(self)
 
-        self.interpreter = BetaInterpreter(self)
+        self.interpreter = BravoInterpreter(self)
 
         self.keyHandlers["\x03"] = self.handle_INT
         self.keyHandlers["\x04"] = self.handle_EOF
@@ -144,7 +144,7 @@ def runWithProtocol():
     fd = sys.__stdin__.fileno()
     oldSettings = termios.tcgetattr(fd)
     tty.setraw(fd)
-    p = ServerProtocol(BetaManhole)
+    p = ServerProtocol(BravoManhole)
     return p
 
 def stopConsole():

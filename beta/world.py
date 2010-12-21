@@ -7,8 +7,8 @@ from twisted.python.filepath import FilePath
 
 from nbt.nbt import NBTFile
 
-from beta.chunk import Chunk
-from beta.serialize import LevelSerializer
+from bravo.chunk import Chunk
+from bravo.serialize import LevelSerializer
 
 def base36(i):
     """
@@ -111,7 +111,7 @@ class World(LevelSerializer):
         """
         Disable saving to disk.
 
-        This is useful for accessing the world on disk without Beta
+        This is useful for accessing the world on disk without Bravo
         interfering, for backing up the world.
         """
 

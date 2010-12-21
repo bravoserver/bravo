@@ -3,7 +3,7 @@ from __future__ import division
 import math
 from random import Random
 
-from beta.compat import chain, permutations
+from bravo.compat import chain, permutations
 
 SIZE = 2**10
 

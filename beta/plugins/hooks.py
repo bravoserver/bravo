@@ -3,9 +3,9 @@ import random
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
-from beta.blocks import blocks
-from beta.ibeta import IBuildHook, IDigHook
-from beta.utilities import split_coords
+from bravo.blocks import blocks
+from bravo.ibravo import IBuildHook, IDigHook
+from bravo.utilities import split_coords
 
 class AlphaSnow(object):
     """
@@ -83,14 +83,14 @@ class AlphaSandGravel(Fallables):
 
     name = "alpha_sand_gravel"
 
-class BetaSnow(Fallables):
+class BravoSnow(Fallables):
     """
     Snow dig hooks that make snow behave like sand and gravel.
     """
 
     fallables = (blocks["snow"].slot,)
 
-    name = "beta_snow"
+    name = "bravo_snow"
 
 class Replace(object):
     """
@@ -196,7 +196,7 @@ class BuildSnow(object):
 alpha_snow = AlphaSnow()
 alpha_sand_gravel = AlphaSandGravel()
 
-beta_snow = BetaSnow()
+bravo_snow = BravoSnow()
 
 replace = Replace()
 give = Give()

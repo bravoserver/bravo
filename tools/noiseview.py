@@ -6,8 +6,8 @@ import sys
 
 import Image
 
-from beta.compat import product
-from beta.simplex import reseed, octaves3
+from bravo.compat import product
+from bravo.simplex import reseed, octaves3
 
 WIDTH, HEIGHT = 800, 800
 

@@ -4,7 +4,7 @@ from StringIO import StringIO
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
-from beta.ibeta import IChatCommand, IConsoleCommand
+from bravo.ibravo import IChatCommand, IConsoleCommand
 
 csv.register_dialect("hey0", delimiter=":")
 

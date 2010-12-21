@@ -2,4 +2,4 @@
 ``factory`` -- Twisted factory
 ==============================
 
-.. automodule:: beta.factory
+.. automodule:: bravo.factory

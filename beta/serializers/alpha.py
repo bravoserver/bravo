@@ -2,7 +2,7 @@ from nbt.nbt import NBTFile
 from nbt.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from nbt.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 
-from beta.utilities import unpack_nibbles, pack_nibbles
+from bravo.utilities import unpack_nibbles, pack_nibbles
 
 class InventorySerializer(object):
 

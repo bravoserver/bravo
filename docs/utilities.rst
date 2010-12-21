@@ -9,17 +9,17 @@ critical code so that unit tests can be used to ensure a minimum of bugginess.
 Coordinate Handling
 ===================
 
-.. autofunction:: beta.utilities.split_coords
+.. autofunction:: bravo.utilities.split_coords
 
 Data Packing
 ============
 
 More affectionately known as "bit-twiddling."
 
-.. autofunction:: beta.utilities.unpack_nibbles
-.. autofunction:: beta.utilities.pack_nibbles
+.. autofunction:: bravo.utilities.unpack_nibbles
+.. autofunction:: bravo.utilities.pack_nibbles
 
 Trigonometry
 ============
 
-.. autofunction:: beta.utilities.rotated_cosine
+.. autofunction:: bravo.utilities.rotated_cosine

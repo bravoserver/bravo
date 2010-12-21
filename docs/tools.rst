@@ -2,7 +2,7 @@
 Tools
 =====
 
-A handful of utilities are distributed with Beta, in the tools directory.
+A handful of utilities are distributed with Bravo, in the tools directory.
 
 Chunkbench
 ==========
@@ -22,7 +22,7 @@ NBTdump pretty-prints an NBT file.
 Noiseview
 =========
 
-Noiseview creates a picture of simplex noise, using Beta's builtin noise
+Noiseview creates a picture of simplex noise, using Bravo's builtin noise
 generator.
 
 parser-cli

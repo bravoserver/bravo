@@ -7,13 +7,13 @@ from twisted.internet.defer import succeed
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import coiterate, deferLater, LoopingCall
 
-from beta.blocks import blocks
-from beta.compat import namedtuple, product
-from beta.config import configuration
-from beta.ibeta import IChatCommand, IBuildHook, IDigHook
-from beta.packets import parse_packets, make_packet, make_error_packet
-from beta.plugin import retrieve_plugins, retrieve_named_plugins
-from beta.utilities import split_coords
+from bravo.blocks import blocks
+from bravo.compat import namedtuple, product
+from bravo.config import configuration
+from bravo.ibravo import IChatCommand, IBuildHook, IDigHook
+from bravo.packets import parse_packets, make_packet, make_error_packet
+from bravo.plugin import retrieve_plugins, retrieve_named_plugins
+from bravo.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
@@ -76,9 +76,9 @@ class BetaProtocol(Protocol):
         })
 
         print "Registering client hooks..."
-        names = configuration.get("beta", "build_hooks").split(",")
+        names = configuration.get("bravo", "build_hooks").split(",")
         self.build_hooks = retrieve_named_plugins(IBuildHook, names)
-        names = configuration.get("beta", "dig_hooks").split(",")
+        names = configuration.get("bravo", "dig_hooks").split(",")
         self.dig_hooks = retrieve_named_plugins(IDigHook, names)
 
     def ping(self, container):

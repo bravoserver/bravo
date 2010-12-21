@@ -4,9 +4,9 @@ from construct import Container
 
 from nbt.nbt import NBTFile
 
-from beta.alpha import Inventory, Location
-from beta.packets import make_packet
-from beta.serialize import ChestSerializer, PlayerSerializer, SignSerializer
+from bravo.alpha import Inventory, Location
+from bravo.packets import make_packet
+from bravo.serialize import ChestSerializer, PlayerSerializer, SignSerializer
 
 class Entity(object):
     """

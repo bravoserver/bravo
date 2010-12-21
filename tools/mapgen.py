@@ -6,10 +6,10 @@ import os.path
 import sys
 import time
 
-from beta.compat import product
-from beta.ibeta import ITerrainGenerator
-from beta.plugin import retrieve_plugins
-from beta.world import World
+from bravo.compat import product
+from bravo.ibravo import ITerrainGenerator
+from bravo.plugin import retrieve_plugins
+from bravo.world import World
 
 if len(sys.argv) <= 3:
     print "Not enough arguments."

@@ -2,7 +2,7 @@
 Auxiliary
 =========
 
-Modules which do not contribute directly to the functionality of Beta.
+Modules which do not contribute directly to the functionality of Bravo.
 
 .. toctree::
 

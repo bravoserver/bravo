@@ -8,4 +8,4 @@ compatibility.
 It is highly recommended to only import functions from this module on an
 as-needed basis.
 
-.. automodule:: beta.compat
+.. automodule:: bravo.compat

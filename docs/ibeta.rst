@@ -1,26 +1,26 @@
 =======================
-``ibeta`` -- Interfaces
+``ibravo`` -- Interfaces
 =======================
 
-The ``ibeta`` module holds the interfaces required to implement plugins and
+The ``ibravo`` module holds the interfaces required to implement plugins and
 hooks.
 
 Plugins
 =======
 
-.. autoclass:: beta.ibeta.IAuthenticator
+.. autoclass:: bravo.ibravo.IAuthenticator
 
-.. autoclass:: beta.ibeta.IChatCommand
+.. autoclass:: bravo.ibravo.IChatCommand
 
-.. autoclass:: beta.ibeta.IConsoleCommand
+.. autoclass:: bravo.ibravo.IConsoleCommand
 
-.. autoclass:: beta.ibeta.ISeason
+.. autoclass:: bravo.ibravo.ISeason
 
-.. autoclass:: beta.ibeta.ITerrainGenerator
+.. autoclass:: bravo.ibravo.ITerrainGenerator
 
 Hooks
 =====
 
-.. autoclass:: beta.ibeta.IBuildHook
+.. autoclass:: bravo.ibravo.IBuildHook
 
-.. autoclass:: beta.ibeta.IDigHook
+.. autoclass:: bravo.ibravo.IDigHook

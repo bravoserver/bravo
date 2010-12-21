@@ -1,4 +1,4 @@
-from beta.serializers.alpha import *
+from bravo.serializers.alpha import *
 
 __all__ = (
     "ChestSerializer",

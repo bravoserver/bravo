@@ -1,11 +1,11 @@
 from numpy import int8, uint8, uint32
 from numpy import cast, empty, where, zeros
 
-from beta.compat import product
-from beta.entity import tile_entities
-from beta.packets import make_packet
-from beta.serialize import ChunkSerializer
-from beta.utilities import pack_nibbles
+from bravo.compat import product
+from bravo.entity import tile_entities
+from bravo.packets import make_packet
+from bravo.serialize import ChunkSerializer
+from bravo.utilities import pack_nibbles
 
 # Set up glow tables.
 # These tables provide glow maps for illuminated points.

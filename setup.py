@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="Beta",
+    name="Bravo",
     version="0.9",
     packages=find_packages(),
     install_requires=[
@@ -16,10 +16,10 @@ setup(
     description="Minecraft server and utilities",
     long_description=open("README.rst").read(),
     license="MIT/X11",
-    url="http://github.com/MostAwesomeDude/beta",
+    url="http://github.com/MostAwesomeDude/bravo",
     entry_points={
         "console_scripts": [
-            "beta = beta.main:main",
+            "bravo = bravo.main:main",
         ],
     },
 )

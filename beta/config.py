@@ -8,7 +8,7 @@ defaults = {
 }
 
 configuration = ConfigParser.SafeConfigParser(defaults)
-configuration.add_section("beta")
+configuration.add_section("bravo")
 
 # XXX improve on this
-configuration.read(["beta.ini"])
+configuration.read(["bravo.ini"])

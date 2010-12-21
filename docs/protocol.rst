@@ -2,4 +2,4 @@
 ``protocol`` -- Twisted protocol
 ================================
 
-.. automodule:: beta.protocol
+.. automodule:: bravo.protocol

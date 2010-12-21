@@ -4,4 +4,4 @@
 
 The ``entity`` module contains entity classes.
 
-.. automodule:: beta.entity
+.. automodule:: bravo.entity

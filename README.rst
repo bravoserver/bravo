@@ -1,9 +1,9 @@
 ====
-Beta
+Bravo
 ====
 
-Beta is a simple implementation of the Minecraft Alpha protocol. Only the
-server side is implemented. Beta also has a few tools useful for examining the
+Bravo is a simple implementation of the Minecraft Alpha protocol. Only the
+server side is implemented. Bravo also has a few tools useful for examining the
 Minecraft Alpha wire protocol.
 
 Features
@@ -77,24 +77,24 @@ Planned Features
 Installing
 ==========
 
-Beta ships with a standard setup.py. You will need setuptools/distribute, but
-most distributions already provide it for you. Beta depends on the following
+Bravo ships with a standard setup.py. You will need setuptools/distribute, but
+most distributions already provide it for you. Bravo depends on the following
 external libraries from PyPI:
 
  * construct or reconstruct
  * numpy
  * Twisted
 
-Beta also uses the external NBT library (http://github.com/twoolie/NBT) for
+Bravo also uses the external NBT library (http://github.com/twoolie/NBT) for
 reading and saving MC Alpha worlds. Since this library is in flux, a version
-that works with Beta has been bundled.
+that works with Bravo has been bundled.
 
-We highly recommend pip for installing Beta, since it handles all dependencies
+We highly recommend pip for installing Bravo, since it handles all dependencies
 for you.
 
 ::
 
- $ pip install Beta
+ $ pip install Bravo
 
 FAQ
 ===
@@ -105,7 +105,7 @@ Why are you doing this? What's wrong with the official Alpha server?
  computer scientists in love with Minecraft be completely unconcerned with its
  licensing. An open-source server goes a long way towards supporting the
  community. Additionally, the official Alpha server chews up gigabytes of
- resources and wastes many minutes of CPU. Beta is far more lightweight and
+ resources and wastes many minutes of CPU. Bravo is far more lightweight and
  will probably not take on those additional costs as it matures due to a
  different programming language (Python), programming paradigm (Twisted-style
  asynchronous scheduling), and programming style (import this).
@@ -128,13 +128,13 @@ Are you going to make an open-source client? That would be awesome!
 Where did the docs go?
  We contribute to the Minecraft Collective's wiki at
  http://mc.kev009.com/wiki/ now, since it allows us to share data faster. All
- general Minecraft data goes to that wiki. Beta-specific docs are shipped in
+ general Minecraft data goes to that wiki. Bravo-specific docs are shipped in
  ReST form, and a processed Sphinx version is available online at
- http://mostawesomedude.github.com/beta/.
+ http://mostawesomedude.github.com/bravo/.
 
 Why did you make design decision <X>?
  There's an entire page dedicated to this in the documentation. Look at
- docs/philosophy.rst or http://mostawesomedude.github.com/beta/philosophy.html.
+ docs/philosophy.rst or http://mostawesomedude.github.com/bravo/philosophy.html.
 
 Who are you guys, anyway?
  Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
@@ -144,7 +144,7 @@ Who are you guys, anyway?
 License
 =======
 
-Beta is made available under the following terms, commonly known as the
+Bravo is made available under the following terms, commonly known as the
 MIT/X11 license. Contributions from third parties are also under this license.
 
 Copyright (c) 2010 Corbin Simpson et al.

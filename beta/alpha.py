@@ -2,8 +2,8 @@ from math import degrees, radians
 
 from construct import Container, ListContainer
 
-from beta.packets import make_packet
-from beta.serialize import InventorySerializer
+from bravo.packets import make_packet
+from bravo.serialize import InventorySerializer
 
 class Inventory(InventorySerializer):
     """

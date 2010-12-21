@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
-from beta.ibeta import IConsoleCommand
+from bravo.ibravo import IConsoleCommand
 
 class Meliae(object):
 

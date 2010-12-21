@@ -3,7 +3,7 @@
 from functools import wraps
 from time import time
 
-from beta.simplex import reseed, simplex2, simplex3, octaves2, octaves3
+from bravo.simplex import reseed, simplex2, simplex3, octaves2, octaves3
 
 print "Be patient; this benchmark takes a minute or so to run each test."
 

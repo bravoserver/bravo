@@ -2,4 +2,4 @@
 ``world`` -- Worlds
 ===================
 
-.. automodule:: beta.world
+.. automodule:: bravo.world

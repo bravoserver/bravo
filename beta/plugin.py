@@ -4,7 +4,7 @@ from zope.interface.exceptions import BrokenImplementation
 from zope.interface.exceptions import BrokenMethodImplementation
 from zope.interface.verify import verifyObject
 
-import beta.plugins
+import bravo.plugins
 
 class PluginException(Exception):
     """
@@ -30,7 +30,7 @@ def retrieve_plugins(interface, cached=True, cache={}):
 
     print "Discovering %s..." % interface
     d = {}
-    for p in getPlugins(interface, beta.plugins):
+    for p in getPlugins(interface, bravo.plugins):
         try:
             verifyObject(interface, p)
             print " ( ^^) Plugin: %s" % p.name

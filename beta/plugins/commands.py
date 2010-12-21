@@ -4,11 +4,11 @@ from twisted.plugin import IPlugin
 from zope.interface import implements
 from twisted.internet import reactor
 
-from beta.blocks import blocks
-from beta.config import configuration
-from beta.ibeta import IChatCommand, IConsoleCommand
-from beta.plugin import retrieve_plugins
-from beta.packets import make_packet
+from bravo.blocks import blocks
+from bravo.config import configuration
+from bravo.ibravo import IChatCommand, IConsoleCommand
+from bravo.plugin import retrieve_plugins
+from bravo.packets import make_packet
 
 def parse_player(factory, name):
     if name in factory.protocols:

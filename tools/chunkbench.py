@@ -3,10 +3,10 @@
 import time
 import sys
 
-from beta.config import configuration
-from beta.chunk import Chunk
-from beta.ibeta import ITerrainGenerator
-from beta.plugin import retrieve_plugins, retrieve_named_plugins
+from bravo.config import configuration
+from bravo.chunk import Chunk
+from bravo.ibravo import ITerrainGenerator
+from bravo.plugin import retrieve_plugins, retrieve_named_plugins
 
 def empty_chunk():
 
@@ -45,7 +45,7 @@ def repeated_seeds(p):
 
 def pipeline():
 
-    generators = configuration.get("beta", "generators").split(",")
+    generators = configuration.get("bravo", "generators").split(",")
     generators = retrieve_named_plugins(ITerrainGenerator, generators)
 
     before = time.time()

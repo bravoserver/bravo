@@ -2,11 +2,11 @@
 
 import sys
 
-import beta.packets
+import bravo.packets
 
 stream = sys.stdin.read()
 
-l, rest = beta.packets.parse_packets(stream)
+l, rest = bravo.packets.parse_packets(stream)
 
 for i, t in enumerate(l):
     header, payload = t

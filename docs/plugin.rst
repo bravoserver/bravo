@@ -5,4 +5,4 @@
 The ``plugin`` module provides several helper functions that wrap
 ``twisted.plugin``. ``plugin`` makes loading plugins simpler.
 
-.. automodule:: beta.plugin
+.. automodule:: bravo.plugin

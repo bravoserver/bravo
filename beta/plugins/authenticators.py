@@ -7,8 +7,8 @@ from twisted.plugin import IPlugin
 from twisted.web.client import getPage
 from zope.interface import implements
 
-from beta.ibeta import IAuthenticator
-from beta.packets import make_packet
+from bravo.ibravo import IAuthenticator
+from bravo.packets import make_packet
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)

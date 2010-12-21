@@ -1,6 +1,6 @@
 import unittest
 
-from beta.simplex import reseed, simplex, octaves2, octaves3
+from bravo.simplex import reseed, simplex, octaves2, octaves3
 
 class TestOctaves(unittest.TestCase):
 

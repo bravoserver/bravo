@@ -2,7 +2,7 @@
 Core
 ====
 
-These modules comprise the core functionality of Beta.
+These modules comprise the core functionality of Bravo.
 
 .. toctree::
 
@@ -11,7 +11,7 @@ These modules comprise the core functionality of Beta.
    chunk
    entity
    factory
-   ibeta
+   ibravo
    packets
    plugin
    protocol

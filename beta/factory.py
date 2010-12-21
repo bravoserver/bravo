@@ -6,15 +6,15 @@ from construct import Container
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 
-from beta.config import configuration
-from beta.entity import Pickup, Player
-from beta.ibeta import IAuthenticator, ISeason, ITerrainGenerator
-from beta.packets import make_packet
-from beta.plugin import retrieve_named_plugins
-from beta.protocol import BetaProtocol
-from beta.world import World
+from bravo.config import configuration
+from bravo.entity import Pickup, Player
+from bravo.ibravo import IAuthenticator, ISeason, ITerrainGenerator
+from bravo.packets import make_packet
+from bravo.plugin import retrieve_named_plugins
+from bravo.protocol import BetaProtocol
+from bravo.world import World
 
-from beta.plugin import retrieve_plugins
+from bravo.plugin import retrieve_plugins
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
@@ -43,14 +43,14 @@ class BetaFactory(Factory):
 
         self.hooks = {}
 
-        authenticator = configuration.get("beta", "authenticator")
+        authenticator = configuration.get("bravo", "authenticator")
         selected = retrieve_named_plugins(IAuthenticator, [authenticator])[0]
 
         print "Using authenticator %s" % selected.name
         self.hooks[2] = selected.handshake
         self.hooks[1] = selected.login
 
-        generators = configuration.get("beta", "generators").split(",")
+        generators = configuration.get("bravo", "generators").split(",")
         generators = retrieve_named_plugins(ITerrainGenerator, generators)
 
         print "Using generators %s" % ", ".join(i.name for i in generators)

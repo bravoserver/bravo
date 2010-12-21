@@ -5,11 +5,11 @@ from numpy import array, where
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
-from beta.blocks import blocks
-from beta.compat import product
-from beta.ibeta import ITerrainGenerator
-from beta.simplex import octaves2, octaves3, reseed
-from beta.utilities import pairwise
+from bravo.blocks import blocks
+from bravo.compat import product
+from bravo.ibravo import ITerrainGenerator
+from bravo.simplex import octaves2, octaves3, reseed
+from bravo.utilities import pairwise
 
 class BoringGenerator(object):
     """

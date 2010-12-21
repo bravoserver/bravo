@@ -2,7 +2,7 @@
 Noise
 =====
 
-Beta, like all Minecraft terrain generators, relies heavily on randomness to
+Bravo, like all Minecraft terrain generators, relies heavily on randomness to
 generate its terrain. In order to understand some of the design decisions in
 the terrain generator, it is required to understand noise and its various
 properties.
