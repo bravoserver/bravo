@@ -1,6 +1,7 @@
 import os
 import sys
 import termios
+import traceback
 import tty
 
 from twisted.conch.recvline import HistoricRecvLine
@@ -52,6 +53,7 @@ class BetaInterpreter(object):
                         # Have to encode to keep Unicode off the wire.
                         self.handler.addOutput(("%s\n" % l).encode("utf8"))
                 except Exception, e:
+                    traceback.print_exc()
                     self.handler.addOutput("Error: %s\n" % e)
             else:
                 self.handler.addOutput("Unknown command: %s\n" % command)
@@ -152,4 +154,4 @@ def stopConsole():
     # control sequence RIS, which resets ANSI-compatible terminals to their
     # initial state. In the process, of course, they nuke all of the stuff on
     # the screen.
-    # os.write(fd, "\r\x1bc\r")
+    os.write(fd, "\r\x1bc\r")

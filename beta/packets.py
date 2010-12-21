@@ -8,6 +8,8 @@ from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32
 from construct import BFloat32, BFloat64
 
+DUMP_ALL_PACKETS = True
+
 # Our tricky Java string decoder.
 # Note that Java has a weird encoding for the NULL byte which we do not
 # respect or honor since no client will generate it. Instead, we will get two
@@ -261,6 +263,11 @@ def parse_packets(bytestream):
     l = [(i.header, i.payload) for i in container.full_packet]
     leftovers = "".join(chr(i) for i in container.leftovers)
 
+    if DUMP_ALL_PACKETS:
+        for packet in l:
+            print "Parsed packet %d" % packet[0]
+            print packet[1]
+
     return l, leftovers
 
 packets_by_name = {
@@ -309,7 +316,11 @@ def make_packet(packet, **kwargs):
     """
 
     header = packets_by_name[packet]
-    payload = packets[header].build(Container(**kwargs))
+    container = Container(**kwargs)
+    if DUMP_ALL_PACKETS:
+        print "Making packet %s (%d)" % (packet, header)
+        print container
+    payload = packets[header].build(container)
     return chr(header) + payload
 
 def make_error_packet(message):
