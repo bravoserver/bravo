@@ -61,7 +61,10 @@ class BetaInterpreter(object):
                 int(token)
                 s.append(typeToColor["number"] + token)
             except ValueError:
-                s.append(normalColor + token)
+                if token in self.commands:
+                    s.append(typeToColor["keyword"] + token)
+                else:
+                    s.append(normalColor + token)
         return normalColor + " ".join(s)
 
 class BetaManhole(Manhole):
@@ -69,7 +72,7 @@ class BetaManhole(Manhole):
     A console for TTYs.
     """
 
-    ps = ("\x1b[1;37mBeta \x1b[37m>\x1b[0m ", "... ")
+    ps = ("\x1b[1;37mBeta \x1b[0;37m>\x1b[0;0m ", "... ")
 
     def connectionMade(self):
         # Manhole.connectionMade(self)
