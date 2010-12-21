@@ -1,5 +1,9 @@
 from twisted.plugin import getPlugins
 
+from zope.interface.exceptions import BrokenImplementation
+from zope.interface.exceptions import BrokenMethodImplementation
+from zope.interface.verify import verifyObject
+
 import beta.plugins
 
 class PluginException(Exception):
@@ -27,8 +31,18 @@ def retrieve_plugins(interface, cached=True, cache={}):
     print "Discovering %s..." % interface
     d = {}
     for p in getPlugins(interface, beta.plugins):
-        print " ~ Plugin: %s" % p.name
-        d[p.name] = p
+        try:
+            verifyObject(interface, p)
+            print " ( ^^) Plugin: %s" % p.name
+            d[p.name] = p
+        except BrokenImplementation, bi:
+            if hasattr(p, "name"):
+                print " ( ~~) Plugin %s is missing attribute \"\"!" % (p.name,
+                    bi.name)
+            else:
+                print " ( >&) Plugin %s is useless!" % p
+        except BrokenMethodImplementation, bmi:
+            print " ( Oo) Plugin %s has a broken %s()!" % (p.name, bmi.method)
 
     cache[interface] = d
     return d
@@ -47,4 +61,7 @@ def retrieve_named_plugins(interface, names):
     """
 
     d = retrieve_plugins(interface)
-    return [d[name] for name in names]
+    try:
+        return [d[name] for name in names]
+    except KeyError:
+        raise PluginException("Couldn't find all plugins!")
