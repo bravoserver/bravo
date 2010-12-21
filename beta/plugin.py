@@ -63,5 +63,6 @@ def retrieve_named_plugins(interface, names):
     d = retrieve_plugins(interface)
     try:
         return [d[name] for name in names]
-    except KeyError:
-        raise PluginException("Couldn't find all plugins!")
+    except KeyError, e:
+        raise PluginException("Couldn't find plugin %s for interface %s!" %
+            (e.args[0], interface))
