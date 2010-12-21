@@ -43,6 +43,7 @@ def retrieve_plugins(interface, cached=True, cache={}):
                 print " ( >&) Plugin %s is useless!" % p
         except BrokenMethodImplementation, bmi:
             print " ( Oo) Plugin %s has a broken %s()!" % (p.name, bmi.method)
+            print bmi
 
     cache[interface] = d
     return d

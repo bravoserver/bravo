@@ -144,4 +144,8 @@ def runWithProtocol():
 def stopConsole():
     fd = sys.__stdin__.fileno()
     termios.tcsetattr(fd, termios.TCSANOW, oldSettings)
-    os.write(fd, "\r\x1bc\r")
+    # Took me forever to figure it out. This adorable little gem is the
+    # control sequence RIS, which resets ANSI-compatible terminals to their
+    # initial state. In the process, of course, they nuke all of the stuff on
+    # the screen.
+    # os.write(fd, "\r\x1bc\r")

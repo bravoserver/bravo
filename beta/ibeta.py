@@ -7,12 +7,12 @@ class IAuthenticator(Interface):
     Authenticators participate in a two-step login process with a handshake.
     """
 
-    def handshake(self, protocol, container):
+    def handshake(protocol, container):
         """
         Handle a handshake.
         """
 
-    def login(self, protocol, container):
+    def login(protocol, container):
         """
         Handle a login.
         """
@@ -26,7 +26,7 @@ class ITerrainGenerator(Interface):
     Interface for terrain generators.
     """
 
-    def populate(self, chunk, seed):
+    def populate(chunk, seed):
         """
         Given a chunk and a seed value, populate the chunk with terrain.
 
@@ -69,7 +69,7 @@ class IChatCommand(ICommand):
     with `IConsoleCommand`.
     """
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(factory, username, parameters):
         """
         Handle a command from the chat interface.
 
@@ -88,7 +88,7 @@ class IConsoleCommand(ICommand):
     they must be given usernames to operate on explicitly.
     """
 
-    def console_command(self, factory, parameters):
+    def console_command(factory, parameters):
         """
         Handle a command.
 
@@ -102,7 +102,7 @@ class ISeason(Interface):
     environment.
     """
 
-    def transform(self, chunk):
+    def transform(chunk):
         """
         Apply the season to the given chunk.
         """
@@ -120,7 +120,7 @@ class IBuildHook(Interface):
     Hook for actions to be taken after a block is placed.
     """
 
-    def build_hook(self, factory, builddata):
+    def build_hook(factory, builddata):
         """
         Do things.
 
@@ -158,7 +158,7 @@ class IDigHook(Interface):
     Hook for actions to be taken after a block is dug up.
     """
 
-    def dig_hook(self, factory, chunk, x, y, z, block):
+    def dig_hook(factory, chunk, x, y, z, block):
         """
         Do things.
 
