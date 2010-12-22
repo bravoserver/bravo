@@ -10,9 +10,6 @@ from zope.interface import implements
 from bravo.ibravo import IAuthenticator
 from bravo.packets import make_packet
 
-(STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
-    STATE_LOCATED) = range(4)
-
 class Authenticator(object):
     """
     Authenticates single clients with a two-phase system.
@@ -34,10 +31,10 @@ class Authenticator(object):
         Subclasses should call this method after their challenge succeeds.
         """
 
-        if container.protocol < 3:
+        if container.protocol < 8:
             # Kick old clients.
             protocol.error("This server doesn't support your ancient client.")
-        elif container.protocol > 6:
+        elif container.protocol > 8:
             # Kick new clients.
             protocol.error("This server doesn't support your newfangled client.")
         else:
