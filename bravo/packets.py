@@ -338,7 +338,6 @@ packets_by_name = {
     "digging"            : 14,
     "build"              : 15,
     "equip"              : 16,
-    "pickup"             : 17,
     "arm"                : 18,
     "player"             : 20,
     "spawn-pickup"       : 21,
@@ -354,7 +353,6 @@ packets_by_name = {
     "chunk"              : 51,
     "batch"              : 52,
     "block"              : 53,
-    "tile"               : 59,
     "explosion"          : 60,
     "error"              : 255,
 }
