@@ -4,6 +4,22 @@ from construct import Container
 
 import bravo.packets
 
+class TestPacketDataStructures(unittest.TestCase):
+
+    def test_named_packets_exist(self):
+        for name, slot in bravo.packets.packets_by_name.iteritems():
+            self.assertTrue(slot in bravo.packets.packets,
+                    "%d is missing" % slot)
+
+    def test_packet_names_exist(self):
+        for slot in bravo.packets.packets.iterkeys():
+            self.assertTrue(slot in bravo.packets.packets_by_name.values(),
+                    "%d is missing" % slot)
+
+    def test_packet_names_match(self):
+        for name, slot in bravo.packets.packets_by_name.iteritems():
+            self.assertEqual(name, bravo.packets.packets[slot].name)
+
 class TestPacketParsing(unittest.TestCase):
 
     def test_ping(self):
