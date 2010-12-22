@@ -47,14 +47,7 @@ class Player(Entity, PlayerSerializer):
 
         super(Player, self).__init__(eid=eid, *args, **kwargs)
 
-        # There are three inventories. -1 is the main inventory, of 36 slots
-        # plus one additional slot for the currently equipped item.  The first
-        # ten slots [0-9] of the main inventory are the current item and the
-        # slots accessible from number keys, 1-9. -2 is the crafting
-        # inventory, and -3 is the equipped armor.
-        self.inventory = Inventory(-1, 0, 37)
-        self.crafting = Inventory(-2, 80, 4)
-        self.armor = Inventory(-3, 100, 4)
+        self.inventory = Inventory(0, 45)
 
     def save_to_packet(self):
 
@@ -114,7 +107,7 @@ class Chest(TileEntity, ChestSerializer):
 
     def __init__(self):
 
-        self.inventory = Inventory(0, 0, 36)
+        self.inventory = Inventory(0, 36)
 
 class Sign(TileEntity, SignSerializer):
     """

@@ -9,10 +9,9 @@ class InventorySerializer(object):
     def load_from_tag(inventory, tag):
 
         for item in tag.tags:
-            slot = item["Slot"].value - inventory.offset
-            if 0 <= slot < len(inventory.items):
-                inventory.items[slot] = (item["id"].value,
-                    item["Damage"].value, item["Count"].value)
+            slot = item["Slot"].value
+            inventory.items[slot] = (item["id"].value,
+                item["Damage"].value, item["Count"].value)
 
     def save_to_tag(inventory):
 
@@ -175,9 +174,7 @@ class PlayerSerializer(object):
         player.location.yaw = tag["Rotation"].tags[0].value
 
         if "Inventory" in tag:
-            for inventory in (player.inventory, player.crafting,
-                    player.armor):
-                inventory.load_from_tag(tag["Inventory"])
+            player.inventory.load_from_tag(tag["Inventory"])
 
     def save_to_tag(player):
 
@@ -192,9 +189,6 @@ class PlayerSerializer(object):
         tag["Rotation"].tags = [TAG_Double(i)
             for i in (player.location.yaw, 0)]
 
-        tag["Inventory"] = TAG_List(type=TAG_Compound)
-
-        for inventory in (player.inventory, player.crafting, player.armor):
-            tag["Inventory"].tags.extend(inventory.save_to_tag().tags)
+        tag["Inventory"] = player.inventory.save_to_tag()
 
         return tag

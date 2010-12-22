@@ -8,7 +8,7 @@ from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32
 from construct import BFloat32, BFloat64
 
-DUMP_ALL_PACKETS = True
+DUMP_ALL_PACKETS = False
 
 # Our tricky Java string decoder.
 # Note that Java has a weird encoding for the NULL byte which we do not
@@ -249,7 +249,7 @@ packets = {
         ),
     ),
     104: Struct("inventory",
-        UBInt8("dst"),
+        UBInt8("name"),
         UBInt16("length"),
         MetaArray(lambda context: context["length"],
             Struct("items",

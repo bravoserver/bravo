@@ -10,9 +10,8 @@ class Inventory(InventorySerializer):
     A collection of items.
     """
 
-    def __init__(self, name, offset, length):
+    def __init__(self, name, length):
         self.name = name
-        self.offset = offset
         self.items = [None] * length
 
     def load_from_packet(self, container):

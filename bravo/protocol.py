@@ -118,12 +118,11 @@ class BetaProtocol(Protocol):
             self.factory.broadcast(packet)
 
     def inventory(self, container):
-        if container.name == -1:
+        if container.name == 0:
             self.player.inventory.load_from_packet(container)
-        elif container.name == -2:
-            self.player.crafting.load_from_packet(container)
-        elif container.name == -3:
-            self.player.armor.load_from_packet(container)
+        else:
+            print "Got unknown inventory!"
+            print container
 
     def flying(self, container):
         self.player.location.load_from_packet(container)
@@ -333,10 +332,6 @@ class BetaProtocol(Protocol):
         self.transport.write(packet)
 
         packet = self.player.inventory.save_to_packet()
-        self.transport.write(packet)
-        packet = self.player.crafting.save_to_packet()
-        self.transport.write(packet)
-        packet = self.player.armor.save_to_packet()
         self.transport.write(packet)
 
         self.send_initial_chunk_and_location()
