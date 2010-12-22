@@ -1,6 +1,6 @@
-=======================
+========================
 ``ibravo`` -- Interfaces
-=======================
+========================
 
 The ``ibravo`` module holds the interfaces required to implement plugins and
 hooks.
