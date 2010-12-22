@@ -1,7 +1,5 @@
 import collections
 
-from construct import Container
-
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
 from twisted.internet.protocol import Protocol
@@ -146,15 +144,13 @@ class BetaProtocol(Protocol):
             if entity.name != "Pickup":
                 continue
 
-            packet = make_packet("pickup", type=entity.block,
-                quantity=entity.quantity, wear=0)
-            self.transport.write(packet)
+            # XXX add to the inventory, then check for inventory damage
 
-            packet = make_packet("collect", entity=Container(id=entity.eid),
+            packet = make_packet("collect", eid=entity.eid,
                 destination=self.player.eid)
             self.transport.write(packet)
 
-            packet = make_packet("destroy", id=entity.eid)
+            packet = make_packet("destroy", eid=entity.eid)
             self.transport.write(packet)
 
             self.factory.destroy_entity(entity)

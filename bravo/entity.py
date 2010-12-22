@@ -1,7 +1,5 @@
 import StringIO
 
-from construct import Container
-
 from nbt.nbt import NBTFile
 
 from bravo.alpha import Inventory, Location
@@ -52,7 +50,7 @@ class Player(Entity, PlayerSerializer):
     def save_to_packet(self):
 
         return make_packet("player",
-                entity=Container(entity=self.eid),
+                eid=self.eid,
                 username=self.username,
                 x=self.location.x,
                 y=self.location.y,

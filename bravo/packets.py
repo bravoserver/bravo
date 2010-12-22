@@ -363,6 +363,10 @@ def make_packet(packet, **kwargs):
     The payload should be passed as keyword arguments.
     """
 
+    if packet not in packets_by_name:
+        print "Couldn't find packet name %s!" % packet
+        return ""
+
     header = packets_by_name[packet]
     container = Container(**kwargs)
     if DUMP_ALL_PACKETS:
