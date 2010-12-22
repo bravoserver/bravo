@@ -2,9 +2,9 @@
 Bravo
 ====
 
-Bravo is a simple implementation of the Minecraft Alpha protocol. Only the
-server side is implemented. Bravo also has a few tools useful for examining the
-Minecraft Alpha wire protocol.
+Bravo is a elegant, speedy, and extensible implementation of the Minecraft
+Alpha/Beta protocol. Only the server side is implemented. Bravo also has a few
+tools useful for examining the wire protocols and disk formats in Minecraft.
 
 Features
 ========
@@ -40,6 +40,11 @@ Extended Features
      * Online
 
    * Commands
+
+     * Inventory control
+     * Teleports
+     * Time of day
+
    * Geometry generation
 
      * Erosion
@@ -63,14 +68,11 @@ Planned Features
  * hey0/llama features
 
    * MOTD and /motd
-   * Adjustable /home
    * Ban lists
    * /lighter
    * Item spawn mods
-   * Named /tp
    * /getpos
    * /compass
-   * /time
 
  * And whatever else we can think of!
 
@@ -100,30 +102,20 @@ FAQ
 ===
 
 Why are you doing this? What's wrong with the official Alpha server?
- Well, there are a handful of reasons. The most prominent one is that we are
- fairly open-source-oriented and it's very disappointing to see so many
- computer scientists in love with Minecraft be completely unconcerned with its
- licensing. An open-source server goes a long way towards supporting the
- community. Additionally, the official Alpha server chews up gigabytes of
- resources and wastes many minutes of CPU. Bravo is far more lightweight and
- will probably not take on those additional costs as it matures due to a
- different programming language (Python), programming paradigm (Twisted-style
- asynchronous scheduling), and programming style (import this).
+ Plenty. The biggest architectural mistake is the choice of dozens of threads
+ instead of NIO and an asynchronous event-driven model, but there are other
+ problems as well.
 
 Are you implying that the official Alpha server is bad?
- I don't want to insult Notch. He's a cool guy and seems to tolerate most of
- the community, even people like us. I will say that the Alpha server starts
- up around four threads for each client, experimentally appears to spawn
- sixteen threads or so on startup, and gets very angry if it is not started
- with at least a GiB of reserved VM memory. Clearly, we can do better.
- Additionally, as hey0 has shown, we are justified in thinking that the
- official server lacks in features.
+ Yes. As previous versions of this FAQ have stated, Notch is a cool guy, but
+ the official server is bad.
 
 Are you going to make an open-source client? That would be awesome!
  The server is free, but the client is not. Accordingly, we are not pursuing
  an open-source client at this time. If you want to play Alpha, you should pay
  for it. There's already enough Minecraft piracy going on; we don't feel like
- being part of the problem.
+ being part of the problem. That said, Bravo's packet parser and networking
+ tools could be used in a client; the license permits it, after all.
 
 Where did the docs go?
  We contribute to the Minecraft Collective's wiki at
@@ -139,7 +131,8 @@ Why did you make design decision <X>?
 Who are you guys, anyway?
  Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
  is the visionary and provider of network traffic dumps. Ben Kero and Mark
- Harris are the reluctant testers and bug-reporters.
+ Harris are the reluctant testers and bug-reporters. The Minecraft Coalition
+ has been an invaluable forum for discussion.
 
 License
 =======
