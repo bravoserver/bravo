@@ -11,7 +11,7 @@ from bravo.config import configuration
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook
 from bravo.packets import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins, retrieve_named_plugins
-from bravo.utilities import split_coords
+from bravo.utilities import chat_name, split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
@@ -82,6 +82,11 @@ class BetaProtocol(Protocol):
     def ping(self, container):
         pass
 
+    def colorize_chat(self, message):
+        for user in self.factory.protocols:
+            message = message.replace(user, chat_name(user))
+        return message
+
     def chat(self, container):
         if container.message.startswith("/"):
 
@@ -99,10 +104,14 @@ class BetaProtocol(Protocol):
                     for line in commands[command].chat_command(self.factory,
                         self.username, params):
                         self.transport.write(
-                            make_packet("chat", message=line))
+                            make_packet("chat",
+                                message=self.colorize_chat(line)
+                            )
+                        )
                 except Exception, e:
                     self.transport.write(
-                        make_packet("chat", message="Error: %s" % e))
+                        make_packet("chat", message="Error: %s" % e)
+                    )
             else:
                 self.transport.write(
                     make_packet("chat",
@@ -110,9 +119,8 @@ class BetaProtocol(Protocol):
                 )
         else:
             message = "<%s> %s" % (self.username, container.message)
-            print message
 
-            packet = make_packet("chat", message=message)
+            packet = make_packet("chat", message=self.colorize_chat(message))
             self.factory.broadcast(packet)
 
     def inventory(self, container):

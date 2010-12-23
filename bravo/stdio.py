@@ -11,7 +11,7 @@ from twisted.protocols.basic import LineReceiver
 
 from bravo.ibravo import IConsoleCommand
 from bravo.plugin import retrieve_plugins
-from bravo.utilities import chat_name, fancy_console_name
+from bravo.utilities import fancy_console_name
 
 try:
     import termios

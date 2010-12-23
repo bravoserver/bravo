@@ -165,7 +165,7 @@ console_colors = {
 
 def chat_name(s):
     return "%s%s%s" % (
-        chat_colors[hash(s) % len(chat_colors)], s, u"§"
+        chat_colors[hash(s) % len(chat_colors)], s, u"§f"
     )
 
 def fancy_console_name(s):
