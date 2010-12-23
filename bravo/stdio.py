@@ -1,10 +1,3 @@
-try:
-    import termios
-    import tty
-except ImportError:
-    # Win32? Whatever.
-    pass
-
 import os
 import sys
 import traceback
@@ -12,6 +5,7 @@ import traceback
 from twisted.conch.insults.insults import ServerProtocol
 from twisted.conch.manhole import Manhole
 from twisted.internet.stdio import StandardIO
+from twisted.protocols.basic import LineReceiver
 
 from bravo.ibravo import IConsoleCommand
 from bravo.plugin import retrieve_plugins
@@ -28,12 +22,12 @@ def run_command(commands, factory, line):
             try:
                 for l in commands[command].console_command(factory, params):
                     # Have to encode to keep Unicode off the wire.
-                    yield ("%s\n" % l).encode("utf8")
+                    yield ("%s" % l).encode("utf8")
             except Exception, e:
                 traceback.print_exc()
-                yield "Error: %s\n" % e
+                yield "Error: %s" % e
         else:
-            yield "Unknown command: %s\n" % command
+            yield "Unknown command: %s" % command
 
 typeToColor = {
     'identifier': '\x1b[31m',
@@ -68,7 +62,7 @@ class BravoInterpreter(object):
         """
 
         for l in run_command(self.commands, self.factory, line):
-            self.handler.addOutput(l)
+            self.handler.addOutput("%s\n" % l)
 
     def lastColorizedLine(self, line):
         s = []
@@ -142,27 +136,76 @@ class BravoManhole(Manhole):
             if n:
                 self.terminal.cursorBackward(n)
 
+greeting = """
+Welcome to Beta!
+This terminal has no fancy features.
+"""
+prompt = "Bravo > "
+
+class BravoConsole(LineReceiver):
+    """
+    A console for things not quite as awesome as TTYs.
+
+    This console is extremely well-suited to Win32.
+    """
+
+    delimiter = os.linesep
+
+    def __init__(self, factory):
+        self.factory = factory
+
+        self.commands = retrieve_plugins(IConsoleCommand)
+        # Register aliases.
+        for plugin in self.commands.values():
+            for alias in plugin.aliases:
+                self.commands[alias] = plugin
+
+    def connectionMade(self):
+        self.transport.write(greeting)
+        self.transport.write(prompt)
+
+    def lineReceived(self, line):
+        for l in run_command(self.commands, self.factory, line):
+            self.sendLine(l)
+
+        self.transport.write(prompt)
 
 # Cribbed from Twisted. This version doesn't try to start the reactor, or a
 # handful of other things. At some point, this may no longer even look like
 # Twisted code.
 
-oldSettings = None
-
 def start_console(factory):
-    global oldSettings
-    fd = sys.__stdin__.fileno()
-    oldSettings = termios.tcgetattr(fd)
-    tty.setraw(fd)
-    p = ServerProtocol(BravoManhole, factory)
+    p = BravoConsole(factory)
     StandardIO(p)
     return p
 
 def stop_console():
-    fd = sys.__stdin__.fileno()
-    termios.tcsetattr(fd, termios.TCSANOW, oldSettings)
-    # Took me forever to figure it out. This adorable little gem is the
-    # control sequence RIS, which resets ANSI-compatible terminals to their
-    # initial state. In the process, of course, they nuke all of the stuff on
-    # the screen.
-    os.write(fd, "\r\x1bc\r")
+    pass
+
+if os.isatty(sys.__stdin__.fileno()):
+    try:
+        import termios
+        import tty
+
+        oldSettings = None
+
+        def start_console(factory):
+            global oldSettings
+            fd = sys.__stdin__.fileno()
+            oldSettings = termios.tcgetattr(fd)
+            tty.setraw(fd)
+            p = ServerProtocol(BravoManhole, factory)
+            StandardIO(p)
+            return p
+
+        def stop_console():
+            fd = sys.__stdin__.fileno()
+            termios.tcsetattr(fd, termios.TCSANOW, oldSettings)
+            # Took me forever to figure it out. This adorable little gem is
+            # the control sequence RIS, which resets ANSI-compatible terminals
+            # to their initial state. In the process, of course, they nuke all
+            # of the stuff on the screen.
+            os.write(fd, "\r\x1bc\r")
+    except ImportError:
+        # Win32? Whatever.
+        pass
