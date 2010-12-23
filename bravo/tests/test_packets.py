@@ -32,6 +32,12 @@ class TestPacketParsing(unittest.TestCase):
         parsed = bravo.packets.packets[4].parse(packet)
         self.assertEqual(parsed.timestamp, 42)
 
+    def test_orientation(self):
+        packet = "\x45\xc5\x66\x76\x42\x2d\xff\xfc\x01"
+        parsed = bravo.packets.packets[12].parse(packet)
+        self.assertEqual(parsed.look.pitch, 43.49998474121094)
+        self.assertEqual(parsed.look.rotation, 6316.8076171875)
+
 class TestPacketAssembly(unittest.TestCase):
 
     def test_ping(self):
