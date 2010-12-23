@@ -9,9 +9,9 @@ import os
 import sys
 import traceback
 
-from twisted.conch.recvline import HistoricRecvLine
 from twisted.conch.insults.insults import ServerProtocol
 from twisted.conch.manhole import Manhole
+from twisted.internet.stdio import StandardIO
 
 from bravo.ibravo import IConsoleCommand
 from bravo.plugin import retrieve_plugins
@@ -49,8 +49,9 @@ normalColor = '\x1b[0m'
 
 class BravoInterpreter(object):
 
-    def __init__(self, handler):
+    def __init__(self, handler, factory):
         self.handler = handler
+        self.factory = factory
 
         self.commands = retrieve_plugins(IConsoleCommand)
         # Register aliases.
@@ -66,7 +67,7 @@ class BravoInterpreter(object):
         Handle a command.
         """
 
-        for l in run_command(self.commands, self.handler.factory, line):
+        for l in run_command(self.commands, self.factory, line):
             self.handler.addOutput(l)
 
     def lastColorizedLine(self, line):
@@ -91,20 +92,15 @@ class BravoManhole(Manhole):
 
     ps = ("\x1b[1;37mBravo \x1b[0;37m>\x1b[0;0m ", "... ")
 
+    def __init__(self, factory, *args, **kwargs):
+        Manhole.__init__(self, *args, **kwargs)
+
+        self.f = factory
+
     def connectionMade(self):
-        # Manhole.connectionMade(self)
-        # Why don't we do that? Because Manhole creates a ManholeInterpreter,
-        # which creates a code.InteractiveInterpreter, which we don't want to
-        # do for a variety of reasons. Thankfully, the relevant code is pretty
-        # small...
-        HistoricRecvLine.connectionMade(self)
+        Manhole.connectionMade(self)
 
-        self.interpreter = BravoInterpreter(self)
-
-        self.keyHandlers["\x03"] = self.handle_INT
-        self.keyHandlers["\x04"] = self.handle_EOF
-        self.keyHandlers["\x0c"] = self.handle_FF
-        self.keyHandlers["\x1c"] = self.handle_QUIT
+        self.interpreter = BravoInterpreter(self, self.f)
 
     # Borrowed from ColoredManhole, this colorizes input.
     def characterReceived(self, ch, moreCharactersComing):
@@ -147,18 +143,22 @@ class BravoManhole(Manhole):
                 self.terminal.cursorBackward(n)
 
 
-# Cribbed from Twisted. This version doesn't try to start the reactor.
+# Cribbed from Twisted. This version doesn't try to start the reactor, or a
+# handful of other things. At some point, this may no longer even look like
+# Twisted code.
+
 oldSettings = None
 
-def runWithProtocol():
+def start_console(factory):
     global oldSettings
     fd = sys.__stdin__.fileno()
     oldSettings = termios.tcgetattr(fd)
     tty.setraw(fd)
-    p = ServerProtocol(BravoManhole)
+    p = ServerProtocol(BravoManhole, factory)
+    StandardIO(p)
     return p
 
-def stopConsole():
+def stop_console():
     fd = sys.__stdin__.fileno()
     termios.tcsetattr(fd, termios.TCSANOW, oldSettings)
     # Took me forever to figure it out. This adorable little gem is the

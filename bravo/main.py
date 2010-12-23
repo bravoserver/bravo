@@ -3,10 +3,9 @@
 import traceback
 
 from twisted.internet import reactor
-from twisted.internet.stdio import StandardIO
 from twisted.python import log
 
-from bravo.stdio import runWithProtocol, stopConsole
+from bravo.stdio import start_console, stop_console
 from bravo.factory import BetaFactory
 
 def main():
@@ -17,19 +16,15 @@ def main():
     # die and vomit out a traceback. On the other hand, we only want to stop
     # it once.
     try:
-        console = runWithProtocol()
         factory = BetaFactory()
-        console.factory = factory
-
-        StandardIO(console)
+        start_console(factory)
 
         reactor.listenTCP(25565, factory)
         reactor.run()
     except:
-        stopConsole()
         traceback.print_exc()
-    else:
-        stopConsole()
+    finally:
+        stop_console()
 
 if __name__ == "__main__":
     main()
