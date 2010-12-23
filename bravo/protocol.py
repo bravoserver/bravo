@@ -188,11 +188,11 @@ class BetaProtocol(Protocol):
 
     def build(self, container):
         # Ignore clients that think -1 is placeable.
-        if container.block == 65535:
+        if container.id == 65535:
             return
 
         # Ignore right-click with items for now.
-        if not 0 <= container.block <= 255:
+        if not 0 <= container.id <= 255:
             return
 
         # Special case when face is -1: Update the status of the currently
@@ -201,10 +201,10 @@ class BetaProtocol(Protocol):
             return
 
         try:
-            block = blocks[container.block]
+            block = blocks[container.id]
         except KeyError:
             print ("Ignoring request to place unknown block %d" %
-                container.block)
+                container.id)
             return
 
         builddata = BuildData(block, container.x, container.y, container.z,
