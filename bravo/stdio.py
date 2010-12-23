@@ -1,3 +1,5 @@
+# vim: set fileencoding=utf8 :
+
 import os
 import sys
 import traceback
@@ -9,25 +11,14 @@ from twisted.protocols.basic import LineReceiver
 
 from bravo.ibravo import IConsoleCommand
 from bravo.plugin import retrieve_plugins
+from bravo.utilities import chat_name, fancy_console_name
 
-def run_command(commands, factory, line):
-    """
-    Single point of entry for the logic for running a command.
-    """
-
-    if line != "":
-        params = line.split(" ")
-        command = params.pop(0).lower()
-        if command in commands:
-            try:
-                for l in commands[command].console_command(factory, params):
-                    # Have to encode to keep Unicode off the wire.
-                    yield ("%s" % l).encode("utf8")
-            except Exception, e:
-                traceback.print_exc()
-                yield "Error: %s" % e
-        else:
-            yield "Unknown command: %s" % command
+try:
+    import termios
+    import tty
+    fancy_console = os.isatty(sys.__stdin__.fileno())
+except ImportError:
+    fancy_console = False
 
 typeToColor = {
     'identifier': '\x1b[31m',
@@ -40,6 +31,24 @@ typeToColor = {
 }
 
 normalColor = '\x1b[0m'
+
+def run_command(commands, factory, line):
+    """
+    Single point of entry for the logic for running a command.
+    """
+
+    if line != "":
+        params = line.split(" ")
+        command = params.pop(0).lower()
+        if command in commands:
+            try:
+                for l in commands[command].console_command(factory, params):
+                    yield "%s" % l
+            except Exception, e:
+                traceback.print_exc()
+                yield "Error: %s" % e
+        else:
+            yield "Unknown command: %s" % command
 
 class BravoInterpreter(object):
 
@@ -62,7 +71,11 @@ class BravoInterpreter(object):
         """
 
         for l in run_command(self.commands, self.factory, line):
-            self.handler.addOutput("%s\n" % l)
+            printable = "%s\n" % l
+            for user in self.factory.protocols:
+                printable = printable.replace(user, fancy_console_name(user))
+            # Have to encode to keep Unicode off the wire.
+            self.handler.addOutput(printable.encode("utf8"))
 
     def lastColorizedLine(self, line):
         s = []
@@ -74,7 +87,7 @@ class BravoInterpreter(object):
                 if token in self.commands:
                     s.append(typeToColor["keyword"] + token)
                 elif token in self.factory.protocols:
-                    s.append(typeToColor["identifier"] + token)
+                    s.append(fancy_console_name(token))
                 else:
                     s.append(normalColor + token)
         return normalColor + " ".join(s)
@@ -166,7 +179,7 @@ class BravoConsole(LineReceiver):
 
     def lineReceived(self, line):
         for l in run_command(self.commands, self.factory, line):
-            self.sendLine(l)
+            self.sendLine(l.encode("utf8"))
 
         self.transport.write(prompt)
 
@@ -174,38 +187,31 @@ class BravoConsole(LineReceiver):
 # handful of other things. At some point, this may no longer even look like
 # Twisted code.
 
-def start_console(factory):
-    p = BravoConsole(factory)
-    StandardIO(p)
-    return p
+if fancy_console:
+    oldSettings = None
 
-def stop_console():
-    pass
+    def start_console(factory):
+        global oldSettings
+        fd = sys.__stdin__.fileno()
+        oldSettings = termios.tcgetattr(fd)
+        tty.setraw(fd)
+        p = ServerProtocol(BravoManhole, factory)
+        StandardIO(p)
+        return p
 
-if os.isatty(sys.__stdin__.fileno()):
-    try:
-        import termios
-        import tty
+    def stop_console():
+        fd = sys.__stdin__.fileno()
+        termios.tcsetattr(fd, termios.TCSANOW, oldSettings)
+        # Took me forever to figure it out. This adorable little gem is
+        # the control sequence RIS, which resets ANSI-compatible terminals
+        # to their initial state. In the process, of course, they nuke all
+        # of the stuff on the screen.
+        os.write(fd, "\r\x1bc\r")
+else:
+    def start_console(factory):
+        p = BravoConsole(factory)
+        StandardIO(p)
+        return p
 
-        oldSettings = None
-
-        def start_console(factory):
-            global oldSettings
-            fd = sys.__stdin__.fileno()
-            oldSettings = termios.tcgetattr(fd)
-            tty.setraw(fd)
-            p = ServerProtocol(BravoManhole, factory)
-            StandardIO(p)
-            return p
-
-        def stop_console():
-            fd = sys.__stdin__.fileno()
-            termios.tcsetattr(fd, termios.TCSANOW, oldSettings)
-            # Took me forever to figure it out. This adorable little gem is
-            # the control sequence RIS, which resets ANSI-compatible terminals
-            # to their initial state. In the process, of course, they nuke all
-            # of the stuff on the screen.
-            os.write(fd, "\r\x1bc\r")
-    except ImportError:
-        # Win32? Whatever.
+    def stop_console():
         pass
