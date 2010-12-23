@@ -231,7 +231,7 @@ class Chunk(ChunkSerializer):
             return ""
         elif self.damaged.sum() == 1:
             # Use a single block update packet.
-            x, z, y = zip(*self.damaged.nonzero())[0]
+            x, z, y = [int(i) for i in zip(*self.damaged.nonzero())[0]]
             return make_packet("block",
                     x=x + self.x * 16,
                     y=y,
@@ -246,9 +246,9 @@ class Chunk(ChunkSerializer):
             # Chunk data structures are ((x * 16) + z) * 128) + y, or in
             # bit-twiddler's parlance, x << 11 | z << 7 | y. However, for
             # this, we need x << 12 | z << 8 | y, so repack accordingly.
-            coords = [x << 12 | z << 8 | y for x, z, y in zip(*damaged)]
-            types = self.blocks[damaged]
-            metadata = self.metadata[damaged]
+            coords = [int(x << 12 | z << 8 | y) for x, z, y in zip(*damaged)]
+            types = [int(i) for i in self.blocks[damaged]]
+            metadata = [int(i) for i in self.metadata[damaged]]
 
             return make_packet("batch", x=self.x, z=self.z,
                 length=len(coords), coords=coords, types=types,
