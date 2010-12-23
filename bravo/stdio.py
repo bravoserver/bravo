@@ -1,8 +1,13 @@
+try:
+    import termios
+    import tty
+except ImportError:
+    # Win32? Whatever.
+    pass
+
 import os
 import sys
-import termios
 import traceback
-import tty
 
 from twisted.conch.recvline import HistoricRecvLine
 from twisted.conch.insults.insults import ServerProtocol
@@ -11,6 +16,24 @@ from twisted.conch.manhole import Manhole
 from bravo.ibravo import IConsoleCommand
 from bravo.plugin import retrieve_plugins
 
+def run_command(commands, factory, line):
+    """
+    Single point of entry for the logic for running a command.
+    """
+
+    if line != "":
+        params = line.split(" ")
+        command = params.pop(0).lower()
+        if command in commands:
+            try:
+                for l in commands[command].console_command(factory, params):
+                    # Have to encode to keep Unicode off the wire.
+                    yield ("%s\n" % l).encode("utf8")
+            except Exception, e:
+                traceback.print_exc()
+                yield "Error: %s\n" % e
+        else:
+            yield "Unknown command: %s\n" % command
 
 typeToColor = {
     'identifier': '\x1b[31m',
@@ -43,20 +66,8 @@ class BravoInterpreter(object):
         Handle a command.
         """
 
-        if line != "":
-            params = line.split(" ")
-            command = params.pop(0).lower()
-            if command in self.commands:
-                try:
-                    for l in self.commands[command].console_command(
-                        self.handler.factory, params):
-                        # Have to encode to keep Unicode off the wire.
-                        self.handler.addOutput(("%s\n" % l).encode("utf8"))
-                except Exception, e:
-                    traceback.print_exc()
-                    self.handler.addOutput("Error: %s\n" % e)
-            else:
-                self.handler.addOutput("Unknown command: %s\n" % command)
+        for l in run_command(self.commands, self.handler.factory, line):
+            self.handler.addOutput(l)
 
     def lastColorizedLine(self, line):
         s = []
