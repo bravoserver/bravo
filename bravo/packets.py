@@ -32,7 +32,7 @@ items = Struct("items",
     If(lambda context: context["id"] >= 0,
         Embed(Struct("item_information",
             UBInt8("count"),
-            UBInt16("damage"),
+            UBInt8("damage"),
         )),
     ),
 )

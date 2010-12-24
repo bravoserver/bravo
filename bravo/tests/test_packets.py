@@ -51,7 +51,7 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.look.rotation, 6316.8076171875)
 
     def test_build(self):
-        packet = "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x00\x12"
+        packet = "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x12"
         parsed = bravo.packets.packets[15].parse(packet)
         self.assertEqual(parsed.x, 25)
         self.assertEqual(parsed.y, 64)
