@@ -89,7 +89,6 @@ packets = {
         SBInt8("y"),
         SBInt32("z"),
         SBInt8("face"),
-        SBInt16("id"),
         Embed(items),
     ),
     16: Struct("equip",
@@ -302,6 +301,37 @@ def parse_packets(bytestream):
             print packet[1]
 
     return l, leftovers
+
+incremental_packet_stream = Struct("incremental_packet_stream",
+    Struct("full_packet",
+        UBInt8("header"),
+        Switch("payload", lambda context: context["header"], packets),
+    ),
+    OptionalGreedyRepeater(
+        UBInt8("leftovers"),
+    ),
+)
+
+def parse_packets_incrementally(bytestream):
+    """
+    Parse out packets one-by-one, yielding a tuple of packet header and packet
+    payload.
+
+    This function returns a generator.
+
+    This function will yield all valid packets in the bytestream up to the
+    first invalid packet.
+
+    :returns: a generator yielding tuples of headers and payloads
+    """
+
+    while bytestream:
+        parsed = incremental_packet_stream.parse(bytestream)
+        header = parsed.full_packet.header
+        payload = parsed.full_packet.payload
+        bytestream = "".join(chr(i) for i in parsed.leftovers)
+
+        yield header, payload
 
 packets_by_name = {
     "ping"               : 0,
