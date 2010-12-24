@@ -38,6 +38,17 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.look.pitch, 43.49998474121094)
         self.assertEqual(parsed.look.rotation, 6316.8076171875)
 
+    def test_build(self):
+        packet = "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x00\x12"
+        parsed = bravo.packets.packets[15].parse(packet)
+        self.assertEqual(parsed.x, 25)
+        self.assertEqual(parsed.y, 64)
+        self.assertEqual(parsed.z, 64)
+        self.assertEqual(parsed.face, 5)
+        self.assertEqual(parsed.id, 4)
+        self.assertEqual(parsed.count, 64)
+        self.assertEqual(parsed.damage, 18)
+
 class TestPacketAssembly(unittest.TestCase):
 
     def test_ping(self):
