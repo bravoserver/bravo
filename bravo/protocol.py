@@ -1,5 +1,3 @@
-import collections
-
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
 from twisted.internet.protocol import Protocol
@@ -55,11 +53,9 @@ class BetaProtocol(Protocol):
 
         self.chunks = dict()
 
-        self.handlers = collections.defaultdict(lambda: self.unhandled)
-        self.handlers.update({
+        self.handlers = {
             0: self.ping,
             3: self.chat,
-            5: self.inventory,
             10: self.flying,
             11: self.position_look,
             12: self.position_look,
@@ -70,8 +66,9 @@ class BetaProtocol(Protocol):
             18: self.animate,
             21: self.pickup,
             59: self.tile,
+            104: self.inventory,
             255: self.quit,
-        })
+        }
 
         print "Registering client hooks..."
         names = configuration.get("bravo", "build_hooks").split(",")
@@ -253,10 +250,6 @@ class BetaProtocol(Protocol):
         print "Client is quitting: %s" % container.message
         self.transport.loseConnection()
 
-    def unhandled(self, container):
-        print "Unhandled but parseable packet found!"
-        print container
-
     def disable_chunk(self, x, z):
         del self.chunks[x, z]
 
@@ -303,8 +296,11 @@ class BetaProtocol(Protocol):
         for header, payload in packets:
             if header in self.factory.hooks:
                 self.factory.hooks[header](self, payload)
-            else:
+            elif header in self.handlers:
                 self.handlers[header](payload)
+            else:
+                print "Didn't handle parseable packet %d!" % header
+                print payload
 
     def challenged(self):
         self.state = STATE_CHALLENGED
