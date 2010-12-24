@@ -9,6 +9,7 @@ from twisted.conch.manhole import Manhole
 from twisted.internet.stdio import StandardIO
 from twisted.protocols.basic import LineReceiver
 
+from bravo.config import configuration
 from bravo.ibravo import IConsoleCommand
 from bravo.plugin import retrieve_plugins
 from bravo.utilities import fancy_console_name
@@ -17,6 +18,8 @@ try:
     import termios
     import tty
     fancy_console = os.isatty(sys.__stdin__.fileno())
+    fancy_console = fancy_console and configuration.getboolean("bravo",
+        "fancy_console")
 except ImportError:
     fancy_console = False
 

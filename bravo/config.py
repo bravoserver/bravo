@@ -5,6 +5,7 @@ defaults = {
     "generators": "simplex,erosion,watertable,grass,safety",
     "build_hooks": "build_snow,build,alpha_sand_gravel",
     "dig_hooks": "give,replace,alpha_snow",
+    "fancy_console": "true",
 }
 
 configuration = ConfigParser.SafeConfigParser(defaults)
