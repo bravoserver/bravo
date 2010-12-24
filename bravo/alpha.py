@@ -39,6 +39,30 @@ class Inventory(InventorySerializer):
 
         return packet
 
+    def add(self, item, quantity):
+        """
+        Attempt to add an item to the inventory.
+
+        :returns: whether the item was successfully added
+        """
+
+        for i, t in reversed(list(enumerate(self.items))):
+            if t is None:
+                self.items[i] = item, 0, quantity
+                return True
+            else:
+                id, damage, count = t
+
+                if id == item and count < 64:
+                    count += quantity
+                    if count > 64:
+                        count, quantity = 64, count - 64
+                    self.items[i] = id, damage, count
+                    if not quantity:
+                        return True
+
+        return False
+
 class Location(object):
     """
     The position and orientation of an entity.

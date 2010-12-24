@@ -149,16 +149,18 @@ class BetaProtocol(Protocol):
             if entity.name != "Pickup":
                 continue
 
-            # XXX add to the inventory, then check for inventory damage
+            if self.player.inventory.add(entity.block, entity.quantity):
+                packet = self.player.inventory.save_to_packet()
+                self.transport.write(packet)
 
-            packet = make_packet("collect", eid=entity.eid,
-                destination=self.player.eid)
-            self.transport.write(packet)
+                packet = make_packet("collect", eid=entity.eid,
+                    destination=self.player.eid)
+                self.transport.write(packet)
 
-            packet = make_packet("destroy", eid=entity.eid)
-            self.transport.write(packet)
+                packet = make_packet("destroy", eid=entity.eid)
+                self.transport.write(packet)
 
-            self.factory.destroy_entity(entity)
+                self.factory.destroy_entity(entity)
 
     def digging(self, container):
         if container.state != 3:
