@@ -1,3 +1,5 @@
+# vim: set fileencoding=utf8 :
+
 import unittest
 
 from construct import Container
@@ -26,6 +28,16 @@ class TestPacketParsing(unittest.TestCase):
         packet = ""
         parsed = bravo.packets.packets[0].parse(packet)
         self.assertTrue(parsed)
+
+    def test_handshake(self):
+        packet = "\x00\x01a"
+        parsed = bravo.packets.packets[2].parse(packet)
+        self.assertEqual(parsed.username, "a")
+
+    def test_handshake_unicode(self):
+        packet = "\x00\x02\xc2\xa7"
+        parsed = bravo.packets.packets[2].parse(packet)
+        self.assertEqual(parsed.username, u"§")
 
     def test_time(self):
         packet = "\x00\x00\x00\x00\x00\x00\x00\x2a"
