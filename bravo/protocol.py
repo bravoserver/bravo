@@ -26,6 +26,12 @@ from the center.
 
 BuildData = namedtuple("BuildData", "block, x, y, z, face")
 
+try:
+    import ampoule
+    async = configuration.getboolean("bravo", "ampoule")
+except ImportError:
+    async = False
+
 class BetaProtocol(Protocol):
     """
     The Minecraft Alpha protocol.
@@ -272,7 +278,12 @@ class BetaProtocol(Protocol):
         if (x, z) in self.chunks:
             return succeed(None)
 
-        d = self.factory.world.request_chunk(x, z)
+        if async:
+            d = self.factory.world.request_chunk(x, z)
+        else:
+            d = deferLater(reactor, 0.000001, self.factory.world.load_chunk,
+                x, z)
+
         d.addCallback(self.send_chunk)
 
         return d

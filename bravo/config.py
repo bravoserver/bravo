@@ -6,6 +6,7 @@ defaults = {
     "build_hooks": "build_snow,build,alpha_sand_gravel",
     "dig_hooks": "give,replace,alpha_snow",
     "fancy_console": "true",
+    "ampoule": "true",
 }
 
 configuration = ConfigParser.SafeConfigParser(defaults)
