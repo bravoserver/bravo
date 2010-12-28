@@ -1,7 +1,7 @@
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
 from twisted.internet.protocol import Protocol
-from twisted.internet.task import coiterate, deferLater, LoopingCall
+from twisted.internet.task import cooperate, deferLater, LoopingCall, TaskDone
 
 from bravo.blocks import blocks
 from bravo.compat import namedtuple, product
@@ -40,7 +40,7 @@ class BetaProtocol(Protocol):
     parser = None
     handler = None
 
-    chunk_generators = None
+    chunk_tasks = None
 
     time_loop = None
     ping_loop = None
@@ -378,31 +378,26 @@ class BetaProtocol(Protocol):
         discarded = old - new
 
         # Perhaps some explanation is in order.
-        # The generator expressions are stored in the protocol instance. If we
-        # need to cancel them, we can call their close() method, which causes
-        # them to become inert. This is incredibly important because we want
-        # to cancel all previously pending chunk changes when a new set of
-        # chunk changes is requested.
-        # The coiterate() function iterates over the iterable it is fed,
+        # The cooperate() function iterates over the iterable it is fed,
         # without tying up the reactor, by yielding after each iteration. The
         # inner part of the generator expression generates all of the chunks
         # around the currently needed chunk, and it sorts them by distance to
         # the current chunk. The end result is that we load chunks one-by-one,
         # nearest to furthest, without stalling other clients.
-        if self.chunk_generators:
-            for generator in self.chunk_generators:
-                generator.close()
+        if self.chunk_tasks:
+            for task in self.chunk_tasks:
+                try:
+                    task.stop()
+                except TaskDone:
+                    pass
 
-        self.chunk_generators = [
+        self.chunk_tasks = [cooperate(task) for task in
             (
                 self.enable_chunk(i, j) for i, j in
                 sorted(added, key=lambda t: (t[0] - x)**2 + (t[1] - z)**2)
             ),
             (self.disable_chunk(i, j) for i, j in discarded)
         ]
-
-        for generator in self.chunk_generators:
-            coiterate(generator)
 
     def update_ping(self):
         packet = make_packet("ping")
@@ -422,9 +417,12 @@ class BetaProtocol(Protocol):
         if self.time_loop:
             self.time_loop.stop()
 
-        if self.chunk_generators:
-            for generator in self.chunk_generators:
-                generator.close()
+        if self.chunk_tasks:
+            for task in self.chunk_tasks:
+                try:
+                    task.stop()
+                except TaskDone:
+                    pass
 
         del self.chunks
 
