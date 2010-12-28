@@ -4,7 +4,7 @@ import weakref
 
 from ampoule import deferToAMPProcess
 
-from twisted.internet.defer import succeed
+from twisted.internet.defer import Deferred, succeed
 from twisted.internet.task import LoopingCall
 from twisted.python.filepath import FilePath
 
@@ -14,7 +14,6 @@ from bravo.chunk import Chunk
 from bravo.config import configuration
 from bravo.remote import MakeChunk
 from bravo.serialize import LevelSerializer
-from bravo.utilities import unpack_nibbles
 
 def base36(i):
     """
@@ -75,6 +74,8 @@ class World(LevelSerializer):
 
         self.chunk_cache = weakref.WeakValueDictionary()
         self.dirty_chunk_cache = dict()
+
+        self._pending_chunks = dict()
 
         self.spawn = (0, 0, 0)
         self.seed = random.randint(0, sys.maxint)
@@ -167,6 +168,11 @@ class World(LevelSerializer):
             return succeed(self.chunk_cache[x, z])
         elif (x, z) in self.dirty_chunk_cache:
             return succeed(self.dirty_chunk_cache[x, z])
+        elif (x, z) in self._pending_chunks:
+            # Rig up another Deferred and wrap it up in a to-go box.
+            d = Deferred()
+            self._pending_chunks[x, z].chainDeferred(d)
+            return d
 
         chunk = Chunk(x, z)
 
@@ -209,8 +215,15 @@ class World(LevelSerializer):
 
             return chunk
 
+        # Set up callbacks.
         d.addCallback(pp)
-        return d
+        # Multiple people might be subscribed to this pending callback. We're
+        # going to keep it for ourselves and fork off another Deferred for our
+        # caller.
+        forked = Deferred()
+        d.chainDeferred(forked)
+        forked.addCallback(lambda none: chunk)
+        return forked
 
     def load_chunk(self, x, z):
         """
