@@ -272,7 +272,7 @@ class BetaProtocol(Protocol):
         if (x, z) in self.chunks:
             return succeed(None)
 
-        d = deferLater(reactor, 0, self.factory.world.load_chunk, x, z)
+        d = self.factory.world.request_chunk(x, z)
         d.addCallback(self.send_chunk)
 
         return d

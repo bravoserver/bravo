@@ -2,6 +2,7 @@ import random
 import sys
 import weakref
 
+from twisted.internet.defer import succeed
 from twisted.internet.task import LoopingCall
 from twisted.python.filepath import FilePath
 
@@ -152,9 +153,16 @@ class World(LevelSerializer):
 
         chunk.regenerate()
 
+    def request_chunk(self, x, z):
+        """
+        Request a ``Chunk`` to be delivered later.
+        """
+
+        return succeed(self.load_chunk(x, z))
+
     def load_chunk(self, x, z):
         """
-        Retrieve a `Chunk`.
+        Retrieve a ``Chunk``.
 
         This method does lots of automatic caching of chunks to ensure that
         disk I/O is kept to a minimum.
