@@ -158,7 +158,51 @@ class World(LevelSerializer):
         Request a ``Chunk`` to be delivered later.
         """
 
-        return succeed(self.load_chunk(x, z))
+        return succeed(self.load_chunk_async(x, z))
+
+    def load_chunk_async(self, x, z):
+        """
+        Retrieve a ``Chunk``.
+
+        This method does lots of automatic caching of chunks to ensure that
+        disk I/O is kept to a minimum.
+        """
+
+        if (x, z) in self.chunk_cache:
+            return self.chunk_cache[x, z]
+        elif (x, z) in self.dirty_chunk_cache:
+            return self.dirty_chunk_cache[x, z]
+
+        chunk = Chunk(x, z)
+
+        f = self.folder.child(base36(x & 63)).child(base36(z & 63))
+        if not f.exists():
+            f.makedirs()
+        f = f.child("c.%s.%s.dat" % (base36(x), base36(z)))
+        if f.exists() and f.getsize():
+            tag = NBTFile(fileobj=f.open("r"))
+            chunk.load_from_tag(tag)
+
+        if chunk.populated:
+            self.chunk_cache[x, z] = chunk
+        else:
+            self.populate_chunk(chunk)
+            chunk.populated = True
+            chunk.dirty = True
+
+            self.dirty_chunk_cache[x, z] = chunk
+
+        # Apply the current season to the chunk.
+        if self.season:
+            self.season.transform(chunk)
+
+        # Since this chunk hasn't been given to any player yet, there's no
+        # conceivable way that any meaningful damage has been accumulated;
+        # anybody loading any part of this chunk will want the entire thing.
+        # Thus, it should start out undamaged.
+        chunk.clear_damage()
+
+        return chunk
 
     def load_chunk(self, x, z):
         """
