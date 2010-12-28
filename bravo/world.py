@@ -2,6 +2,8 @@ import random
 import sys
 import weakref
 
+from ampoule import deferToAMPProcess
+
 from twisted.internet.defer import succeed
 from twisted.internet.task import LoopingCall
 from twisted.python.filepath import FilePath
@@ -9,7 +11,10 @@ from twisted.python.filepath import FilePath
 from nbt.nbt import NBTFile
 
 from bravo.chunk import Chunk
+from bravo.config import configuration
+from bravo.remote import MakeChunk
 from bravo.serialize import LevelSerializer
+from bravo.utilities import unpack_nibbles
 
 def base36(i):
     """
@@ -158,20 +163,10 @@ class World(LevelSerializer):
         Request a ``Chunk`` to be delivered later.
         """
 
-        return succeed(self.load_chunk_async(x, z))
-
-    def load_chunk_async(self, x, z):
-        """
-        Retrieve a ``Chunk``.
-
-        This method does lots of automatic caching of chunks to ensure that
-        disk I/O is kept to a minimum.
-        """
-
         if (x, z) in self.chunk_cache:
-            return self.chunk_cache[x, z]
+            return succeed(self.chunk_cache[x, z])
         elif (x, z) in self.dirty_chunk_cache:
-            return self.dirty_chunk_cache[x, z]
+            return succeed(self.dirty_chunk_cache[x, z])
 
         chunk = Chunk(x, z)
 
@@ -185,24 +180,37 @@ class World(LevelSerializer):
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
-        else:
-            self.populate_chunk(chunk)
+            return succeed(chunk)
+
+        d = deferToAMPProcess(MakeChunk, x=x, z=z, seed=self.seed,
+            generators=configuration.get("bravo", "generators"))
+
+        def pp(kwargs):
+            chunk.blocks.ravel()[:] = [ord(i) for i in kwargs["blocks"]]
+            chunk.heightmap.ravel()[:] = [ord(i) for i in kwargs["heightmap"]]
+            chunk.metadata.ravel()[:] = [ord(i) for i in kwargs["metadata"]]
+            chunk.skylight.ravel()[:] = [ord(i) for i in kwargs["skylight"]]
+            chunk.lightmap.ravel()[:] = [ord(i) for i in kwargs["blocklight"]]
+
             chunk.populated = True
             chunk.dirty = True
 
+            # Apply the current season to the chunk.
+            if self.season:
+                self.season.transform(chunk)
+
+            # Since this chunk hasn't been given to any player yet, there's no
+            # conceivable way that any meaningful damage has been accumulated;
+            # anybody loading any part of this chunk will want the entire thing.
+            # Thus, it should start out undamaged.
+            chunk.clear_damage()
+
             self.dirty_chunk_cache[x, z] = chunk
 
-        # Apply the current season to the chunk.
-        if self.season:
-            self.season.transform(chunk)
+            return chunk
 
-        # Since this chunk hasn't been given to any player yet, there's no
-        # conceivable way that any meaningful damage has been accumulated;
-        # anybody loading any part of this chunk will want the entire thing.
-        # Thus, it should start out undamaged.
-        chunk.clear_damage()
-
-        return chunk
+        d.addCallback(pp)
+        return d
 
     def load_chunk(self, x, z):
         """
