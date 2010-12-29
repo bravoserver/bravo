@@ -290,7 +290,7 @@ class World(LevelSerializer):
         """
 
         player = self.factory.create_entity(self.spawn[0], self.spawn[1],
-            self.spawn[2], "Player")
+            self.spawn[2], "Player", username=username)
 
         player.location.stance = self.spawn[1]
         player.username = username

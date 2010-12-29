@@ -46,6 +46,7 @@ class Player(Entity, PlayerSerializer):
 
         super(Player, self).__init__(eid=eid, *args, **kwargs)
 
+        self.username = username
         self.inventory = Inventory(0, 45)
 
     def save_to_packet(self):

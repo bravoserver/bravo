@@ -61,9 +61,9 @@ class BetaFactory(Factory):
 
         print "Factory init'd"
 
-    def create_entity(self, x, y, z, name):
+    def create_entity(self, x, y, z, name, **kwargs):
         self.eid += 1
-        entity = entities_by_name[name](self.eid)
+        entity = entities_by_name[name](self.eid, **kwargs)
         entity.location.x = x
         entity.location.y = y
         entity.location.z = z
