@@ -61,7 +61,7 @@ class OfflineAuthenticator(Authenticator):
         protocol.username = container.username
 
         packet = make_packet("login", protocol=protocol.eid, username="",
-            unused="", unknown1=0, unknown2=0)
+            unused="", seed=0, dimension=0)
         protocol.transport.write(packet)
 
         super(OfflineAuthenticator, self).login(protocol, container)
@@ -109,7 +109,7 @@ class OnlineAuthenticator(Authenticator):
             return
 
         packet = make_packet("login", protocol=protocol.eid, username="",
-            unused="", unknown1=0, unknown2=0)
+            unused="", seed=0, dimension=0)
         protocol.transport.write(packet)
 
         super(OnlineAuthenticator, self).login(protocol, container)
