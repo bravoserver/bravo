@@ -56,7 +56,7 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.x, 25)
         self.assertEqual(parsed.y, 64)
         self.assertEqual(parsed.z, 64)
-        self.assertEqual(parsed.face, 5)
+        self.assertEqual(parsed.face, "+x")
         self.assertEqual(parsed.id, 4)
         self.assertEqual(parsed.count, 64)
         self.assertEqual(parsed.damage, 18)

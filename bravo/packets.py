@@ -1,6 +1,6 @@
 import functools
 
-from construct import Struct, Container, Embed
+from construct import Struct, Container, Embed, Enum
 from construct import MetaArray, If, Switch
 from construct import OptionalGreedyRepeater
 from construct import PascalString
@@ -36,6 +36,17 @@ items = Struct("items",
         )),
     ),
 )
+
+faces = {
+    "noop": -1,
+    "-y": 0,
+    "+y": 1,
+    "-z": 2,
+    "+z": 3,
+    "-x": 4,
+    "+x": 5,
+}
+face = Enum(SBInt8("face"), **faces)
 
 packets = {
     0: Struct("ping"),
@@ -83,13 +94,13 @@ packets = {
         SBInt32("x"),
         UBInt8("y"),
         SBInt32("z"),
-        UBInt8("face"),
+        face,
     ),
     15: Struct("build",
         SBInt32("x"),
         SBInt8("y"),
         SBInt32("z"),
-        SBInt8("face"),
+        face,
         Embed(items),
     ),
     16: Struct("equip",

@@ -212,9 +212,9 @@ class BetaProtocol(Protocol):
         if not 0 <= container.id <= 255:
             return
 
-        # Special case when face is -1: Update the status of the currently
+        # Special case when face is "noop": Update the status of the currently
         # held block rather than placing a new block.
-        if container.face == -1:
+        if container.face == "noop":
             return
 
         try:

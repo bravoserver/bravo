@@ -148,18 +148,18 @@ class Build(object):
     def build_hook(self, factory, builddata):
         block, x, y, z, face = builddata
         # Offset coords according to face.
-        if face == 0:
-            y -= 1
-        elif face == 1:
-            y += 1
-        elif face == 2:
-            z -= 1
-        elif face == 3:
-            z += 1
-        elif face == 4:
+        if face == "-x":
             x -= 1
-        elif face == 5:
+        elif face == "+x":
             x += 1
+        elif face == "-y":
+            y -= 1
+        elif face == "+y":
+            y += 1
+        elif face == "-z":
+            z -= 1
+        elif face == "+z":
+            z += 1
 
         bigx, smallx, bigz, smallz = split_coords(x, z)
         chunk = factory.world.load_chunk(bigx, bigz)
@@ -186,7 +186,7 @@ class BuildSnow(object):
 
         if block == blocks["snow"].slot:
             # Building any block on snow causes snow to get replaced.
-            builddata = builddata._replace(face=1, y=builddata.y - 1)
+            builddata = builddata._replace(face="+y", y=builddata.y - 1)
 
         return True, builddata
 
