@@ -236,8 +236,8 @@ class Chunk(ChunkSerializer):
                     x=x + self.x * 16,
                     y=y,
                     z=z + self.x * 16,
-                    type=self.blocks[x, z, y],
-                    meta=self.metadata[x, z, y])
+                    type=int(self.blocks[x, z, y]),
+                    meta=int(self.metadata[x, z, y]))
         else:
             # Use a batch update.
             damaged = self.damaged.nonzero()
