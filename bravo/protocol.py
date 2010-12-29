@@ -174,7 +174,10 @@ class BetaProtocol(Protocol):
             if entity is self.player or entity.name != "Player":
                 continue
 
-            packet = self.player.save_to_packet()
+            packet = entity.save_to_packet()
+            self.transport.write(packet)
+
+            packet = make_packet("create", eid=entity.eid)
             self.transport.write(packet)
 
     def digging(self, container):
