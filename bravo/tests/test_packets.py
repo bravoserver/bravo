@@ -3,6 +3,7 @@
 import unittest
 
 from construct import Container
+from construct import MappingError
 
 import bravo.packets
 
@@ -61,6 +62,10 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.count, 64)
         self.assertEqual(parsed.damage, 18)
 
+    def test_build_bad_face(self):
+        packet = "\x00\x00\x00\x19@\x00\x00\x00@\x06\x00\x04@\x12"
+        self.assertRaises(MappingError, bravo.packets.packets[15].parse, packet)
+
 class TestPacketAssembly(unittest.TestCase):
 
     def test_ping(self):
@@ -72,3 +77,16 @@ class TestPacketAssembly(unittest.TestCase):
         container = Container(timestamp=42)
         assembled = bravo.packets.packets[4].build(container)
         self.assertEqual(assembled, "\x00\x00\x00\x00\x00\x00\x00\x2a")
+
+    def test_build(self):
+        container = Container(x=25, y=64, z=64, face="+x", id=4, count=64,
+            damage=18)
+        assembled = bravo.packets.packets[15].build(container)
+        self.assertEqual(assembled,
+            "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x12")
+
+    def test_build_bad_face(self):
+        container = Container(x=25, y=64, z=64, face="+q", id=4, count=64,
+            damage=18)
+        self.assertRaises(MappingError, bravo.packets.packets[15].build,
+            container)
