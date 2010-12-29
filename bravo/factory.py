@@ -17,6 +17,11 @@ from bravo.plugin import retrieve_plugins
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
 
+entities_by_name = {
+    "Player": Player,
+    "Pickup": Pickup,
+}
+
 class BetaFactory(Factory):
     """
     A ``Factory`` that creates ``BetaProtocol`` objects when connected to.
@@ -58,11 +63,7 @@ class BetaFactory(Factory):
 
     def create_entity(self, x, y, z, name):
         self.eid += 1
-        # XXX use a dispatch dict
-        if name == "Pickup":
-            entity = Pickup(self.eid)
-        elif name == "Player":
-            entity = Player(self.eid)
+        entity = entities_by_name[name](self.eid)
         entity.location.x = x
         entity.location.y = y
         entity.location.z = z

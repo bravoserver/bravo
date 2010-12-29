@@ -1,3 +1,4 @@
+from math import pi
 import StringIO
 
 from nbt.nbt import NBTFile
@@ -36,7 +37,7 @@ class Player(Entity, PlayerSerializer):
 
     name = "Player"
 
-    def __init__(self, eid=0, *args, **kwargs):
+    def __init__(self, eid=0, username="", *args, **kwargs):
         """
         Create a player.
 
@@ -49,16 +50,19 @@ class Player(Entity, PlayerSerializer):
 
     def save_to_packet(self):
 
+        yaw = int(self.location.theta * 255 / (2 * pi)) % 256
+        pitch = int(self.location.phi * 255 / (2 * pi)) % 256
+
         return make_packet("player",
-                eid=self.eid,
-                username=self.username,
-                x=self.location.x,
-                y=self.location.y,
-                z=self.location.z,
-                yaw=self.location.yaw,
-                pitch=self.location.pitch,
-                item=self.inventory.items[0]
-            )
+            eid=self.eid,
+            username=self.username,
+            x=self.location.x,
+            y=self.location.y,
+            z=self.location.z,
+            yaw=yaw,
+            pitch=pitch,
+            item=self.inventory.items[0]
+        )
 
 class Pickup(Entity):
     """

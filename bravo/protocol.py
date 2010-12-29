@@ -151,7 +151,7 @@ class BetaProtocol(Protocol):
             self.update_chunks()
 
         for entity in self.factory.entities_near(pos[0] * 32,
-            self.player.location.y * 32, pos[2] * 32, 64):
+            pos[1] * 32, pos[2] * 32, 2 * 32):
             if entity.name != "Pickup":
                 continue
 
@@ -167,6 +167,14 @@ class BetaProtocol(Protocol):
                 self.transport.write(packet)
 
                 self.factory.destroy_entity(entity)
+
+        for entity in self.factory.entities_near(pos[0] * 32,
+            pos[1] * 32, pos[2] * 32, 160 * 32):
+            if entity.name != "Player":
+                continue
+
+            packet = self.player.save_to_packet()
+            self.transport.write(packet)
 
     def digging(self, container):
         if container.state != 3:
@@ -335,6 +343,7 @@ class BetaProtocol(Protocol):
 
         self.player = self.factory.world.load_player(self.username)
         self.player.eid = self.eid
+        self.factory.entities.add(self.player)
 
         packet = make_packet("chat",
             message="%s is joining the game..." % self.username)
@@ -439,6 +448,7 @@ class BetaProtocol(Protocol):
 
         if self.player:
             self.factory.world.save_player(self.username, self.player)
+            self.factory.destroy_entity(self.player)
 
         if self.username in self.factory.protocols:
             del self.factory.protocols[self.username]
