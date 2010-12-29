@@ -107,7 +107,7 @@ packets = {
         SBInt32("z"),
         UBInt8("yaw"),
         UBInt8("pitch"),
-        UBInt16("item"),
+        SBInt16("item"),
     ),
     21: Struct("pickup",
         UBInt32("eid"),

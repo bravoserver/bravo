@@ -54,6 +54,10 @@ class Player(Entity, PlayerSerializer):
         yaw = int(self.location.theta * 255 / (2 * pi)) % 256
         pitch = int(self.location.phi * 255 / (2 * pi)) % 256
 
+        item = self.inventory.items[0]
+        if item is None:
+            item = -1
+
         return make_packet("player",
             eid=self.eid,
             username=self.username,
@@ -62,7 +66,7 @@ class Player(Entity, PlayerSerializer):
             z=self.location.z,
             yaw=yaw,
             pitch=pitch,
-            item=self.inventory.items[0]
+            item=item
         )
 
 class Pickup(Entity):
