@@ -18,6 +18,7 @@ AlphaString = functools.partial(PascalString,
     length_field=UBInt16("length"),
     encoding="utf8")
 
+# Flying, position, and orientation, reused in several places.
 flying = Struct("flying", UBInt8("flying"))
 position = Struct("position",
     BFloat64("x"),
@@ -27,6 +28,8 @@ position = Struct("position",
 )
 look = Struct("look", BFloat32("rotation"), BFloat32("pitch"))
 
+# Notchian item packing, used in all packets except 0x68. (For no particular
+# reason other than that 0x68 is just the old 0x05, renamed.)
 items = Struct("items",
     SBInt16("id"),
     If(lambda context: context["id"] >= 0,
@@ -37,6 +40,7 @@ items = Struct("items",
     ),
 )
 
+# Build faces, used during dig and build.
 faces = {
     "noop": -1,
     "-y": 0,
