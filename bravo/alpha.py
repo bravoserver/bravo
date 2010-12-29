@@ -83,6 +83,12 @@ class Location(object):
         # Whether we are in the air.
         self.midair = False
 
+    def __repr__(self):
+        return "<Location(%.6f, %.6f (%.6f), %.6f, %.2f, %.2f)>" % (self.x,
+            self.y, self.stance, self.z, self.theta, self.phi)
+
+    __str__ = __repr__
+
     @property
     def yaw(self):
         return degrees(self.theta)
