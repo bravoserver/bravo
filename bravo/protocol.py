@@ -170,7 +170,8 @@ class BetaProtocol(Protocol):
 
         for entity in self.factory.entities_near(pos[0] * 32,
             pos[1] * 32, pos[2] * 32, 160 * 32):
-            if entity.name != "Player":
+
+            if entity is self.player or entity.name != "Player":
                 continue
 
             packet = self.player.save_to_packet()
