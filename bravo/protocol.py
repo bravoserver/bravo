@@ -9,7 +9,7 @@ from bravo.config import configuration
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook
 from bravo.packets import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins, retrieve_named_plugins
-from bravo.utilities import chat_name, split_coords
+from bravo.utilities import chat_name, sanitize_chat, split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
@@ -88,7 +88,7 @@ class BetaProtocol(Protocol):
     def colorize_chat(self, message):
         for user in self.factory.protocols:
             message = message.replace(user, chat_name(user))
-        return message
+        return sanitize_chat(message)
 
     def chat(self, container):
         if container.message.startswith("/"):
