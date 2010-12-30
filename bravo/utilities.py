@@ -174,3 +174,15 @@ def fancy_console_name(s):
         s,
         '\x1b[0m'
     )
+
+def sanitize_chat(s):
+    """
+    Verify that the given chat string is safe to send to Notchian recepients.
+    """
+
+    # Check for Notchian bug: Color controls can't be at the end of the
+    # message.
+    if len(s) > 1 and s[-2] == u"§":
+        s = s[:-2]
+
+    return s

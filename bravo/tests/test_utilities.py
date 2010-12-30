@@ -1,3 +1,5 @@
+# vim: set fileencoding=utf8 :
+
 import unittest
 
 from numpy import array
@@ -31,3 +33,10 @@ class TestBitTwiddling(unittest.TestCase):
             list(bravo.utilities.pack_nibbles(
                     array([6, 14, 6, 9, 6, 2, 7, 3]))),
             list("nibs"))
+
+class TestStringMunging(unittest.TestCase):
+
+    def test_sanitize_chat_color_control_at_end(self):
+        message = u"§0Test§f"
+        sanitized = u"§0Test"
+        self.assertEqual(bravo.utilities.sanitize_chat(message), sanitized)
