@@ -30,3 +30,9 @@ class TestWorldNBT(unittest.TestCase):
         self.assertTrue("Data" in data)
         for name in ("RandomSeed", "SpawnX", "SpawnY", "SpawnZ"):
             self.assertTrue(name in data["Data"])
+
+class TestWorldUtilities(unittest.TestCase):
+
+    def test_names_for_chunk(self):
+        self.assertEqual(bravo.world.names_for_chunk(-13, 44),
+            ("1f", "18", "c.-d.18.dat"))

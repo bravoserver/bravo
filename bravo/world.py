@@ -41,6 +41,17 @@ def base36(i):
 
     return s
 
+def names_for_chunk(x, z):
+    """
+    Calculate the folder and file names for given chunk coordinates.
+    """
+
+    first = base36(x & 63)
+    second = base36(z & 63)
+    third = "c.%s.%s.dat" % (base36(x), base36(z))
+
+    return first, second, third
+
 class World(LevelSerializer):
     """
     Object representing a world on disk.
@@ -176,10 +187,11 @@ class World(LevelSerializer):
 
         chunk = Chunk(x, z)
 
-        f = self.folder.child(base36(x & 63)).child(base36(z & 63))
+        first, second, filename = names_for_chunk(x, z)
+        f = self.folder.child(first).child(second)
         if not f.exists():
             f.makedirs()
-        f = f.child("c.%s.%s.dat" % (base36(x), base36(z)))
+        f = f.child(filename)
         if f.exists() and f.getsize():
             tag = NBTFile(fileobj=f.open("r"))
             chunk.load_from_tag(tag)
@@ -242,10 +254,11 @@ class World(LevelSerializer):
 
         chunk = Chunk(x, z)
 
-        f = self.folder.child(base36(x & 63)).child(base36(z & 63))
+        first, second, filename = names_for_chunk(x, z)
+        f = self.folder.child(first).child(second)
         if not f.exists():
             f.makedirs()
-        f = f.child("c.%s.%s.dat" % (base36(x), base36(z)))
+        f = f.child(filename)
         if f.exists() and f.getsize():
             tag = NBTFile(fileobj=f.open("r"))
             chunk.load_from_tag(tag)
@@ -276,11 +289,11 @@ class World(LevelSerializer):
         if not chunk.dirty:
             return
 
-        x, z = chunk.x, chunk.z
-        f = self.folder.child(base36(x & 63)).child(base36(z & 63))
+        first, second, filename = names_for_chunk(chunk.x, chunk.z)
+        f = self.folder.child(first).child(second)
         if not f.exists():
             f.makedirs()
-        f = f.child("c.%s.%s.dat" % (base36(x), base36(z)))
+        f = f.child(filename)
         tag = chunk.save_to_tag()
         tag.write_file(fileobj=f.open("w"))
 
