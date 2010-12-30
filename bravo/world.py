@@ -190,6 +190,7 @@ class World(LevelSerializer):
 
         d = deferToAMPProcess(MakeChunk, x=x, z=z, seed=self.seed,
             generators=configuration.get("bravo", "generators"))
+        self._pending_chunks[x, z] = d
 
         def pp(kwargs):
             chunk.blocks.ravel()[:] = [ord(i) for i in kwargs["blocks"]]
@@ -212,6 +213,7 @@ class World(LevelSerializer):
             chunk.clear_damage()
 
             self.dirty_chunk_cache[x, z] = chunk
+            del self._pending_chunks[x, z]
 
             return chunk
 
