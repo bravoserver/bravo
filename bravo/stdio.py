@@ -153,7 +153,7 @@ class BravoManhole(Manhole):
                 self.terminal.cursorBackward(n)
 
 greeting = """
-Welcome to Beta!
+Welcome to Bravo!
 This terminal has no fancy features.
 """
 prompt = "Bravo > "
