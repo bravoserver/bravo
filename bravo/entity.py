@@ -1,7 +1,4 @@
 from math import pi
-import StringIO
-
-from nbt.nbt import NBTFile
 
 from bravo.alpha import Inventory, Location
 from bravo.packets import make_packet
@@ -76,38 +73,7 @@ class Pickup(Entity):
 
     name = "Pickup"
 
-class TileEntity(object):
-    """
-    A block that is also an entity.
-
-    Tiles have a separate serialization and saving step because they are
-    stored in two places in the protocol.
-
-    Upstream states that, at some point, tiles do eventually get specialized
-    into either blocks or entities.
-    """
-
-    def load_from_packet(self, container):
-
-        self.x = container.x
-        self.y = container.y
-        self.z = container.z
-
-        tag = NBTFile(fileobj=container.nbt)
-        self.load_from_tag(tag)
-
-    def save_to_packet(self):
-
-        tag = self.save_to_tag()
-        sio = StringIO.StringIO()
-        sio.mode = "wb"
-        tag.write_file(fileobj=sio)
-
-        packet = make_packet("tile", x=self.x, y=self.y, z=self.z,
-            nbt=sio.getvalue())
-        return packet
-
-class Chest(TileEntity, ChestSerializer):
+class Chest(ChestSerializer):
     """
     A tile that holds items.
     """
@@ -116,7 +82,17 @@ class Chest(TileEntity, ChestSerializer):
 
         self.inventory = Inventory(0, 36)
 
-class Sign(TileEntity, SignSerializer):
+    def load_from_packet(self, container):
+
+        print "Can't deserialize chests yet!"
+
+    def save_to_packet(self):
+
+        print "Can't serialize chests yet!"
+
+        return ""
+
+class Sign(SignSerializer):
     """
     A tile that stores text.
     """
@@ -127,6 +103,24 @@ class Sign(TileEntity, SignSerializer):
         self.text2 = ""
         self.text3 = ""
         self.text4 = ""
+
+    def load_from_packet(self, container):
+
+        self.x = container.x
+        self.y = container.y
+        self.z = container.z
+
+        self.text1 = container.line1
+        self.text2 = container.line2
+        self.text3 = container.line3
+        self.text4 = container.line4
+
+    def save_to_packet(self):
+
+        packet = make_packet("sign", x=self.x, y=self.y, z=self.z,
+            line1=self.text1, line2=self.text2, line3=self.text3,
+            line4=self.text4)
+        return packet
 
 tile_entities = {
     "Chest": Chest,
