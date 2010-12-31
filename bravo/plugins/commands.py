@@ -261,7 +261,7 @@ class WriteConfig(object):
     implements(IPlugin, IConsoleCommand)
 
     def console_command(self, factory, parameters):
-        f = open(parameters, "w")
+        f = open("".join(parameters), "w")
         configuration.write(f)
         f.close()
         yield "Configuration saved."
