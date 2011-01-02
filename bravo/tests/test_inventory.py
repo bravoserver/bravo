@@ -21,3 +21,4 @@ class TestInventoryInternals(unittest.TestCase):
         self.assertEqual(self.i.holdables[0], (2, 0, 1))
         self.assertTrue(self.i.add(2, 1))
         self.assertEqual(self.i.holdables[0], (2, 0, 2))
+        self.assertEqual(self.i.holdables[1], None)

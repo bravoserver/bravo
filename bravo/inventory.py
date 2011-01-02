@@ -65,20 +65,25 @@ class Inventory(InventorySerializer):
         :returns: whether the item was successfully added
         """
 
+        # Try to put it in holdables first.
         for stash in (self.holdables, self.storage):
+            # Check in two separate loops, to avoid bad grouping patterns.
             for i, t in enumerate(stash):
-                if t is None:
-                    stash[i] = item, 0, quantity
-                    return True
-                else:
+                if t is not None:
                     id, damage, count = t
 
                     if id == item and count < 64:
                         count += quantity
                         if count > 64:
                             count, quantity = 64, count - 64
+                        else:
+                            quantity = 0
                         stash[i] = id, damage, count
                         if not quantity:
                             return True
+            for i, t in enumerate(stash):
+                if t is None:
+                    stash[i] = item, 0, quantity
+                    return True
 
         return False
