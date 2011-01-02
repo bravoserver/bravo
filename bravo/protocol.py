@@ -266,6 +266,10 @@ class BetaProtocol(Protocol):
                 acknowledged=1)
             self.transport.write(packet)
 
+            if container.button == 0:
+                # Left-click.
+                self.player.inventory.select(container.slot)
+
     def inventory(self, container):
         if container.name == 0:
             self.player.inventory.load_from_packet(container)

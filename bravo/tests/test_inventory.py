@@ -22,3 +22,20 @@ class TestInventoryInternals(unittest.TestCase):
         self.assertTrue(self.i.add(2, 1))
         self.assertEqual(self.i.holdables[0], (2, 0, 2))
         self.assertEqual(self.i.holdables[1], None)
+
+    def test_select_stack(self):
+        self.i.holdables[0] = (2, 0, 1)
+        self.i.holdables[1] = (2, 0, 1)
+        self.i.select(37)
+        self.i.select(36)
+        self.assertEqual(self.i.holdables[0], (2, 0, 2))
+        self.assertEqual(self.i.holdables[1], None)
+
+    def test_select_switch(self):
+        self.i.holdables[0] = (2, 0, 1)
+        self.i.holdables[1] = (3, 0, 1)
+        self.i.select(36)
+        self.i.select(37)
+        self.i.select(36)
+        self.assertEqual(self.i.holdables[0], (3, 0, 1))
+        self.assertEqual(self.i.holdables[1], (2, 0, 1))

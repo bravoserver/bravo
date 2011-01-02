@@ -20,6 +20,24 @@ class Inventory(InventorySerializer):
         self.storage = [None] * 27
         self.holdables = [None] * 9
 
+        self.selected = None
+
+    def container_for_slot(self, slot):
+        """
+        Retrieve the list and index for a given slot.
+        """
+
+        if slot == 0:
+            return self.crafted, 0
+        elif 1 <= slot <= 4:
+            return self.crafting, slot - 1
+        elif 5 <= slot <= 8:
+            return self.armor, slot - 5
+        elif 9 <= slot <= 35:
+            return self.storage, slot - 9
+        elif 36 <= slot <= 44:
+            return self.holdables, slot - 36
+
     def load_from_list(self, l):
 
         self.crafted = l[0]
@@ -87,3 +105,21 @@ class Inventory(InventorySerializer):
                     return True
 
         return False
+
+    def select(self, slot):
+        """
+        Handle a slot selection.
+        """
+
+        l, index = self.container_for_slot(slot)
+
+        if self.selected is not None and l[index] is not None:
+            stype, sdamage, scount = self.selected
+            itype, idamage, icount = l[index]
+            if stype == itype and scount + icount <= 64:
+                l[index] = itype, idamage, scount + icount
+                self.selected = None
+                return
+
+        # Default case: just swap.
+        self.selected, l[index] = l[index], self.selected
