@@ -70,9 +70,9 @@ class BetaProtocol(Protocol):
             14: self.digging,
             15: self.build,
             16: self.equip,
-            18: self.animate,
             21: self.pickup,
             59: self.tile,
+            102: self.waction,
             104: self.inventory,
             255: self.quit,
         }
@@ -126,13 +126,6 @@ class BetaProtocol(Protocol):
 
             packet = make_packet("chat", message=self.colorize_chat(message))
             self.factory.broadcast(packet)
-
-    def inventory(self, container):
-        if container.name == 0:
-            self.player.inventory.load_from_packet(container)
-        else:
-            print "Got unknown inventory!"
-            print container
 
     def flying(self, container):
         self.player.location.load_from_packet(container)
@@ -242,9 +235,6 @@ class BetaProtocol(Protocol):
     def equip(self, container):
         self.player.equipped = container.item
 
-    def animate(self, container):
-        pass
-
     def pickup(self, container):
 
         self.factory.give((container.x, container.y, container.z),
@@ -266,6 +256,22 @@ class BetaProtocol(Protocol):
             print "Found tile!"
         else:
             print "Couldn't find tile."
+
+    def waction(self, container):
+        print "Handling action..."
+
+        if container.wid == 0:
+            # Inventory.
+            packet = make_packet("window-token", wid=0, token=container.token,
+                acknowledged=1)
+            self.transport.write(packet)
+
+    def inventory(self, container):
+        if container.name == 0:
+            self.player.inventory.load_from_packet(container)
+        else:
+            print "Got unknown inventory!"
+            print container
 
     def quit(self, container):
         print "Client is quitting: %s" % container.message
