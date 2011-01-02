@@ -65,19 +65,20 @@ class Inventory(InventorySerializer):
         :returns: whether the item was successfully added
         """
 
-        for i, t in reversed(list(enumerate(self._items))):
-            if t is None:
-                self._items[i] = item, 0, quantity
-                return True
-            else:
-                id, damage, count = t
+        for stash in (self.holdables, self.storage):
+            for i, t in enumerate(stash):
+                if t is None:
+                    stash[i] = item, 0, quantity
+                    return True
+                else:
+                    id, damage, count = t
 
-                if id == item and count < 64:
-                    count += quantity
-                    if count > 64:
-                        count, quantity = 64, count - 64
-                    self._items[i] = id, damage, count
-                    if not quantity:
-                        return True
+                    if id == item and count < 64:
+                        count += quantity
+                        if count > 64:
+                            count, quantity = 64, count - 64
+                        stash[i] = id, damage, count
+                        if not quantity:
+                            return True
 
         return False
