@@ -1,6 +1,7 @@
 from math import pi
 
-from bravo.alpha import Inventory, Location
+from bravo.alpha import Location
+from bravo.inventory import Inventory
 from bravo.packets import make_packet
 from bravo.serialize import ChestSerializer, PlayerSerializer, SignSerializer
 
@@ -51,7 +52,7 @@ class Player(Entity, PlayerSerializer):
         yaw = int(self.location.theta * 255 / (2 * pi)) % 256
         pitch = int(self.location.phi * 255 / (2 * pi)) % 256
 
-        item = self.inventory.items[0]
+        item = self.inventory._items[0]
         if item is None:
             item = -1
 

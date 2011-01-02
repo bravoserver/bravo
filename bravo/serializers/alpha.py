@@ -10,14 +10,14 @@ class InventorySerializer(object):
 
         for item in tag.tags:
             slot = item["Slot"].value
-            inventory.items[slot] = (item["id"].value,
+            inventory._items[slot] = (item["id"].value,
                 item["Damage"].value, item["Count"].value)
 
     def save_to_tag(inventory):
 
         tag = TAG_List(type=TAG_Compound)
 
-        for i, item in enumerate(inventory.items):
+        for i, item in enumerate(inventory._items):
             if item is not None:
                 d = TAG_Compound()
                 id, damage, count = item

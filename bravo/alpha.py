@@ -1,67 +1,8 @@
 from math import degrees, radians
 
-from construct import Container, ListContainer
+from construct import Container
 
 from bravo.packets import make_packet
-from bravo.serialize import InventorySerializer
-
-class Inventory(InventorySerializer):
-    """
-    A collection of items.
-    """
-
-    def __init__(self, name, length):
-        self.name = name
-        self.items = [None] * length
-
-    def load_from_packet(self, container):
-        """
-        Load data from a packet container.
-        """
-
-        for i, item in enumerate(container.items):
-            if item.id < 0:
-                self.items[i] = None
-            else:
-                self.items[i] = item.id, item.damage, item.count
-
-    def save_to_packet(self):
-        lc = ListContainer()
-        for item in self.items:
-            if item is None:
-                lc.append(Container(id=-1))
-            else:
-                lc.append(Container(id=item[0], damage=item[1],
-                        count=item[2]))
-
-        packet = make_packet("inventory", name=self.name, length=len(lc),
-            items=lc)
-
-        return packet
-
-    def add(self, item, quantity):
-        """
-        Attempt to add an item to the inventory.
-
-        :returns: whether the item was successfully added
-        """
-
-        for i, t in reversed(list(enumerate(self.items))):
-            if t is None:
-                self.items[i] = item, 0, quantity
-                return True
-            else:
-                id, damage, count = t
-
-                if id == item and count < 64:
-                    count += quantity
-                    if count > 64:
-                        count, quantity = 64, count - 64
-                    self.items[i] = id, damage, count
-                    if not quantity:
-                        return True
-
-        return False
 
 class Location(object):
     """
