@@ -1,7 +1,8 @@
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
 from twisted.internet.protocol import Protocol
-from twisted.internet.task import cooperate, deferLater, LoopingCall, TaskDone
+from twisted.internet.task import cooperate, deferLater, LoopingCall
+from twisted.internet.task import TaskDone, TaskFailed
 
 from bravo.blocks import blocks
 from bravo.compat import namedtuple, product
@@ -412,7 +413,7 @@ class BetaProtocol(Protocol):
             for task in self.chunk_tasks:
                 try:
                     task.stop()
-                except TaskDone:
+                except (TaskDone, TaskFailed):
                     pass
 
         self.chunk_tasks = [cooperate(task) for task in
@@ -445,7 +446,7 @@ class BetaProtocol(Protocol):
             for task in self.chunk_tasks:
                 try:
                     task.stop()
-                except TaskDone:
+                except (TaskDone, TaskFailed):
                     pass
 
         del self.chunks
