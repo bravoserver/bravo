@@ -52,7 +52,7 @@ class Player(Entity, PlayerSerializer):
         yaw = int(self.location.theta * 255 / (2 * pi)) % 256
         pitch = int(self.location.phi * 255 / (2 * pi)) % 256
 
-        item = self.inventory._items[0]
+        item = self.inventory.holdables[0]
         if item is None:
             item = -1
 

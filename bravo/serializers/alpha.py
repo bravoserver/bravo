@@ -1,3 +1,5 @@
+from itertools import chain
+
 from nbt.nbt import NBTFile
 from nbt.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from nbt.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
@@ -8,16 +10,22 @@ class InventorySerializer(object):
 
     def load_from_tag(inventory, tag):
 
+        items = [None] * 45
+
         for item in tag.tags:
             slot = item["Slot"].value
-            inventory._items[slot] = (item["id"].value,
+            items[slot] = (item["id"].value,
                 item["Damage"].value, item["Count"].value)
+
+        inventory.load_from_list(items)
 
     def save_to_tag(inventory):
 
         tag = TAG_List(type=TAG_Compound)
 
-        for i, item in enumerate(inventory._items):
+        for i, item in enumerate(chain([inventory.crafted],
+            inventory.crafting, inventory.armor, inventory.storage,
+            inventory.holdables)):
             if item is not None:
                 d = TAG_Compound()
                 id, damage, count = item

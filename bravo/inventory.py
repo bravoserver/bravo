@@ -1,3 +1,5 @@
+from itertools import chain
+
 from construct import Container, ListContainer
 
 from bravo.packets import make_packet
@@ -12,30 +14,39 @@ class Inventory(InventorySerializer):
 
     def __init__(self, name, length):
         self.name = name
-        self._items = [None] * length
+        self.crafting = [None] * 4
+        self.crafted = None
+        self.armor = [None] * 4
+        self.storage = [None] * 27
+        self.holdables = [None] * 9
 
-    @property
-    def crafting(self):
-        return self._items[1:4]
+    def load_from_list(self, l):
 
-    @crafting.setter
-    def crafting(self, value):
-        self._items[1:4] = value
+        self.crafted = l[0]
+        self.crafting = l[1:5]
+        self.armor = l[5:9]
+        self.storage = l[9:36]
+        self.holdables = l[37:45]
 
     def load_from_packet(self, container):
         """
         Load data from a packet container.
         """
 
+        items = [None] * 45
+
         for i, item in enumerate(container.items):
             if item.id < 0:
-                self._items[i] = None
+                items[i] = None
             else:
-                self._items[i] = item.id, item.damage, item.count
+                items[i] = item.id, item.damage, item.count
+
+        self.load_from_list(items)
 
     def save_to_packet(self):
         lc = ListContainer()
-        for item in self._items:
+        for item in chain([self.crafted], self.crafting, self.armor,
+            self.storage, self.holdables):
             if item is None:
                 lc.append(Container(id=-1))
             else:
