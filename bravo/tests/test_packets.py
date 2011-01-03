@@ -69,7 +69,19 @@ class TestPacketParsing(unittest.TestCase):
 
     def test_build_bad_face(self):
         packet = "\x00\x00\x00\x19@\x00\x00\x00@\x06\x00\x04@\x12"
-        self.assertRaises(MappingError, bravo.packets.packets[15].parse, packet)
+        self.assertRaises(MappingError, bravo.packets.packets[15].parse,
+            packet)
+
+    def test_animate(self):
+        packet = "\x00\x00\x00\x03\x01"
+        parsed = bravo.packets.packets[18].parse(packet)
+        self.assertEqual(parsed.eid, 3)
+        self.assertEqual(parsed.animation, "arm")
+
+    def test_animate_bad_animation(self):
+        packet = "\x00\x00\x00\x03\x05"
+        self.assertRaises(MappingError, bravo.packets.packets[18].parse,
+            packet)
 
 class TestPacketAssembly(unittest.TestCase):
 
