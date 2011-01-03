@@ -1,11 +1,12 @@
 import unittest
 
+import bravo.blocks
 import bravo.inventory
 
 class TestInventoryInternals(unittest.TestCase):
 
     def setUp(self):
-        self.i = bravo.inventory.Inventory(-1, 45)
+        self.i = bravo.inventory.Inventory(0, 45)
 
     def test_trivial(self):
         pass
@@ -39,3 +40,16 @@ class TestInventoryInternals(unittest.TestCase):
         self.i.select(36)
         self.assertEqual(self.i.holdables[0], (3, 0, 1))
         self.assertEqual(self.i.holdables[1], (2, 0, 1))
+
+class TestCrafting(unittest.TestCase):
+
+    def setUp(self):
+        self.i = bravo.inventory.Inventory(0, 45)
+
+    def test_trivial(self):
+        pass
+
+    def test_crafting_wood(self):
+        self.i.crafting[0] = (bravo.blocks.blocks["log"].slot, 0, 1)
+        self.assertEqual(bravo.inventory.check_recipes(self.i.crafting),
+            (bravo.blocks.blocks["wood"].slot, 4))

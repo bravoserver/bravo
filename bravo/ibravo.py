@@ -96,6 +96,35 @@ class IConsoleCommand(ICommand):
         :param list parameters: additional parameters passed to the command
         """
 
+class IRecipe(Interface):
+    """
+    Recipe for crafting materials from other materials.
+    """
+
+    name = Attribute("""
+        Name of the recipe.
+        """)
+
+    dimensions = Attribute("""
+        Tuple representing the size of the recipe.
+        """)
+
+    recipe = Attribute("""
+        Tuple representing the items of the recipe.
+
+        Recipes need to be filled out left-to-right, top-to-bottom, with one
+        of two things:
+
+         * A tuple (slot, count) for the item/block that needs to be present;
+         * None, if the slot needs to be empty.
+        """)
+
+    provides = Attribute("""
+        Tuple representing the yield of this recipe.
+
+        This tuple must be of the format (slot, count).
+        """)
+
 class ISeason(Interface):
     """
     Seasons are transformational stages run during certain days to emulate an

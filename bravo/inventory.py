@@ -2,7 +2,9 @@ from itertools import chain
 
 from construct import Container, ListContainer
 
+from bravo.ibravo import IRecipe
 from bravo.packets import make_packet
+from bravo.plugin import retrieve_plugins
 from bravo.serialize import InventorySerializer
 
 class Inventory(InventorySerializer):
@@ -119,7 +121,39 @@ class Inventory(InventorySerializer):
             if stype == itype and scount + icount <= 64:
                 l[index] = itype, idamage, scount + icount
                 self.selected = None
-                return
+            else:
+                # Default case: just swap.
+                self.selected, l[index] = l[index], self.selected
+        else:
+            # Default case: just swap.
+            self.selected, l[index] = l[index], self.selected
 
-        # Default case: just swap.
-        self.selected, l[index] = l[index], self.selected
+        if l is self.crafting:
+            # Crafting table changed...
+            crafted = check_recipes(l)
+            if crafted is not None:
+                self.crafted = crafted[0], 0, crafted[1]
+
+def check_recipes(crafting):
+    """
+    See if the crafting table matches any recipes.
+
+    :returns: the crafted item, or None if no recipes match
+    """
+
+    # XXX add support for 3x3 tables
+    for recipe in retrieve_plugins(IRecipe).itervalues():
+        if recipe.dimensions == (1, 1):
+            # Fast path for single-block recipes.
+            needle, count = recipe.recipe[0]
+            nones = sorted(crafting)
+            target = nones.pop()
+            if all(none == None for none in nones) and target is not None:
+                # Ooh, did we match?!
+                found, chaff, fcount = target
+                if needle == found:
+                    # Jackpot!
+                    pslot, pcount = recipe.provides
+                    return pslot, pcount * (fcount // count)
+
+    return None
