@@ -6,7 +6,7 @@ from twisted.internet import reactor
 
 from bravo.blocks import blocks
 from bravo.config import configuration
-from bravo.ibravo import IChatCommand, IConsoleCommand
+from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
 from bravo.plugin import retrieve_plugins
 from bravo.packets import make_packet
 
@@ -102,10 +102,23 @@ class Time(object):
         # 0000 is noon, not midnight
         hours = hours + 12 % 24
         minutes = minutes * 6 / 100
-        season, date = divmod(factory.day, 90)
-        # Quick hack for season names
-        season = ["Winter", "Spring", "Summer", "Fall"][season]
-        yield "%02d:%02d, %d (%s)" % (hours, minutes, date, season)
+        # Find seasons, and figure out which season we're in.
+        seasons = retrieve_plugins(ISeason).values()
+        seasons.sort(reverse=True, key=lambda season: season.day)
+        if seasons:
+            if all(s.day > factory.day for s in seasons):
+                # We are too close to the beginning of the year; grab the last
+                # season of "last" year.
+                date = "%d (%d %s)" % (factory.day,
+                    factory.day + 360 - seasons[0].day, seasons[0].name)
+            else:
+                # Grab the closest season, Price-is-Right-style.
+                season = next(s for s in seasons if s.day <= factory.day)
+                date = "%d (%d %s)" % (factory.day, factory.day - season.day,
+                    season.name)
+        else:
+            date = "%d" % factory.day
+        yield "%02d:%02d, %s" % (hours, minutes, date)
 
     def chat_command(self, factory, username, parameters):
         for i in self.dispatch(factory):
