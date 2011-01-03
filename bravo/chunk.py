@@ -18,6 +18,45 @@ for i in range(15):
         glow[i][ x,  y,  z] = i + 1 - distance
     glow[i] = cast[uint8](glow[i].clip(0, 15))
 
+def blit_glow(target, strength, x, y, z):
+    """
+    Blit a light source onto a lightmap.
+    """
+
+    ambient = glow[strength]
+
+    sx = x - strength
+    sy = y - strength
+    sz = z - strength
+
+    ex = x + strength
+    ey = y + strength
+    ez = z + strength
+
+    si, sj, sk = 0, 0, 0
+    ei, ej, ek = strength * 2, strength * 2, strength * 2
+
+    if sx < 0:
+        sx, si = 0, -sx
+
+    if sy < 0:
+        sy, sj = 0, -sy
+
+    if sz < 0:
+        sz, sk = 0, -sz
+
+    if ex > 15:
+        ex, ei = 15, ei - ex + 15
+
+    if ey > 127:
+        ey, ej = 127, ej - ey + 127
+
+    if ez > 15:
+        ez, ek = 15, ek - ez + 15
+
+    # Blit!
+    target[sx:ex, sz:ez, sy:ey] = ambient[si:ei, sk:ek, sj:ej]
+
 class Chunk(ChunkSerializer):
     """
     A chunk of blocks.
@@ -130,37 +169,7 @@ class Chunk(ChunkSerializer):
         for x, z in product(xrange(16), repeat=2):
             y = self.heightmap[x, z]
 
-            sx = x - 14
-            sy = y - 14
-            sz = z - 14
-
-            ex = x + 14
-            ey = y + 14
-            ez = z + 14
-
-            si, sj, sk = 0, 0, 0
-            ei, ej, ek = 28, 28, 28
-
-            if sx < 0:
-                sx, si = 0, -sx
-
-            if sy < 0:
-                sy, sj = 0, -sy
-
-            if sz < 0:
-                sz, sk = 0, -sz
-
-            if ex > 15:
-                ex, ei = 15, ei - ex + 15
-
-            if ey > 127:
-                ey, ej = 127, ej - ey + 127
-
-            if ez > 15:
-                ez, ek = 15, ek - ez + 15
-
-            # Blit!
-            lightmap[sx:ex, sz:ez, sy:ey] = ambient[si:ei, sk:ek, sj:ej]
+            blit_glow(lightmap, 14, x, y, z)
 
         self.lightmap = cast[uint8](lightmap.clip(0, 15))
 
