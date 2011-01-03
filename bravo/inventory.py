@@ -115,6 +115,11 @@ class Inventory(InventorySerializer):
 
         l, index = self.container_for_slot(slot)
 
+        if l is self.crafted:
+            # Special case for crafted output.
+            if self.selected is not None:
+                return False
+
         if self.selected is not None and l[index] is not None:
             stype, sdamage, scount = self.selected
             itype, idamage, icount = l[index]
@@ -135,6 +140,8 @@ class Inventory(InventorySerializer):
                 self.crafted[0] = crafted[0], 0, crafted[1]
             else:
                 self.crafted[0] = None
+
+        return True
 
 def check_recipes(crafting):
     """

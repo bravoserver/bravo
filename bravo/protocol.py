@@ -262,13 +262,14 @@ class BetaProtocol(Protocol):
 
         if container.wid == 0:
             # Inventory.
-            packet = make_packet("window-token", wid=0, token=container.token,
-                acknowledged=1)
-            self.transport.write(packet)
 
             if container.button == 0:
                 # Left-click.
-                self.player.inventory.select(container.slot)
+                selected = self.player.inventory.select(container.slot)
+
+                packet = make_packet("window-token", wid=0, token=container.token,
+                    acknowledged=selected)
+                self.transport.write(packet)
 
     def inventory(self, container):
         if container.name == 0:
