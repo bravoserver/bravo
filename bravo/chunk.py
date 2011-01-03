@@ -1,6 +1,7 @@
 from numpy import int8, uint8, uint32
 from numpy import cast, empty, where, zeros
 
+from bravo.blocks import glowing_blocks
 from bravo.compat import product
 from bravo.entity import tile_entities
 from bravo.packets import make_packet
@@ -148,7 +149,14 @@ class Chunk(ChunkSerializer):
             self.heightmap[x, z] = y
 
     def regenerate_lightmap(self):
-        pass
+        lightmap = zeros((16, 16, 128), dtype=uint32)
+
+        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
+            block = self.blocks[x, z, y]
+            if block in glowing_blocks:
+                blit_glow(lightmap, glowing_blocks[block], x, y, z)
+
+        self.lightmap = cast[uint8](lightmap.clip(0, 15))
 
     def regenerate_metadata(self):
         pass
@@ -163,7 +171,6 @@ class Chunk(ChunkSerializer):
         The height map must be valid for this method to produce valid results.
         """
 
-        ambient = glow[14]
         lightmap = zeros((16, 16, 128), dtype=uint32)
 
         for x, z in product(xrange(16), repeat=2):
@@ -171,7 +178,7 @@ class Chunk(ChunkSerializer):
 
             blit_glow(lightmap, 14, x, y, z)
 
-        self.lightmap = cast[uint8](lightmap.clip(0, 15))
+        self.skylight = cast[uint8](lightmap.clip(0, 15))
 
     def regenerate(self):
         """
@@ -278,8 +285,8 @@ class Chunk(ChunkSerializer):
 
         array = [chr(i) for i in self.blocks.ravel()]
         array += pack_nibbles(self.metadata)
-        array += pack_nibbles(self.lightmap)
         array += pack_nibbles(self.skylight)
+        array += pack_nibbles(self.lightmap)
         packet = make_packet("chunk", x=self.x * 16, y=0, z=self.z * 16,
             x_size=15, y_size=127, z_size=15, data="".join(array))
         return packet
@@ -319,6 +326,12 @@ class Chunk(ChunkSerializer):
                 if self.blocks[x, z, y]:
                     break
             self.heightmap[x, z] = y
+
+            # Add to lightmap at this coordinate.
+            if block in glowing_blocks:
+                blit_glow(self.lightmap, glowing_blocks[block], x, y, z)
+
+                self.lightmap = cast[uint8](self.lightmap.clip(0, 15))
 
             self.dirty = True
             self.damage(coords)

@@ -207,3 +207,7 @@ for i, name in enumerate(names):
     b = Block(i, name, **kwargs)
     blocks[i] = b
     blocks[name] = b
+
+glowing_blocks = {
+    blocks["torch"].slot: 14,
+}
