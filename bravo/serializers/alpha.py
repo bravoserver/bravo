@@ -23,7 +23,7 @@ class InventorySerializer(object):
 
         tag = TAG_List(type=TAG_Compound)
 
-        for i, item in enumerate(chain([inventory.crafted],
+        for i, item in enumerate(chain(inventory.crafted,
             inventory.crafting, inventory.armor, inventory.storage,
             inventory.holdables)):
             if item is not None:

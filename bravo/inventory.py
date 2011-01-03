@@ -17,7 +17,7 @@ class Inventory(InventorySerializer):
     def __init__(self, name, length):
         self.name = name
         self.crafting = [None] * 4
-        self.crafted = None
+        self.crafted = [None]
         self.armor = [None] * 4
         self.storage = [None] * 27
         self.holdables = [None] * 9
@@ -42,7 +42,7 @@ class Inventory(InventorySerializer):
 
     def load_from_list(self, l):
 
-        self.crafted = l[0]
+        self.crafted = list(l[0])
         self.crafting = l[1:5]
         self.armor = l[5:9]
         self.storage = l[9:36]
@@ -65,7 +65,7 @@ class Inventory(InventorySerializer):
 
     def save_to_packet(self):
         lc = ListContainer()
-        for item in chain([self.crafted], self.crafting, self.armor,
+        for item in chain(self.crafted, self.crafting, self.armor,
             self.storage, self.holdables):
             if item is None:
                 lc.append(Container(id=-1))
@@ -132,7 +132,9 @@ class Inventory(InventorySerializer):
             # Crafting table changed...
             crafted = check_recipes(l)
             if crafted is not None:
-                self.crafted = crafted[0], 0, crafted[1]
+                self.crafted[0] = crafted[0], 0, crafted[1]
+            else:
+                self.crafted[0] = None
 
 def check_recipes(crafting):
     """
