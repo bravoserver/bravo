@@ -286,24 +286,20 @@ class WriteConfig(object):
 
 class Season(object):
 
-    implements(IPlugin, IConsoleCommand)
+    implements(IPlugin, IConsoleCommand, ISeason)
     
     def console_command(self, factory, parameters):
-            def f(x):
-                return {
-                    "winter": 0,
-                    "spring": 90,
-                    "summer": 180,
-                    "fall": 270
-                }.get(x, "unknown season")
-            day = f(parameters[0])
-            if day != "unknown season":
-                factory.day = day
-                yield "[Server] Season changed to " + parameters[0] + "."
-                packet = make_packet("chat", message="[Server] Season changed to " + parameters[0] + ".")
+        wantedSeason = " ".join(parameters)
+        msg = "[Server] Season changed to "
+        for season in retrieve_plugins(ISeason):
+            if wantedSeason == season.name:
+                factory.day = season.day
+                factory.update_season()
+                yield msg + season.name
+                packet = make_packet("chat", message=msg + season.name)
                 factory.broadcast(packet)
-            else:
-                yield day
+        else:
+            yield "Unknown season"
 
     name = "season"
     aliases = tuple()
