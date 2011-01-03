@@ -42,7 +42,7 @@ class Inventory(InventorySerializer):
 
     def load_from_list(self, l):
 
-        self.crafted = list(l[0])
+        self.crafted = [l[0]]
         self.crafting = l[1:5]
         self.armor = l[5:9]
         self.storage = l[9:36]
