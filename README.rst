@@ -21,6 +21,7 @@ Standard Features
  * Entities
 
    * Players
+   * Pickups
    * Tiles
 
      * Chests
@@ -28,6 +29,7 @@ Standard Features
 
  * Lighting
  * Save controls
+ * Server-side inventories
 
 Extended Features
 -----------------
@@ -97,6 +99,14 @@ for you.
 ::
 
  $ pip install Bravo
+
+Bravo can also optionally use Ampoule to offload some of its inner
+calculations to a separate process, improving server response times. Ampoule
+will be automatically detected and is completely optional.
+
+::
+
+ $ pip install ampoule
 
 FAQ
 ===
