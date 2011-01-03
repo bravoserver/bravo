@@ -7,7 +7,8 @@ from twisted.internet import reactor
 from bravo.blocks import blocks
 from bravo.config import configuration
 from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
-from bravo.plugin import retrieve_plugins
+from bravo.plugin import retrieve_plugins, retrieve_named_plugins
+from bravo.plugin import PluginException
 from bravo.packets import make_packet
 
 def parse_player(factory, name):
@@ -286,25 +287,26 @@ class WriteConfig(object):
 
 class Season(object):
 
-    implements(IPlugin, IConsoleCommand, ISeason)
-    
+    implements(IPlugin, IConsoleCommand)
+
     def console_command(self, factory, parameters):
-        wantedSeason = " ".join(parameters)
-        msg = "[Server] Season changed to "
-        for season in retrieve_plugins(ISeason):
-            if wantedSeason == season.name:
-                factory.day = season.day
-                factory.update_season()
-                yield msg + season.name
-                packet = make_packet("chat", message=msg + season.name)
-                factory.broadcast(packet)
-        else:
-            yield "Unknown season"
+        wanted = " ".join(parameters)
+        try:
+            season = retrieve_named_plugins(ISeason, [wanted])[0]
+        except PluginException:
+            yield "Couldn't find season %s" % wanted
+            return
+
+        msg = "Changing season to %s..." % wanted
+        yield msg
+        factory.day = season.day
+        factory.update_season()
+        yield "Season successfully changed!"
 
     name = "season"
     aliases = tuple()
     usage = "<season>"
-    info = "Changes season by setting the day."
+    info = "Advance date to the beginning of the given season"
 
 help = Help()
 list = List()
