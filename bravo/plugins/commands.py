@@ -284,6 +284,32 @@ class WriteConfig(object):
     usage = ""
     info = "Saves configuration to disk"
 
+class Season(object):
+
+    implements(IPlugin, IConsoleCommand)
+    
+    def console_command(self, factory, parameters):
+            def f(x):
+                return {
+                    "winter": 0,
+                    "spring": 90,
+                    "summer": 180,
+                    "fall": 270
+                }.get(x, "unknown season")
+            day = f(parameters[0])
+            if day != "unknown season":
+                factory.day = day
+                yield "[Server] Season changed to " + parameters[0] + "."
+                packet = make_packet("chat", message="[Server] Season changed to " + parameters[0] + ".")
+                factory.broadcast(packet)
+            else:
+                yield day
+
+    name = "season"
+    aliases = tuple()
+    usage = "<season>"
+    info = "Changes season by setting the day."
+
 help = Help()
 list = List()
 time = Time()
@@ -294,3 +320,4 @@ save_all = SaveAll()
 save_off = SaveOff()
 save_on = SaveOn()
 write_config = WriteConfig()
+season = Season()
