@@ -19,11 +19,14 @@ def parse_player(factory, name):
 
 def parse_block(block):
     try:
-        return int(block)
+        if block.startswith("0x"):
+            return int(block, 16)
+        else:
+            return int(block)
     except ValueError:
         try:
             return blocks[block].slot
-        except IndexError:
+        except (KeyError, IndexError):
             raise Exception("Couldn't parse block %s!" % block)
 
 def parse_int(i):
