@@ -74,6 +74,7 @@ class BetaProtocol(Protocol):
             59: self.tile,
             102: self.waction,
             104: self.inventory,
+            130: self.sign,
             255: self.quit,
         }
 
@@ -198,6 +199,7 @@ class BetaProtocol(Protocol):
             chunk.clear_damage()
 
     def build(self, container):
+        print container
         # Ignore clients that think -1 is placeable.
         if container.id == 65535:
             return
@@ -277,6 +279,11 @@ class BetaProtocol(Protocol):
         else:
             print "Got unknown inventory!"
             print container
+
+    def sign(self, container):
+        print container
+        packet = make_packet("sign", container)
+        self.transport.write(packet)
 
     def quit(self, container):
         print "Client is quitting: %s" % container.message

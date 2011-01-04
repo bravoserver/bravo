@@ -4,7 +4,7 @@ from twisted.plugin import IPlugin
 from zope.interface import implements
 from twisted.internet import reactor
 
-from bravo.blocks import blocks
+from bravo.blocks import blocks, items
 from bravo.config import configuration
 from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
 from bravo.plugin import retrieve_plugins, retrieve_named_plugins
@@ -24,9 +24,11 @@ def parse_block(block):
         else:
             return int(block)
     except ValueError:
-        try:
+        if block in blocks:
             return blocks[block].slot
-        except (KeyError, IndexError):
+        elif block in items:
+            return items[block].slot
+        else:
             raise Exception("Couldn't parse block %s!" % block)
 
 def parse_int(i):
