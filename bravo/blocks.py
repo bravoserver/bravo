@@ -54,7 +54,25 @@ class Block(object):
         self.ratio = ratio
         self.quantity = quantity
 
-names = [
+class Item(object):
+    """
+    An item.
+    """
+
+    __slots__ = (
+        "name",
+        "slot",
+    )
+
+    def __init__(self, slot, name):
+        """
+        An item.
+        """
+
+        self.slot = slot
+        self.name = name
+
+block_names = [
     "air",
     "stone",
     "grass",
@@ -149,6 +167,10 @@ names = [
     "jack-o-lantern",
 ]
 
+item_names = [
+    "sign",
+]
+
 drops = {}
 
 # Block -> block drops.
@@ -194,7 +216,14 @@ A dictionary of ``Block`` objects.
 This dictionary can be indexed by slot number or block name.
 """
 
-for i, name in enumerate(names):
+items = {}
+"""
+A dictionary of ``Item`` objects.
+
+This dictionary can be indexed by slot number or block name.
+"""
+
+for i, name in enumerate(block_names):
     kwargs = {}
     if i in drops:
         kwargs["drop"] = drops[i]
@@ -207,6 +236,14 @@ for i, name in enumerate(names):
     b = Block(i, name, **kwargs)
     blocks[i] = b
     blocks[name] = b
+
+for i, name in enumerate(item_names):
+    kwargs = {}
+    # 256 for item slots; 2nd offset should go away at some point
+    i += 256 + 0x43
+    item = Item(i, name, **kwargs)
+    items[i] = item
+    items[name] = item
 
 glowing_blocks = {
     blocks["torch"].slot: 14,
