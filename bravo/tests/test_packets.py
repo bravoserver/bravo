@@ -107,3 +107,9 @@ class TestPacketAssembly(unittest.TestCase):
             damage=18)
         self.assertRaises(MappingError, bravo.packets.packets[15].build,
             container)
+
+class TestPacketHelpers(unittest.TestCase):
+
+    def test_make_packet(self):
+        packet = bravo.packets.make_packet("ping")
+        self.assertEqual(packet, "\x00")

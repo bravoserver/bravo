@@ -419,11 +419,13 @@ packets_by_name = {
     "error"              : 255,
 }
 
-def make_packet(packet, **kwargs):
+def make_packet(packet, *args, **kwargs):
     """
     Constructs a packet bytestream from a packet header and payload.
 
-    The payload should be passed as keyword arguments.
+    The payload should be passed as keyword arguments. Additional containers
+    or dictionaries to be added to the payload may be passed positionally, as
+    well.
     """
 
     if packet not in packets_by_name:
@@ -431,7 +433,11 @@ def make_packet(packet, **kwargs):
         return ""
 
     header = packets_by_name[packet]
+
+    for arg in args:
+        kwargs.update(dict(arg))
     container = Container(**kwargs)
+
     if DUMP_ALL_PACKETS:
         print "Making packet %s (%d)" % (packet, header)
         print container
