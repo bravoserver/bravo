@@ -14,5 +14,5 @@ def benchmark():
             simplex2(i, i)
         after = time()
         t = (after - before) / 10000
-        times.append(t)
+        times.append(1/t)
     return times
