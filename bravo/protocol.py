@@ -26,7 +26,7 @@ A list of points in a filled circle of radius 10, sorted according to distance
 from the center.
 """
 
-BuildData = namedtuple("BuildData", "block, x, y, z, face")
+BuildData = namedtuple("BuildData", "block, metadata, x, y, z, face")
 
 try:
     import ampoule
@@ -217,8 +217,8 @@ class BetaProtocol(Protocol):
                 container.id)
             return
 
-        builddata = BuildData(block, container.x, container.y, container.z,
-            container.face)
+        builddata = BuildData(block, 0x0, container.x, container.y,
+            container.z, container.face)
 
         for hook in self.build_hooks:
             cont, builddata = hook.build_hook(self.factory, builddata)

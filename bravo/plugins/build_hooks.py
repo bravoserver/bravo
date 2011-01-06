@@ -16,7 +16,7 @@ class Tile(object):
     implements(IPlugin, IBuildHook)
 
     def build_hook(self, factory, builddata):
-        item, x, y, z, face = builddata
+        item, metadata, x, y, z, face = builddata
 
         if item.slot == items["sign"].slot:
             # Buildin' a sign, puttin' it on a wall...
@@ -68,7 +68,7 @@ class Build(object):
     implements(IPlugin, IBuildHook)
 
     def build_hook(self, factory, builddata):
-        block, x, y, z, face = builddata
+        block, metadata, x, y, z, face = builddata
 
         # Don't place items as blocks.
         if block.slot not in blocks:
