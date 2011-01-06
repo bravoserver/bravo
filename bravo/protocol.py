@@ -4,9 +4,10 @@ from twisted.internet.protocol import Protocol
 from twisted.internet.task import cooperate, deferLater, LoopingCall
 from twisted.internet.task import TaskDone, TaskFailed
 
-from bravo.blocks import blocks
+from bravo.blocks import blocks, items
 from bravo.compat import namedtuple, product
 from bravo.config import configuration
+from bravo.entity import Sign
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook
 from bravo.packets import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins, retrieve_named_plugins
@@ -71,7 +72,6 @@ class BetaProtocol(Protocol):
             15: self.build,
             16: self.equip,
             21: self.pickup,
-            59: self.tile,
             102: self.waction,
             104: self.inventory,
             130: self.sign,
@@ -204,18 +204,16 @@ class BetaProtocol(Protocol):
         if container.id == 65535:
             return
 
-        # Ignore right-click with items for now.
-        if not 0 <= container.id <= 255:
-            return
-
         # Special case when face is "noop": Update the status of the currently
         # held block rather than placing a new block.
         if container.face == "noop":
             return
 
-        try:
+        if container.id in blocks:
             block = blocks[container.id]
-        except KeyError:
+        elif container.id in items:
+            block = items[container.id]
+        else:
             print ("Ignoring request to place unknown block %d" %
                 container.id)
             return
@@ -242,23 +240,6 @@ class BetaProtocol(Protocol):
         self.factory.give((container.x, container.y, container.z),
             container.item, container.count)
 
-    def tile(self, container):
-        print "Tiling!"
-
-        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
-
-        try:
-            chunk = self.chunks[bigx, bigz]
-        except KeyError:
-            self.error("Couldn't access tiles in chunk (%d, %d)!" % (bigx,
-                bigz))
-            return
-
-        if (smallx, container.y, smallz) in chunk.tiles:
-            print "Found tile!"
-        else:
-            print "Couldn't find tile."
-
     def waction(self, container):
         print "Handling action..."
 
@@ -282,8 +263,38 @@ class BetaProtocol(Protocol):
 
     def sign(self, container):
         print container
+
+        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
+
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't handle sign in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        if (smallx, container.y, smallz) in chunk.tiles:
+            print "Found old sign"
+            s = chunk.tiles[smallx, container.y, smallz]
+        else:
+            print "Making new sign"
+            s = Sign()
+
+        s.x = smallx
+        s.y = container.y
+        s.z = smallz
+
+        s.text1 = container.line1
+        s.text2 = container.line2
+        s.text3 = container.line3
+        s.text4 = container.line4
+
+        chunk.tiles[smallx, container.y, smallz] = s
+        chunk.dirty = True
+
+        # The best part of a sign isn't making one, it's showing everybody
+        # else on the server that you did.
         packet = make_packet("sign", container)
-        self.transport.write(packet)
+        self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
     def quit(self, container):
         print "Client is quitting: %s" % container.message

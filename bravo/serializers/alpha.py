@@ -121,6 +121,8 @@ class ChunkSerializer(object):
 
     def save_to_tag(chunk):
 
+        print "Serializing chunk %s" % chunk
+
         tag = NBTFile()
         tag.name = ""
 
@@ -145,6 +147,7 @@ class ChunkSerializer(object):
 
         level["TileEntities"] = TAG_List(type=TAG_Compound)
         for tile in chunk.tiles.itervalues():
+            print "Serializing tile %s" % tile
             level["TileEntities"].tags.append(tile.save_to_tag())
 
         return tag

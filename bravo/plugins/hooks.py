@@ -3,7 +3,8 @@ import random
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
-from bravo.blocks import blocks
+from bravo.blocks import blocks, items
+from bravo.entity import tile_entities
 from bravo.ibravo import IBuildHook, IDigHook
 from bravo.utilities import split_coords
 
@@ -136,6 +137,51 @@ class Give(object):
 
     name = "give"
 
+class Tile(object):
+    """
+    Place tiles.
+
+    You almost certainly want to enable this plugin.
+    """
+
+    implements(IPlugin, IBuildHook)
+
+    def build_hook(self, factory, builddata):
+        item, x, y, z, face = builddata
+
+        if item.slot == items["sign"].slot:
+            # Offset coords according to face.
+            if face == "-x":
+                x -= 1
+            elif face == "+x":
+                x += 1
+            elif face == "-y":
+                y -= 1
+            elif face == "+y":
+                y += 1
+            elif face == "-z":
+                z -= 1
+            elif face == "+z":
+                z += 1
+
+            bigx, smallx, bigz, smallz = split_coords(x, z)
+            chunk = factory.world.load_chunk(bigx, bigz)
+
+            # Let's build a sign!
+            s = tile_entities["Sign"]()
+            s.x = x
+            s.y = y
+            s.z = z
+
+            chunk.tiles[x, y, z] = s
+
+            # We handled this build correctly; all finished.
+            return False, builddata
+
+        return True, builddata
+
+    name = "tile"
+
 class Build(object):
     """
     Place a block in a given location.
@@ -147,6 +193,11 @@ class Build(object):
 
     def build_hook(self, factory, builddata):
         block, x, y, z, face = builddata
+
+        # Don't place items as blocks.
+        if block.slot not in blocks:
+            return True, builddata
+
         # Offset coords according to face.
         if face == "-x":
             x -= 1
@@ -199,6 +250,7 @@ alpha_sand_gravel = AlphaSandGravel()
 bravo_snow = BravoSnow()
 
 replace = Replace()
+tile = Tile()
 give = Give()
 
 build = Build()
