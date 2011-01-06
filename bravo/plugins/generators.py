@@ -9,7 +9,6 @@ from bravo.blocks import blocks
 from bravo.compat import product
 from bravo.ibravo import ITerrainGenerator
 from bravo.simplex import octaves2, octaves3, reseed
-from bravo.utilities import pairwise
 
 class BoringGenerator(object):
     """
@@ -136,15 +135,15 @@ class ErosionGenerator(object):
         Turn the top few layers of stone into dirt.
         """
 
-        for x, z in product(xrange(16), repeat=2):
-            column = chunk.get_column(x, z)
-            for i, block in enumerate(reversed(column)):
-                if block == blocks["stone"].slot:
-                    top = len(column) - i
-                    bottom = max(top - 4, 0)
-                    column[bottom:top].fill(blocks["dirt"].slot)
+        chunk.regenerate_heightmap()
 
-                    break
+        for x, z in product(xrange(16), repeat=2):
+            y = chunk.heightmap[x, z]
+
+            if chunk.get_block((x, y, z)) == blocks["stone"].slot:
+                column = chunk.get_column(x, z)
+                bottom = max(y - 3, 0)
+                column[bottom:y + 1].fill(blocks["dirt"].slot)
 
     name = "erosion"
 
