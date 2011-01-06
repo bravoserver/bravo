@@ -150,14 +150,20 @@ class Tile(object):
         item, x, y, z, face = builddata
 
         if item.slot == items["sign"].slot:
+            # Buildin' a sign, puttin' it on a wall...
+            builddata = builddata._replace(block=blocks["wall-sign"])
+
             # Offset coords according to face.
             if face == "-x":
                 x -= 1
             elif face == "+x":
                 x += 1
             elif face == "-y":
-                y -= 1
+                # Ceiling Sign is watching you read.
+                return False, builddata
             elif face == "+y":
+                # Put +Y signs on signposts. We're fancy that way.
+                builddata = builddata._replace(block=blocks["signpost"])
                 y += 1
             elif face == "-z":
                 z -= 1
@@ -175,8 +181,9 @@ class Tile(object):
 
             chunk.tiles[x, y, z] = s
 
-            # We handled this build correctly; all finished.
-            return False, builddata
+            # We handled this build correctly, but the signpost still needs to
+            # get placed.
+            return True, builddata
 
         return True, builddata
 
