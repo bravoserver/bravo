@@ -102,7 +102,7 @@ class ChunkSerializer(object):
         chunk.blocks.ravel()[:] = [ord(i) for i in level["Blocks"].value]
         chunk.heightmap.ravel()[:] = [ord(i)
                 for i in level["HeightMap"].value]
-        chunk.lightmap.ravel()[:] = unpack_nibbles(level["BlockLight"].value)
+        chunk.blocklight.ravel()[:] = unpack_nibbles(level["BlockLight"].value)
         chunk.metadata.ravel()[:] = unpack_nibbles(level["Data"].value)
         chunk.skylight.ravel()[:] = unpack_nibbles(level["SkyLight"].value)
 
@@ -137,7 +137,7 @@ class ChunkSerializer(object):
         level["HeightMap"].value = "".join(chr(i)
                 for i in chunk.heightmap.ravel())
         level["BlockLight"].value = "".join(
-                pack_nibbles(chunk.lightmap.ravel()))
+                pack_nibbles(chunk.blocklight.ravel()))
         level["Data"].value = "".join(pack_nibbles(chunk.metadata))
         level["SkyLight"].value = "".join(pack_nibbles(chunk.skylight))
 
