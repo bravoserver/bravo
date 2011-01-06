@@ -209,7 +209,7 @@ class World(LevelSerializer):
             chunk.heightmap.ravel()[:] = [ord(i) for i in kwargs["heightmap"]]
             chunk.metadata.ravel()[:] = [ord(i) for i in kwargs["metadata"]]
             chunk.skylight.ravel()[:] = [ord(i) for i in kwargs["skylight"]]
-            chunk.lightmap.ravel()[:] = [ord(i) for i in kwargs["blocklight"]]
+            chunk.blocklight.ravel()[:] = [ord(i) for i in kwargs["blocklight"]]
 
             chunk.populated = True
             chunk.dirty = True

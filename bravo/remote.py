@@ -47,7 +47,7 @@ class Slave(AMPChild):
             "blocks": "".join(chr(i) for i in chunk.blocks.ravel()),
             "metadata": "".join(chr(i) for i in chunk.metadata.ravel()),
             "skylight": "".join(chr(i) for i in chunk.skylight.ravel()),
-            "blocklight": "".join(chr(i) for i in chunk.lightmap.ravel()),
+            "blocklight": "".join(chr(i) for i in chunk.blocklight.ravel()),
             "heightmap": "".join(chr(i) for i in chunk.heightmap.ravel()),
         }
 
