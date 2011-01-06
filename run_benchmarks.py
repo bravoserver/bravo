@@ -21,7 +21,7 @@ data = {
     'commitid': description,
     'project': 'Bravo',
     'executable': 'CPython 2.6.6',
-    'environment': "Athena",
+    'environment': "Hera",
     'result_date': datetime.datetime.today(),
 }
 
@@ -44,20 +44,21 @@ def main():
     for bench in glob.glob("benchmarks/*.py"):
         name = os.path.splitext(os.path.basename(bench))[0]
         module = imp.load_source("bench", bench)
-        benchmark = module.benchmark
-        print "Running benchmark %s..." % name
-        l = benchmark()
-        print "Average %f, min %f, max %f, stddev %f" % (
-                average(l), min(l), max(l), stddev(l))
-        d = {
-            "benchmark": name,
-            "result_value": average(l),
-            "std_dev": stddev(l),
-            "max": max(l),
-            "min": min(l),
-        }
-        d.update(data)
-        add(d)
+        benchmarks = module.benchmarks
+        print "Running benchmarks in %s..." % name
+        for benchmark in benchmarks:
+            name, l = benchmark()
+            print "%s: Average %f, min %f, max %f, stddev %f" % (
+                name, average(l), min(l), max(l), stddev(l))
+            d = {
+                "benchmark": name,
+                "result_value": average(l),
+                "std_dev": stddev(l),
+                "max": max(l),
+                "min": min(l),
+            }
+            d.update(data)
+            add(d)
 
 if __name__ == "__main__":
     main()
