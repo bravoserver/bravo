@@ -44,7 +44,7 @@ class TestNumpyQuirks(unittest.TestCase):
 
 class TestLightmaps(unittest.TestCase):
 
-    def test_boring_lightmap_values(self):
+    def test_boring_skylight_values(self):
         chunk = bravo.chunk.Chunk(0, 0)
 
         # Fill it as if we were the boring generator.
@@ -54,5 +54,5 @@ class TestLightmaps(unittest.TestCase):
         # Make sure that all of the blocks at the bottom of the ambient
         # lightmap are set to 15 (fully illuminated).
         for x, z in bravo.compat.product(xrange(16), repeat=2):
-            self.assertEqual(chunk.lightmap[x, z, 0], 15,
+            self.assertEqual(chunk.skylight[x, z, 0], 15,
                 "Coordinate (%d, 0, %d) is bad!" % (x, z))

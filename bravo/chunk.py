@@ -107,7 +107,7 @@ class Chunk(ChunkSerializer):
 
         self.blocks = zeros((16, 16, 128), dtype=uint8)
         self.heightmap = zeros((16, 16), dtype=uint8)
-        self.lightmap = zeros((16, 16, 128), dtype=uint8)
+        self.blocklight = zeros((16, 16, 128), dtype=uint8)
         self.metadata = zeros((16, 16, 128), dtype=uint8)
         self.skylight = empty((16, 16, 128), dtype=uint8)
         self.skylight.fill(0xf)
@@ -148,7 +148,7 @@ class Chunk(ChunkSerializer):
 
             self.heightmap[x, z] = y
 
-    def regenerate_lightmap(self):
+    def regenerate_blocklight(self):
         lightmap = zeros((16, 16, 128), dtype=uint32)
 
         for x, y, z in product(xrange(16), xrange(128), xrange(16)):
@@ -156,7 +156,7 @@ class Chunk(ChunkSerializer):
             if block in glowing_blocks:
                 blit_glow(lightmap, glowing_blocks[block], x, y, z)
 
-        self.lightmap = cast[uint8](lightmap.clip(0, 15))
+        self.blocklight = cast[uint8](lightmap.clip(0, 15))
 
     def regenerate_metadata(self):
         pass
@@ -186,7 +186,7 @@ class Chunk(ChunkSerializer):
         """
 
         self.regenerate_heightmap()
-        self.regenerate_lightmap()
+        self.regenerate_blocklight()
         self.regenerate_metadata()
         self.regenerate_skylight()
 
@@ -286,7 +286,7 @@ class Chunk(ChunkSerializer):
         array = [chr(i) for i in self.blocks.ravel()]
         array += pack_nibbles(self.metadata)
         array += pack_nibbles(self.skylight)
-        array += pack_nibbles(self.lightmap)
+        array += pack_nibbles(self.blocklight)
         packet = make_packet("chunk", x=self.x * 16, y=0, z=self.z * 16,
             x_size=15, y_size=127, z_size=15, data="".join(array))
         return packet
@@ -329,9 +329,9 @@ class Chunk(ChunkSerializer):
 
             # Add to lightmap at this coordinate.
             if block in glowing_blocks:
-                blit_glow(self.lightmap, glowing_blocks[block], x, y, z)
+                blit_glow(self.blocklight, glowing_blocks[block], x, y, z)
 
-                self.lightmap = cast[uint8](self.lightmap.clip(0, 15))
+                self.blocklight = cast[uint8](self.blocklight.clip(0, 15))
 
             self.dirty = True
             self.damage(coords)
