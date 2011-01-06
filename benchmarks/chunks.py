@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import time
-import sys
 
 from bravo.chunk import Chunk
 from bravo.ibravo import ITerrainGenerator
@@ -35,8 +34,7 @@ def empty_bench():
     return "chunk_baseline", l
 
 benchmarks = [empty_bench]
-for plugin in plugins:
-    name = plugin.name
+for name, plugin in plugins.items():
     def seq():
         l = [sequential_seeded(i, plugin) for i in xrange(25)]
         return ("chunk_%s_sequential" % name), l

@@ -21,7 +21,7 @@ data = {
     'commitid': description,
     'project': 'Bravo',
     'executable': 'CPython 2.6.6',
-    'environment': "Hera",
+    'environment': "Athena",
     'result_date': datetime.datetime.today(),
 }
 
