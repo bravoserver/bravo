@@ -19,12 +19,16 @@ for i in range(15):
         glow[i][ x,  y,  z] = i + 1 - distance
     glow[i] = cast[uint8](glow[i].clip(0, 15))
 
-def blit_glow(target, strength, x, y, z):
+def composite_glow(target, strength, x, y, z):
     """
-    Blit a light source onto a lightmap.
+    Composite a light source onto a lightmap.
+
+    The exact operation is not quite unlike an add.
     """
 
     ambient = glow[strength]
+
+    xbound, zbound, ybound = target.shape
 
     sx = x - strength
     sy = y - strength
@@ -46,17 +50,17 @@ def blit_glow(target, strength, x, y, z):
     if sz < 0:
         sz, sk = 0, -sz
 
-    if ex > 15:
-        ex, ei = 15, ei - ex + 15
+    if ex > xbound:
+        ex, ei = xbound, ei - ex + xbound
 
-    if ey > 127:
-        ey, ej = 127, ej - ey + 127
+    if ey > ybound:
+        ey, ej = ybound, ej - ey + ybound
 
-    if ez > 15:
-        ez, ek = 15, ek - ez + 15
+    if ez > zbound:
+        ez, ek = zbound, ek - ez + zbound
 
-    # Blit!
-    target[sx:ex, sz:ez, sy:ey] = ambient[si:ei, sk:ek, sj:ej]
+    # Composite!
+    target[sx:ex, sz:ez, sy:ey] += ambient[si:ei, sk:ek, sj:ej]
 
 class Chunk(ChunkSerializer):
     """
@@ -154,7 +158,7 @@ class Chunk(ChunkSerializer):
         for x, y, z in product(xrange(16), xrange(128), xrange(16)):
             block = self.blocks[x, z, y]
             if block in glowing_blocks:
-                blit_glow(lightmap, glowing_blocks[block], x, y, z)
+                composite_glow(lightmap, glowing_blocks[block], x, y, z)
 
         self.blocklight = cast[uint8](lightmap.clip(0, 15))
 
@@ -176,7 +180,7 @@ class Chunk(ChunkSerializer):
         for x, z in product(xrange(16), repeat=2):
             y = self.heightmap[x, z]
 
-            blit_glow(lightmap, 14, x, y, z)
+            composite_glow(lightmap, 14, x, y, z)
 
         self.skylight = cast[uint8](lightmap.clip(0, 15))
 
