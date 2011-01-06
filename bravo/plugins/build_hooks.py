@@ -24,8 +24,10 @@ class Tile(object):
 
             # Offset coords according to face.
             if face == "-x":
+                builddata = builddata._replace(metadata=0x4)
                 x -= 1
             elif face == "+x":
+                builddata = builddata._replace(metadata=0x5)
                 x += 1
             elif face == "-y":
                 # Ceiling Sign is watching you read.
@@ -35,8 +37,10 @@ class Tile(object):
                 builddata = builddata._replace(block=blocks["signpost"])
                 y += 1
             elif face == "-z":
+                builddata = builddata._replace(metadata=0x2)
                 z -= 1
             elif face == "+z":
+                builddata = builddata._replace(metadata=0x3)
                 z += 1
 
             bigx, smallx, bigz, smallz = split_coords(x, z)
@@ -92,6 +96,8 @@ class Build(object):
         chunk = factory.world.load_chunk(bigx, bigz)
 
         chunk.set_block((smallx, y, smallz), block.slot)
+        if metadata:
+            chunk.set_metadata((smallx, y, smallz), metadata)
 
         return True, builddata
 
