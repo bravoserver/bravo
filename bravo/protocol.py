@@ -199,7 +199,6 @@ class BetaProtocol(Protocol):
             chunk.clear_damage()
 
     def build(self, container):
-        print container
         # Ignore clients that think -1 is placeable.
         if container.id == 65535:
             return
@@ -262,8 +261,6 @@ class BetaProtocol(Protocol):
             print container
 
     def sign(self, container):
-        print container
-
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
 
         try:
@@ -273,10 +270,8 @@ class BetaProtocol(Protocol):
             return
 
         if (smallx, container.y, smallz) in chunk.tiles:
-            print "Found old sign"
             s = chunk.tiles[smallx, container.y, smallz]
         else:
-            print "Making new sign"
             s = Sign()
 
         s.x = smallx
