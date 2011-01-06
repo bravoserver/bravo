@@ -333,7 +333,7 @@ class Chunk(ChunkSerializer):
 
             # Add to lightmap at this coordinate.
             if block in glowing_blocks:
-                blit_glow(self.blocklight, glowing_blocks[block], x, y, z)
+                composite_glow(self.blocklight, glowing_blocks[block], x, y, z)
 
                 self.blocklight = cast[uint8](self.blocklight.clip(0, 15))
 
