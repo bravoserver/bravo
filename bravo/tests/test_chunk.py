@@ -2,6 +2,7 @@ import unittest
 import warnings
 
 import bravo.chunk
+import bravo.compat
 
 class TestNumpyQuirks(unittest.TestCase):
     """
@@ -40,3 +41,18 @@ class TestNumpyQuirks(unittest.TestCase):
         c.get_damage_packet()
         # ...And reset the warning filters.
         warnings.resetwarnings()
+
+class TestLightmaps(unittest.TestCase):
+
+    def test_boring_lightmap_values(self):
+        chunk = bravo.chunk.Chunk(0, 0)
+
+        # Fill it as if we were the boring generator.
+        chunk.blocks[:, :, 0].fill(1)
+        chunk.regenerate()
+
+        # Make sure that all of the blocks at the bottom of the ambient
+        # lightmap are set to 15 (fully illuminated).
+        for x, z in bravo.compat.product(xrange(16), repeat=2):
+            self.assertEqual(chunk.lightmap[x, z, 0], 15,
+                "Coordinate (%d, 0, %d) is bad!" % (x, z))
