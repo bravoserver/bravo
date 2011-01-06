@@ -13,6 +13,8 @@ from bravo.simplex import octaves2, octaves3, reseed
 class BoringGenerator(object):
     """
     Generates boring slabs of flat stone.
+
+    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(IPlugin, ITerrainGenerator)
@@ -22,9 +24,7 @@ class BoringGenerator(object):
         Fill the bottom half of the chunk with stone.
         """
 
-        for x, z in product(xrange(16), xrange(16)):
-            column = chunk.get_column(x, z)
-            column[0:64].fill([blocks["stone"].slot])
+        chunk.blocks[:, :, :64].fill(blocks["stone"].slot)
 
     name = "boring"
 
@@ -34,6 +34,8 @@ class SimplexGenerator(object):
 
     This class uses a simplex noise generator to procedurally generate
     organic-looking, continuously smooth terrain.
+
+    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(IPlugin, ITerrainGenerator)
@@ -64,7 +66,7 @@ class SimplexGenerator(object):
             height = int(height + 70)
 
             column = chunk.get_column(x, z)
-            column[0:height].fill([blocks["stone"].slot])
+            column[:height + 1].fill([blocks["stone"].slot])
 
     name = "simplex"
 
@@ -74,6 +76,8 @@ class ComplexGenerator(object):
 
     This class uses a simplex noise generator to procedurally generate
     ridiculous things.
+
+    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(IPlugin, ITerrainGenerator)
@@ -106,6 +110,8 @@ class ComplexGenerator(object):
 class WaterTableGenerator(object):
     """
     Create a water table.
+
+    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(IPlugin, ITerrainGenerator)
@@ -115,17 +121,18 @@ class WaterTableGenerator(object):
         Generate a flat water table halfway up the map.
         """
 
-        for x, z in product(xrange(16), repeat=2):
-            column = chunk.get_column(x, z)
-
-            column[:64] = where(column[:64] == blocks["air"].slot,
-                    blocks["spring"].slot, column[:64])
+        chunk.blocks[:, :, :64] = where(
+            chunk.blocks[:, :, :64] == blocks["air"].slot,
+            blocks["spring"].slot,
+            chunk.blocks[:, :, :64])
 
     name = "watertable"
 
 class ErosionGenerator(object):
     """
     Erodes stone surfaces into dirt.
+
+    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(IPlugin, ITerrainGenerator)
@@ -150,6 +157,8 @@ class ErosionGenerator(object):
 class GrassGenerator(object):
     """
     Find exposed dirt and grow grass.
+
+    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(IPlugin, ITerrainGenerator)
@@ -174,6 +183,8 @@ class GrassGenerator(object):
 class SafetyGenerator(object):
     """
     Generates terrain features essential for the safety of clients.
+
+    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(IPlugin, ITerrainGenerator)
@@ -184,10 +195,9 @@ class SafetyGenerator(object):
         top two layers to avoid players getting stuck at the top.
         """
 
-        for x, z in product(xrange(16), repeat=2):
-            chunk.set_block((x, 0, z), blocks["bedrock"].slot)
-            chunk.set_block((x, 126, z), blocks["air"].slot)
-            chunk.set_block((x, 127, z), blocks["air"].slot)
+        chunk.blocks[:, :, 0].fill(blocks["bedrock"].slot)
+        chunk.blocks[:, :, 126].fill(blocks["air"].slot)
+        chunk.blocks[:, :, 127].fill(blocks["air"].slot)
 
     name = "safety"
 
