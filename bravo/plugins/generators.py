@@ -160,16 +160,15 @@ class GrassGenerator(object):
         Find the top dirt block in each y-level and turn it into grass.
         """
 
+        chunk.regenerate_heightmap()
+
         for x, z in product(xrange(16), repeat=2):
-            # We're using the column getter here, but we're writing back
-            # single blocks, because typically there will only be one or two
-            # grass blocks per column and we want to avoid dirtying an entire
-            # column for want of one block.
-            column = chunk.get_column(x, z)
-            for first, second in pairwise(enumerate(column)):
-                if (first[1] == blocks["dirt"].slot
-                    and second[1] == blocks["air"].slot):
-                    column[first[0]] = blocks["grass"].slot
+            y = chunk.heightmap[x, z]
+
+            if (chunk.get_block((x, y, z)) == blocks["dirt"].slot and
+                (y == 127 or
+                    chunk.get_block((x, y + 1, z)) == blocks["air"].slot)):
+                        chunk.set_block((x, y, z), blocks["grass"].slot)
 
     name = "grass"
 
