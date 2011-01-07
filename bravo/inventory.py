@@ -24,6 +24,9 @@ class Inventory(InventorySerializer):
 
         self.selected = None
 
+        self.recipe = None
+        self.recipe_offset = None
+
     def container_for_slot(self, slot):
         """
         Retrieve the list and index for a given slot.
@@ -159,11 +162,13 @@ class Inventory(InventorySerializer):
 
         if l is self.crafting:
             # Crafting table changed...
-            crafted = check_recipes(l)
-            if crafted is not None:
-                self.crafted[0] = crafted[0], 0, crafted[1]
-            else:
+            self.recipe, self.recipe_offset = check_recipes(l)
+            if self.recipe is None:
                 self.crafted[0] = None
+            else:
+                crafted = apply_recipe(self.recipe, self.crafting,
+                    self.recipe_offset)
+                self.crafted[0] = crafted[0], 0, crafted[1]
 
         return True
 
@@ -171,7 +176,7 @@ def check_recipes(crafting):
     """
     See if the crafting table matches any recipes.
 
-    :returns: the crafted item, or None if no recipes match
+    :returns: the recipe and offset, or None if no matches could be made
     """
 
     # XXX add support for 3x3 tables
@@ -186,7 +191,29 @@ def check_recipes(crafting):
                 found, chaff, fcount = target
                 if needle == found:
                     # Jackpot!
-                    pslot, pcount = recipe.provides
-                    return pslot, pcount * (fcount // count)
+                    offset = divmod(crafting.index(target), 2)
+                    return recipe, offset
 
     return None
+
+def apply_recipe(recipe, crafting, offset):
+    """
+    Return the crafted output of an applied recipe.
+
+    This function assumes that the recipe already fits the crafting table and
+    will not do additional checks to verify this assumption.
+    """
+
+    stride = 2
+    count = []
+    for i, slot in enumerate(recipe.recipe):
+        if slot is not None:
+            j = offset[0] * stride + offset[1] + i
+            target = crafting[j]
+            scount = slot[0]
+            tcount = target[0]
+            count.append(tcount // scount)
+
+    counted = min(count)
+    if counted > 0:
+        return recipe.provides[0], recipe.provides[1] * counted

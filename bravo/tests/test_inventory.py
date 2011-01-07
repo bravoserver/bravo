@@ -62,10 +62,12 @@ class TestCrafting(unittest.TestCase):
     def test_trivial(self):
         pass
 
-    def test_crafting_wood(self):
+    def test_check_recipes_crafting_wood(self):
         self.i.crafting[0] = (bravo.blocks.blocks["log"].slot, 0, 1)
-        self.assertEqual(bravo.inventory.check_recipes(self.i.crafting),
-            (bravo.blocks.blocks["wood"].slot, 4))
+        # Force crafting table to be rechecked.
+        self.i.select(2)
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.recipe_offset, (0, 0))
 
 class TestInventoryIntegration(unittest.TestCase):
 
