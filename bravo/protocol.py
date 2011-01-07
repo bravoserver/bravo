@@ -221,7 +221,8 @@ class BetaProtocol(Protocol):
             container.z, container.face)
 
         for hook in self.build_hooks:
-            cont, builddata = hook.build_hook(self.factory, builddata)
+            cont, builddata = hook.build_hook(self.factory, self.player,
+                builddata)
             if not cont:
                 break
 

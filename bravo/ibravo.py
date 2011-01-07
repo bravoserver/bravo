@@ -149,9 +149,11 @@ class IBuildHook(Interface):
     Hook for actions to be taken after a block is placed.
     """
 
-    def build_hook(factory, builddata):
+    def build_hook(factory, player, builddata):
         """
         Do things.
+
+        The ``player`` is a ``Player`` entity and can be modified as needed.
 
         The ``builddata`` tuple has all of the useful things. It stores a
         ``Block`` that will be placed, as well as the block coordinates and
@@ -169,10 +171,11 @@ class IBuildHook(Interface):
 
         A trivial do-nothing build hook looks like the following:
 
-        >>> def build_hook(self, factory, builddata):
+        >>> def build_hook(self, factory, player, builddata):
         ...     return True, builddata
 
-        :param `Factory` factory: factory
+        :param ``Factory`` factory: factory
+        :param ``Player`` player: player entity doing the building
         :param namedtuple builddata: permanent building location and data
 
         :returns: tuple of build data and whether subsequent hooks will run

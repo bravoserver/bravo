@@ -42,7 +42,7 @@ class Fallables(object):
         chunk.set_column(x, z, column)
 
 
-    def build_hook(self, factory, builddata):
+    def build_hook(self, factory, player, builddata):
         bigx, smallx, bigz, smallz = split_coords(builddata.x, builddata.z)
         chunk = factory.world.load_chunk(bigx, bigz)
         self.dig_hook(factory, chunk, smallx, builddata.y, smallz,

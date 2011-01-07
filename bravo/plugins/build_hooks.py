@@ -15,7 +15,7 @@ class Tile(object):
 
     implements(IPlugin, IBuildHook)
 
-    def build_hook(self, factory, builddata):
+    def build_hook(self, factory, player, builddata):
         item, metadata, x, y, z, face = builddata
 
         if item.slot == items["sign"].slot:
@@ -71,7 +71,7 @@ class Build(object):
 
     implements(IPlugin, IBuildHook)
 
-    def build_hook(self, factory, builddata):
+    def build_hook(self, factory, player, builddata):
         block, metadata, x, y, z, face = builddata
 
         # Don't place items as blocks.
@@ -112,7 +112,7 @@ class BuildSnow(object):
 
     implements(IPlugin, IBuildHook)
 
-    def build_hook(self, factory, builddata):
+    def build_hook(self, factory, player, builddata):
         bigx, smallx, bigz, smallz = split_coords(builddata.x, builddata.z)
         chunk = factory.world.load_chunk(bigx, bigz)
         block = chunk.get_block((smallx, builddata.y, smallz))
