@@ -81,12 +81,24 @@ class TestInventoryIntegration(unittest.TestCase):
         self.i.add(bravo.blocks.blocks["log"].slot, 1)
         # Select log from holdables.
         self.i.select(36)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["log"].slot, 0, 1))
         # Select log into crafting.
         self.i.select(1)
+        self.assertEqual(self.i.crafting[0],
+            (bravo.blocks.blocks["log"].slot, 0, 1))
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.blocks["wood"].slot, 0, 4))
         # Select wood from crafted.
         self.i.select(0)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["wood"].slot, 0, 4))
+        self.assertEqual(self.i.crafting[0], None)
+        self.assertEqual(self.i.crafted[0], None)
         # And select wood into holdables.
         self.i.select(36)
+        self.assertEqual(self.i.selected, None)
         self.assertEqual(self.i.holdables[0],
             (bravo.blocks.blocks["wood"].slot, 0, 4))
         self.assertEqual(self.i.crafting[0], None)
