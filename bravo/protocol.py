@@ -226,6 +226,12 @@ class BetaProtocol(Protocol):
             if not cont:
                 break
 
+        # Re-send inventory.
+        # XXX this could be optimized if/when inventories track damage.
+        packet = self.player.inventory.save_to_packet()
+        self.transport.write(packet)
+
+        # Flush damaged chunks.
         for chunk in self.chunks.itervalues():
             if chunk.is_damaged():
                 packet = chunk.get_damage_packet()

@@ -112,6 +112,10 @@ class Build(object):
         if block.slot not in blocks:
             return True, builddata
 
+        # Make sure we can remove it from the inventory first.
+        if not player.inventory.consume(block.slot):
+            return True, builddata
+
         # Offset coords according to face.
         if face == "-x":
             x -= 1
