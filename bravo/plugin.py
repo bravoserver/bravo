@@ -1,4 +1,5 @@
 from twisted.plugin import getPlugins
+from twisted.python import log
 
 from zope.interface.exceptions import BrokenImplementation
 from zope.interface.exceptions import BrokenMethodImplementation
@@ -26,24 +27,26 @@ def retrieve_plugins(interface, cached=True, cache={}):
     """
 
     if cached and interface in cache:
+        log.msg("Not rediscovering cached interface %s..." % interface)
         return cache[interface]
 
-    print "Discovering %s..." % interface
+    log.msg("Discovering %s..." % interface)
     d = {}
     for p in getPlugins(interface, bravo.plugins):
         try:
             verifyObject(interface, p)
-            print " ( ^^) Plugin: %s" % p.name
+            log.msg(" ( ^^) Plugin: %s" % p.name)
             d[p.name] = p
         except BrokenImplementation, bi:
             if hasattr(p, "name"):
-                print " ( ~~) Plugin %s is missing attribute \"\"!" % (p.name,
-                    bi.name)
+                log.msg(" ( ~~) Plugin %s is missing attribute \"\"!" %
+                    (p.name, bi.name))
             else:
-                print " ( >&) Plugin %s is useless!" % p
+                log.msg(" ( >&) Plugin %s is unnamed and useless!" % p)
         except BrokenMethodImplementation, bmi:
-            print " ( Oo) Plugin %s has a broken %s()!" % (p.name, bmi.method)
-            print bmi
+            log.msg(" ( Oo) Plugin %s has a broken %s()!" % (p.name,
+                bmi.method))
+            log.err()
 
     cache[interface] = d
     return d
