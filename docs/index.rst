@@ -11,11 +11,13 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   features
+   plugins
    philosophy
+   noise
    core
    auxiliary
    tools
-   noise
 
 Indices and tables
 ==================
