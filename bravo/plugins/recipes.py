@@ -34,3 +34,4 @@ class Sticks(object):
     provides = (items["stick"].slot, 4)
 
 wood = Wood()
+sticks = Sticks()

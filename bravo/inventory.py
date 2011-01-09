@@ -2,6 +2,7 @@ from itertools import chain
 
 from construct import Container, ListContainer
 
+from bravo.compat import product
 from bravo.ibravo import IRecipe
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_plugins
@@ -173,8 +174,9 @@ class Inventory(InventorySerializer):
                 self.selected = self.crafted[0]
                 # XXX Should this be part of reduce_recipe()?
                 count = self.crafted[0][2] // self.recipe.provides[1]
-                reduce_recipe(self.recipe, self.crafting, self.recipe_offset,
+                reduce_recipe(self.recipe, self.crafting_table, self.recipe_offset,
                     count)
+                self.sync_crafting_table()
                 self.crafted[0] = None
                 return True
             else:
@@ -196,12 +198,13 @@ class Inventory(InventorySerializer):
 
         if l is self.crafting:
             # Crafting table changed...
-            t = check_recipes(l)
+            self.fill_crafting_table()
+            t = check_recipes(self.crafting_table)
             if t is None:
                 self.crafted[0] = None
             else:
                 self.recipe, self.recipe_offset = t
-                crafted = apply_recipe(self.recipe, self.crafting,
+                crafted = apply_recipe(self.recipe, self.crafting_table,
                     self.recipe_offset)
                 self.crafted[0] = crafted[0], 0, crafted[1]
 
@@ -214,20 +217,36 @@ def check_recipes(crafting):
     :returns: the recipe and offset, or None if no matches could be made
     """
 
-    # XXX add support for 3x3 tables
+
+    # This isn't perfect, unfortunately, but correctness trumps algorithmic
+    # perfection. (For now.)
+    stride = 2 if len(crafting) < 6 else 3
     for recipe in retrieve_plugins(IRecipe).itervalues():
-        if recipe.dimensions == (1, 1):
-            # Fast path for single-block recipes.
-            needle, count = recipe.recipe[0]
-            nones = sorted(crafting)
-            target = nones.pop()
-            if all(none == None for none in nones) and target is not None:
-                # Ooh, did we match?!
-                found, chaff, fcount = target
-                if needle == found:
+        dims = recipe.dimensions
+        matches_needed = dims[0] * dims[1]
+
+        for x, y in crafting.iterkeys():
+            if x + dims[0] > stride or y + dims[1] > stride:
+                continue
+
+            for i, slot in enumerate(recipe.recipe):
+                sx = x
+                sy = y + i
+                while sy >= stride:
+                    sx += 1
+                    sy -= stride
+
+                if crafting[x, y] is None and slot is None:
+                    matches_needed -= 1
+                elif crafting[x, y] is not None and slot is not None:
+                    cblock, chaff, ccount = crafting[x, y]
+                    sblock, scount = slot
+                    if cblock == sblock and ccount >= scount:
+                        matches_needed -= 1
+
+                if matches_needed == 0:
                     # Jackpot!
-                    offset = divmod(crafting.index(target), 2)
-                    return recipe, offset
+                    return recipe, (x, y)
 
     return None
 
@@ -239,14 +258,15 @@ def apply_recipe(recipe, crafting, offset):
     will not do additional checks to verify this assumption.
     """
 
-    stride = 2
+    dims = recipe.dimensions
+    indices = product(xrange(offset[0], offset[0] + dims[0]),
+        xrange(offset[1], offset[1] + dims[1]))
     count = []
-    for i, slot in enumerate(recipe.recipe):
+
+    for index, slot in zip(indices, recipe.recipe):
         if slot is not None:
-            j = offset[0] * stride + offset[1] + i
-            target = crafting[j]
             scount = slot[1]
-            tcount = target[2]
+            tcount = crafting[index][2]
             count.append(tcount // scount)
 
     counted = min(count)
@@ -263,15 +283,16 @@ def reduce_recipe(recipe, crafting, offset, count):
     will not do additional checks to verify this assumption.
     """
 
-    stride = 2
-    for i, slot in enumerate(recipe.recipe):
-        if slot is not None:
-            j = offset[0] * stride + offset[1] + i
-            scount = slot[1]
+    dims = recipe.dimensions
+    indices = product(xrange(offset[0], offset[0] + dims[0]),
+        xrange(offset[1], offset[1] + dims[1]))
 
-            tblock, tdamage, tcount = crafting[j]
+    for index, slot in zip(indices, recipe.recipe):
+        if slot is not None:
+            scount = slot[1]
+            tblock, tdamage, tcount = crafting[index]
             tcount -= count * scount
             if tcount:
-                crafting[j] = tblock, tdamage, tcount
+                crafting[index] = tblock, tdamage, tcount
             else:
-                crafting[j] = None
+                crafting[index] = None
