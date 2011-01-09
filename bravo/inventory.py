@@ -161,9 +161,13 @@ class Inventory(InventorySerializer):
 
         return False
 
-    def select(self, slot):
+    def select(self, slot, secondary=False):
         """
         Handle a slot selection.
+
+        :param int slot: which slot was selected
+        :param bool secondary: whether the selection is secondary; e.g., if it
+                               was done with a right-click
         """
 
         l, index = self.container_for_slot(slot)
@@ -172,12 +176,20 @@ class Inventory(InventorySerializer):
             # Special case for crafted output.
             if self.selected is None and self.recipe and self.crafted[0]:
                 self.selected = self.crafted[0]
-                # XXX Should this be part of reduce_recipe()?
-                count = self.crafted[0][2] // self.recipe.provides[1]
+                if secondary:
+                    count = 1
+                else:
+                    count = self.crafted[0][2] // self.recipe.provides[1]
+
                 reduce_recipe(self.recipe, self.crafting_table, self.recipe_offset,
                     count)
                 self.sync_crafting_table()
-                self.crafted[0] = None
+                sitem, sdamage, scount = self.crafted[0]
+                scount -= self.recipe.provides[1] * count
+                if scount <= 0:
+                    self.crafted[0] = None
+                else:
+                    self.crafted[0] = sitem, sdamage, scount
                 return True
             else:
                 # Forbid placing things in the crafted slot.
@@ -187,15 +199,45 @@ class Inventory(InventorySerializer):
             stype, sdamage, scount = self.selected
             itype, idamage, icount = l[index]
             if stype == itype and scount + icount <= 64:
-                l[index] = itype, idamage, scount + icount
-                self.selected = None
+                if secondary:
+                    icount += 1
+                    scount -= 1
+                    l[index] = itype, idamage, icount + 1
+                    if scount <= 0:
+                        self.selected = None
+                    else:
+                        self.selected = stype, sdamage, scount
+                else:
+                    l[index] = itype, idamage, scount + icount
+                    self.selected = None
+            else:
+                if not secondary:
+                    self.selected, l[index] = l[index], self.selected
+        else:
+            if secondary:
+                if self.selected is not None:
+                    sitem, sdamage, scount = self.selected
+                    l[index] = sitem, sdamage, 1
+                    if scount <= 1:
+                        self.selected = None
+                    else:
+                        self.selected = sitem, sdamage, scount - 1
+                else:
+                    # Logically, l[index] is not None, but self.selected is.
+                    litem, ldamage, lcount = l[index]
+                    scount = lcount // 2
+                    scount, lcount = lcount - scount, scount
+                    if lcount >= 0:
+                        l[index] = litem, ldamage, lcount
+                    else:
+                        l[index] = None
+                    self.selected = litem, ldamage, scount
             else:
                 # Default case: just swap.
                 self.selected, l[index] = l[index], self.selected
-        else:
-            # Default case: just swap.
-            self.selected, l[index] = l[index], self.selected
 
+        # At this point, we've already finished touching our selection; this
+        # is just a state update.
         if l is self.crafting:
             # Crafting table changed...
             self.fill_crafting_table()

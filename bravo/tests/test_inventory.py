@@ -60,6 +60,24 @@ class TestInventoryInternals(unittest.TestCase):
         self.assertEqual(self.i.holdables[0], (3, 0, 1))
         self.assertEqual(self.i.holdables[1], (2, 0, 1))
 
+    def test_select_secondary(self):
+        self.i.holdables[0] = (2, 0, 4)
+        self.i.select(36, True)
+        self.assertEqual(self.i.holdables[0], (2, 0, 2))
+        self.assertEqual(self.i.selected, (2, 0, 2))
+
+    def test_select_secondary_selected(self):
+        self.i.selected = (2, 0, 2)
+        self.i.select(36, True)
+        self.assertEqual(self.i.holdables[0], (2, 0, 1))
+        self.assertEqual(self.i.selected, (2, 0, 1))
+
+    def test_select_secondary_odd(self):
+        self.i.holdables[0] = (2, 0, 3)
+        self.i.select(36, True)
+        self.assertEqual(self.i.holdables[0], (2, 0, 1))
+        self.assertEqual(self.i.selected, (2, 0, 2))
+
 class TestCraftingWood(unittest.TestCase):
     """
     Test basic crafting functionality.
