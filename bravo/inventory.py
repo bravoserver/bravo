@@ -217,7 +217,6 @@ def check_recipes(crafting):
     :returns: the recipe and offset, or None if no matches could be made
     """
 
-
     # This isn't perfect, unfortunately, but correctness trumps algorithmic
     # perfection. (For now.)
     stride = 2 if len(crafting) < 6 else 3
@@ -236,10 +235,10 @@ def check_recipes(crafting):
                     sx += 1
                     sy -= stride
 
-                if crafting[x, y] is None and slot is None:
+                if crafting[sx, sy] is None and slot is None:
                     matches_needed -= 1
-                elif crafting[x, y] is not None and slot is not None:
-                    cblock, chaff, ccount = crafting[x, y]
+                elif crafting[sx, sy] is not None and slot is not None:
+                    cblock, chaff, ccount = crafting[sx, sy]
                     sblock, scount = slot
                     if cblock == sblock and ccount >= scount:
                         matches_needed -= 1
@@ -264,7 +263,7 @@ def apply_recipe(recipe, crafting, offset):
     count = []
 
     for index, slot in zip(indices, recipe.recipe):
-        if slot is not None:
+        if slot is not None and crafting[index] is not None:
             scount = slot[1]
             tcount = crafting[index][2]
             count.append(tcount // scount)
