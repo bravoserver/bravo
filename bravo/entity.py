@@ -47,14 +47,18 @@ class Player(Entity, PlayerSerializer):
         self.username = username
         self.inventory = Inventory(0, 45)
 
+        self.equipped = 0
+
     def save_to_packet(self):
 
         yaw = int(self.location.theta * 255 / (2 * pi)) % 256
         pitch = int(self.location.phi * 255 / (2 * pi)) % 256
 
-        item = self.inventory.holdables[0]
+        item = self.inventory.holdables[self.equipped]
         if item is None:
-            item = -1
+            item = 0
+        else:
+            item = item[0]
 
         return make_packet("player",
             eid=self.eid,
