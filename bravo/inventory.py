@@ -22,10 +22,35 @@ class Inventory(InventorySerializer):
         self.storage = [None] * 27
         self.holdables = [None] * 9
 
+        self.crafting_table = {}
+        """
+        A two-dimensional table for quickly and cleanly doing crafting.
+        """
+
         self.selected = None
 
         self.recipe = None
         self.recipe_offset = None
+
+    def fill_crafting_table(self):
+        """
+        Copy the crafting array into the crafting table.
+        """
+
+        self.crafting_table[0, 0] = self.crafting[0]
+        self.crafting_table[0, 1] = self.crafting[1]
+        self.crafting_table[1, 0] = self.crafting[2]
+        self.crafting_table[1, 1] = self.crafting[3]
+
+    def sync_crafting_table(self):
+        """
+        Copy the crafting table into the crafting array.
+        """
+
+        self.crafting[0] = self.crafting_table[0, 0]
+        self.crafting[1] = self.crafting_table[0, 1]
+        self.crafting[2] = self.crafting_table[1, 0]
+        self.crafting[3] = self.crafting_table[1, 1]
 
     def container_for_slot(self, slot):
         """
