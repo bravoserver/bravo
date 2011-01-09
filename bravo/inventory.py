@@ -75,7 +75,7 @@ class Inventory(InventorySerializer):
         self.crafting = l[1:5]
         self.armor = l[5:9]
         self.storage = l[9:36]
-        self.holdables = l[37:45]
+        self.holdables = l[36:45]
 
     def load_from_packet(self, container):
         """

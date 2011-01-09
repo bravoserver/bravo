@@ -11,6 +11,12 @@ class TestInventoryInternals(unittest.TestCase):
     def test_trivial(self):
         pass
 
+    def test_load_holdables_from_list(self):
+        l = [None] * 45
+        l[36] = 20, 0, 1
+        self.i.load_from_list(l)
+        self.assertEqual(self.i.holdables[0], (20, 0, 1))
+
     def test_add_to_inventory(self):
         self.assertEqual(self.i.holdables, [None] * 9)
         self.assertTrue(self.i.add(2, 1))
