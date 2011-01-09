@@ -167,6 +167,10 @@ block_names = [
     "jack-o-lantern",
 ]
 
+item_names2 = [
+    "stick",
+]
+
 item_names = [
     "sign",
 ]
@@ -236,6 +240,14 @@ for i, name in enumerate(block_names):
     b = Block(i, name, **kwargs)
     blocks[i] = b
     blocks[name] = b
+
+for i, name in enumerate(item_names2):
+    kwargs = {}
+    # 256 for item slots; 2nd offset should go away at some point
+    i += 256 + 0x18
+    item = Item(i, name, **kwargs)
+    items[i] = item
+    items[name] = item
 
 for i, name in enumerate(item_names):
     kwargs = {}
