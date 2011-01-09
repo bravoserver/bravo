@@ -222,23 +222,22 @@ def check_recipes(crafting):
     stride = 2 if len(crafting) < 6 else 3
     for recipe in retrieve_plugins(IRecipe).itervalues():
         dims = recipe.dimensions
-        matches_needed = dims[0] * dims[1]
 
         for x, y in crafting.iterkeys():
-            if x + dims[0] > stride or y + dims[1] > stride:
+            if x + dims[1] > stride or y + dims[0] > stride:
                 continue
 
-            for i, slot in enumerate(recipe.recipe):
-                sx = x
-                sy = y + i
-                while sy >= stride:
-                    sx += 1
-                    sy -= stride
+            indices = product(xrange(x, x + dims[1]),
+                xrange(y, y + dims[0]))
 
-                if crafting[sx, sy] is None and slot is None:
+            matches_needed = dims[0] * dims[1]
+
+            for index, slot in zip(indices, recipe.recipe):
+
+                if crafting[index] is None and slot is None:
                     matches_needed -= 1
-                elif crafting[sx, sy] is not None and slot is not None:
-                    cblock, chaff, ccount = crafting[sx, sy]
+                elif crafting[index] is not None and slot is not None:
+                    cblock, chaff, ccount = crafting[index]
                     sblock, scount = slot
                     if cblock == sblock and ccount >= scount:
                         matches_needed -= 1
@@ -258,8 +257,8 @@ def apply_recipe(recipe, crafting, offset):
     """
 
     dims = recipe.dimensions
-    indices = product(xrange(offset[0], offset[0] + dims[0]),
-        xrange(offset[1], offset[1] + dims[1]))
+    indices = product(xrange(offset[0], offset[0] + dims[1]),
+        xrange(offset[1], offset[1] + dims[0]))
     count = []
 
     for index, slot in zip(indices, recipe.recipe):
@@ -283,8 +282,8 @@ def reduce_recipe(recipe, crafting, offset, count):
     """
 
     dims = recipe.dimensions
-    indices = product(xrange(offset[0], offset[0] + dims[0]),
-        xrange(offset[1], offset[1] + dims[1]))
+    indices = product(xrange(offset[0], offset[0] + dims[1]),
+        xrange(offset[1], offset[1] + dims[0]))
 
     for index, slot in zip(indices, recipe.recipe):
         if slot is not None:
