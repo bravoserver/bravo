@@ -9,13 +9,10 @@ class Wood(object):
     implements(IPlugin, IRecipe)
 
     name = "wood"
-
     dimensions = (1, 1)
-
     recipe = (
         (blocks["log"].slot, 1),
     )
-
     provides = (blocks["wood"].slot, 4)
 
 class Sticks(object):
@@ -23,15 +20,40 @@ class Sticks(object):
     implements(IPlugin, IRecipe)
 
     name = "sticks"
-
     dimensions = (1, 2)
-
     recipe = (
         (blocks["wood"].slot, 1),
         (blocks["wood"].slot, 1),
     )
-
     provides = (items["stick"].slot, 4)
+
+class Torches(object):
+
+    implements(IPlugin, IRecipe)
+
+    name = "torches"
+    dimensions = (1, 2)
+    recipe = (
+        (items["coal"].slot, 1),
+        (items["stick"].slot, 1),
+    )
+    provides = (blocks["torch"].slot, 4)
+
+class Workbench(object):
+
+    implements(IPlugin, IRecipe)
+
+    name = "workbench"
+    dimensions = (2, 2)
+    recipe = (
+        (blocks["wood"].slot, 1),
+        (blocks["wood"].slot, 1),
+        (blocks["wood"].slot, 1),
+        (blocks["wood"].slot, 1),
+    )
+    provides = (blocks["workbench"].slot, 1)
 
 wood = Wood()
 sticks = Sticks()
+torches = Torches()
+workbench = Workbench()
