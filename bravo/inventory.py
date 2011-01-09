@@ -170,7 +170,7 @@ class Inventory(InventorySerializer):
 
         if l is self.crafted:
             # Special case for crafted output.
-            if self.selected is None:
+            if self.selected is None and self.recipe and self.crafted[0]:
                 self.selected = self.crafted[0]
                 # XXX Should this be part of reduce_recipe()?
                 count = self.crafted[0][2] // self.recipe.provides[1]
