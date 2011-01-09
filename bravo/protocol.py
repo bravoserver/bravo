@@ -60,6 +60,7 @@ class BetaProtocol(Protocol):
         print "Client connected!"
 
         self.chunks = dict()
+        self.entities = set()
 
         self.handlers = {
             0: self.ping,
@@ -166,8 +167,12 @@ class BetaProtocol(Protocol):
         for entity in self.factory.entities_near(pos[0] * 32,
             pos[1] * 32, pos[2] * 32, 160 * 32):
 
-            if entity is self.player or entity.name != "Player":
+            if (entity is self.player or
+                entity.name != "Player" or
+                entity.eid in self.entities):
                 continue
+
+            self.entities.add(entity.eid)
 
             packet = entity.save_to_packet()
             self.transport.write(packet)
