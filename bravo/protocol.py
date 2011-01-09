@@ -266,11 +266,8 @@ class BetaProtocol(Protocol):
                 self.transport.write(packet)
 
     def inventory(self, container):
-        if container.name == 0:
-            self.player.inventory.load_from_packet(container)
-        else:
-            print "Got unknown inventory!"
-            print container
+        print "Got inventory!"
+        print container
 
     def sign(self, container):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
