@@ -54,7 +54,14 @@ class TestInventoryInternals(unittest.TestCase):
         self.assertEqual(self.i.holdables[0], (3, 0, 1))
         self.assertEqual(self.i.holdables[1], (2, 0, 1))
 
-class TestCrafting(unittest.TestCase):
+class TestCraftingWood(unittest.TestCase):
+    """
+    Test basic crafting functionality.
+
+    Assumes that the basic log->wood recipe is present and enabled. This
+    recipe was chosen because it is the simplest and most essential recipe
+    from which all crafting is derived.
+    """
 
     def setUp(self):
         self.i = bravo.inventory.Inventory(0, 45)
@@ -62,12 +69,73 @@ class TestCrafting(unittest.TestCase):
     def test_trivial(self):
         pass
 
-    def test_check_recipes_crafting_wood(self):
+    def test_check_crafting(self):
         self.i.crafting[0] = (bravo.blocks.blocks["log"].slot, 0, 1)
         # Force crafting table to be rechecked.
         self.i.select(2)
         self.assertTrue(self.i.recipe)
         self.assertEqual(self.i.recipe_offset, (0, 0))
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.blocks["wood"].slot, 0, 4))
+
+    def test_check_crafting_multiple(self):
+        self.i.crafting[0] = (bravo.blocks.blocks["log"].slot, 0, 2)
+        # Force crafting table to be rechecked.
+        self.i.select(2)
+        # Only checking count of crafted table; the previous test assured that
+        # the recipe was selected.
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.blocks["wood"].slot, 0, 8))
+
+    def test_check_crafting_offset(self):
+        self.i.crafting[1] = (bravo.blocks.blocks["log"].slot, 0, 1)
+        # Force crafting table to be rechecked.
+        self.i.select(1)
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.recipe_offset, (0, 1))
+
+class TestCraftingSticks(unittest.TestCase):
+    """
+    Test basic crafting functionality.
+
+    Assumes that the basic wood->stick recipe is present and enabled. This
+    recipe was chosen because it is the simplest recipe with more than one
+    ingredient.
+    """
+
+    def setUp(self):
+        self.i = bravo.inventory.Inventory(0, 45)
+
+    def test_trivial(self):
+        pass
+
+    def test_check_crafting(self):
+        self.i.crafting[0] = (bravo.blocks.blocks["wood"].slot, 0, 1)
+        self.i.crafting[2] = (bravo.blocks.blocks["wood"].slot, 0, 1)
+        # Force crafting table to be rechecked.
+        self.i.select(2)
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.recipe_offset, (0, 0))
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.items["stick"].slot, 0, 4))
+
+    def test_check_crafting_multiple(self):
+        self.i.crafting[0] = (bravo.blocks.blocks["wood"].slot, 0, 2)
+        self.i.crafting[2] = (bravo.blocks.blocks["wood"].slot, 0, 2)
+        # Force crafting table to be rechecked.
+        self.i.select(2)
+        # Only checking count of crafted table; the previous test assured that
+        # the recipe was selected.
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.items["stick"].slot, 0, 8))
+
+    def test_check_crafting_offset(self):
+        self.i.crafting[1] = (bravo.blocks.blocks["wood"].slot, 0, 1)
+        self.i.crafting[3] = (bravo.blocks.blocks["wood"].slot, 0, 1)
+        # Force crafting table to be rechecked.
+        self.i.select(1)
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.recipe_offset, (0, 1))
 
 class TestInventoryIntegration(unittest.TestCase):
 

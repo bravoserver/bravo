@@ -171,10 +171,11 @@ class Inventory(InventorySerializer):
 
         if l is self.crafting:
             # Crafting table changed...
-            self.recipe, self.recipe_offset = check_recipes(l)
-            if self.recipe is None:
+            t = check_recipes(l)
+            if t is None:
                 self.crafted[0] = None
             else:
+                self.recipe, self.recipe_offset = t
                 crafted = apply_recipe(self.recipe, self.crafting,
                     self.recipe_offset)
                 self.crafted[0] = crafted[0], 0, crafted[1]
