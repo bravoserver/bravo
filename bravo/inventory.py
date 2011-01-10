@@ -64,20 +64,16 @@ class Inventory(InventorySerializer):
         Copy the crafting array into the crafting table.
         """
 
-        self.crafting_table[0, 0] = self.crafting[0]
-        self.crafting_table[0, 1] = self.crafting[1]
-        self.crafting_table[1, 0] = self.crafting[2]
-        self.crafting_table[1, 1] = self.crafting[3]
+        for i, slot in enumerate(self.crafting):
+            self.crafting_table[divmod(i, self.crafting_stride)] = slot
 
     def sync_crafting_table(self):
         """
         Copy the crafting table into the crafting array.
         """
 
-        self.crafting[0] = self.crafting_table[0, 0]
-        self.crafting[1] = self.crafting_table[0, 1]
-        self.crafting[2] = self.crafting_table[1, 0]
-        self.crafting[3] = self.crafting_table[1, 1]
+        for i, slot in self.crafting_table.iteritems():
+            self.crafting[i[0] * self.crafting_stride + i[1]] = slot
 
     def container_for_slot(self, slot):
         """
