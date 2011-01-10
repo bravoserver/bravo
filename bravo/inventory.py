@@ -15,18 +15,40 @@ class Inventory(InventorySerializer):
     The ``Inventory`` covers a player's armor, crafting box, and inventory.
     """
 
+    crafting = 4
+    crafting_stride = 2
+    armor = 4
+    storage = 27
+    holdables = 9
+
     def __init__(self, name, length):
         self.name = name
-        self.crafting = [None] * 4
-        self.crafted = [None]
-        self.armor = [None] * 4
-        self.storage = [None] * 27
-        self.holdables = [None] * 9
+
+        if self.crafting:
+            self.crafting = [None] * self.crafting
+            self.crafted = [None]
+        else:
+            self.crafting = self.crafted = []
 
         self.crafting_table = {}
         """
         A two-dimensional table for quickly and cleanly doing crafting.
         """
+
+        if self.armor:
+            self.armor = [None] * self.armor
+        else:
+            self.armor = []
+
+        if self.storage:
+            self.storage = [None] * self.storage
+        else:
+            self.storage = []
+
+        if self.holdables:
+            self.holdables = [None] * self.holdables
+        else:
+            self.storage = []
 
         self.selected = None
 
@@ -58,16 +80,15 @@ class Inventory(InventorySerializer):
         Retrieve the list and index for a given slot.
         """
 
-        if slot == 0:
-            return self.crafted, 0
-        elif 1 <= slot <= 4:
-            return self.crafting, slot - 1
-        elif 5 <= slot <= 8:
-            return self.armor, slot - 5
-        elif 9 <= slot <= 35:
-            return self.storage, slot - 9
-        elif 36 <= slot <= 44:
-            return self.holdables, slot - 36
+        metalist = [self.crafted, self.crafting, self.armor, self.storage,
+            self.holdables]
+
+        for l in metalist:
+            if not len(l):
+                continue
+            if slot < len(l):
+                return l, slot
+            slot -= len(l)
 
     def load_from_list(self, l):
 
@@ -251,6 +272,18 @@ class Inventory(InventorySerializer):
                 self.crafted[0] = crafted[0], 0, crafted[1]
 
         return True
+
+class Equipment(Inventory):
+
+    identifier = 0
+
+class Workbench(Inventory):
+
+    identifier = 1
+
+class Furnace(Inventory):
+
+    identifier = 2
 
 def check_recipes(crafting):
     """
