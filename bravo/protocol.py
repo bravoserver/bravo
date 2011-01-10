@@ -1,3 +1,5 @@
+from time import time
+
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
 from twisted.internet.protocol import Protocol
@@ -88,6 +90,8 @@ class BetaProtocol(Protocol):
         self.build_hooks = retrieve_named_plugins(IBuildHook, names)
         names = configuration.get("bravo", "dig_hooks").split(",")
         self.dig_hooks = retrieve_named_plugins(IDigHook, names)
+
+        self.last_dig_build_timer = time()
 
     def ping(self, container):
         pass
@@ -188,6 +192,11 @@ class BetaProtocol(Protocol):
         if container.state != 3:
             return
 
+        if time() - self.last_dig_build_timer < 0.1:
+            self.error("You are digging too fast.")
+
+        self.last_dig_build_timer = time()
+
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
 
         try:
@@ -244,6 +253,11 @@ class BetaProtocol(Protocol):
             print ("Ignoring request to place unknown block %d" %
                 container.id)
             return
+
+        if time() - self.last_dig_build_timer < 0.1:
+            self.error("You are building too fast.")
+
+        self.last_dig_build_timer = time()
 
         builddata = BuildData(block, 0x0, container.x, container.y,
             container.z, container.face)
