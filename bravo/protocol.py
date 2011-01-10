@@ -9,6 +9,7 @@ from bravo.compat import namedtuple, product
 from bravo.config import configuration
 from bravo.entity import Sign
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook
+from bravo.inventory import Workbench, sync_inventories
 from bravo.packets import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins, retrieve_named_plugins
 from bravo.utilities import chat_name, sanitize_chat, split_coords
@@ -217,7 +218,9 @@ class BetaProtocol(Protocol):
 
         if (chunk.get_block((smallx, container.y, smallz)) ==
             blocks["workbench"].slot):
-            self.windows[self.wid] = "workbench"
+            i = Workbench()
+            sync_inventories(self.player.inventory, i)
+            self.windows[self.wid] = i
             packet = make_packet("window-open", wid=self.wid, type="workbench",
                 title="Hurp", slots=2)
             self.wid += 1
@@ -272,27 +275,33 @@ class BetaProtocol(Protocol):
 
     def wclose(self, container):
         if container.wid in self.windows:
+            i = self.windows[container.wid]
             del self.windows[container.wid]
+            sync_inventories(i, self.player.inventory)
         elif container.wid == 0:
             pass
         else:
             self.error("Can't close non-existent window %d!" % container.wid)
 
     def waction(self, container):
-        print container
-        print "Handling action..."
-
         if container.wid == 0:
             # Inventory.
-            selected = self.player.inventory.select(container.slot,
-                bool(container.button))
-
-            packet = make_packet("window-token", wid=0, token=container.token,
-                acknowledged=selected)
-            self.transport.write(packet)
+            i = self.player.inventory
         elif container.wid in self.windows:
-            # ...
-            pass
+            i = self.windows[container.wid]
+        else:
+            self.error("Couldn't find window %d" % container.wid)
+
+        selected = i.select(container.slot, bool(container.button))
+
+        if selected:
+            # XXX should be if there's any damage to the inventory
+            packet = i.save_to_packet()
+            self.transport.write(packet)
+
+        packet = make_packet("window-token", wid=0, token=container.token,
+            acknowledged=selected)
+        self.transport.write(packet)
 
     def inventory(self, container):
         print "Got inventory!"

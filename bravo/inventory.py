@@ -386,3 +386,14 @@ def reduce_recipe(recipe, crafting, offset, count):
                 crafting[index] = tblock, tdamage, tcount
             else:
                 crafting[index] = None
+
+def sync_inventories(src, dst):
+    """
+    Copy storage and holdables from one inventory into another.
+
+    This is usually intended for temporary inventories which will be sync'd
+    and destroyed later.
+    """
+
+    dst.holdables = src.holdables
+    dst.storage = src.storage
