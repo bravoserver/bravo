@@ -15,11 +15,11 @@ class Inventory(InventorySerializer):
     The ``Inventory`` covers a player's armor, crafting box, and inventory.
     """
 
-    crafting = 4
-    crafting_stride = 2
-    armor = 4
-    storage = 27
-    holdables = 9
+    crafting = 0
+    crafting_stride = 0
+    armor = 0
+    storage = 0
+    holdables = 0
 
     def __init__(self):
         if self.crafting:
@@ -46,7 +46,7 @@ class Inventory(InventorySerializer):
         if self.holdables:
             self.holdables = [None] * self.holdables
         else:
-            self.storage = []
+            self.holdables = []
 
         self.selected = None
 
@@ -104,7 +104,7 @@ class Inventory(InventorySerializer):
         Load data from a packet container.
         """
 
-        items = [None] * 45
+        items = [None] * len(self.i)
 
         for i, item in enumerate(container.items):
             if item.id < 0:
@@ -276,9 +276,20 @@ class Inventory(InventorySerializer):
 
 class Equipment(Inventory):
 
+    crafting = 4
+    crafting_stride = 2
+    armor = 4
+    storage = 27
+    holdables = 9
+
     identifier = 0
 
 class Workbench(Inventory):
+
+    crafting = 9
+    crafting_stride = 3
+    storage = 27
+    holdables = 9
 
     identifier = 1
 

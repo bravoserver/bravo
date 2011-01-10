@@ -4,9 +4,24 @@ import bravo.blocks
 import bravo.inventory
 
 class TestInventoryInternals(unittest.TestCase):
+    """
+    The Inventory class might be near-useless when not subclassed, but we can
+    still test a handful of its properties.
+    """
 
     def setUp(self):
         self.i = bravo.inventory.Inventory()
+
+    def test_trivial(self):
+        pass
+
+    def test_add(self):
+        self.assertFalse(self.i.add(0, 1))
+
+class TestEquipmentInternals(unittest.TestCase):
+
+    def setUp(self):
+        self.i = bravo.inventory.Equipment()
 
     def test_trivial(self):
         pass
@@ -91,7 +106,7 @@ class TestCraftingWood(unittest.TestCase):
     """
 
     def setUp(self):
-        self.i = bravo.inventory.Inventory()
+        self.i = bravo.inventory.Equipment()
 
     def test_trivial(self):
         pass
@@ -131,7 +146,7 @@ class TestCraftingSticks(unittest.TestCase):
     """
 
     def setUp(self):
-        self.i = bravo.inventory.Inventory()
+        self.i = bravo.inventory.Equipment()
 
     def test_trivial(self):
         pass
@@ -167,7 +182,7 @@ class TestCraftingSticks(unittest.TestCase):
 class TestInventoryIntegration(unittest.TestCase):
 
     def setUp(self):
-        self.i = bravo.inventory.Inventory()
+        self.i = bravo.inventory.Equipment()
 
     def test_trivial(self):
         pass
