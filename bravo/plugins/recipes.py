@@ -53,7 +53,47 @@ class Workbench(object):
     )
     provides = (blocks["workbench"].slot, 1)
 
+class Furnace(object):
+
+    implements(IPlugin, IRecipe)
+
+    name = "furnace"
+    dimensions = (3, 3)
+    recipe = (
+        (blocks["cobblestone"].slot, 1),
+        (blocks["cobblestone"].slot, 1),
+        (blocks["cobblestone"].slot, 1),
+        (blocks["cobblestone"].slot, 1),
+        (None),
+        (blocks["cobblestone"].slot, 1),
+        (blocks["cobblestone"].slot, 1),
+        (blocks["cobblestone"].slot, 1),
+        (blocks["cobblestone"].slot, 1),
+    )
+    provides = (blocks["furnace"].slot, 1)
+
+class Chest(object):
+
+    implements(IPlugin, IRecipe)
+
+    name = "furnace"
+    dimensions = (3, 3)
+    recipe = (
+        (blocks["wood"].slot, 1),
+        (blocks["wood"].slot, 1),
+        (blocks["wood"].slot, 1),
+        (blocks["wood"].slot, 1),
+        (None),
+        (blocks["wood"].slot, 1),
+        (blocks["wood"].slot, 1),
+        (blocks["wood"].slot, 1),
+        (blocks["wood"].slot, 1),
+    )
+    provides = (blocks["chest"].slot, 1)
+
 wood = Wood()
 sticks = Sticks()
 torches = Torches()
 workbench = Workbench()
+furnace = Furnace()
+chest = Chest()
