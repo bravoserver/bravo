@@ -124,7 +124,7 @@ class Inventory(InventorySerializer):
                 lc.append(Container(id=item[0], damage=item[1],
                         count=item[2]))
 
-        packet = make_packet("inventory", name=self.name, length=len(lc),
+        packet = make_packet("inventory", name=self.identifier, length=len(lc),
             items=lc)
 
         return packet
