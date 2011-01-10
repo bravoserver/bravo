@@ -1,7 +1,7 @@
 from math import pi
 
 from bravo.alpha import Location
-from bravo.inventory import Inventory
+from bravo.inventory import Equipment, ChestStorage
 from bravo.packets import make_packet
 from bravo.serialize import ChestSerializer, PlayerSerializer, SignSerializer
 
@@ -45,7 +45,7 @@ class Player(Entity, PlayerSerializer):
         super(Player, self).__init__(eid=eid, *args, **kwargs)
 
         self.username = username
-        self.inventory = Inventory(0, 45)
+        self.inventory = Equipment()
 
         self.equipped = 0
 
@@ -85,7 +85,7 @@ class Chest(ChestSerializer):
 
     def __init__(self):
 
-        self.inventory = Inventory(0, 36)
+        self.inventory = ChestStorage()
 
     def load_from_packet(self, container):
 

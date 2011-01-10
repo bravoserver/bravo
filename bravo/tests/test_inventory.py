@@ -6,13 +6,16 @@ import bravo.inventory
 class TestInventoryInternals(unittest.TestCase):
 
     def setUp(self):
-        self.i = bravo.inventory.Inventory(0, 45)
+        self.i = bravo.inventory.Inventory()
 
     def test_trivial(self):
         pass
 
+    def test_len(self):
+        self.assertEqual(len(self.i), 45)
+
     def test_load_holdables_from_list(self):
-        l = [None] * 45
+        l = [None] * len(self.i)
         l[36] = 20, 0, 1
         self.i.load_from_list(l)
         self.assertEqual(self.i.holdables[0], (20, 0, 1))
@@ -88,7 +91,7 @@ class TestCraftingWood(unittest.TestCase):
     """
 
     def setUp(self):
-        self.i = bravo.inventory.Inventory(0, 45)
+        self.i = bravo.inventory.Inventory()
 
     def test_trivial(self):
         pass
@@ -128,7 +131,7 @@ class TestCraftingSticks(unittest.TestCase):
     """
 
     def setUp(self):
-        self.i = bravo.inventory.Inventory(0, 45)
+        self.i = bravo.inventory.Inventory()
 
     def test_trivial(self):
         pass
@@ -164,7 +167,7 @@ class TestCraftingSticks(unittest.TestCase):
 class TestInventoryIntegration(unittest.TestCase):
 
     def setUp(self):
-        self.i = bravo.inventory.Inventory(0, 45)
+        self.i = bravo.inventory.Inventory()
 
     def test_trivial(self):
         pass

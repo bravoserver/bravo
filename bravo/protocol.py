@@ -279,6 +279,7 @@ class BetaProtocol(Protocol):
             self.error("Can't close non-existent window %d!" % container.wid)
 
     def waction(self, container):
+        print container
         print "Handling action..."
 
         if container.wid == 0:

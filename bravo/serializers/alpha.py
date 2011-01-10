@@ -10,7 +10,7 @@ class InventorySerializer(object):
 
     def load_from_tag(inventory, tag):
 
-        items = [None] * 45
+        items = [None] * len(inventory)
 
         for item in tag.tags:
             slot = item["Slot"].value

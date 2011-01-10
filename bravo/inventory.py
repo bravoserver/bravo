@@ -21,9 +21,7 @@ class Inventory(InventorySerializer):
     storage = 27
     holdables = 9
 
-    def __init__(self, name, length):
-        self.name = name
-
+    def __init__(self):
         if self.crafting:
             self.crafting = [None] * self.crafting
             self.crafted = [None]
@@ -54,6 +52,12 @@ class Inventory(InventorySerializer):
 
         self.recipe = None
         self.recipe_offset = None
+
+    def __len__(self):
+
+        retval = len(self.crafted) + len(self.crafting) + len(self.armor)
+        retval += len(self.storage) + len(self.holdables)
+        return retval
 
     def fill_crafting_table(self):
         """
@@ -92,11 +96,12 @@ class Inventory(InventorySerializer):
 
     def load_from_list(self, l):
 
-        self.crafted = [l[0]]
-        self.crafting = l[1:5]
-        self.armor = l[5:9]
-        self.storage = l[9:36]
-        self.holdables = l[36:45]
+        metalist = [self.crafted, self.crafting, self.armor, self.storage,
+            self.holdables]
+
+        for target in metalist:
+            if len(target):
+                target[:], l = l[:len(target)], l[len(target):]
 
     def load_from_packet(self, container):
         """
@@ -284,6 +289,11 @@ class Workbench(Inventory):
 class Furnace(Inventory):
 
     identifier = 2
+
+class ChestStorage(Inventory):
+
+    # XXX maybe not right
+    identifier = 3
 
 def check_recipes(crafting):
     """
