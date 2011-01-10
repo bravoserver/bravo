@@ -204,8 +204,23 @@ class BetaProtocol(Protocol):
             chunk.clear_damage()
 
     def build(self, container):
+        # Is the target being selected?
+        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        if (chunk.get_block((smallx, container.y, smallz)) ==
+            blocks["workbench"].slot):
+            packet = make_packet("window-open", wid=1, type="workbench",
+                title="Hurp", slots=2)
+            self.transport.write(packet)
+            return
+
         # Ignore clients that think -1 is placeable.
-        if container.id == 65535:
+        if container.id == -1:
             return
 
         # Special case when face is "noop": Update the status of the currently
@@ -256,14 +271,12 @@ class BetaProtocol(Protocol):
 
         if container.wid == 0:
             # Inventory.
+            selected = self.player.inventory.select(container.slot,
+                bool(container.button))
 
-            if container.button == 0:
-                # Left-click.
-                selected = self.player.inventory.select(container.slot)
-
-                packet = make_packet("window-token", wid=0, token=container.token,
-                    acknowledged=selected)
-                self.transport.write(packet)
+            packet = make_packet("window-token", wid=0, token=container.token,
+                acknowledged=selected)
+            self.transport.write(packet)
 
     def inventory(self, container):
         print "Got inventory!"
