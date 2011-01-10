@@ -13,6 +13,7 @@ Contents:
 
    features
    plugins
+   differences
    philosophy
    noise
    core
