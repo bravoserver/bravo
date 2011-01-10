@@ -61,6 +61,8 @@ class BetaProtocol(Protocol):
 
         self.chunks = dict()
         self.entities = set()
+        self.windows = dict()
+        self.wid = 1
 
         self.handlers = {
             0: self.ping,
@@ -73,6 +75,7 @@ class BetaProtocol(Protocol):
             15: self.build,
             16: self.equip,
             21: self.pickup,
+            101: self.wclose,
             102: self.waction,
             104: self.inventory,
             130: self.sign,
@@ -214,8 +217,10 @@ class BetaProtocol(Protocol):
 
         if (chunk.get_block((smallx, container.y, smallz)) ==
             blocks["workbench"].slot):
-            packet = make_packet("window-open", wid=1, type="workbench",
+            self.windows[self.wid] = "workbench"
+            packet = make_packet("window-open", wid=self.wid, type="workbench",
                 title="Hurp", slots=2)
+            self.wid += 1
             self.transport.write(packet)
             return
 
@@ -262,9 +267,16 @@ class BetaProtocol(Protocol):
         self.player.equipped = container.item
 
     def pickup(self, container):
-
         self.factory.give((container.x, container.y, container.z),
             container.item, container.count)
+
+    def wclose(self, container):
+        if container.wid in self.windows:
+            del self.windows[container.wid]
+        elif container.wid == 0:
+            pass
+        else:
+            self.error("Can't close non-existent window %d!" % container.wid)
 
     def waction(self, container):
         print "Handling action..."
@@ -277,6 +289,9 @@ class BetaProtocol(Protocol):
             packet = make_packet("window-token", wid=0, token=container.token,
                 acknowledged=selected)
             self.transport.write(packet)
+        elif container.wid in self.windows:
+            # ...
+            pass
 
     def inventory(self, container):
         print "Got inventory!"
