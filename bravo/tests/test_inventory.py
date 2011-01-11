@@ -179,6 +179,51 @@ class TestCraftingSticks(unittest.TestCase):
         self.assertTrue(self.i.recipe)
         self.assertEqual(self.i.recipe_offset, (0, 1))
 
+class TestCraftingFurnace(unittest.TestCase):
+    """
+    Test basic crafting functionality.
+
+    Assumes that the basic cobblestone->furnace recipe is present and enabled.
+    This recipe was chosen because it is the simplest recipe that requires a
+    3x3 crafting table.
+    """
+
+    def setUp(self):
+        self.i = bravo.inventory.Workbench()
+
+    def test_trivial(self):
+        pass
+
+    def test_check_crafting(self):
+        self.i.crafting[0] = (bravo.blocks.blocks["cobblestone"].slot, 0, 1)
+        self.i.crafting[1] = (bravo.blocks.blocks["cobblestone"].slot, 0, 1)
+        self.i.crafting[2] = (bravo.blocks.blocks["cobblestone"].slot, 0, 1)
+        self.i.crafting[3] = (bravo.blocks.blocks["cobblestone"].slot, 0, 1)
+        self.i.crafting[5] = (bravo.blocks.blocks["cobblestone"].slot, 0, 1)
+        self.i.crafting[6] = (bravo.blocks.blocks["cobblestone"].slot, 0, 1)
+        self.i.crafting[7] = (bravo.blocks.blocks["cobblestone"].slot, 0, 1)
+        self.i.crafting[8] = (bravo.blocks.blocks["cobblestone"].slot, 0, 1)
+        # Force crafting table to be rechecked.
+        self.i.select(5)
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.recipe_offset, (0, 0))
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.blocks["furnace"].slot, 0, 1))
+
+    def test_check_crafting_multiple(self):
+        self.i.crafting[0] = (bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        self.i.crafting[1] = (bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        self.i.crafting[2] = (bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        self.i.crafting[3] = (bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        self.i.crafting[5] = (bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        self.i.crafting[6] = (bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        self.i.crafting[7] = (bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        self.i.crafting[8] = (bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        # Force crafting table to be rechecked.
+        self.i.select(5)
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.blocks["furnace"].slot, 0, 2))
+
 class TestInventoryIntegration(unittest.TestCase):
 
     def setUp(self):
