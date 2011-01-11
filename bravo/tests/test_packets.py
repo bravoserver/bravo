@@ -117,6 +117,10 @@ class TestPacketHelpers(unittest.TestCase):
 class TestPacketIntegration(unittest.TestCase):
 
     def test_location_round_trip(self):
+        """
+        Test whether we are affected by an older Construct bug.
+        """
+
         packet = "\x0d@\x1a\x00\x00\x00\x00\x00\x00@P\xcf\\)\x00\x00\x00@Pg\xae\x14\x80\x00\x00@\x1e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
         header, payload = bravo.packets.parse_packets(packet)[0][0]
         self.assertEqual(header, 13)

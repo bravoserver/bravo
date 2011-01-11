@@ -58,7 +58,6 @@ def main():
                 "min": min(l),
             }
             d.update(data)
-            add(d)
 
 if __name__ == "__main__":
     main()

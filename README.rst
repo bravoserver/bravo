@@ -85,7 +85,7 @@ Bravo ships with a standard setup.py. You will need setuptools/distribute, but
 most distributions already provide it for you. Bravo depends on the following
 external libraries from PyPI:
 
- * construct or reconstruct
+ * construct, version 2.03 or later
  * numpy
  * Twisted
 
