@@ -198,16 +198,12 @@ class Inventory(InventorySerializer):
             # Special case for crafted output.
             if self.selected is None and self.recipe and self.crafted[0]:
                 self.selected = self.crafted[0]
-                if secondary:
-                    count = 1
-                else:
-                    count = self.crafted[0][2] // self.recipe.provides[1]
 
-                reduce_recipe(self.recipe, self.crafting_table, self.recipe_offset,
-                    count)
+                reduce_recipe(self.recipe, self.crafting_table,
+                    self.recipe_offset, 1)
                 self.sync_crafting_table()
                 sitem, sdamage, scount = self.crafted[0]
-                scount -= self.recipe.provides[1] * count
+                scount -= self.recipe.provides[1]
                 if scount <= 0:
                     self.crafted[0] = None
                 else:
