@@ -199,8 +199,7 @@ class Inventory(InventorySerializer):
             if self.selected is None and self.recipe and self.crafted[0]:
                 self.selected = self.crafted[0]
 
-                reduce_recipe(self.recipe, self.crafting_table,
-                    self.recipe_offset, 1)
+                self.reduce_recipe()
                 self.sync_crafting_table()
                 sitem, sdamage, scount = self.crafted[0]
                 scount -= self.recipe.provides[1]
@@ -259,16 +258,105 @@ class Inventory(InventorySerializer):
         if l is self.crafting:
             # Crafting table changed...
             self.fill_crafting_table()
-            t = check_recipes(self.crafting_table)
+            t = self.check_recipes()
             if t is None:
                 self.crafted[0] = None
             else:
                 self.recipe, self.recipe_offset = t
-                crafted = apply_recipe(self.recipe, self.crafting_table,
-                    self.recipe_offset)
+                crafted = self.apply_recipe()
                 self.crafted[0] = crafted[0], 0, crafted[1]
 
         return True
+
+    def check_recipes(self):
+        """
+        See if the crafting table matches any recipes.
+
+        :returns: the recipe and offset, or None if no matches could be made
+        """
+
+        # This isn't perfect, unfortunately, but correctness trumps algorithmic
+        # perfection. (For now.)
+        crafting = self.crafting_table
+        for recipe in retrieve_plugins(IRecipe).itervalues():
+            dims = recipe.dimensions
+
+            for x, y in crafting.iterkeys():
+                if (x + dims[1] > self.crafting_stride or
+                    y + dims[0] > self.crafting_stride):
+                    continue
+
+                indices = product(xrange(x, x + dims[1]),
+                    xrange(y, y + dims[0]))
+
+                matches_needed = dims[0] * dims[1]
+
+                for index, slot in zip(indices, recipe.recipe):
+
+                    if crafting[index] is None and slot is None:
+                        matches_needed -= 1
+                    elif crafting[index] is not None and slot is not None:
+                        cblock, chaff, ccount = crafting[index]
+                        sblock, scount = slot
+                        if cblock == sblock and ccount >= scount:
+                            matches_needed -= 1
+
+                    if matches_needed == 0:
+                        # Jackpot!
+                        return recipe, (x, y)
+
+        return None
+
+    def apply_recipe(self):
+        """
+        Return the crafted output of an applied recipe.
+
+        This function assumes that the recipe already fits the crafting table and
+        will not do additional checks to verify this assumption.
+        """
+
+        crafting = self.crafting_table
+        offset = self.recipe_offset
+        dims = self.recipe.dimensions
+        indices = product(xrange(offset[0], offset[0] + dims[1]),
+            xrange(offset[1], offset[1] + dims[0]))
+        count = []
+
+        for index, slot in zip(indices, self.recipe.recipe):
+            if slot is not None and crafting[index] is not None:
+                scount = slot[1]
+                tcount = crafting[index][2]
+                count.append(tcount // scount)
+
+        counted = min(count)
+        if counted > 0:
+            return self.recipe.provides[0], self.recipe.provides[1] * counted
+
+    def reduce_recipe(self):
+        """
+        Reduce a crafting table according to a recipe.
+
+        This function returns None; the crafting table is modified in-place.
+
+        This function assumes that the recipe already fits the crafting table and
+        will not do additional checks to verify this assumption.
+        """
+
+        crafting = self.crafting_table
+        offset = self.recipe_offset
+        dims = self.recipe.dimensions
+        indices = product(xrange(offset[0], offset[0] + dims[1]),
+            xrange(offset[1], offset[1] + dims[0]))
+
+        for index, slot in zip(indices, self.recipe.recipe):
+            if slot is not None:
+                scount = slot[1]
+                tblock, tdamage, tcount = crafting[index]
+                tcount -= scount
+                if tcount:
+                    crafting[index] = tblock, tdamage, tcount
+                else:
+                    crafting[index] = None
 
 class Equipment(Inventory):
 
@@ -297,91 +385,6 @@ class ChestStorage(Inventory):
 
     # XXX maybe not right
     identifier = 3
-
-def check_recipes(crafting):
-    """
-    See if the crafting table matches any recipes.
-
-    :returns: the recipe and offset, or None if no matches could be made
-    """
-
-    # This isn't perfect, unfortunately, but correctness trumps algorithmic
-    # perfection. (For now.)
-    stride = 2 if len(crafting) < 6 else 3
-    for recipe in retrieve_plugins(IRecipe).itervalues():
-        dims = recipe.dimensions
-
-        for x, y in crafting.iterkeys():
-            if x + dims[1] > stride or y + dims[0] > stride:
-                continue
-
-            indices = product(xrange(x, x + dims[1]),
-                xrange(y, y + dims[0]))
-
-            matches_needed = dims[0] * dims[1]
-
-            for index, slot in zip(indices, recipe.recipe):
-
-                if crafting[index] is None and slot is None:
-                    matches_needed -= 1
-                elif crafting[index] is not None and slot is not None:
-                    cblock, chaff, ccount = crafting[index]
-                    sblock, scount = slot
-                    if cblock == sblock and ccount >= scount:
-                        matches_needed -= 1
-
-                if matches_needed == 0:
-                    # Jackpot!
-                    return recipe, (x, y)
-
-    return None
-
-def apply_recipe(recipe, crafting, offset):
-    """
-    Return the crafted output of an applied recipe.
-
-    This function assumes that the recipe already fits the crafting table and
-    will not do additional checks to verify this assumption.
-    """
-
-    dims = recipe.dimensions
-    indices = product(xrange(offset[0], offset[0] + dims[1]),
-        xrange(offset[1], offset[1] + dims[0]))
-    count = []
-
-    for index, slot in zip(indices, recipe.recipe):
-        if slot is not None and crafting[index] is not None:
-            scount = slot[1]
-            tcount = crafting[index][2]
-            count.append(tcount // scount)
-
-    counted = min(count)
-    if counted > 0:
-        return recipe.provides[0], recipe.provides[1] * counted
-
-def reduce_recipe(recipe, crafting, offset, count):
-    """
-    Reduce a crafting table according to a recipe.
-
-    This function returns None; the crafting table is modified in-place.
-
-    This function assumes that the recipe already fits the crafting table and
-    will not do additional checks to verify this assumption.
-    """
-
-    dims = recipe.dimensions
-    indices = product(xrange(offset[0], offset[0] + dims[1]),
-        xrange(offset[1], offset[1] + dims[0]))
-
-    for index, slot in zip(indices, recipe.recipe):
-        if slot is not None:
-            scount = slot[1]
-            tblock, tdamage, tcount = crafting[index]
-            tcount -= count * scount
-            if tcount:
-                crafting[index] = tblock, tdamage, tcount
-            else:
-                crafting[index] = None
 
 def sync_inventories(src, dst):
     """
