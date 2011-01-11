@@ -5,6 +5,7 @@ from twisted.internet.defer import succeed
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import cooperate, deferLater, LoopingCall
 from twisted.internet.task import TaskDone, TaskFailed
+from twisted.python import log
 
 from bravo.blocks import blocks, items
 from bravo.compat import namedtuple, product
@@ -60,7 +61,7 @@ class BetaProtocol(Protocol):
     username = None
 
     def __init__(self):
-        print "Client connected!"
+        log.msg("Client connecting...")
 
         self.chunks = dict()
         self.entities = set()
@@ -85,7 +86,7 @@ class BetaProtocol(Protocol):
             255: self.quit,
         }
 
-        print "Registering client hooks..."
+        log.msg("Registering client hooks...")
         names = configuration.get("bravo", "build_hooks").split(",")
         self.build_hooks = retrieve_named_plugins(IBuildHook, names)
         names = configuration.get("bravo", "dig_hooks").split(",")
@@ -250,7 +251,7 @@ class BetaProtocol(Protocol):
         elif container.id in items:
             block = items[container.id]
         else:
-            print ("Ignoring request to place unknown block %d" %
+            log.err("Ignoring request to place unknown block %d" %
                 container.id)
             return
 
@@ -318,8 +319,8 @@ class BetaProtocol(Protocol):
         self.transport.write(packet)
 
     def inventory(self, container):
-        print "Got inventory!"
-        print container
+        log.msg("Got inventory!")
+        log.msg(container)
 
     def sign(self, container):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
@@ -353,7 +354,7 @@ class BetaProtocol(Protocol):
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
     def quit(self, container):
-        print "Client is quitting: %s" % container.message
+        log.msg("Client is quitting: %s" % container.message)
         self.transport.loseConnection()
 
     def disable_chunk(self, x, z):
@@ -410,8 +411,8 @@ class BetaProtocol(Protocol):
             elif header in self.handlers:
                 self.handlers[header](payload)
             else:
-                print "Didn't handle parseable packet %d!" % header
-                print payload
+                log.err("Didn't handle parseable packet %d!" % header)
+                log.err(payload)
 
     def challenged(self):
         self.state = STATE_CHALLENGED
@@ -478,7 +479,6 @@ class BetaProtocol(Protocol):
         self.transport.write(packet)
 
     def update_chunks(self):
-        print "Sending chunks..."
         x, chaff, z, chaff = split_coords(self.player.location.x,
             self.player.location.z)
 
