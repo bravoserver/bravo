@@ -258,11 +258,10 @@ class Inventory(InventorySerializer):
         if l is self.crafting:
             # Crafting table changed...
             self.fill_crafting_table()
-            t = self.check_recipes()
-            if t is None:
+            self.check_recipes()
+            if self.recipe is None:
                 self.crafted[0] = None
             else:
-                self.recipe, self.recipe_offset = t
                 crafted = self.apply_recipe()
                 self.crafted[0] = crafted[0], 0, crafted[1]
 
@@ -303,9 +302,11 @@ class Inventory(InventorySerializer):
 
                     if matches_needed == 0:
                         # Jackpot!
-                        return recipe, (x, y)
+                        self.recipe = recipe
+                        self.recipe_offset = (x, y)
+                        return
 
-        return None
+        self.recipe = None
 
     def apply_recipe(self):
         """
