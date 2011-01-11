@@ -113,3 +113,19 @@ class TestPacketHelpers(unittest.TestCase):
     def test_make_packet(self):
         packet = bravo.packets.make_packet("ping")
         self.assertEqual(packet, "\x00")
+
+class TestPacketIntegration(unittest.TestCase):
+
+    def test_location_round_trip(self):
+        packet = "\x0d@\x1a\x00\x00\x00\x00\x00\x00@P\xcf\\)\x00\x00\x00@Pg\xae\x14\x80\x00\x00@\x1e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        header, payload = bravo.packets.parse_packets(packet)[0][0]
+        self.assertEqual(header, 13)
+        self.assertEqual(payload.position.x, 6.5)
+        self.assertEqual(payload.position.y, 67.24000000953674)
+        self.assertEqual(payload.position.stance, 65.62000000476837)
+        self.assertEqual(payload.position.z, 7.5)
+        self.assertEqual(payload.look.rotation, 0.0)
+        self.assertEqual(payload.look.pitch, 0.0)
+        self.assertEqual(payload.flying.flying, 0)
+        reconstructed = bravo.packets.make_packet("location", payload)
+        self.assertEqual(packet, reconstructed)
