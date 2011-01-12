@@ -2,6 +2,7 @@ import random
 import sys
 
 from twisted.internet import reactor
+from twisted.internet.defer import succeed
 from twisted.internet.task import deferLater
 from twisted.plugin import IPlugin
 from twisted.web.client import getPage
@@ -10,37 +11,9 @@ from zope.interface import implements
 from bravo.ibravo import IAuthenticator
 from bravo.packets import make_packet
 
-class Authenticator(object):
-    """
-    Authenticates single clients with a two-phase system.
-    """
+class OfflineAuthenticator(object):
 
     implements(IPlugin, IAuthenticator)
-
-    def handshake(self, protocol, container):
-        """
-        Respond to a handshake attempt.
-
-        Handshakes consist of a single field, the username.
-        """
-
-    def login(self, protocol, container):
-        """
-        Acknowledge a successful handshake.
-
-        Subclasses should call this method after their challenge succeeds.
-        """
-
-        if container.protocol < 8:
-            # Kick old clients.
-            protocol.error("This server doesn't support your ancient client.")
-        elif container.protocol > 8:
-            # Kick new clients.
-            protocol.error("This server doesn't support your newfangled client.")
-        else:
-            reactor.callLater(0, protocol.authenticated)
-
-class OfflineAuthenticator(Authenticator):
 
     def handshake(self, protocol, container):
         """
@@ -57,6 +30,8 @@ class OfflineAuthenticator(Authenticator):
         d = deferLater(reactor, 0, protocol.challenged)
         d.addCallback(lambda none: protocol.transport.write(packet))
 
+        return True
+
     def login(self, protocol, container):
         protocol.username = container.username
 
@@ -64,13 +39,15 @@ class OfflineAuthenticator(Authenticator):
             unused="", seed=0, dimension=0)
         protocol.transport.write(packet)
 
-        super(OfflineAuthenticator, self).login(protocol, container)
+        return succeed(None)
 
     name = "offline"
 
 server = "http://www.minecraft.net/game/checkserver.jsp?user=%s&serverId=%s"
 
-class OnlineAuthenticator(Authenticator):
+class OnlineAuthenticator(object):
+
+    implements(IPlugin, IAuthenticator)
 
     def __init__(self):
 
@@ -89,6 +66,8 @@ class OnlineAuthenticator(Authenticator):
         d = deferLater(reactor, 0, protocol.challenged)
         d.addCallback(lambda none: protocol.transport.write(packet))
 
+        return True
+
     def login(self, protocol, container):
         if protocol not in self.challenges:
             protocol.error("Didn't see your handshake.")
@@ -102,6 +81,8 @@ class OnlineAuthenticator(Authenticator):
         d.addCallback(self.success, protocol, container)
         d.addErrback(self.error, protocol)
 
+        return d
+
     def success(self, response, protocol, container):
 
         if response != "YES":
@@ -111,8 +92,6 @@ class OnlineAuthenticator(Authenticator):
         packet = make_packet("login", protocol=protocol.eid, username="",
             unused="", seed=0, dimension=0)
         protocol.transport.write(packet)
-
-        super(OnlineAuthenticator, self).login(protocol, container)
 
     def error(self, description, protocol):
 

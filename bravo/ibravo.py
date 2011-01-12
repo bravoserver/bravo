@@ -10,11 +10,17 @@ class IAuthenticator(Interface):
     def handshake(protocol, container):
         """
         Handle a handshake.
+
+        This function should always return True or False, depending on whether
+        the handshake was successful.
         """
 
     def login(protocol, container):
         """
         Handle a login.
+
+        This function should return a ``Deferred`` which will fire depending
+        on whether the login was successful.
         """
 
     name = Attribute("""
