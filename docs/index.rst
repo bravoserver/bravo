@@ -14,6 +14,7 @@ Contents:
    features
    plugins
    differences
+   config
    philosophy
    noise
    core
