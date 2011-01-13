@@ -70,6 +70,8 @@ class BetaProtocol(Protocol):
 
         self.handlers = {
             0: self.ping,
+            1: self.login,
+            2: self.handshake,
             3: self.chat,
             10: self.flying,
             11: self.position_look,
@@ -96,6 +98,31 @@ class BetaProtocol(Protocol):
 
     def ping(self, container):
         pass
+
+    def login(self, container):
+        """
+        Handle a login packet.
+
+        This method wraps a login hook which is permitted to do just about
+        anything, as long as it's asynchronous. The hook returns a
+        ``Deferred``, which is chained to authenticate the user or disconnect
+        them depending on the results of the authentication.
+        """
+
+        if container.protocol < 8:
+            # Kick old clients.
+            self.error("This server doesn't support your ancient client.")
+        elif container.protocol > 8:
+            # Kick new clients.
+            self.error("This server doesn't support your newfangled client.")
+
+        d = self.factory.login_hook(self, container)
+        d.addCallback(lambda *args, **kwargs: self.authenticated())
+        d.addErrback(lambda *args, **kwargs: self.loseConnection())
+
+    def handshake(self, container):
+        if not self.factory.handshake_hook(self, container):
+            self.loseConnection()
 
     def colorize_chat(self, message):
         for user in self.factory.protocols:
@@ -406,9 +433,7 @@ class BetaProtocol(Protocol):
         packets, self.buf = parse_packets(self.buf)
 
         for header, payload in packets:
-            if header in self.factory.hooks:
-                self.factory.hooks[header](self, payload)
-            elif header in self.handlers:
+            if header in self.handlers:
                 self.handlers[header](payload)
             else:
                 log.err("Didn't handle parseable packet %d!" % header)

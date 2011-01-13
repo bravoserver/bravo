@@ -14,6 +14,7 @@ from bravo.chunk import Chunk
 from bravo.config import configuration
 from bravo.remote import MakeChunk
 from bravo.serialize import LevelSerializer
+from bravo.serialize import read_from_file, write_to_file, extension
 
 def base36(i):
     """
@@ -48,7 +49,7 @@ def names_for_chunk(x, z):
 
     first = base36(x & 63)
     second = base36(z & 63)
-    third = "c.%s.%s.dat" % (base36(x), base36(z))
+    third = "c.%s.%s%s" % (base36(x), base36(z), extension())
 
     return first, second, third
 
@@ -91,12 +92,11 @@ class World(LevelSerializer):
         self.spawn = (0, 0, 0)
         self.seed = random.randint(0, sys.maxint)
 
-        level = self.folder.child("level.dat")
+        level = self.folder.child("level%s" % extension())
         if level.exists() and level.getsize():
-            self.load_from_tag(NBTFile(fileobj=level.open("r")))
+            self.load_from_tag(read_from_file(level.open("r")))
 
-        tag = self.save_to_tag()
-        tag.write_file(fileobj=level.open("w"))
+        write_to_file(self.save_to_tag(), level.open("w"))
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
@@ -193,8 +193,7 @@ class World(LevelSerializer):
             f.makedirs()
         f = f.child(filename)
         if f.exists() and f.getsize():
-            tag = NBTFile(fileobj=f.open("r"))
-            chunk.load_from_tag(tag)
+            chunk.load_from_tag(read_from_file(f.open("r")))
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
@@ -260,8 +259,7 @@ class World(LevelSerializer):
             f.makedirs()
         f = f.child(filename)
         if f.exists() and f.getsize():
-            tag = NBTFile(fileobj=f.open("r"))
-            chunk.load_from_tag(tag)
+            chunk.load_from_tag(read_from_file(f.open("r")))
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
@@ -294,8 +292,7 @@ class World(LevelSerializer):
         if not f.exists():
             f.makedirs()
         f = f.child(filename)
-        tag = chunk.save_to_tag()
-        tag.write_file(fileobj=f.open("w"))
+        write_to_file(chunk.save_to_tag(), f.open("w"))
 
         chunk.dirty = False
 
@@ -313,10 +310,9 @@ class World(LevelSerializer):
         f = self.folder.child("players")
         if not f.exists():
             f.makedirs()
-        f = f.child("%s.dat" % username)
+        f = f.child("%s%s" % (username, extension()))
         if f.exists() and f.getsize():
-            tag = NBTFile(fileobj=f.open("r"))
-            player.load_from_tag(tag)
+            player.load_from_tag(f.open("r"))
 
         return player
 
@@ -325,6 +321,5 @@ class World(LevelSerializer):
         f = self.folder.child("players")
         if not f.exists():
             f.makedirs()
-        f = f.child("%s.dat" % username)
-        tag = player.save_to_tag()
-        tag.write_file(fileobj=f.open("w"))
+        f = f.child("%s%s" % (username, extension()))
+        write_to_file(player.save_to_tag(), f.open("w"))

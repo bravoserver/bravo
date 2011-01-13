@@ -33,9 +33,26 @@ class BetaFactory(Factory):
     time = 0
     day = 0
 
-    def __init__(self):
-        self.world = World("world")
+    handshake_hook = None
+    login_hook = None
+
+    def __init__(self, name):
+        """
+        Create a factory and world.
+
+        ``name`` is the string used to look up factory-specific settings from
+        the configuration.
+
+        :param str name: internal name of this factory
+        """
+
+        self.name = name
+        self.port = configuration.getint(name, "port")
+
+        world_folder = configuration.get(name, "world")
+        self.world = World(world_folder)
         self.world.factory = self
+
         self.protocols = dict()
 
         self.eid = 1
@@ -44,14 +61,12 @@ class BetaFactory(Factory):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
 
-        self.hooks = {}
-
         authenticator = configuration.get("bravo", "authenticator")
         selected = retrieve_named_plugins(IAuthenticator, [authenticator])[0]
 
         print "Using authenticator %s" % selected.name
-        self.hooks[2] = selected.handshake
-        self.hooks[1] = selected.login
+        self.handshake_hook = selected.handshake
+        self.login_hook = selected.login
 
         generators = configuration.get("bravo", "generators").split(",")
         generators = retrieve_named_plugins(ITerrainGenerator, generators)

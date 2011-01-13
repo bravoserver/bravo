@@ -7,6 +7,7 @@ defaults = {
     "dig_hooks": "give,replace,alpha_snow",
     "fancy_console": "true",
     "ampoule": "true",
+    "serializer": "json",
 }
 
 configuration = ConfigParser.SafeConfigParser(defaults)

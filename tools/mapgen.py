@@ -46,6 +46,7 @@ for i, j in product(xrange(size), repeat=2):
     if count >= counts[0]:
         print "Status: %d/%d (%.2f%%)" % (count, total, count * 100 / total)
         counts.append(counts.pop(0) * 10)
+
 taken = time.time() - before
 print "Finished!"
 print "Took %.2f seconds to generate (%dms/chunk)" % (taken,
