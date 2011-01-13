@@ -36,9 +36,23 @@ class BetaFactory(Factory):
     handshake_hook = None
     login_hook = None
 
-    def __init__(self):
-        self.world = World("world")
+    def __init__(self, name):
+        """
+        Create a factory and world.
+
+        ``name`` is the string used to look up factory-specific settings from
+        the configuration.
+
+        :param str name: internal name of this factory
+        """
+
+        self.name = name
+        self.port = configuration.getint(name, "port")
+
+        world_folder = configuration.get(name, "world")
+        self.world = World(world_folder)
         self.world.factory = self
+
         self.protocols = dict()
 
         self.eid = 1
