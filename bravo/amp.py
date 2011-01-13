@@ -33,6 +33,7 @@ class RunCommand(Command):
         ("output", ListOf(Unicode())),
     )
     errors = {
+        KeyError: "KEY_ERROR",
         ValueError: "VALUE_ERROR",
     }
 

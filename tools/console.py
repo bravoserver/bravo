@@ -64,6 +64,9 @@ class BravoConsole(LineReceiver):
         self.transport.write(greeting)
 
     def lineReceived(self, line):
+        if line == "":
+            return
+
         if self.ready:
             if line.startswith("select "):
                 # World selection.
@@ -76,12 +79,15 @@ class BravoConsole(LineReceiver):
             else:
                 # Remote command. Do we have a world?
                 if self.world:
-                    params = line.split()
-                    command = params.pop(0).lower()
-                    d = self.remote.callRemote(RunCommand, world=self.world,
-                        command=command, parameters=params)
-                    d.addCallback(self.results)
-                    self.ready = False
+                    try:
+                        params = line.split()
+                        command = params.pop(0).lower()
+                        d = self.remote.callRemote(RunCommand, world=self.world,
+                            command=command, parameters=params)
+                        d.addCallback(self.results)
+                        self.ready = False
+                    except:
+                        self.sendLine("Huh?")
                 else:
                     self.sendLine("No world selected.")
 
