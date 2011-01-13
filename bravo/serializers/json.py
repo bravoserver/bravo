@@ -8,8 +8,6 @@ except ImportError:
     except ImportError:
         raise ImportError("Couldn't find a JSON library!")
 
-from bravo.utilities import unpack_nibbles, pack_nibbles
-
 class InventorySerializer(object):
 
     def load_from_tag(inventory, l):
@@ -97,11 +95,11 @@ class ChunkSerializer(object):
 
         level = d["Level"]
 
-        chunk.blocks.ravel()[:] = [ord(i) for i in level["Blocks"]]
-        chunk.heightmap.ravel()[:] = [ord(i) for i in level["HeightMap"]]
-        chunk.blocklight.ravel()[:] = unpack_nibbles(level["BlockLight"])
-        chunk.metadata.ravel()[:] = unpack_nibbles(level["Data"])
-        chunk.skylight.ravel()[:] = unpack_nibbles(level["SkyLight"])
+        chunk.blocks.ravel()[:] = [i for i in level["Blocks"]]
+        chunk.heightmap.ravel()[:] = [i for i in level["HeightMap"]]
+        chunk.blocklight.ravel()[:] = [i for i in level["BlockLight"]]
+        chunk.metadata.ravel()[:] = [i for i in level["Data"]]
+        chunk.skylight.ravel()[:] = [i for i in level["SkyLight"]]
 
         chunk.populated = level["TerrainPopulated"]
 
@@ -120,13 +118,11 @@ class ChunkSerializer(object):
 
         d = {
             "Level:": {
-                "Blocks": "".join(chr(i) for i in chunk.blocks.ravel()),
-                "HeightMap": "".join(chr(i) for i in chunk.heightmap.ravel()),
-                "BlockLight": "".join(
-                    pack_nibbles(chunk.blocklight)
-                ),
-                "Data": "".join(pack_nibbles(chunk.metadata)),
-                "SkyLight": "".join(pack_nibbles(chunk.skylight)),
+                "Blocks": [int(i) for i in chunk.blocks.ravel()],
+                "HeightMap": [int(i) for i in chunk.heightmap.ravel()],
+                "BlockLight": [int(i) for i in chunk.blocklight.ravel()],
+                "Data": [int(i) for i in chunk.metadata.ravel()],
+                "SkyLight": [int(i) for i in chunk.skylight.ravel()],
                 "TerrainPopulated": chunk.populated,
                 "TileEntities": [tile.save_to_tag()
                     for tile in chunk.tiles.itervalues()
