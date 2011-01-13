@@ -7,4 +7,7 @@ __all__ = (
     "LevelSerializer",
     "PlayerSerializer",
     "SignSerializer",
+    "read_from_file",
+    "write_to_file",
+    "extension",
 )

@@ -200,3 +200,16 @@ class PlayerSerializer(object):
         tag["Inventory"] = player.inventory.save_to_tag()
 
         return tag
+
+def read_from_file(f):
+
+    tag = NBTFile(fileobj=f)
+    return tag
+
+def write_to_file(tag, f):
+
+    tag.write_file(fileobj=f)
+
+def extension():
+
+    return ".dat"

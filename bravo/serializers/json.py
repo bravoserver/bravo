@@ -1,10 +1,10 @@
 from itertools import chain
 
 try:
-    from json import loads, dumps
+    from json import load, dump
 except ImportError:
     try:
-        from simplejson import loads, dumps
+        from simplejson import load, dump
     except ImportError:
         raise ImportError("Couldn't find a JSON library!")
 
@@ -179,3 +179,15 @@ class PlayerSerializer(object):
         }
 
         return d
+
+def read_from_file(f):
+
+    return load(f)
+
+def write_to_file(d, f):
+
+    dump(d, f)
+
+def extension():
+
+    return ".json"
