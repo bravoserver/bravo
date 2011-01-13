@@ -3,10 +3,12 @@ from twisted.application.service import Application, MultiService
 
 from bravo.config import configuration
 from bravo.factory import BetaFactory
-from bravo.web import site
+from bravo.amp import ConsoleRPCFactory
 
 service = MultiService()
-TCPServer(25600, site).setServiceParent(service)
+
+# Start up our AMP.
+TCPServer(25600, ConsoleRPCFactory()).setServiceParent(service)
 
 for section in configuration.sections():
     if section.startswith("world"):
