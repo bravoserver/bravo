@@ -7,13 +7,15 @@ from bravo.amp import ConsoleRPCFactory
 
 service = MultiService()
 
-# Start up our AMP.
-TCPServer(25600, ConsoleRPCFactory()).setServiceParent(service)
-
+worlds = []
 for section in configuration.sections():
-    if section.startswith("world"):
-        factory = BetaFactory(section)
+    if section.startswith("world "):
+        factory = BetaFactory(section[6:])
         TCPServer(factory.port, factory).setServiceParent(service)
+        worlds.append(factory)
+
+# Start up our AMP.
+TCPServer(25600, ConsoleRPCFactory(worlds)).setServiceParent(service)
 
 application = Application("Bravo")
 service.setServiceParent(application)

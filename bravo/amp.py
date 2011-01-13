@@ -11,6 +11,12 @@ class Version(Command):
         ("version", Unicode()),
     )
 
+class Worlds(Command):
+    arguments = tuple()
+    response = (
+        ("worlds", ListOf(Unicode())),
+    )
+
 class Commands(Command):
     arguments = tuple()
     response = (
@@ -19,19 +25,24 @@ class Commands(Command):
 
 class RunCommand(Command):
     arguments = (
-        ("factory", Unicode()),
+        ("world", Unicode()),
         ("command", Unicode()),
+        ("parameters", ListOf(Unicode())),
     )
     response = (
         ("output", ListOf(Unicode())),
     )
+    errors = {
+        ValueError: "VALUE_ERROR",
+    }
 
 class ConsoleRPCProtocol(AMP):
     """
     Simple AMP server for clients implementing console services.
     """
 
-    def __init__(self):
+    def __init__(self, worlds):
+        self.factories = dict((factory.name, factory) for factory in worlds)
         # XXX hax
         self.commands = retrieve_plugins(IConsoleCommand)
         # Register aliases.
@@ -43,27 +54,35 @@ class ConsoleRPCProtocol(AMP):
         return {"version": bravo_version}
     Version.responder(version)
 
+    def worlds(self):
+        return {"worlds": self.factories.keys()}
+    Worlds.responder(worlds)
+
     def commands(self):
         return {"commands": self.commands.keys()}
     Commands.responder(commands)
 
-    def run_command(self, factory, line):
+    def run_command(self, world, command, parameters):
         """
         Single point of entry for the logic for running a command.
         """
 
-        if line != "":
-            params = line.split(" ")
-            command = params.pop(0).lower()
-            if command in self.commands:
-                try:
-                    for l in self.commands[command].console_command(factory, params):
-                        yield "%s" % l
-                except Exception, e:
-                    traceback.print_exc()
-                    yield "Error: %s" % e
-            else:
-                yield "Unknown command: %s" % command
+        factory = self.factories[world]
+
+        lines = [i
+            for i in self.commands[command].console_command(factory,
+                parameters)]
+
+        return {"output": lines}
+    RunCommand.responder(run_command)
 
 class ConsoleRPCFactory(Factory):
     protocol = ConsoleRPCProtocol
+
+    def __init__(self, worlds):
+        self.worlds = worlds
+
+    def buildProtocol(self, addr):
+        protocol = self.protocol(self.worlds)
+        protocol.factory = self
+        return protocol
