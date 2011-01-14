@@ -490,8 +490,8 @@ class BetaProtocol(Protocol):
         d = cooperate(
             self.enable_chunk(i, j)
             for i, j in product(
-                xrange(bigx - 4, bigx + 4),
-                xrange(bigz - 4, bigz + 4)
+                xrange(bigx - 3, bigx + 3),
+                xrange(bigz - 3, bigz + 3)
             )
         ).whenDone()
 
