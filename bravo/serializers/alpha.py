@@ -137,7 +137,7 @@ class ChunkSerializer(object):
         level["HeightMap"].value = "".join(chr(i)
                 for i in chunk.heightmap.ravel())
         level["BlockLight"].value = "".join(
-                pack_nibbles(chunk.blocklight.ravel()))
+                pack_nibbles(chunk.blocklight))
         level["Data"].value = "".join(pack_nibbles(chunk.metadata))
         level["SkyLight"].value = "".join(pack_nibbles(chunk.skylight))
 
