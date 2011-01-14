@@ -484,7 +484,16 @@ class BetaProtocol(Protocol):
         bigx, smallx, bigz, smallz = split_coords(self.player.location.x,
             self.player.location.z)
 
-        d = self.enable_chunk(bigx, bigz)
+        # Spawn the 25 chunks in a square around the spawn, *before* spawning
+        # the player. Otherwise, there's a funky Beta 1.2 bug which causes the
+        # player to not be able to move.
+        d = cooperate(
+            self.enable_chunk(i, j)
+            for i, j in product(
+                xrange(bigx - 4, bigx + 4),
+                xrange(bigz - 4, bigz + 4)
+            )
+        ).whenDone()
 
         # Don't dare send more chunks beyond the initial one until we've
         # spawned.
