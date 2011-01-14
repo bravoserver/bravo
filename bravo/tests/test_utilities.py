@@ -27,12 +27,10 @@ class TestBitTwiddling(unittest.TestCase):
             [6, 14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 7, 3])
 
     def test_pack_nibbles(self):
-        self.assertEqual(list(bravo.utilities.pack_nibbles(array([6, 1]))),
-            ["a"])
+        self.assertEqual(bravo.utilities.pack_nibbles(array([6, 1])), "a")
         self.assertEqual(
-            list(bravo.utilities.pack_nibbles(
-                    array([6, 14, 6, 9, 6, 2, 7, 3]))),
-            list("nibs"))
+            bravo.utilities.pack_nibbles(array([6, 14, 6, 9, 6, 2, 7, 3])),
+            "nibs")
 
 class TestStringMunging(unittest.TestCase):
 

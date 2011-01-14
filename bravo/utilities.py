@@ -7,6 +7,8 @@ from functools import wraps
 from itertools import izip, tee
 from time import time
 
+from numpy import uint8, cast
+
 # Coord handling.
 
 def split_coords(x, z):
@@ -58,11 +60,13 @@ def pack_nibbles(a):
 
     :param `ndarray` a: nibbles to pack
 
-    :returns: iterable yielding bytes
+    :returns: packed nibbles as a string of bytes
     """
 
-    for i, j in a.reshape(-1, 2):
-        yield chr(i << 4 | j)
+    a = a.reshape(-1, 2)
+    if a.dtype != uint8:
+        a = cast[uint8](a)
+    return ((a[:, 0] << 4) | a[:, 1]).tostring()
 
 # Trig.
 
