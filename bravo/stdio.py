@@ -106,8 +106,6 @@ class AMPGateway(object):
                 # Remote command. Do we have a world?
                 if self.world:
                     try:
-                        params = line.split()
-                        command = params.pop(0).lower()
                         d = self.remote.callRemote(RunCommand, world=self.world,
                             command=command, parameters=params)
                         d.addCallback(self.results)
@@ -147,7 +145,7 @@ class BravoInterpreter(object):
         # XXX
         #for user in self.factory.protocols:
         #    printable = printable.replace(user, fancy_console_name(user))
-        self.handler.addOutput(line)
+        self.handler.addOutput("%s\n" % line)
 
     def push(self, line):
         """
