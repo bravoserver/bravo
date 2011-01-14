@@ -119,13 +119,13 @@ class Inventory(InventorySerializer):
         for item in chain(self.crafted, self.crafting, self.armor,
             self.storage, self.holdables):
             if item is None:
-                lc.append(Container(id=-1))
+                lc.append(Container(primary=-1))
             else:
-                lc.append(Container(id=item[0], damage=item[1],
-                        count=item[2]))
+                lc.append(Container(primary=item[0], secondary=item[1],
+                    count=item[2]))
 
-        packet = make_packet("inventory", name=self.identifier, length=len(lc),
-            items=lc)
+        packet = make_packet("inventory", name=self.identifier,
+            length=len(lc), items=lc)
 
         return packet
 
@@ -141,15 +141,15 @@ class Inventory(InventorySerializer):
             # Check in two separate loops, to avoid bad grouping patterns.
             for i, t in enumerate(stash):
                 if t is not None:
-                    id, damage, count = t
+                    primary, secondary, count = t
 
-                    if id == item and count < 64:
+                    if (primary, secondary) == item and count < 64:
                         count += quantity
                         if count > 64:
                             count, quantity = 64, count - 64
                         else:
                             quantity = 0
-                        stash[i] = id, damage, count
+                        stash[i] = primary, secondary, count
                         if not quantity:
                             return True
             for i, t in enumerate(stash):
@@ -171,24 +171,24 @@ class Inventory(InventorySerializer):
 
         for i, t in enumerate(self.holdables):
             if t is not None:
-                id, damage, count = t
+                primary, secondary, count = t
 
-                if id == item and count:
+                if (primary, secondary) == item and count:
                     count -= 1
                     if count:
-                        self.holdables[i] = (id, damage, count)
+                        self.holdables[i] = primary, secondary, count
                     else:
                         self.holdables[i] = None
                     return True
 
         return False
 
-    def select(self, slot, secondary=False):
+    def select(self, slot, alternate=False):
         """
         Handle a slot selection.
 
         :param int slot: which slot was selected
-        :param bool secondary: whether the selection is secondary; e.g., if it
+        :param bool alternate: whether the selection is alternate; e.g., if it
                                was done with a right-click
         """
 
@@ -201,54 +201,55 @@ class Inventory(InventorySerializer):
 
                 self.reduce_recipe()
                 self.sync_crafting_table()
-                sitem, sdamage, scount = self.crafted[0]
-                scount -= self.recipe.provides[1]
-                if scount <= 0:
+                primary, secondary, count = self.crafted[0]
+                count -= self.recipe.provides[1]
+                if count <= 0:
                     self.crafted[0] = None
                 else:
-                    self.crafted[0] = sitem, sdamage, scount
+                    self.crafted[0] = primary, secondary, count
                 return True
             else:
                 # Forbid placing things in the crafted slot.
                 return False
 
         if self.selected is not None and l[index] is not None:
-            stype, sdamage, scount = self.selected
-            itype, idamage, icount = l[index]
-            if stype == itype and scount + icount <= 64:
-                if secondary:
+            sprimary, ssecondary, scount = self.selected
+            iprimary, isecondary, icount = l[index]
+            if ((sprimary, ssecondary) == (iprimary, isecondary) and
+                scount + icount <= 64):
+                if alternate:
                     icount += 1
                     scount -= 1
-                    l[index] = itype, idamage, icount + 1
+                    l[index] = iprimary, isecondary, icount + 1
                     if scount <= 0:
                         self.selected = None
                     else:
-                        self.selected = stype, sdamage, scount
+                        self.selected = sprimary, ssecondary, scount
                 else:
-                    l[index] = itype, idamage, scount + icount
+                    l[index] = iprimary, isecondary, scount + icount
                     self.selected = None
             else:
-                if not secondary:
+                if not alternate:
                     self.selected, l[index] = l[index], self.selected
         else:
-            if secondary:
+            if alternate:
                 if self.selected is not None:
-                    sitem, sdamage, scount = self.selected
-                    l[index] = sitem, sdamage, 1
+                    sprimary, ssecondary, scount = self.selected
+                    l[index] = sprimary, ssecondary, 1
                     if scount <= 1:
                         self.selected = None
                     else:
-                        self.selected = sitem, sdamage, scount - 1
+                        self.selected = sprimary, ssecondary, scount - 1
                 else:
                     # Logically, l[index] is not None, but self.selected is.
-                    litem, ldamage, lcount = l[index]
+                    lprimary, lsecondary, lcount = l[index]
                     scount = lcount // 2
                     scount, lcount = lcount - scount, scount
                     if lcount >= 0:
-                        l[index] = litem, ldamage, lcount
+                        l[index] = lprimary, lsecondary, lcount
                     else:
                         l[index] = None
-                    self.selected = litem, ldamage, scount
+                    self.selected = lprimary, lsecondary, scount
             else:
                 # Default case: just swap.
                 self.selected, l[index] = l[index], self.selected
@@ -263,7 +264,7 @@ class Inventory(InventorySerializer):
                 self.crafted[0] = None
             else:
                 crafted = self.apply_recipe()
-                self.crafted[0] = crafted[0], 0, crafted[1]
+                self.crafted[0] = crafted[0][0], crafted[0][1], crafted[1]
 
         return True
 
@@ -295,9 +296,10 @@ class Inventory(InventorySerializer):
                     if crafting[index] is None and slot is None:
                         matches_needed -= 1
                     elif crafting[index] is not None and slot is not None:
-                        cblock, chaff, ccount = crafting[index]
-                        sblock, scount = slot
-                        if cblock == sblock and ccount >= scount:
+                        cprimary, csecondary, ccount = crafting[index]
+                        sprimary, ssecondary, scount = slot
+                        if ((cprimary, csecondary) == (sprimary, ssecondary)
+                            and ccount >= scount):
                             matches_needed -= 1
 
                     if matches_needed == 0:
@@ -352,10 +354,10 @@ class Inventory(InventorySerializer):
         for index, slot in zip(indices, self.recipe.recipe):
             if slot is not None:
                 scount = slot[1]
-                tblock, tdamage, tcount = crafting[index]
+                primary, secondary, tcount = crafting[index]
                 tcount -= scount
                 if tcount:
-                    crafting[index] = tblock, tdamage, tcount
+                    crafting[index] = primary, secondary, tcount
                 else:
                     crafting[index] = None
 
