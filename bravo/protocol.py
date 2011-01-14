@@ -265,7 +265,7 @@ class BetaProtocol(Protocol):
             return
 
         # Ignore clients that think -1 is placeable.
-        if container.id == -1:
+        if container.primary == -1:
             return
 
         # Special case when face is "noop": Update the status of the currently
@@ -273,13 +273,13 @@ class BetaProtocol(Protocol):
         if container.face == "noop":
             return
 
-        if container.id in blocks:
-            block = blocks[container.id]
-        elif container.id in items:
-            block = items[container.id]
+        if container.primary in blocks:
+            block = blocks[container.primary]
+        elif container.primary in items:
+            block = items[container.primary]
         else:
             log.err("Ignoring request to place unknown block %d" %
-                container.id)
+                container.primary)
             return
 
         if time() - self.last_dig_build_timer < 0.1:
