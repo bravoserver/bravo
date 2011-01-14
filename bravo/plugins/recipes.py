@@ -11,9 +11,9 @@ class Wood(object):
     name = "wood"
     dimensions = (1, 1)
     recipe = (
-        (blocks["log"].slot, 1),
+        (blocks["log"].key, 1),
     )
-    provides = (blocks["wood"].slot, 4)
+    provides = (blocks["wood"].key, 4)
 
 class Sticks(object):
 
@@ -22,10 +22,10 @@ class Sticks(object):
     name = "sticks"
     dimensions = (1, 2)
     recipe = (
-        (blocks["wood"].slot, 1),
-        (blocks["wood"].slot, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
     )
-    provides = (items["stick"].slot, 4)
+    provides = (items["stick"].key, 4)
 
 class Torches(object):
 
@@ -34,10 +34,10 @@ class Torches(object):
     name = "torches"
     dimensions = (1, 2)
     recipe = (
-        (items["coal"].slot, 1),
-        (items["stick"].slot, 1),
+        (items["coal"].key, 1),
+        (items["stick"].key, 1),
     )
-    provides = (blocks["torch"].slot, 4)
+    provides = (blocks["torch"].key, 4)
 
 class Workbench(object):
 
@@ -46,12 +46,12 @@ class Workbench(object):
     name = "workbench"
     dimensions = (2, 2)
     recipe = (
-        (blocks["wood"].slot, 1),
-        (blocks["wood"].slot, 1),
-        (blocks["wood"].slot, 1),
-        (blocks["wood"].slot, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
     )
-    provides = (blocks["workbench"].slot, 1)
+    provides = (blocks["workbench"].key, 1)
 
 class Furnace(object):
 
@@ -60,17 +60,17 @@ class Furnace(object):
     name = "furnace"
     dimensions = (3, 3)
     recipe = (
-        (blocks["cobblestone"].slot, 1),
-        (blocks["cobblestone"].slot, 1),
-        (blocks["cobblestone"].slot, 1),
-        (blocks["cobblestone"].slot, 1),
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
         (None),
-        (blocks["cobblestone"].slot, 1),
-        (blocks["cobblestone"].slot, 1),
-        (blocks["cobblestone"].slot, 1),
-        (blocks["cobblestone"].slot, 1),
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
     )
-    provides = (blocks["furnace"].slot, 1)
+    provides = (blocks["furnace"].key, 1)
 
 class Chest(object):
 
@@ -79,17 +79,17 @@ class Chest(object):
     name = "furnace"
     dimensions = (3, 3)
     recipe = (
-        (blocks["wood"].slot, 1),
-        (blocks["wood"].slot, 1),
-        (blocks["wood"].slot, 1),
-        (blocks["wood"].slot, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
         (None),
-        (blocks["wood"].slot, 1),
-        (blocks["wood"].slot, 1),
-        (blocks["wood"].slot, 1),
-        (blocks["wood"].slot, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
     )
-    provides = (blocks["chest"].slot, 1)
+    provides = (blocks["chest"].key, 1)
 
 wood = Wood()
 sticks = Sticks()

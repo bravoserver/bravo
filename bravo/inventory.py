@@ -297,8 +297,8 @@ class Inventory(InventorySerializer):
                         matches_needed -= 1
                     elif crafting[index] is not None and slot is not None:
                         cprimary, csecondary, ccount = crafting[index]
-                        sprimary, ssecondary, scount = slot
-                        if ((cprimary, csecondary) == (sprimary, ssecondary)
+                        skey, scount = slot
+                        if ((cprimary, csecondary) == skey
                             and ccount >= scount):
                             matches_needed -= 1
 

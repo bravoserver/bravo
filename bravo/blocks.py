@@ -11,6 +11,7 @@ class Block(object):
 
     __slots__ = (
         "drop",
+        "key",
         "name",
         "quantity",
         "ratio",
@@ -45,6 +46,9 @@ class Block(object):
         self.slot = slot
         self.name = name
 
+        # XXX
+        self.key = (self.slot, 0)
+
         if drop is None:
             self.drop = slot
         else:
@@ -60,6 +64,7 @@ class Item(object):
     """
 
     __slots__ = (
+        "key",
         "name",
         "slot",
     )
@@ -71,6 +76,9 @@ class Item(object):
 
         self.slot = slot
         self.name = name
+
+        # XXX
+        self.key = (self.slot, 0)
 
 block_names = [
     "air",
