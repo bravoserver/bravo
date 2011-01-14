@@ -6,9 +6,15 @@ import traceback
 
 from twisted.conch.insults.insults import ServerProtocol
 from twisted.conch.manhole import Manhole
+from twisted.internet import reactor
+from twisted.internet.defer import Deferred
+from twisted.internet.protocol import ClientCreator
 from twisted.internet.stdio import StandardIO
+from twisted.internet.task import LoopingCall
+from twisted.protocols.amp import AMP
 from twisted.protocols.basic import LineReceiver
 
+from bravo.amp import Version, Worlds, Commands, RunCommand
 from bravo.config import configuration
 from bravo.ibravo import IConsoleCommand
 from bravo.plugin import retrieve_plugins
@@ -35,50 +41,122 @@ typeToColor = {
 
 normalColor = '\x1b[0m'
 
-def run_command(commands, factory, line):
+class AMPGateway(object):
     """
-    Single point of entry for the logic for running a command.
+    Wrapper around the logical implementation of a console.
     """
 
-    if line != "":
-        params = line.split(" ")
-        command = params.pop(0).lower()
-        if command in commands:
-            try:
-                for l in commands[command].console_command(factory, params):
-                    yield "%s" % l
-            except Exception, e:
-                traceback.print_exc()
-                yield "Error: %s" % e
-        else:
-            yield "Unknown command: %s" % command
+    def __init__(self, host, port):
+        self.ready = False
+
+        self.host = host
+        self.port = port
+        self.cc = ClientCreator(reactor, AMP)
+
+        d = self.cc.connectTCP(self.host, self.port)
+        d.addCallback(self.connected)
+
+        self.world = None
+
+    def connected(self, p):
+        self.remote = p
+
+        self.sendLine("Successfully connected to server, getting version...")
+        d = self.remote.callRemote(Version)
+        d.addCallback(self.version)
+
+        LoopingCall(self.world_loop).start(10)
+
+    def world_loop(self):
+        self.remote.callRemote(Worlds).addCallback(
+            lambda d: setattr(self, "worlds", d["worlds"])
+        )
+
+    def version(self, d):
+        self.version = d["version"]
+
+        self.sendLine("Connected to Bravo %s. Ready." % self.version)
+        self.ready = True
+
+    def call(self, command, params):
+        """
+        Run a command.
+
+        This is the client-side implementation; it wraps a few things to
+        protect the console from raw logic and the server from builtin
+        commands.
+        """
+
+        self.ready_deferred = Deferred()
+
+        if self.ready:
+            if command in ("exit", "quit"):
+                # Quit.
+                stop_console()
+                reactor.stop()
+            elif command == "select":
+                # World selection.
+                world = params[0]
+                if world in self.worlds:
+                    self.world = world
+                    self.sendLine("Selected world %s" % world)
+                else:
+                    self.sendLine("Couldn't find world %s" % world)
+            else:
+                # Remote command. Do we have a world?
+                if self.world:
+                    try:
+                        d = self.remote.callRemote(RunCommand, world=self.world,
+                            command=command, parameters=params)
+                        d.addCallback(self.results)
+                        self.ready = False
+                    except:
+                        self.sendLine("Huh?")
+                else:
+                    self.sendLine("No world selected.")
+
+        if self.ready:
+            self.ready_deferred.callback(None)
+        return self.ready_deferred
+
+    def results(self, d):
+        for line in d["output"]:
+            self.sendLine(line)
+        self.ready = True
+        reactor.callLater(0, self.ready_deferred.callback, None)
+
+    def sendLine(self, line):
+        if isinstance(line, unicode):
+            line = line.encode("utf8")
+        self.print_hook(line)
 
 class BravoInterpreter(object):
 
-    def __init__(self, handler, factory):
+    def __init__(self, handler, ag):
         self.handler = handler
-        self.factory = factory
+        self.ag = ag
 
-        self.commands = retrieve_plugins(IConsoleCommand)
-        # Register aliases.
-        for plugin in self.commands.values():
-            for alias in plugin.aliases:
-                self.commands[alias] = plugin
+        self.ag.print_hook = self.print_hook
 
     def resetBuffer(self):
         pass
+
+    def print_hook(self, line):
+        # XXX
+        #for user in self.factory.protocols:
+        #    printable = printable.replace(user, fancy_console_name(user))
+        self.handler.addOutput("%s\n" % line)
 
     def push(self, line):
         """
         Handle a command.
         """
 
-        for l in run_command(self.commands, self.factory, line):
-            printable = "%s\n" % l
-            for user in self.factory.protocols:
-                printable = printable.replace(user, fancy_console_name(user))
-            # Have to encode to keep Unicode off the wire.
-            self.handler.addOutput(printable.encode("utf8"))
+        line = line.strip()
+        if line:
+            params = line.split()
+            command = params.pop(0).lower()
+            d = self.ag.call(command, params)
 
     def lastColorizedLine(self, line):
         s = []
@@ -167,42 +245,47 @@ class BravoConsole(LineReceiver):
 
     delimiter = os.linesep
 
-    def __init__(self, factory):
-        self.factory = factory
-
-        self.commands = retrieve_plugins(IConsoleCommand)
-        # Register aliases.
-        for plugin in self.commands.values():
-            for alias in plugin.aliases:
-                self.commands[alias] = plugin
+    def __init__(self, ag):
+        self.ag = ag
+        ag.print_hook = self.sendLine
 
     def connectionMade(self):
         self.transport.write(greeting)
         self.transport.write(prompt)
 
     def lineReceived(self, line):
-        for l in run_command(self.commands, self.factory, line):
-            self.sendLine(l.encode("utf8"))
-
-        self.transport.write(prompt)
+        line = line.strip()
+        if line:
+            params = line.split()
+            command = params.pop(0).lower()
+            d = self.ag.call(command, params)
+            d.addCallback(lambda chaff: self.transport.write(prompt))
+        else:
+            self.transport.write(prompt)
 
 # Cribbed from Twisted. This version doesn't try to start the reactor, or a
 # handful of other things. At some point, this may no longer even look like
 # Twisted code.
 
-if fancy_console:
-    oldSettings = None
+oldSettings = None
 
-    def start_console(factory):
+def start_console():
+    ag = AMPGateway("localhost", 25600)
+
+    if fancy_console:
         global oldSettings
         fd = sys.__stdin__.fileno()
         oldSettings = termios.tcgetattr(fd)
         tty.setraw(fd)
-        p = ServerProtocol(BravoManhole, factory)
-        StandardIO(p)
-        return p
+        p = ServerProtocol(BravoManhole, ag)
+    else:
+        p = BravoConsole(ag)
 
-    def stop_console():
+    StandardIO(p)
+    return p
+
+def stop_console():
+    if fancy_console:
         fd = sys.__stdin__.fileno()
         termios.tcsetattr(fd, termios.TCSANOW, oldSettings)
         # Took me forever to figure it out. This adorable little gem is
@@ -210,11 +293,3 @@ if fancy_console:
         # to their initial state. In the process, of course, they nuke all
         # of the stuff on the screen.
         os.write(fd, "\r\x1bc\r")
-else:
-    def start_console(factory):
-        p = BravoConsole(factory)
-        StandardIO(p)
-        return p
-
-    def stop_console():
-        pass

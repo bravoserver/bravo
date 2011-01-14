@@ -46,10 +46,12 @@ class BetaFactory(Factory):
         :param str name: internal name of this factory
         """
 
-        self.name = name
-        self.port = configuration.getint(name, "port")
+        print "Initializing factory for world '%s'..." % name
 
-        world_folder = configuration.get(name, "world")
+        self.name = name
+        self.port = configuration.getint("world %s" % name, "port")
+
+        world_folder = configuration.get("world %s" % name, "world")
         self.world = World(world_folder)
         self.world.factory = self
 
@@ -74,7 +76,7 @@ class BetaFactory(Factory):
         print "Using generators %s" % ", ".join(i.name for i in generators)
         self.world.pipeline = generators
 
-        print "Factory init'd"
+        print "Factory successfully initialized for world '%s'!" % name
 
     def create_entity(self, x, y, z, name, **kwargs):
         self.eid += 1

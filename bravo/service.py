@@ -3,15 +3,19 @@ from twisted.application.service import Application, MultiService
 
 from bravo.config import configuration
 from bravo.factory import BetaFactory
-from bravo.web import site
+from bravo.amp import ConsoleRPCFactory
 
 service = MultiService()
-TCPServer(25600, site).setServiceParent(service)
 
+worlds = []
 for section in configuration.sections():
-    if section.startswith("world"):
-        factory = BetaFactory(section)
+    if section.startswith("world "):
+        factory = BetaFactory(section[6:])
         TCPServer(factory.port, factory).setServiceParent(service)
+        worlds.append(factory)
+
+# Start up our AMP.
+TCPServer(25600, ConsoleRPCFactory(worlds)).setServiceParent(service)
 
 application = Application("Bravo")
 service.setServiceParent(application)
