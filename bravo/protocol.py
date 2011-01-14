@@ -117,8 +117,8 @@ class BetaProtocol(Protocol):
             self.error("This server doesn't support your newfangled client.")
 
         d = self.factory.login_hook(self, container)
+        d.addErrback(lambda *args, **kwargs: self.transport.loseConnection())
         d.addCallback(lambda *args, **kwargs: self.authenticated())
-        d.addErrback(lambda *args, **kwargs: self.loseConnection())
 
     def handshake(self, container):
         if not self.factory.handshake_hook(self, container):

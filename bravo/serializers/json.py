@@ -117,7 +117,7 @@ class ChunkSerializer(object):
     def save_to_tag(chunk):
 
         d = {
-            "Level:": {
+            "Level": {
                 "Blocks": [int(i) for i in chunk.blocks.ravel()],
                 "HeightMap": [int(i) for i in chunk.heightmap.ravel()],
                 "BlockLight": [int(i) for i in chunk.blocklight.ravel()],

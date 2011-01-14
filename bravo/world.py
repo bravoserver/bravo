@@ -312,7 +312,7 @@ class World(LevelSerializer):
             f.makedirs()
         f = f.child("%s%s" % (username, extension()))
         if f.exists() and f.getsize():
-            player.load_from_tag(f.open("r"))
+            player.load_from_tag(read_from_file(f.open("r")))
 
         return player
 

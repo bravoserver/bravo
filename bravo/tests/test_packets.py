@@ -90,6 +90,13 @@ class TestPacketAssembly(unittest.TestCase):
         assembled = bravo.packets.packets[0].build(container)
         self.assertEqual(assembled, "")
 
+    def test_login(self):
+        container = Container(protocol=0, username="", unused="", seed=0,
+            dimension=0)
+        assembled = bravo.packets.packets[1].build(container)
+        self.assertEqual(assembled,
+            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+
     def test_time(self):
         container = Container(timestamp=42)
         assembled = bravo.packets.packets[4].build(container)

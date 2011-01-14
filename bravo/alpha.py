@@ -55,12 +55,12 @@ class Location(object):
 
         if hasattr(container, "position"):
             self.x = container.position.x
-            self.y = container.position.y
+            self.y = container.position.stance
             self.z = container.position.z
             # Stance is the current jumping position, plus a small offset of
             # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
             # or the anti-flying code kicks the client.
-            self.stance = container.position.stance
+            self.y = container.position.stance
         if hasattr(container, "look"):
             self.yaw = container.look.rotation
             self.pitch = container.look.pitch
