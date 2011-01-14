@@ -2,13 +2,13 @@ import random
 import sys
 import weakref
 
+from numpy import fromstring, uint8
+
 from ampoule import deferToAMPProcess
 
 from twisted.internet.defer import Deferred, succeed
 from twisted.internet.task import LoopingCall
 from twisted.python.filepath import FilePath
-
-from nbt.nbt import NBTFile
 
 from bravo.chunk import Chunk
 from bravo.config import configuration
@@ -204,11 +204,16 @@ class World(LevelSerializer):
         self._pending_chunks[x, z] = d
 
         def pp(kwargs):
-            chunk.blocks.ravel()[:] = [ord(i) for i in kwargs["blocks"]]
-            chunk.heightmap.ravel()[:] = [ord(i) for i in kwargs["heightmap"]]
-            chunk.metadata.ravel()[:] = [ord(i) for i in kwargs["metadata"]]
-            chunk.skylight.ravel()[:] = [ord(i) for i in kwargs["skylight"]]
-            chunk.blocklight.ravel()[:] = [ord(i) for i in kwargs["blocklight"]]
+            chunk.blocks = fromstring(kwargs["blocks"],
+                dtype=uint8).reshape(chunk.blocks.shape)
+            chunk.heightmap = fromstring(kwargs["heightmap"],
+                dtype=uint8).reshape(chunk.heightmap.shape)
+            chunk.metadata = fromstring(kwargs["metadata"],
+                dtype=uint8).reshape(chunk.metadata.shape)
+            chunk.skylight = fromstring(kwargs["skylight"],
+                dtype=uint8).reshape(chunk.skylight.shape)
+            chunk.blocklight = fromstring(kwargs["blocklight"],
+                dtype=uint8).reshape(chunk.blocklight.shape)
 
             chunk.populated = True
             chunk.dirty = True

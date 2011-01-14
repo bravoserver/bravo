@@ -1,5 +1,7 @@
 from itertools import chain
 
+from numpy import array, fromstring, uint8
+
 from nbt.nbt import NBTFile
 from nbt.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from nbt.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
@@ -99,12 +101,18 @@ class ChunkSerializer(object):
 
         level = tag["Level"]
 
-        chunk.blocks.ravel()[:] = [ord(i) for i in level["Blocks"].value]
-        chunk.heightmap.ravel()[:] = [ord(i)
-                for i in level["HeightMap"].value]
-        chunk.blocklight.ravel()[:] = unpack_nibbles(level["BlockLight"].value)
-        chunk.metadata.ravel()[:] = unpack_nibbles(level["Data"].value)
-        chunk.skylight.ravel()[:] = unpack_nibbles(level["SkyLight"].value)
+        # These are designed to raise if there are any issues, but still be
+        # speedy.
+        chunk.blocks = fromstring(level["Blocks"].value,
+            dtype=uint8).reshape(chunk.blocks.shape)
+        chunk.heightmap = fromstring(level["HeightMap"].value,
+            dtype=uint8).reshape(chunk.heightmap.shape)
+        chunk.blocklight = array(unpack_nibbles(
+            level["BlockLight"].value)).reshape(chunk.blocklight.shape)
+        chunk.metadata = array(unpack_nibbles(
+            level["Data"].value)).reshape(chunk.metadata.shape)
+        chunk.skylight = array(unpack_nibbles(
+            level["SkyLight"].value)).reshape(chunk.skylight.shape)
 
         chunk.populated = bool(level["TerrainPopulated"])
 
