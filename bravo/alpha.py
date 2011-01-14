@@ -9,11 +9,21 @@ class Location(object):
     The position and orientation of an entity.
     """
 
+    __slots__ = (
+        "midair",
+        "phi",
+        "stance",
+        "theta",
+        "x",
+        "_y",
+        "z",
+    )
+
     def __init__(self):
         # Position in pixels.
         self.x = 0
-        self.y = 0
         self.stance = 0
+        self.y = 0
         self.z = 0
 
         # Orientation, in radians.
@@ -25,10 +35,21 @@ class Location(object):
         self.midair = False
 
     def __repr__(self):
-        return "<Location(%.6f, %.6f (%.6f), %.6f, %.2f, %.2f)>" % (self.x,
-            self.y, self.stance, self.z, self.theta, self.phi)
+        return "<Location(%s, (%.6f, %.6f (+%.6f), %.6f), (%.2f, %.2f))>" % (
+            "flying" if self.midair else "not flying", self.x, self.y,
+            self.stance - self.y, self.z, self.theta, self.phi)
 
     __str__ = __repr__
+
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self, value):
+        self._y = value
+        if not 0.1 < (self.stance - self.y) < 1.65:
+            self.stance = self.y + 1.0
 
     @property
     def yaw(self):
