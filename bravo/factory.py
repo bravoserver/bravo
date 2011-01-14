@@ -172,8 +172,9 @@ class BetaFactory(Factory):
         entity.block = block
         entity.quantity = quantity
 
-        packet = make_packet("pickup", eid=entity.eid, item=block,
-                count=quantity, x=x, y=y, z=z, yaw=0, pitch=0, roll=0)
+        packet = make_packet("pickup", eid=entity.eid, primary=block,
+            secondary=0, count=quantity, x=x, y=y, z=z, yaw=0, pitch=0,
+            roll=0)
         self.broadcast(packet)
 
         packet = make_packet("create", eid=entity.eid)
