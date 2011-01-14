@@ -57,15 +57,15 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.look.rotation, 6316.8076171875)
 
     def test_build(self):
-        packet = "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x12"
+        packet = "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x00\x12"
         parsed = bravo.packets.packets[15].parse(packet)
         self.assertEqual(parsed.x, 25)
         self.assertEqual(parsed.y, 64)
         self.assertEqual(parsed.z, 64)
         self.assertEqual(parsed.face, "+x")
-        self.assertEqual(parsed.id, 4)
+        self.assertEqual(parsed.primary, 4)
         self.assertEqual(parsed.count, 64)
-        self.assertEqual(parsed.damage, 18)
+        self.assertEqual(parsed.secondary, 18)
 
     def test_build_bad_face(self):
         packet = "\x00\x00\x00\x19@\x00\x00\x00@\x06\x00\x04@\x12"
@@ -96,11 +96,11 @@ class TestPacketAssembly(unittest.TestCase):
         self.assertEqual(assembled, "\x00\x00\x00\x00\x00\x00\x00\x2a")
 
     def test_build(self):
-        container = Container(x=25, y=64, z=64, face="+x", id=4, count=64,
-            damage=18)
+        container = Container(x=25, y=64, z=64, face="+x", primary=4,
+            secondary=18, count=64)
         assembled = bravo.packets.packets[15].build(container)
         self.assertEqual(assembled,
-            "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x12")
+            "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x00\x12")
 
     def test_build_bad_face(self):
         container = Container(x=25, y=64, z=64, face="+q", id=4, count=64,
