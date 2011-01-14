@@ -287,12 +287,12 @@ class Chunk(ChunkSerializer):
         Generate a chunk packet.
         """
 
-        array = [chr(i) for i in self.blocks.ravel()]
+        array = self.blocks.tostring()
         array += pack_nibbles(self.metadata)
         array += pack_nibbles(self.skylight)
         array += pack_nibbles(self.blocklight)
         packet = make_packet("chunk", x=self.x * 16, y=0, z=self.z * 16,
-            x_size=15, y_size=127, z_size=15, data="".join(array))
+            x_size=15, y_size=127, z_size=15, data=array)
         return packet
 
     def get_block(self, coords):

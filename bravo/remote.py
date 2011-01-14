@@ -44,11 +44,11 @@ class Slave(AMPChild):
             stage.populate(chunk, seed)
 
         return {
-            "blocks": "".join(chr(i) for i in chunk.blocks.ravel()),
-            "metadata": "".join(chr(i) for i in chunk.metadata.ravel()),
-            "skylight": "".join(chr(i) for i in chunk.skylight.ravel()),
-            "blocklight": "".join(chr(i) for i in chunk.blocklight.ravel()),
-            "heightmap": "".join(chr(i) for i in chunk.heightmap.ravel()),
+            "blocks": chunk.blocks.tostring(),
+            "metadata": chunk.metadata.tostring(),
+            "skylight": chunk.skylight.tostring(),
+            "blocklight": chunk.blocklight.tostring(),
+            "heightmap": chunk.heightmap.tostring(),
         }
 
     MakeChunk.responder(make_chunk)

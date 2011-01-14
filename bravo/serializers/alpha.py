@@ -133,9 +133,8 @@ class ChunkSerializer(object):
         level["Data"] = TAG_Byte_Array()
         level["SkyLight"] = TAG_Byte_Array()
 
-        level["Blocks"].value = "".join(chr(i) for i in chunk.blocks.ravel())
-        level["HeightMap"].value = "".join(chr(i)
-                for i in chunk.heightmap.ravel())
+        level["Blocks"].value = chunk.blocks.tostring()
+        level["HeightMap"].value = chunk.heightmap.tostring()
         level["BlockLight"].value = pack_nibbles(chunk.blocklight)
         level["Data"].value = pack_nibbles(chunk.metadata)
         level["SkyLight"].value = pack_nibbles(chunk.skylight)
