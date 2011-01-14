@@ -90,7 +90,11 @@ class AMPGateway(object):
         self.ready_deferred = Deferred()
 
         if self.ready:
-            if command == "select":
+            if command in ("exit", "quit"):
+                # Quit.
+                stop_console()
+                reactor.stop()
+            elif command == "select":
                 # World selection.
                 world = params[0]
                 if world in self.worlds:
@@ -134,20 +138,27 @@ class BravoInterpreter(object):
         self.handler = handler
         self.ag = ag
 
+        self.ag.print_hook = self.print_hook
+
     def resetBuffer(self):
         pass
+
+    def print_hook(self, line):
+        # XXX
+        #for user in self.factory.protocols:
+        #    printable = printable.replace(user, fancy_console_name(user))
+        self.handler.addOutput(line)
 
     def push(self, line):
         """
         Handle a command.
         """
 
-        for l in run_command(self.commands, self.factory, line):
-            printable = "%s\n" % l
-            for user in self.factory.protocols:
-                printable = printable.replace(user, fancy_console_name(user))
-            # Have to encode to keep Unicode off the wire.
-            self.handler.addOutput(printable.encode("utf8"))
+        line = line.strip()
+        if line:
+            params = line.split()
+            command = params.pop(0).lower()
+            d = self.ag.call(command, params)
 
     def lastColorizedLine(self, line):
         s = []
