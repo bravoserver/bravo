@@ -133,6 +133,7 @@ class Inventory(InventorySerializer):
         """
         Attempt to add an item to the inventory.
 
+        :param tuple item: a key representing the item
         :returns: whether the item was successfully added
         """
 
@@ -154,7 +155,7 @@ class Inventory(InventorySerializer):
                             return True
             for i, t in enumerate(stash):
                 if t is None:
-                    stash[i] = item, 0, quantity
+                    stash[i] = item[0], item[1], quantity
                     return True
 
         return False
@@ -166,6 +167,7 @@ class Inventory(InventorySerializer):
         A return value of ``False`` indicates that there were no holdables of
         the given type to consume.
 
+        :param tuple item: a key representing the type of the item
         :returns: whether the item was successfully removed
         """
 

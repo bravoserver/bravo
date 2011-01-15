@@ -16,7 +16,7 @@ class TestInventoryInternals(unittest.TestCase):
         pass
 
     def test_add(self):
-        self.assertFalse(self.i.add(0, 1))
+        self.assertFalse(self.i.add((0, 0), 1))
 
 class TestEquipmentInternals(unittest.TestCase):
 
@@ -37,28 +37,28 @@ class TestEquipmentInternals(unittest.TestCase):
 
     def test_add_to_inventory(self):
         self.assertEqual(self.i.holdables, [None] * 9)
-        self.assertTrue(self.i.add(2, 1))
+        self.assertTrue(self.i.add((2, 0), 1))
         self.assertEqual(self.i.holdables[0], (2, 0, 1))
 
     def test_add_to_inventory_sequential(self):
         self.assertEqual(self.i.holdables, [None] * 9)
-        self.assertTrue(self.i.add(2, 1))
+        self.assertTrue(self.i.add((2, 0), 1))
         self.assertEqual(self.i.holdables[0], (2, 0, 1))
-        self.assertTrue(self.i.add(2, 1))
+        self.assertTrue(self.i.add((2, 0), 1))
         self.assertEqual(self.i.holdables[0], (2, 0, 2))
         self.assertEqual(self.i.holdables[1], None)
 
     def test_consume_holdable(self):
         self.i.holdables[0] = (2, 0, 1)
-        self.assertTrue(self.i.consume(2))
+        self.assertTrue(self.i.consume((2, 0)))
         self.assertEqual(self.i.holdables[0], None)
 
     def test_consume_holdable_empty(self):
-        self.assertFalse(self.i.consume(2))
+        self.assertFalse(self.i.consume((2, 0)))
 
     def test_consume_holdable_second_slot(self):
         self.i.holdables[1] = (2, 0, 1)
-        self.assertTrue(self.i.consume(2))
+        self.assertTrue(self.i.consume((2, 0)))
         self.assertEqual(self.i.holdables[1], None)
 
     def test_select_stack(self):
@@ -233,7 +233,7 @@ class TestInventoryIntegration(unittest.TestCase):
         pass
 
     def test_craft_wood_from_log(self):
-        self.i.add(bravo.blocks.blocks["log"].slot, 1)
+        self.i.add(bravo.blocks.blocks["log"].key, 1)
         # Select log from holdables.
         self.i.select(36)
         self.assertEqual(self.i.selected,
