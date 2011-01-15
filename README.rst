@@ -92,10 +92,41 @@ external libraries from PyPI:
 Bravo also uses the external NBT library
 (http://github.com/MostAwesomeDude/NBT) for reading and saving MC Alpha
 worlds. If this is a release version of Bravo, NBT is probably bundled;
-otherwise, you will have to retrieve it yourself.
+otherwise, you will have to retrieve it yourself. This library is only needed
+if you are using the NBT format for saving and loading worlds.
 
-We highly recommend pip for installing Bravo, since it handles all dependencies
-for you.
+Debian & Ubuntu
+---------------
+
+Debian and its derivatives, like Ubuntu, have Numpy and Twisted in their
+package managers.
+
+::
+
+ $ sudo aptitude install python-numpy python-twisted
+
+If you are tight on space, you can install only part of Twisted.
+
+::
+
+ $ sudo aptitude install python-numpy python-twisted-core python-twisted-bin python-twisted-conch
+
+Fedora
+------
+
+Numpy and Twisted can be installed from the standard Fedora repository.
+
+::
+
+ $ sudo yum install numpy python-twisted python-twisted-conch
+
+LFS/Virtualenv/Standalone
+-------------------------
+
+If, for some reason, you are installing to a very raw or unmanaged place, and
+you want to ensure that everything is built from the latest source available
+on PyPI, we highly recommend pip for installing Bravo, since it handles all
+dependencies for you.
 
 ::
 
@@ -138,6 +169,13 @@ Where did the docs go?
 Why did you make design decision <X>?
  There's an entire page dedicated to this in the documentation. Look at
  docs/philosophy.rst or http://mostawesomedude.github.com/bravo/philosophy.html.
+
+It doesn't install? Okay, maybe it installed, but I'm having issues!
+ On Freenode IRC (irc.freenode.net), #bravo is dedicated to Bravo development
+ and assistance, and #mcdevs is a more general channel for all custom
+ Minecraft development. You can generally get help from those channels. If you
+ think you have found a bug, you can directly report it on the Github issue
+ tracker as well.
 
 Who are you guys, anyway?
  Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
