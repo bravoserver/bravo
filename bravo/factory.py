@@ -3,6 +3,7 @@ from time import time
 
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
+from twisted.python import log
 
 from bravo.config import configuration
 from bravo.entity import Pickup, Player
@@ -46,7 +47,7 @@ class BetaFactory(Factory):
         :param str name: internal name of this factory
         """
 
-        print "Initializing factory for world '%s'..." % name
+        log.msg("Initializing factory for world '%s'..." % name)
 
         self.name = name
         self.port = configuration.getint("world %s" % name, "port")
@@ -66,17 +67,17 @@ class BetaFactory(Factory):
         authenticator = configuration.get("bravo", "authenticator")
         selected = retrieve_named_plugins(IAuthenticator, [authenticator])[0]
 
-        print "Using authenticator %s" % selected.name
+        log.msg("Using authenticator %s" % selected.name)
         self.handshake_hook = selected.handshake
         self.login_hook = selected.login
 
         generators = configuration.get("bravo", "generators").split(",")
         generators = retrieve_named_plugins(ITerrainGenerator, generators)
 
-        print "Using generators %s" % ", ".join(i.name for i in generators)
+        log.msg("Using generators %s" % ", ".join(i.name for i in generators))
         self.world.pipeline = generators
 
-        print "Factory successfully initialized for world '%s'!" % name
+        log.msg("Factory successfully initialized for world '%s'!" % name)
 
     def create_entity(self, x, y, z, name, **kwargs):
         self.eid += 1
