@@ -5,8 +5,6 @@ import unittest
 
 import bravo.world
 
-import nbt.utilities
-
 class TestWorldFiles(unittest.TestCase):
 
     def setUp(self):
