@@ -62,11 +62,11 @@ class Give(object):
 
         if block.ratio is None:
             # Guaranteed drop.
-            factory.give(coords, block.drop, block.quantity)
+            factory.give(coords, (block.drop, 0), block.quantity)
         elif (random.randint(1, block.ratio.denominator) <=
                 block.ratio.numerator):
             # Random drop based on ratio.
-            factory.give(coords, block.drop, block.quantity)
+            factory.give(coords, (block.drop, 0), block.quantity)
 
     name = "give"
 

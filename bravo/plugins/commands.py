@@ -18,16 +18,20 @@ def parse_player(factory, name):
         raise Exception("Couldn't find player %s" % name)
 
 def parse_block(block):
+    """
+    Get the key for a given block/item.
+    """
+
     try:
         if block.startswith("0x"):
-            return int(block, 16)
+            return (int(block, 16), 0)
         else:
-            return int(block)
+            return (int(block), 0)
     except ValueError:
         if block in blocks:
-            return blocks[block].slot
+            return blocks[block].key
         elif block in items:
-            return items[block].slot
+            return items[block].key
         else:
             raise Exception("Couldn't parse block %s!" % block)
 
