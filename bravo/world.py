@@ -4,17 +4,22 @@ import weakref
 
 from numpy import fromstring, uint8
 
-from ampoule import deferToAMPProcess
-
+from twisted.internet import reactor
 from twisted.internet.defer import Deferred, succeed
-from twisted.internet.task import LoopingCall
+from twisted.internet.task import deferLater, LoopingCall
 from twisted.python.filepath import FilePath
 
 from bravo.chunk import Chunk
 from bravo.config import configuration
-from bravo.remote import MakeChunk
 from bravo.serialize import LevelSerializer
 from bravo.serialize import read_from_file, write_to_file, extension
+
+try:
+    from ampoule import deferToAMPProcess
+    from bravo.remote import MakeChunk
+    async = configuration.getboolean("bravo", "ampoule")
+except ImportError:
+    async = False
 
 def base36(i):
     """
@@ -173,7 +178,13 @@ class World(LevelSerializer):
     def request_chunk(self, x, z):
         """
         Request a ``Chunk`` to be delivered later.
+
+        :returns: Deferred that will be called with the Chunk
         """
+
+        if not async:
+            return deferLater(reactor, 0.000001, self.factory.world.load_chunk,
+                x, z)
 
         if (x, z) in self.chunk_cache:
             return succeed(self.chunk_cache[x, z])
@@ -245,7 +256,7 @@ class World(LevelSerializer):
 
     def load_chunk(self, x, z):
         """
-        Retrieve a ``Chunk``.
+        Retrieve a ``Chunk`` synchronously.
 
         This method does lots of automatic caching of chunks to ensure that
         disk I/O is kept to a minimum.

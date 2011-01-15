@@ -1,9 +1,8 @@
 from time import time
 
-from twisted.internet import reactor
 from twisted.internet.defer import succeed
 from twisted.internet.protocol import Protocol
-from twisted.internet.task import cooperate, deferLater, LoopingCall
+from twisted.internet.task import cooperate, LoopingCall
 from twisted.internet.task import TaskDone, TaskFailed
 from twisted.python import log
 
@@ -31,12 +30,6 @@ from the center.
 """
 
 BuildData = namedtuple("BuildData", "block, metadata, x, y, z, face")
-
-try:
-    import ampoule
-    async = configuration.getboolean("bravo", "ampoule")
-except ImportError:
-    async = False
 
 class BetaProtocol(Protocol):
     """
@@ -404,12 +397,7 @@ class BetaProtocol(Protocol):
         if (x, z) in self.chunks:
             return succeed(None)
 
-        if async:
-            d = self.factory.world.request_chunk(x, z)
-        else:
-            d = deferLater(reactor, 0.000001, self.factory.world.load_chunk,
-                x, z)
-
+        d = self.factory.world.request_chunk(x, z)
         d.addCallback(self.send_chunk)
 
         return d
