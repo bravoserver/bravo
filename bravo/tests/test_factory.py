@@ -26,3 +26,16 @@ class TestBetaFactory(unittest.TestCase):
 
     def test_trivial(self):
         pass
+
+    def test_initial(self):
+        self.assertEqual(self.f.name, "unittest")
+        self.assertEqual(self.f.eid, 1)
+
+    def test_create_entity_pickup(self):
+        entity = self.f.create_entity(0, 0, 0, "Pickup")
+        self.assertTrue(entity in self.f.entities)
+        self.assertEqual(entity.eid, 2)
+        self.assertEqual(self.f.eid, 2)
+
+    def test_give(self):
+        self.f.give((0, 0, 0), (2, 0), 1)

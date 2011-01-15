@@ -165,6 +165,10 @@ class BetaFactory(Factory):
         Spawn a pickup at the specified coordinates.
 
         The coordinates need to be in pixels, not blocks.
+
+        :param tuple coords: coordinates, in pixels
+        :param tuple block: key of block or item to drop
+        :param int quantity: number of blocks to drop in the stack
         """
 
         x, y, z = coords
@@ -173,8 +177,8 @@ class BetaFactory(Factory):
         entity.block = block
         entity.quantity = quantity
 
-        packet = make_packet("pickup", eid=entity.eid, primary=block,
-            secondary=0, count=quantity, x=x, y=y, z=z, yaw=0, pitch=0,
+        packet = make_packet("pickup", eid=entity.eid, primary=block[0],
+            secondary=block[1], count=quantity, x=x, y=y, z=z, yaw=0, pitch=0,
             roll=0)
         self.broadcast(packet)
 
