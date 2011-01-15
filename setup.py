@@ -8,7 +8,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "numpy",
-        "reconstruct",
+        "construct>=2.03",
         "Twisted",
     ],
     author="Corbin Simpson",
