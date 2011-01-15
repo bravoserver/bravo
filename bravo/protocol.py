@@ -313,7 +313,7 @@ class BetaProtocol(Protocol):
 
     def pickup(self, container):
         self.factory.give((container.x, container.y, container.z),
-            container.item, container.count)
+            (container.primary, container.secondary), container.count)
 
     def wclose(self, container):
         if container.wid in self.windows:
