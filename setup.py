@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name="Bravo",
     version="1.0",
-    packages=find_packages(),
+    packages=["bravo", "twisted.plugins"],
     install_requires=[
         "numpy",
         "construct>=2.03",
