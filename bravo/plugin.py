@@ -27,7 +27,6 @@ def retrieve_plugins(interface, cached=True, cache={}):
     """
 
     if cached and interface in cache:
-        log.msg("Not rediscovering cached interface %s..." % interface)
         return cache[interface]
 
     log.msg("Discovering %s..." % interface)
