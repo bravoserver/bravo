@@ -23,3 +23,9 @@ setup(
         ],
     },
 )
+
+try:
+    from twisted.plugins import getPlugins, IPlugin
+    list(getPlugins(IPlugin))
+except:
+    pass
