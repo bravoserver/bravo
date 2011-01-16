@@ -4,6 +4,31 @@ import warnings
 import bravo.chunk
 import bravo.compat
 
+class TestChunkBlocks(unittest.TestCase):
+
+    def setUp(self):
+        self.c = bravo.chunk.Chunk(0, 0)
+
+    def test_trivial(self):
+        pass
+
+    def test_set_block(self):
+        self.assertEqual(self.c.blocks[0, 0, 0], 0)
+        self.c.set_block((0, 0, 0), 1)
+        self.assertEqual(self.c.blocks[0, 0, 0], 1)
+
+    def test_set_block_xyz_xzy(self):
+        """
+        Test that set_block swizzles correctly.
+        """
+
+        self.c.set_block((1, 0, 0), 1)
+        self.c.set_block((0, 1, 0), 2)
+        self.c.set_block((0, 0, 1), 3)
+        self.assertEqual(self.c.blocks[1, 0, 0], 1)
+        self.assertEqual(self.c.blocks[0, 1, 0], 3)
+        self.assertEqual(self.c.blocks[0, 0, 1], 2)
+
 class TestNumpyQuirks(unittest.TestCase):
     """
     Tests for the bad interaction between several components of Bravo.
