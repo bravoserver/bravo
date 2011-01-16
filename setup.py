@@ -17,11 +17,6 @@ setup(
     long_description=open("README.rst").read(),
     license="MIT/X11",
     url="http://github.com/MostAwesomeDude/bravo",
-    entry_points={
-        "console_scripts": [
-            "bravo = bravo.main:main",
-        ],
-    },
 )
 
 try:
