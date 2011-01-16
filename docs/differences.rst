@@ -24,3 +24,19 @@ diameter as the Notchian server's square. This effectively results in a circle
 of 315 chunks deployed to the client; a savings of nearly 30% in memory and
 bandwidth for chunks. Additionally, only the 50 closest chunks are deployed
 before the client is spawned and permitted to interact with the world.
+
+Inventory
+=========
+
+The Notchian viewpoint of items in the inventory is as a list of slots. Each
+slot holds an item, identified by a single number, and can hold 1 to 64
+instances of that item. Some items can be damaged. Some items are completely
+different depending on their damage.
+
+Bravo views item identifiers as a composite key of a primary and secondary
+identifier. In this scheme, items with identical primary keys and different
+secondary keys are properly segregated, and item damage is stored as the
+secondary key, keeping items with differing amounts of damage from occupying
+the same slot. This avoids an entire class of bugs, where items can be
+stacked and unstacked to change the amount of damage on them, which have
+historically plagued the Notchian codebase.
