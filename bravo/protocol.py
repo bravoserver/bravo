@@ -73,6 +73,7 @@ class BetaProtocol(Protocol):
             14: self.digging,
             15: self.build,
             16: self.equip,
+            18: self.animate,
             21: self.pickup,
             101: self.wclose,
             102: self.waction,
@@ -307,6 +308,9 @@ class BetaProtocol(Protocol):
     def pickup(self, container):
         self.factory.give((container.x, container.y, container.z),
             (container.primary, container.secondary), container.count)
+
+    def animate(self, container):
+        pass
 
     def wclose(self, container):
         if container.wid in self.windows:
