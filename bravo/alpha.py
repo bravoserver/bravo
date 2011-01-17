@@ -41,31 +41,19 @@ class Location(object):
 
     __str__ = __repr__
 
-    @property
-    def y(self):
-        return self._y
-
-    @y.setter
-    def y(self, value):
+    def _y_setter(self, value):
         self._y = value
         if not 0.1 < (self.stance - self.y) < 1.65:
             self.stance = self.y + 1.0
+    y = property(lambda self: self._y, _y_setter)
 
-    @property
-    def yaw(self):
-        return degrees(self.theta)
-
-    @yaw.setter
-    def yaw(self, value):
+    def _yaw_setter(self, value):
         self.theta = radians(value)
+    yaw = property(lambda self: degrees(self.theta), _yaw_setter)
 
-    @property
-    def pitch(self):
-        return degrees(self.phi)
-
-    @pitch.setter
-    def pitch(self, value):
+    def _pitch_setter(self, value):
         self.phi = radians(value)
+    pitch = property(lambda self: degrees(self.phi), _pitch_setter)
 
     def load_from_packet(self, container):
         """
