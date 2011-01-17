@@ -14,6 +14,7 @@ snow_resistant = set([
     blocks["rose"].slot,
     blocks["spring"].slot,
     blocks["torch"].slot,
+    blocks["water"].slot,
 ])
 
 class Winter(object):
