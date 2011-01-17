@@ -13,7 +13,7 @@ class TestBetaFactory(unittest.TestCase):
         self.name = "unittest"
 
         bravo.config.configuration.add_section("world unittest")
-        bravo.config.configuration.set("world unittest", "world", self.d)
+        bravo.config.configuration.set("world unittest", "path", self.d)
         bravo.config.configuration.set("world unittest", "port", "0")
 
         self.f = bravo.factory.BetaFactory(self.name)
