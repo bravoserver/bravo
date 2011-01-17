@@ -1,0 +1,66 @@
+# Bravo sample configuration.
+
+[bravo]
+# Plugins.
+# Bravo's plugin architecture is quite complex. It is absolutely essential to
+# remember that plugins are ordered, and that order matters.
+
+# Dig hooks. The ones you probably want:
+# ~ give: causes pickups to be dropped when appropriate.
+# ~ replace: causes replaced blocks to spawn when needed.
+# Additionally, you probably want either alpha_snow or bravo_snow for snow
+# support.
+#dig_hooks = give,replace,alpha_snow
+dig_hooks = give,replace,bravo_snow
+
+# Build hooks. The important ones:
+# ~ build: place blocks
+# ~ build_snow: ensure correct block placement on snow
+# ~ tile: make workbenches, furnaces, etc. work
+# Additionally, there are a few other good build hooks.
+# ~ torch: Orient torches
+build_hooks = build_snow,torch,tile,build,alpha_sand_gravel
+
+# Authenticator. There are only two options:
+# ~ offline: anybody can log in, no authentication is done
+# ~ online: only people logged into minecraft.net can log in
+#authenticator = online
+authenticator = offline
+
+# Terrain generators.
+# Some important generators:
+# ~ erosion: make dirt appear
+# ~ watertable: provide water
+# ~ grass: self-explanatory, I hope
+# ~ safety: bedrock and other safety essentials
+# You'll probably want simplex, complex, or some other terrain provider, as
+# well.
+#generators = boring,erosion,watertable,grass,safety
+generators = simplex,erosion,watertable,grass,safety
+
+# Try to enable Ampoule. This can massively improve server responsiveness, but
+# it can cause crashes, misrendering, and other weird bugs. You have been
+# warned.
+#ampoule = yes
+ampoule = no
+
+# Try to use the fancy console.
+fancy_console = true
+
+# Which serializer to use for saving worlds to disk.
+# ~ alpha: The Alpha NBT format
+# ~ json: JSON format, for debugging
+serializer = json
+
+[world example]
+# This is just an example world. World names come from the name of the
+# section; this section describes a world called "example".
+
+# The port to listen on. All of the normal port rules apply; you probably
+# cannot use ports below 1024 without root permissions.
+port = 25565
+
+# The folder to use for storing the world. Make sure you have write
+# permissions to this folder. If it does not exist, it will be created.
+# Relative paths are allowed but discouraged.
+path = example-world
