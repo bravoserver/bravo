@@ -1,4 +1,5 @@
 import ConfigParser
+from os.path import expanduser
 
 defaults = {
     "authenticator": "offline",
@@ -14,4 +15,10 @@ configuration = ConfigParser.SafeConfigParser(defaults)
 configuration.add_section("bravo")
 
 # XXX improve on this
-configuration.read(["bravo.ini"])
+default_files = [
+    "/etc/bravo/bravo.ini",
+    expanduser("~/.bravo/bravo.ini"),
+    "bravo.ini",
+]
+
+configuration.read(default_files)
