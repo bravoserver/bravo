@@ -1,6 +1,6 @@
 from itertools import chain
 
-from numpy import array
+from numpy import array, uint8
 
 try:
     from json import load, dump
@@ -97,11 +97,16 @@ class ChunkSerializer(object):
 
         level = d["Level"]
 
-        chunk.blocks = array(level["Blocks"]).reshape(chunk.blocks.shape)
-        chunk.heightmap = array(level["HeightMap"]).reshape(chunk.heightmap.shape)
-        chunk.blocklight = array(level["BlockLight"]).reshape(chunk.blocklight.shape)
-        chunk.metadata = array(level["Data"]).reshape(chunk.metadata.shape)
-        chunk.skylight = array(level["SkyLight"]).reshape(chunk.skylight.shape)
+        chunk.blocks = array(level["Blocks"],
+            dtype=uint8).reshape(chunk.blocks.shape)
+        chunk.heightmap = array(level["HeightMap"],
+            dtype=uint8).reshape(chunk.heightmap.shape)
+        chunk.blocklight = array(level["BlockLight"],
+            dtype=uint8).reshape(chunk.blocklight.shape)
+        chunk.metadata = array(level["Data"],
+            dtype=uint8).reshape(chunk.metadata.shape)
+        chunk.skylight = array(level["SkyLight"],
+            dtype=uint8).reshape(chunk.skylight.shape)
 
         chunk.populated = level["TerrainPopulated"]
 
