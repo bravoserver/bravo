@@ -52,7 +52,7 @@ class BetaFactory(Factory):
         self.name = name
         self.port = configuration.getint("world %s" % name, "port")
 
-        world_folder = configuration.get("world %s" % name, "world")
+        world_folder = configuration.get("world %s" % name, "path")
         self.world = World(world_folder)
         self.world.factory = self
 
