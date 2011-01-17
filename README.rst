@@ -95,6 +95,10 @@ worlds. If this is a release version of Bravo, NBT is probably bundled;
 otherwise, you will have to retrieve it yourself. This library is only needed
 if you are using the NBT format for saving and loading worlds.
 
+**Important: Bravo's installation process is currently broken. Until this
+notice is removed, please don't install, just run directly from the git
+checkout. It's easier and runs just as well.**
+
 Debian & Ubuntu
 ---------------
 
@@ -139,6 +143,22 @@ will be automatically detected and is completely optional.
 ::
 
  $ pip install ampoule
+
+Running
+=======
+
+Bravo includes a twistd plugin, so it's quite easy to run. Just copy
+bravo.ini.example to bravo.ini, and put it in one of these locations:
+
+ * /etc/bravo/
+ * ~/.bravo/
+ * Your working directory
+
+And then run this to start Bravo!
+
+::
+
+ $ twistd -n bravo
 
 FAQ
 ===
