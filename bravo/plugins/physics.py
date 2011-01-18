@@ -33,7 +33,7 @@ class Water(object):
                     (x, y, z + 1)):
                     if w.get_block(coords) == blocks["air"].slot:
                         w.set_block(coords, blocks["water"].slot)
-                        w.set_metadata(coords, 0x7)
+                        w.set_metadata(coords, 0x0)
                         new.add((factory,) + coords)
 
                 if w.get_block((x, y - 1, z)) == blocks["air"].slot:
@@ -48,8 +48,8 @@ class Water(object):
                         w.set_block((x, y - 1, z), blocks["water"].slot)
                         w.set_metadata((x, y - 1, z), 0x8)
                         new.add((factory, x, y - 1, z))
-                elif metadata > 0x1:
-                    metadata -= 1
+                elif metadata < 0x7:
+                    metadata += 1
                     for coords in ((x - 1, y, z), (x + 1, y, z),
                         (x, y, z - 1), (x, y, z + 1)):
                         if w.get_block(coords) == blocks["air"].slot:
