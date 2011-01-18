@@ -58,6 +58,11 @@ Extended Features
      * Spring
      * Winter
 
+   * Physics
+
+     * Sand, gravel
+     * Water, lava
+
  * Chat commands
 
 Planned Features

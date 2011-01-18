@@ -58,6 +58,12 @@ Inventory
 
 Bravo provides server-side inventory handling.
 
+Physics
+-------
+
+Bravo simulates physics, including the behaviors of sand, gravel, water, and
+lava.
+
 Extended features
 =================
 
