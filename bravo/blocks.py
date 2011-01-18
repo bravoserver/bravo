@@ -175,16 +175,111 @@ block_names = [
     "jack-o-lantern",
 ]
 
-item_names3 = [
-    "coal",
-]
-
-item_names2 = [
-    "stick",
-]
-
 item_names = [
+    "iron-shovel",
+    "iron-pickaxe",
+    "iron-axe",
+    "flint-and-steel",
+    "apple",
+    "bow",
+    "arrow",
+    "coal",
+    "diamond",
+    "iron-ingot",
+    "gold-ingot",
+    "iron-sword",
+    "wooden-sword",
+    "wooden-shovel",
+    "wooden-pickaxe",
+    "wooden-axe",
+    "stone-sword",
+    "stone-shovel",
+    "stone-pickaxe",
+    "stone-axe",
+    "diamond-sword",
+    "diamond-shovel",
+    "diamond-pickaxe",
+    "diamond-axe",
+    "stick",
+    "bowl",
+    "mushroom-coup",
+    "gold-sword",
+    "gold-shovel",
+    "gold-pickaxe",
+    "gold-axe",
+    "string",
+    "feather",
+    "sulphur",
+    "wooden-hoe",
+    "stone-hoe",
+    "iron-hoe",
+    "diamond-hoe",
+    "gold-hoe",
+    "seeds",
+    "wheat",
+    "bread",
+    "leather-helmet",
+    "leather-chestplate",
+    "leather-leggings",
+    "leather-boots",
+    "chainmail-helmet",
+    "chainmail-chestplate",
+    "chainmail-leggings",
+    "chainmail-boots",
+    "iron-helmet",
+    "iron-chestplate",
+    "iron-leggings",
+    "iron-boots",
+    "diamond-helmet",
+    "diamond-chestplate",
+    "diamond-leggings",
+    "diamond-boots",
+    "gold-helmet",
+    "gold-chestplate",
+    "gold-leggings",
+    "gold-boots",
+    "flint",
+    "raw-porkchop",
+    "cooked-porkchop",
+    "paintings",
+    "golden-apple",
     "sign",
+    "wooden-door",
+    "bucket",
+    "water-bucket",
+    "lava-bucket",
+    "mine-cart",
+    "saddle",
+    "iron-door",
+    "redstone",
+    "snowball",
+    "boat",
+    "leather",
+    "milk",
+    "clay-brick",
+    "clay-balls",
+    "sugar-cane",
+    "paper",
+    "book",
+    "slimeball",
+    "storage-minecart",
+    "powered-minecart",
+    "egg",
+    "compass",
+    "fishing-rod",
+    "clock",
+    "glowstone-dust",
+    "raw-fish",
+    "cooked-fish",
+    "ink-sack",
+    "bone",
+    "sugar",
+    "cake",
+]
+
+special_item_names = [
+    "gold-music-disc",
+    "green-music-disc",
 ]
 
 drops = {}
@@ -253,26 +348,16 @@ for i, name in enumerate(block_names):
     blocks[i] = b
     blocks[name] = b
 
-for i, name in enumerate(item_names3):
-    kwargs = {}
-    # 256 for item slots; 2nd offset should go away at some point
-    i += 256 + 0x7
-    item = Item(i, name, **kwargs)
-    items[i] = item
-    items[name] = item
-
-for i, name in enumerate(item_names2):
-    kwargs = {}
-    # 256 for item slots; 2nd offset should go away at some point
-    i += 256 + 0x18
-    item = Item(i, name, **kwargs)
-    items[i] = item
-    items[name] = item
-
 for i, name in enumerate(item_names):
     kwargs = {}
-    # 256 for item slots; 2nd offset should go away at some point
-    i += 256 + 0x43
+    i += 0x100
+    item = Item(i, name, **kwargs)
+    items[i] = item
+    items[name] = item
+
+for i, name in enumerate(special_item_names):
+    kwargs = {}
+    i += 0x8D0
     item = Item(i, name, **kwargs)
     items[i] = item
     items[name] = item
