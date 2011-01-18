@@ -54,10 +54,7 @@ class Water(object):
                             chunk.set_metadata(coords, metadata)
                             new.add((factory,) + coords)
 
-            if chunk.is_damaged():
-                packet = chunk.get_damage_packet()
-                factory.broadcast_for_chunk(x, z, packet)
-                chunk.clear_damage()
+            factory.flush_chunk(chunk)
 
         self.tracked = new
 

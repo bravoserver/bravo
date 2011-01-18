@@ -145,6 +145,18 @@ class BetaFactory(Factory):
             if (x, z) in player.chunks:
                 player.transport.write(packet)
 
+    def flush_chunk(self, chunk):
+        """
+        Flush a damaged chunk to all players that have it loaded.
+        """
+
+        if chunk.is_damaged():
+            packet = chunk.get_damage_packet()
+            for player in self.protocols.itervalues():
+                if (chunk.x, chunk.z) in player.chunks:
+                    player.transport.write(packet)
+            chunk.clear_damage()
+
     def entities_near(self, x, y, z, radius):
         """
         Given a coordinate and a radius, return all entities within that

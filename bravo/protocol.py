@@ -233,10 +233,7 @@ class BetaProtocol(Protocol):
             hook.dig_hook(self.factory, chunk, smallx, container.y, smallz,
                 oldblock)
 
-        if chunk.is_damaged():
-            packet = chunk.get_damage_packet()
-            self.factory.broadcast_for_chunk(packet, bigx, bigz)
-            chunk.clear_damage()
+        self.factory.flush_chunk(chunk)
 
     def build(self, container):
         # Is the target being selected?
@@ -297,10 +294,7 @@ class BetaProtocol(Protocol):
 
         # Flush damaged chunks.
         for chunk in self.chunks.itervalues():
-            if chunk.is_damaged():
-                packet = chunk.get_damage_packet()
-                self.factory.broadcast_for_chunk(packet, chunk.x, chunk.z)
-                chunk.clear_damage()
+            self.factory.flush_chunk(chunk)
 
     def equip(self, container):
         self.player.equipped = container.item
