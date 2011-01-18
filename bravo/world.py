@@ -13,6 +13,7 @@ from bravo.chunk import Chunk
 from bravo.config import configuration
 from bravo.serialize import LevelSerializer
 from bravo.serialize import read_from_file, write_to_file, extension
+from bravo.utilities import split_coords
 
 try:
     from ampoule import deferToAMPProcess
@@ -339,3 +340,47 @@ class World(LevelSerializer):
             f.makedirs()
         f = f.child("%s%s" % (username, extension()))
         write_to_file(player.save_to_tag(), f.open("w"))
+
+    def get_block(self, coords):
+        """
+        Get a block from an unknown chunk.
+        """
+
+        x, y, z = coords
+
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+        chunk = self.load_chunk(bigx, bigz)
+        return chunk.get_block((smallx, y, smallz))
+
+    def set_block(self, coords, value):
+        """
+        Set a block in an unknown chunk.
+        """
+
+        x, y, z = coords
+
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+        chunk = self.load_chunk(bigx, bigz)
+        chunk.set_block((smallx, y, smallz), value)
+
+    def get_metadata(self, coords):
+        """
+        Get a block's metadata from an unknown chunk.
+        """
+
+        x, y, z = coords
+
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+        chunk = self.load_chunk(bigx, bigz)
+        return chunk.get_metadata((smallx, y, smallz))
+
+    def set_metadata(self, coords, value):
+        """
+        Set a block's metadata in an unknown chunk.
+        """
+
+        x, y, z = coords
+
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+        chunk = self.load_chunk(bigx, bigz)
+        chunk.set_metadata((smallx, y, smallz), value)
