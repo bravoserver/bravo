@@ -1,10 +1,13 @@
+from collections import defaultdict
+from itertools import chain
+
 from twisted.internet.task import LoopingCall
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import IBuildHook, IDigHook
-from bravo.utilities import split_coords, timed
+from bravo.utilities import timed
 
 class Water(object):
 
@@ -19,42 +22,48 @@ class Water(object):
     @timed
     def process(self):
         new = set()
-        for factory, x, y, z in self.tracked:
-            bigx, smallx, bigz, smallz = split_coords(x, z)
-            chunk = factory.world.load_chunk(bigx, bigz)
 
-            block = chunk.get_block((x, y, z))
+        for factory, x, y, z in self.tracked:
+            w = factory.world
+
+            block = w.get_block((x, y, z))
             if block == blocks["spring"].slot:
                 # Spawn water from springs.
                 for coords in ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
                     (x, y, z + 1)):
-                    if chunk.get_block(coords) == blocks["air"].slot:
-                        chunk.set_block(coords, blocks["water"].slot)
-                        chunk.set_metadata(coords, 0x7)
+                    if w.get_block(coords) == blocks["air"].slot:
+                        w.set_block(coords, blocks["water"].slot)
+                        w.set_metadata(coords, 0x7)
                         new.add((factory,) + coords)
 
-                if chunk.get_block((x, y - 1, z)) == blocks["air"].slot:
-                    chunk.set_block((x, y - 1, z), blocks["water"].slot)
-                    chunk.set_metadata((x, y - 1, z), 0x8)
-                    new.add(factory, x, y - 1, z)
+                if w.get_block((x, y - 1, z)) == blocks["air"].slot:
+                    w.set_block((x, y - 1, z), blocks["water"].slot)
+                    w.set_metadata((x, y - 1, z), 0x8)
+                    new.add((factory, x, y - 1, z))
             elif block == blocks["water"].slot:
                 # Extend water.
-                metadata = chunk.get_metadata((x, y, z))
+                metadata = w.get_metadata((x, y, z))
                 if metadata & 0x8:
-                    if chunk.get_block((x, y - 1, z)) == blocks["air"].slot:
-                        chunk.set_block((x, y - 1, z), blocks["water"].slot)
-                        chunk.set_metadata((x, y - 1, z), 0x8)
-                        new.add(factory, x, y - 1, z)
+                    if w.get_block((x, y - 1, z)) == blocks["air"].slot:
+                        w.set_block((x, y - 1, z), blocks["water"].slot)
+                        w.set_metadata((x, y - 1, z), 0x8)
+                        new.add((factory, x, y - 1, z))
                 elif metadata > 0x1:
                     metadata -= 1
                     for coords in ((x - 1, y, z), (x + 1, y, z),
                         (x, y, z - 1), (x, y, z + 1)):
-                        if chunk.get_block(coords) == blocks["air"].slot:
-                            chunk.set_block(coords, blocks["water"].slot)
-                            chunk.set_metadata(coords, metadata)
+                        if w.get_block(coords) == blocks["air"].slot:
+                            w.set_block(coords, blocks["water"].slot)
+                            w.set_metadata(coords, metadata)
                             new.add((factory,) + coords)
 
-            factory.flush_chunk(chunk)
+        # Flush affected chunks.
+        to_flush = defaultdict(set)
+        for factory, x, y, z in chain(self.tracked, new):
+            to_flush[factory].add(factory.world.load_chunk(x // 16, z // 16))
+        for factory, chunks in to_flush.iteritems():
+            for chunk in chunks:
+                factory.flush_chunk(chunk)
 
         self.tracked = new
 
