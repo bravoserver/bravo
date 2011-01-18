@@ -8,7 +8,10 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IBuildHook, IDigHook
 
-class Water(object):
+class Fluid(object):
+    """
+    Fluid simulator.
+    """
 
     implements(IPlugin, IBuildHook, IDigHook)
 
@@ -16,13 +19,7 @@ class Water(object):
         self.tracked = set()
 
         self.loop = LoopingCall(self.process)
-        self.loop.start(0.2)
-
-        self.spring = blocks["spring"].slot
-        self.fluid = blocks["water"].slot
-
-        self.whitespace = (blocks["air"].slot, blocks["snow"].slot)
-        self.meltables = (blocks["ice"].slot,)
+        self.loop.start(self.step)
 
     def process(self):
         new = set()
@@ -59,7 +56,7 @@ class Water(object):
                 else:
                     if metadata & 0x8:
                         metadata &= ~0x8
-                    if metadata < 0x7:
+                    if metadata < self.levels:
                         metadata += 1
                         for coords in ((x - 1, y, z), (x + 1, y, z),
                             (x, y, z - 1), (x, y, z + 1)):
@@ -95,7 +92,8 @@ class Water(object):
         elif face == "+z":
             z += 1
 
-        if block == blocks["spring"]:
+        if (block.slot in (self.spring, self.fluid) or
+            factory.world.get_block((x, y, z)) in (self.spring, self.fluid)):
             self.tracked.add((factory, x, y, z))
 
         return True, builddata
@@ -103,6 +101,31 @@ class Water(object):
     def dig_hook(self, factory, chunk, x, y, z, block):
         pass
 
+class Water(Fluid):
+
+    spring = blocks["spring"].slot
+    fluid = blocks["water"].slot
+    levels = 7
+
+    whitespace = (blocks["air"].slot, blocks["snow"].slot)
+    meltables = (blocks["ice"].slot,)
+
+    step = 0.2
+
     name = "water"
 
+class Lava(Fluid):
+
+    spring = blocks["lava-spring"].slot
+    fluid = blocks["lava"].slot
+    levels = 3
+
+    whitespace = (blocks["air"].slot, blocks["snow"].slot)
+    meltables = (blocks["ice"].slot,)
+
+    step = 0.5
+
+    name = "lava"
+
 water = Water()
+lava = Lava()
