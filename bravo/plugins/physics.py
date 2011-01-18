@@ -18,39 +18,48 @@ class Water(object):
 
     @timed
     def process(self):
+        new = set()
         for factory, x, y, z in self.tracked:
-            print "Tracked"
             bigx, smallx, bigz, smallz = split_coords(x, z)
             chunk = factory.world.load_chunk(bigx, bigz)
 
             block = chunk.get_block((x, y, z))
-            print block
-            print blocks["spring"].slot
             if block == blocks["spring"].slot:
-                print "Spring"
-                # Spread water.
-                if chunk.get_block((x - 1, y, z)) == blocks["air"].slot:
-                    chunk.set_block((x - 1, y, z), blocks["water"].slot)
-                    chunk.set_metadata((x - 1, y, z), 0x7)
-                    print "Spread x-1"
-                if chunk.get_block((x + 1, y, z)) == blocks["air"].slot:
-                    chunk.set_block((x + 1, y, z), blocks["water"].slot)
-                    chunk.set_metadata((x + 1, y, z), 0x7)
-                    print "Spread x+1"
-                if chunk.get_block((x, y, z - 1)) == blocks["air"].slot:
-                    chunk.set_block((x, y, z - 1), blocks["water"].slot)
-                    chunk.set_metadata((x, y, z - 1), 0x7)
-                    print "Spread z-1"
-                if chunk.get_block((x, y, z + 1)) == blocks["air"].slot:
-                    chunk.set_block((x, y, z + 1), blocks["water"].slot)
-                    chunk.set_metadata((x, y, z + 1), 0x7)
-                    print "Spread z+1"
+                # Spawn water from springs.
+                for coords in ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
+                    (x, y, z + 1)):
+                    if chunk.get_block(coords) == blocks["air"].slot:
+                        chunk.set_block(coords, blocks["water"].slot)
+                        chunk.set_metadata(coords, 0x7)
+                        new.add((factory,) + coords)
 
-                if chunk.is_damaged():
-                    print "Damaging"
-                    packet = chunk.get_damage_packet()
-                    factory.broadcast_for_chunk(x, z, packet)
-                    chunk.clear_damage()
+                if chunk.get_block((x, y - 1, z)) == blocks["air"].slot:
+                    chunk.set_block((x, y - 1, z), blocks["water"].slot)
+                    chunk.set_metadata((x, y - 1, z), 0x8)
+                    new.add(factory, x, y - 1, z)
+            elif block == blocks["water"].slot:
+                # Extend water.
+                metadata = chunk.get_metadata((x, y, z))
+                if metadata & 0x8:
+                    if chunk.get_block((x, y - 1, z)) == blocks["air"].slot:
+                        chunk.set_block((x, y - 1, z), blocks["water"].slot)
+                        chunk.set_metadata((x, y - 1, z), 0x8)
+                        new.add(factory, x, y - 1, z)
+                elif metadata > 0x1:
+                    metadata -= 1
+                    for coords in ((x - 1, y, z), (x + 1, y, z),
+                        (x, y, z - 1), (x, y, z + 1)):
+                        if chunk.get_block(coords) == blocks["air"].slot:
+                            chunk.set_block(coords, blocks["water"].slot)
+                            chunk.set_metadata(coords, metadata)
+                            new.add((factory,) + coords)
+
+            if chunk.is_damaged():
+                packet = chunk.get_damage_packet()
+                factory.broadcast_for_chunk(x, z, packet)
+                chunk.clear_damage()
+
+        self.tracked = new
 
     def build_hook(self, factory, player, builddata):
         block, metadata, x, y, z, face = builddata
