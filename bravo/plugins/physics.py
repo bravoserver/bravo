@@ -7,7 +7,6 @@ from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import IBuildHook, IDigHook
-from bravo.utilities import timed
 
 class Water(object):
 
@@ -19,7 +18,9 @@ class Water(object):
         self.loop = LoopingCall(self.process)
         self.loop.start(0.2)
 
-    @timed
+        self.spring = blocks["spring"].slot
+        self.fluid = blocks["water"].slot
+
     def process(self):
         new = set()
 
@@ -27,33 +28,35 @@ class Water(object):
             w = factory.world
 
             block = w.get_block((x, y, z))
-            if block == blocks["spring"].slot:
+            if block == self.spring:
                 # Spawn water from springs.
                 for coords in ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
                     (x, y, z + 1)):
                     if w.get_block(coords) == blocks["air"].slot:
-                        w.set_block(coords, blocks["water"].slot)
+                        w.set_block(coords, self.fluid)
                         w.set_metadata(coords, 0x0)
                         new.add((factory,) + coords)
 
                 if w.get_block((x, y - 1, z)) == blocks["air"].slot:
-                    w.set_block((x, y - 1, z), blocks["water"].slot)
+                    w.set_block((x, y - 1, z), self.fluid)
                     w.set_metadata((x, y - 1, z), 0x8)
                     new.add((factory, x, y - 1, z))
             elif block == blocks["water"].slot:
-                # Extend water.
+                # Extend water. Remember, either the water flows downward to
+                # the next y-level, or it flows out across the xz-level, but
+                # *not* both.
                 metadata = w.get_metadata((x, y, z))
-                if metadata & 0x8:
-                    if w.get_block((x, y - 1, z)) == blocks["air"].slot:
-                        w.set_block((x, y - 1, z), blocks["water"].slot)
-                        w.set_metadata((x, y - 1, z), 0x8)
-                        new.add((factory, x, y - 1, z))
+
+                if w.get_block((x, y - 1, z)) == blocks["air"].slot:
+                    w.set_block((x, y - 1, z), self.fluid)
+                    w.set_metadata((x, y - 1, z), 0x8)
+                    new.add((factory, x, y - 1, z))
                 elif metadata < 0x7:
                     metadata += 1
                     for coords in ((x - 1, y, z), (x + 1, y, z),
                         (x, y, z - 1), (x, y, z + 1)):
                         if w.get_block(coords) == blocks["air"].slot:
-                            w.set_block(coords, blocks["water"].slot)
+                            w.set_block(coords, self.fluid)
                             w.set_metadata(coords, metadata)
                             new.add((factory,) + coords)
 
