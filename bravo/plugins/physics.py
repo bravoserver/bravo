@@ -21,6 +21,9 @@ class Water(object):
         self.spring = blocks["spring"].slot
         self.fluid = blocks["water"].slot
 
+        self.whitespace = (blocks["air"].slot, blocks["snow"].slot)
+        self.meltables = (blocks["ice"].slot,)
+
     def process(self):
         new = set()
 
@@ -32,33 +35,38 @@ class Water(object):
                 # Spawn water from springs.
                 for coords in ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
                     (x, y, z + 1)):
-                    if w.get_block(coords) == blocks["air"].slot:
+                    if w.get_block(coords) in self.whitespace:
                         w.set_block(coords, self.fluid)
                         w.set_metadata(coords, 0x0)
                         new.add((factory,) + coords)
 
-                if w.get_block((x, y - 1, z)) == blocks["air"].slot:
+                if w.get_block((x, y - 1, z)) in self.whitespace:
                     w.set_block((x, y - 1, z), self.fluid)
                     w.set_metadata((x, y - 1, z), 0x8)
                     new.add((factory, x, y - 1, z))
+
             elif block == blocks["water"].slot:
                 # Extend water. Remember, either the water flows downward to
                 # the next y-level, or it flows out across the xz-level, but
                 # *not* both.
                 metadata = w.get_metadata((x, y, z))
 
-                if w.get_block((x, y - 1, z)) == blocks["air"].slot:
+                if w.get_block((x, y - 1, z)) in self.whitespace:
+                    metadata |= 0x8
                     w.set_block((x, y - 1, z), self.fluid)
-                    w.set_metadata((x, y - 1, z), 0x8)
+                    w.set_metadata((x, y - 1, z), metadata)
                     new.add((factory, x, y - 1, z))
-                elif metadata < 0x7:
-                    metadata += 1
-                    for coords in ((x - 1, y, z), (x + 1, y, z),
-                        (x, y, z - 1), (x, y, z + 1)):
-                        if w.get_block(coords) == blocks["air"].slot:
-                            w.set_block(coords, self.fluid)
-                            w.set_metadata(coords, metadata)
-                            new.add((factory,) + coords)
+                else:
+                    if metadata & 0x8:
+                        metadata &= ~0x8
+                    if metadata < 0x7:
+                        metadata += 1
+                        for coords in ((x - 1, y, z), (x + 1, y, z),
+                            (x, y, z - 1), (x, y, z + 1)):
+                            if w.get_block(coords) in self.whitespace:
+                                w.set_block(coords, self.fluid)
+                                w.set_metadata(coords, metadata)
+                                new.add((factory,) + coords)
 
         # Flush affected chunks.
         to_flush = defaultdict(set)
