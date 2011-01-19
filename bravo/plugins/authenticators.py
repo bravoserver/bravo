@@ -2,12 +2,13 @@ import random
 import sys
 
 from twisted.internet import reactor
-from twisted.internet.defer import succeed
+from twisted.internet.defer import succeed, fail
 from twisted.internet.task import deferLater
 from twisted.plugin import IPlugin
 from twisted.web.client import getPage
 from zope.interface import implements
 
+from bravo.config import configuration
 from bravo.ibravo import IAuthenticator
 from bravo.packets import make_packet
 
@@ -99,5 +100,42 @@ class OnlineAuthenticator(object):
 
     name = "online"
 
+class PasswordAuthenticator(object):
+
+    implements(IPlugin, IAuthenticator)
+
+    def handshake(self, protocol, container):
+        """
+        Handle a handshake with a server-specific password.
+
+        This doesn't work with Notchian clients.
+        """
+
+        packet = make_packet("handshake", username="+")
+
+        # Order is important here; the challenged callback *must* fire before
+        # we send anything back to the client, because otherwise we won't have
+        # a valid entity ready to use.
+        d = deferLater(reactor, 0, protocol.challenged)
+        d.addCallback(lambda none: protocol.transport.write(packet))
+
+        return True
+
+    def login(self, protocol, container):
+        if container.password != configuration.get("bravo", "password"):
+            protocol.error("Wrong password.")
+            return fail()
+
+        protocol.username = container.username
+
+        packet = make_packet("login", protocol=protocol.eid, username="",
+            unused="", seed=0, dimension=0)
+        protocol.transport.write(packet)
+
+        return succeed(None)
+
+    name = "password"
+
 offline = OfflineAuthenticator()
 online = OnlineAuthenticator()
+password = PasswordAuthenticator()
