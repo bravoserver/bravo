@@ -5,11 +5,12 @@ from setuptools import setup
 setup(
     name="Bravo",
     version="1.1",
-    packages=["bravo", "twisted.plugins"],
+    packages=["bravo", "bravo.plugins", "bravo.serializers", "bravo.tests",
+        "twisted.plugins"],
     install_requires=[
         "numpy",
         "construct>=2.03",
-        "Twisted",
+        "Twisted>=10",
     ],
     author="Corbin Simpson",
     author_email="MostAwesomeDude@gmail.com",
