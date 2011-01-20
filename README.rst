@@ -133,6 +133,16 @@ Numpy and Twisted can be installed from the standard Fedora repository.
 
  $ sudo yum install numpy python-twisted python-twisted-conch
 
+Gentoo
+------
+
+Gentoo doesn't (yet) carry a Construct new enough for Bravo, but it does have
+Numpy and Twisted.
+
+::
+
+ # emerge numpy twisted twisted-conch
+
 LFS/Virtualenv/Standalone
 -------------------------
 
