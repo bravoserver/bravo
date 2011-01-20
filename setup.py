@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="Bravo",
-    version="1.0",
+    version="1.1",
     packages=["bravo", "twisted.plugins"],
     install_requires=[
         "numpy",
