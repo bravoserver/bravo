@@ -151,7 +151,8 @@ class Redstone(object):
         elif face == "+x":
             x += 1
         elif face == "-y":
-            y -= 1
+            # Can't build on ceilings, sorry.
+            return True, builddata
         elif face == "+y":
             y += 1
         elif face == "-z":
@@ -160,7 +161,16 @@ class Redstone(object):
             z += 1
 
         if block.slot == items["redstone"].slot:
-            builddata = builddata._replace(block=blocks["redstone-wire"])
+            # Override the normal block placement, because it's so heavily
+            # customized.
+            print "Placing wire..."
+            if not player.inventory.consume((items["redstone"].slot, 0)):
+                return True, builddata
+
+            self.tracked.add((factory, x, y, z))
+
+            factory.world.set_block((x, y, z), blocks["redstone-wire"].slot)
+            factory.world.set_metadata((x, y, z), 0x0)
 
         return True, builddata
 
