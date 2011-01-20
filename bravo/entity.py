@@ -1,7 +1,7 @@
 from math import pi
 
-from bravo.alpha import Location
 from bravo.inventory import Equipment, ChestStorage
+from bravo.location import Location
 from bravo.packets import make_packet
 from bravo.serialize import ChestSerializer, PlayerSerializer, SignSerializer
 
