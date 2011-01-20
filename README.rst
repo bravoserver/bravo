@@ -86,13 +86,17 @@ Planned Features
 Installing
 ==========
 
+Bravo currently requires Python 2.5 or any newer Python 2.x. It is known to
+work on CPython and PyPy. (PyPy support is currently on hiatus and will return
+when numpy support returns to PyPy.)
+
 Bravo ships with a standard setup.py. You will need setuptools/distribute, but
 most distributions already provide it for you. Bravo depends on the following
 external libraries from PyPI:
 
  * construct, version 2.03 or later
  * numpy
- * Twisted
+ * Twisted, version 10.0 or later
 
 Bravo also uses the external NBT library
 (http://github.com/MostAwesomeDude/NBT) for reading and saving MC Alpha
@@ -159,7 +163,13 @@ bravo.ini.example to bravo.ini, and put it in one of these locations:
  * ~/.bravo/
  * Your working directory
 
-And then run this to start Bravo!
+And then run the TAC to start Bravo!
+
+::
+
+ $ twisted -ny bravo.tac
+
+Alternatively, a Twisted plugin is provided as well:
 
 ::
 
