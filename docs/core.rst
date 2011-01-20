@@ -6,12 +6,12 @@ These modules comprise the core functionality of Bravo.
 
 .. toctree::
 
-   alpha
    blocks
    chunk
    entity
    factory
    ibravo
+   location
    packets
    plugin
    protocol

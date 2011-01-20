@@ -1,12 +1,12 @@
 import math
 import unittest
 
-import bravo.alpha
+import bravo.location
 
 class TestLocation(unittest.TestCase):
 
     def setUp(self):
-        self.l = bravo.alpha.Location()
+        self.l = bravo.location.Location()
 
     def test_trivial(self):
         pass
