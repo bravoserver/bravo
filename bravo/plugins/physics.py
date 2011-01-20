@@ -5,7 +5,7 @@ from twisted.internet.task import LoopingCall
 from twisted.plugin import IPlugin
 from zope.interface import implements
 
-from bravo.blocks import blocks
+from bravo.blocks import blocks, items
 from bravo.ibravo import IBuildHook, IDigHook
 
 class Fluid(object):
@@ -127,5 +127,48 @@ class Lava(Fluid):
 
     name = "lava"
 
+class Redstone(object):
+
+    implements(IPlugin, IBuildHook, IDigHook)
+
+    step = 0.2
+
+    def __init__(self):
+        self.tracked = set()
+
+        self.loop = LoopingCall(self.process)
+        self.loop.start(self.step)
+
+    def process(self):
+        pass
+
+    def build_hook(self, factory, player, builddata):
+        block, metadata, x, y, z, face = builddata
+
+        # Offset coords according to face.
+        if face == "-x":
+            x -= 1
+        elif face == "+x":
+            x += 1
+        elif face == "-y":
+            y -= 1
+        elif face == "+y":
+            y += 1
+        elif face == "-z":
+            z -= 1
+        elif face == "+z":
+            z += 1
+
+        if block.slot == items["redstone"].slot:
+            builddata = builddata._replace(block=blocks["redstone-wire"])
+
+        return True, builddata
+
+    def dig_hook(self, factory, chunk, x, y, z, block):
+        pass
+
+    name = "redstone"
+
 water = Water()
 lava = Lava()
+redstone = Redstone()
