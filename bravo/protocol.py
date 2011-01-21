@@ -14,7 +14,7 @@ from bravo.ibravo import IChatCommand, IBuildHook, IDigHook
 from bravo.inventory import Workbench, sync_inventories
 from bravo.packets import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins, retrieve_named_plugins
-from bravo.utilities import chat_name, sanitize_chat, split_coords
+from bravo.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
@@ -118,11 +118,6 @@ class BetaProtocol(Protocol):
         if not self.factory.handshake_hook(self, container):
             self.loseConnection()
 
-    def colorize_chat(self, message):
-        for user in self.factory.protocols:
-            message = message.replace(user, chat_name(user))
-        return sanitize_chat(message)
-
     def chat(self, container):
         if container.message.startswith("/"):
 
@@ -154,10 +149,9 @@ class BetaProtocol(Protocol):
                         message="Unknown command: %s" % command)
                 )
         else:
+            # Send the message up to the factory to be chatified.
             message = "<%s> %s" % (self.username, container.message)
-
-            packet = make_packet("chat", message=self.colorize_chat(message))
-            self.factory.broadcast(packet)
+            self.factory.chat(message)
 
     def flying(self, container):
         self.player.location.load_from_packet(container)

@@ -1,9 +1,11 @@
 from math import sqrt
 from time import time
 
+from twisted.internet.interfaces import IPushProducer
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 from twisted.python import log
+from zope.interface import implements
 
 from bravo.config import configuration
 from bravo.entity import Pickup, Player
@@ -11,6 +13,7 @@ from bravo.ibravo import IAuthenticator, ISeason, ITerrainGenerator
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_named_plugins
 from bravo.protocol import BetaProtocol
+from bravo.utilities import chat_name, sanitize_chat
 from bravo.world import World
 
 from bravo.plugin import retrieve_plugins
@@ -27,6 +30,8 @@ class BetaFactory(Factory):
     """
     A ``Factory`` that creates ``BetaProtocol`` objects when connected to.
     """
+
+    implements(IPushProducer)
 
     protocol = BetaProtocol
 
@@ -76,6 +81,8 @@ class BetaFactory(Factory):
 
         log.msg("Using generators %s" % ", ".join(i.name for i in generators))
         self.world.pipeline = generators
+
+        self.chat_consumers = set()
 
         log.msg("Factory successfully initialized for world '%s'!" % name)
 
@@ -129,6 +136,25 @@ class BetaFactory(Factory):
         for plugin in retrieve_plugins(ISeason).itervalues():
             if plugin.day == self.day:
                 self.world.season = plugin
+
+    def chat(self, message):
+        """
+        Relay chat messages.
+
+        Chat messages are sent to all connected clients, as well as to anybody
+        consuming this factory.
+        """
+
+        for consumer in self.chat_consumers:
+            consumer.write(message)
+
+        # Prepare the message for chat packeting.
+        for user in self.protocols:
+            message = message.replace(user, chat_name(user))
+        message = sanitize_chat(message)
+
+        packet = make_packet("chat", message=message)
+        self.broadcast(packet)
 
     def broadcast(self, packet):
         for player in self.protocols.itervalues():
@@ -196,3 +222,12 @@ class BetaFactory(Factory):
 
         packet = make_packet("create", eid=entity.eid)
         self.broadcast(packet)
+
+    def pauseProducing(self):
+        pass
+
+    def resumeProducing(self):
+        pass
+
+    def stopProducing(self):
+        pass
