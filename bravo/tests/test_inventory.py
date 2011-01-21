@@ -179,6 +179,48 @@ class TestCraftingSticks(unittest.TestCase):
         self.assertTrue(self.i.recipe)
         self.assertEqual(self.i.recipe_offset, 1)
 
+class TestCraftingTorches(unittest.TestCase):
+    """
+    Test basic crafting functionality.
+
+    Assumes that the basic torch recipe is present and enabled. This recipe
+    was chosen because somebody was having problems crafting torches.
+    """
+
+    def setUp(self):
+        self.i = bravo.inventory.Equipment()
+
+    def test_trivial(self):
+        pass
+
+    def test_check_crafting(self):
+        self.i.crafting[0] = (bravo.blocks.items["coal"].slot, 0, 1)
+        self.i.crafting[2] = (bravo.blocks.items["stick"].slot, 0, 1)
+        # Force crafting table to be rechecked.
+        self.i.select(2)
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.recipe_offset, 0)
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.blocks["torch"].slot, 0, 4))
+
+    def test_check_crafting_multiple(self):
+        self.i.crafting[0] = (bravo.blocks.items["coal"].slot, 0, 2)
+        self.i.crafting[2] = (bravo.blocks.items["stick"].slot, 0, 2)
+        # Force crafting table to be rechecked.
+        self.i.select(2)
+        # Only checking count of crafted table; the previous test assured that
+        # the recipe was selected.
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.blocks["torch"].slot, 0, 8))
+
+    def test_check_crafting_offset(self):
+        self.i.crafting[1] = (bravo.blocks.items["coal"].slot, 0, 1)
+        self.i.crafting[3] = (bravo.blocks.items["stick"].slot, 0, 1)
+        # Force crafting table to be rechecked.
+        self.i.select(1)
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.recipe_offset, 1)
+
 class TestCraftingFurnace(unittest.TestCase):
     """
     Test basic crafting functionality.
