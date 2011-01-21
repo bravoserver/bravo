@@ -20,6 +20,8 @@ class BravoIRCClient(IRCClient):
         """
 
         self.factories = dict((factory.name, factory) for factory in worlds)
+        for factory in self.factories.itervalues():
+            factory.chat_consumers.add(self)
 
         self.config = "irc %s" % config
 
