@@ -135,9 +135,7 @@ class BetaProtocol(Protocol):
                     for line in commands[command].chat_command(self.factory,
                         self.username, params):
                         self.transport.write(
-                            make_packet("chat",
-                                message=self.colorize_chat(line)
-                            )
+                            make_packet("chat", message=line)
                         )
                 except Exception, e:
                     self.transport.write(
