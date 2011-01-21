@@ -179,7 +179,7 @@ class Helmet(object):
     dimensions = (3, 2)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%s-helmet" % name
         self.recipe = (
             (material.key, 1),
             (material.key, 1),
@@ -197,7 +197,7 @@ class Chestplate(object):
     dimensions = (3, 3)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%s-chestplate" % name
         self.recipe = (
             (material.key, 1),
             (None),
@@ -218,7 +218,7 @@ class Leggings(object):
     dimensions = (3, 3)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%s-leggings" % name
         self.recipe = (
             (material.key, 1),
             (material.key, 1),
@@ -239,7 +239,7 @@ class Boots(object):
     dimensions = (3, 2)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%s-boots" % name
         self.recipe = (
             (material.key, 1),
             (None),
@@ -412,7 +412,7 @@ class Sword(object):
     dimensions = (1, 3)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%-sword" % name
         self.recipe = (
             (material.key, 1),
             (material.key, 1),
@@ -505,7 +505,7 @@ class Door(object):
     dimensions = (2, 3)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%s-door" % name
         self.recipe = (
             (material.key, 1),
             (material.key, 1),
@@ -702,35 +702,35 @@ fishingrod = FishingRod()
 bucket = BowlBucket(items["iron-ingot"], items["bucket"], 1, "bucket")
 
 #Weapon
-woodsword = Sword(blocks["wood"], items["wooden-sword"], "woodsword")
-cstonesword = Sword(blocks["cobblestone"], items["stone-sword"], "stonesword")
-ironsword = Sword(items["iron-ingot"], items["iron-sword"], "ironsword")
-goldsword = Sword(items["gold-ingot"], items["gold-sword"], "goldsword")
-diamondsword = Sword(items["diamond"], items["diamond-sword"], "diamondsword")
+woodsword = Sword(blocks["wood"], items["wooden-sword"], "wood")
+cstonesword = Sword(blocks["cobblestone"], items["stone-sword"], "stone")
+ironsword = Sword(items["iron-ingot"], items["iron-sword"], "iron")
+goldsword = Sword(items["gold-ingot"], items["gold-sword"], "gold")
+diamondsword = Sword(items["diamond"], items["diamond-sword"], "diamond")
 bow = Bow()
 arrow = Arrow()
 
 #Armor
-leatherhelmet = Helmet(items["leather"], items["leather-helmet"], "leather-helmet")
-goldhelmet = Helmet(items["gold-ingot"], items["gold-helmet"], "gold-helmet")
-ironhelmet = Helmet(items["iron-ingot"], items["iron-helmet"], "iron-helmet")
-diamondhelmet = Helmet(items["diamond"], items["diamond-helmet"], "diamond-helmet")
-chainmailhelmet = Helmet(blocks["fire"], items["chainmail-helmet"], "chainmail-helmet")
-leatherchestplate = Chestplate(items["leather"], items["leather-chestplate"], "leather-chestplate")
-goldchestplate = Chestplate(items["gold-ingot"], items["gold-chestplate"], "gold-chestplate")
-ironchestplate = Chestplate(items["iron-ingot"], items["iron-chestplate"], "iron-chestplate")
-diamondchestplate = Chestplate(items["diamond"], items["diamond-chestplate"], "diamond-chestplate")
-chainmailchestplate = Chestplate(blocks["fire"], items["chainmail-chestplate"], "chainmail-chestplate")
-leatherLeggings = Leggings(items["leather"], items["leather-leggings"], "leather-leggings")
-goldleggings = Leggings(items["gold-ingot"], items["gold-leggings"], "gold-leggings")
-ironleggings = Leggings(items["iron-ingot"], items["iron-leggings"], "iron-leggings")
-diamondleggings = Leggings(items["diamond"], items["diamond-leggings"], "diamond-leggings")
-chainmailleggings = Leggings(blocks["fire"], items["chainmail-leggings"], "chainmail-leggings")
-leatherboots = Boots(items["leather"], items["leather-boots"], "leather-boots")
-goldboots = Boots(items["gold-ingot"], items["gold-boots"], "gold-boots")
-ironboots = Boots(items["iron-ingot"], items["iron-boots"], "iron-boots")
-diamondboots = Boots(items["diamond"], items["diamond-boots"], "diamond-boots")
-chainmailboots = Boots(blocks["fire"], items["chainmail-boots"], "chainmail-boots")
+leatherhelmet = Helmet(items["leather"], items["leather-helmet"], "leather")
+goldhelmet = Helmet(items["gold-ingot"], items["gold-helmet"], "gold")
+ironhelmet = Helmet(items["iron-ingot"], items["iron-helmet"], "iron")
+diamondhelmet = Helmet(items["diamond"], items["diamond-helmet"], "diamond")
+chainmailhelmet = Helmet(blocks["fire"], items["chainmail-helmet"], "chainmail")
+leatherchestplate = Chestplate(items["leather"], items["leather-chestplate"], "leather")
+goldchestplate = Chestplate(items["gold-ingot"], items["gold-chestplate"], "gold")
+ironchestplate = Chestplate(items["iron-ingot"], items["iron-chestplate"], "iron")
+diamondchestplate = Chestplate(items["diamond"], items["diamond-chestplate"], "diamond")
+chainmailchestplate = Chestplate(blocks["fire"], items["chainmail-chestplate"], "chainmail")
+leatherLeggings = Leggings(items["leather"], items["leather-leggings"], "leather")
+goldleggings = Leggings(items["gold-ingot"], items["gold-leggings"], "gold")
+ironleggings = Leggings(items["iron-ingot"], items["iron-leggings"], "iron")
+diamondleggings = Leggings(items["diamond"], items["diamond-leggings"], "diamond")
+chainmailleggings = Leggings(blocks["fire"], items["chainmail-leggings"], "chainmail")
+leatherboots = Boots(items["leather"], items["leather-boots"], "leather")
+goldboots = Boots(items["gold-ingot"], items["gold-boots"], "gold")
+ironboots = Boots(items["iron-ingot"], items["iron-boots"], "iron")
+diamondboots = Boots(items["diamond"], items["diamond-boots"], "diamond")
+chainmailboots = Boots(blocks["fire"], items["chainmail-boots"], "chainmail")
 
 #Transportation
 minecart = CartBoat(items["iron-ingot"], items["mine-cart"], "minecart")
@@ -740,8 +740,8 @@ track = Track()
 boat = CartBoat(blocks["wood"], items["boat"], "boat")
 
 #Mechanism
-wooddoor = Door(blocks["wood"], blocks["wooden-door"], "wooddoor")
-irondoor = Door(items["iron-ingot"], blocks["iron-door"], "irondoor")
+wooddoor = Door(blocks["wood"], blocks["wooden-door"], "wood")
+irondoor = Door(items["iron-ingot"], blocks["iron-door"], "iron")
 woodpressure = ThreeByOne(blocks["wood"], blocks["wooden-plate"], 1, "wood-plate")
 stonepressure = ThreeByOne(blocks["stone"], blocks["stone-plate"], 1, "stone-plate")
 stonebtn = OneByTwo(blocks["stone"], blocks["stone"], blocks["stone-button"], 1, "stone-btn")
