@@ -300,3 +300,42 @@ class TestInventoryIntegration(unittest.TestCase):
             (bravo.blocks.blocks["wood"].slot, 0, 4))
         self.assertEqual(self.i.crafting[0], None)
         self.assertEqual(self.i.crafted[0], None)
+
+    def test_craft_torches(self):
+        self.i.add(bravo.blocks.items["coal"].key, 2)
+        self.i.add(bravo.blocks.items["stick"].key, 2)
+        # Select coal from holdables.
+        self.i.select(36)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.items["coal"].slot, 0, 2))
+        # Select coal into crafting.
+        self.i.select(1)
+        self.assertEqual(self.i.crafting[0],
+            (bravo.blocks.items["coal"].slot, 0, 2))
+        # Select stick from holdables.
+        self.i.select(37)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.items["stick"].slot, 0, 2))
+        # Select stick into crafting.
+        self.i.select(3)
+        self.assertEqual(self.i.crafting[2],
+            (bravo.blocks.items["stick"].slot, 0, 2))
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.blocks["torch"].slot, 0, 4))
+        # Select torches from crafted.
+        self.i.select(0)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["torch"].slot, 0, 4))
+        self.i.select(0)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["torch"].slot, 0, 8))
+        self.assertEqual(self.i.crafting[0], None)
+        self.assertEqual(self.i.crafted[0], None)
+        # And select torches into holdables.
+        self.i.select(36)
+        self.assertEqual(self.i.selected, None)
+        self.assertEqual(self.i.holdables[0],
+            (bravo.blocks.blocks["torch"].slot, 0, 8))
+        self.assertEqual(self.i.crafting[0], None)
+        self.assertEqual(self.i.crafted[0], None)
