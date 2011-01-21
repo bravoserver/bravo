@@ -12,6 +12,27 @@ def grouper(n, iterable, fillvalue=None):
     args = [iter(iterable)] * n
     return izip_longest(fillvalue=fillvalue, *args)
 
+def pad_to_stride(recipe, rstride, cstride):
+    """
+    Pad a recipe out to a given stride.
+
+    :param tuple recipe: a recipe
+    :param int rstride: stride of the recipe
+    :param int cstride: stride of the crafting table
+    """
+
+    if rstride > cstride:
+        raise ValueError("Recipe is wider than crafting!")
+
+    pad = (None,) * (cstride - rstride)
+    g = grouper(rstride, recipe)
+    padded = list(next(g))
+    for row in g:
+        padded.extend(pad)
+        padded.extend(row)
+
+    return padded
+
 class Inventory(InventorySerializer):
     """
     Item manager.
@@ -284,13 +305,14 @@ class Inventory(InventorySerializer):
         # perfection. (For now.)
         for name, recipe in sorted(retrieve_plugins(IRecipe).iteritems()):
             dims = recipe.dimensions
-            recipe_stride = dims[0]
-            pad = (None,) * (self.crafting_stride - recipe_stride)
-            g = grouper(recipe_stride, recipe.recipe)
-            padded = list(next(g))
-            for row in g:
-                padded.extend(pad)
-                padded.extend(row)
+
+            # Skip recipes that don't fit our crafting table.
+            if (dims[0] > self.crafting_stride or
+                dims[1] > len(self.crafting) // self.crafting_stride):
+                continue
+
+            padded = pad_to_stride(recipe.recipe, dims[0],
+                self.crafting_stride)
 
             for offset in range(len(self.crafting) - len(padded) + 1):
                 nones = self.crafting[:offset]
@@ -330,9 +352,12 @@ class Inventory(InventorySerializer):
         offset = self.recipe_offset
         count = []
 
-        for index, rslot in enumerate(self.recipe.recipe):
+        padded = pad_to_stride(self.recipe.recipe, self.recipe.dimensions[0],
+            self.crafting_stride)
+
+        for index, rslot in enumerate(padded):
             index += offset
-            if rslot is not None and self.crafting[index] is not None:
+            if rslot is not None:
                 rcount = rslot[1]
                 ccount = self.crafting[index][2]
                 count.append(ccount // rcount)
@@ -353,7 +378,10 @@ class Inventory(InventorySerializer):
 
         offset = self.recipe_offset
 
-        for index, slot in enumerate(self.recipe.recipe):
+        padded = pad_to_stride(self.recipe.recipe, self.recipe.dimensions[0],
+            self.crafting_stride)
+
+        for index, slot in enumerate(padded):
             if slot is not None:
                 index += offset
                 rcount = slot[1]
