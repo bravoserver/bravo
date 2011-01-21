@@ -4,11 +4,16 @@ from zope.interface import implements
 from bravo.blocks import blocks, items
 from bravo.ibravo import IRecipe
 
-#Basics
-class OneBlock(object):
-    #first used in basics, but also usable in Misc. Recipes
+class Recipe(object):
+    """
+    Base class for recipes. Just holds the implements() incantation.
+    """
 
     implements(IPlugin, IRecipe)
+
+#Basics
+class OneBlock(Recipe):
+    #first used in basics, but also usable in Misc. Recipes
 
     dimensions = (1, 1)
 
@@ -19,9 +24,7 @@ class OneBlock(object):
         )
         self.provides = (provides.key, amount)
 
-class OneByTwo(object):
-
-    implements(IPlugin, IRecipe)
+class OneByTwo(Recipe):
 
     dimensions = (1, 2)
 
@@ -33,9 +36,7 @@ class OneByTwo(object):
         )
         self.provides = (provides.key, amount)
 
-class TwoByTwo(object):
-
-    implements(IPlugin, IRecipe)
+class TwoByTwo(Recipe):
 
     dimensions = (2, 2)
 
@@ -49,9 +50,7 @@ class TwoByTwo(object):
         )
         self.provides = (provides.key, 1)
 
-class ChestFurnace(object):
-
-    implements(IPlugin, IRecipe)
+class ChestFurnace(Recipe):
 
     dimensions = (3, 3)
 
@@ -71,10 +70,8 @@ class ChestFurnace(object):
         self.provides = (provides.key, 1)
 
 
-class ThreeByThree(object):
+class ThreeByThree(Recipe):
     #Not all 3x3s fit here, this is only center changable 3x3s.
-
-    implements(IPlugin, IRecipe)
 
     dimensions = (3, 3)
 
@@ -94,9 +91,7 @@ class ThreeByThree(object):
         self.provides = (provides.key, 1)
 
 #Block
-class TNT(object):
-
-    implements(IPlugin, IRecipe)
+class TNT(Recipe):
 
     dimensions = (3, 3)
 
@@ -114,9 +109,7 @@ class TNT(object):
     )
     provides = (blocks["tnt"].key, 1)
 
-class ThreeByOne(object):
-
-    implements(IPlugin, IRecipe)
+class ThreeByOne(Recipe):
 
     dimensions = (3, 1)
 
@@ -129,9 +122,7 @@ class ThreeByOne(object):
         )
         self.provides = (provides.key, amount)
 
-class Stairs(object):
-
-    implements(IPlugin, IRecipe)
+class Stairs(Recipe):
 
     dimensions = (3, 3)
 
@@ -150,9 +141,7 @@ class Stairs(object):
         )
         self.provides = (provides.key, 1)
 
-class Bookshelf(object):
-
-    implements(IPlugin, IRecipe)
+class Bookshelf(Recipe):
 
     dimensions = (3, 3)
 
@@ -172,9 +161,7 @@ class Bookshelf(object):
     provides = (blocks["bookshelf"].key, 1)
 
 #Armor
-class Helmet(object):
-
-    implements(IPlugin, IRecipe)
+class Helmet(Recipe):
 
     dimensions = (3, 2)
 
@@ -190,9 +177,7 @@ class Helmet(object):
         )
         self.provides = (provides.key, 1)
 
-class Chestplate(object):
-
-    implements(IPlugin, IRecipe)
+class Chestplate(Recipe):
 
     dimensions = (3, 3)
 
@@ -211,9 +196,7 @@ class Chestplate(object):
         )
         self.provides = (provides.key, 1)
 
-class Leggings(object):
-
-    implements(IPlugin, IRecipe)
+class Leggings(Recipe):
 
     dimensions = (3, 3)
 
@@ -232,9 +215,7 @@ class Leggings(object):
         )
         self.provides = (provides.key, 1)
 
-class Boots(object):
-
-    implements(IPlugin, IRecipe)
+class Boots(Recipe):
 
     dimensions = (3, 2)
 
@@ -251,9 +232,7 @@ class Boots(object):
         self.provides = (provides.key, 1)
 
 #Tools
-class Axe(object):
-
-    implements(IPlugin, IRecipe)
+class Axe(Recipe):
 
     dimensions = (2, 3)
 
@@ -269,9 +248,7 @@ class Axe(object):
         )
         self.provides = (provides.key, 1)
 
-class Pickaxe(object):
-
-    implements(IPlugin, IRecipe)
+class Pickaxe(Recipe):
 
     dimensions = (3, 3)
 
@@ -290,9 +267,7 @@ class Pickaxe(object):
         )
         self.provides = (provides.key, 1)
 
-class Shovel(object):
-
-    implements(IPlugin, IRecipe)
+class Shovel(Recipe):
 
     dimensions = (3, 1)
 
@@ -309,9 +284,7 @@ class Shovel(object):
         )
         self.provides = (provides.key, 1)
 
-class Hoe(object):
-
-    implements(IPlugin, IRecipe)
+class Hoe(Recipe):
 
     dimensions = (3, 2)
 
@@ -327,9 +300,7 @@ class Hoe(object):
         )
         self.provides = (provides.key, 1)
 
-class ClockCompass(object):
-
-    implements(IPlugin, IRecipe)
+class ClockCompass(Recipe):
 
     dimensions = (3, 3)
 
@@ -348,9 +319,7 @@ class ClockCompass(object):
         )
         self.provides = (provides, 1)
 
-class FlintAndSteel(object):
-
-    implements(IPlugin, IRecipe)
+class FlintAndSteel(Recipe):
 
     name = "flint-and-steel"
 
@@ -364,9 +333,7 @@ class FlintAndSteel(object):
     )
     provides = (items["flint-and-steel"].key, 1)
 
-class FishingRod(object):
-
-    implements(IPlugin, IRecipe)
+class FishingRod(Recipe):
 
     name = "fishing-rod"
 
@@ -386,9 +353,7 @@ class FishingRod(object):
     )
     provides = (items["fishing-rod"].key, 1)
 
-class BowlBucket(object):
-
-    implements(IPlugin, IRecipe)
+class BowlBucket(Recipe):
 
     dimensions = (2, 3)
 
@@ -405,9 +370,7 @@ class BowlBucket(object):
         self.provides = (provides.key, amount)
 
 #Weapons
-class Sword(object):
-
-    implements(IPlugin, IRecipe)
+class Sword(Recipe):
 
     dimensions = (1, 3)
 
@@ -420,9 +383,7 @@ class Sword(object):
         )
         self.provides = (provides.key, 1)
 
-class Bow(object):
-
-    implements(IPlugin, IRecipe)
+class Bow(Recipe):
 
     dimensions = (3,3)
 
@@ -441,9 +402,7 @@ class Bow(object):
     )
     provides = (items["bow"].key, 1)
 
-class Arrow(object):
-
-    implements(IPlugin, IRecipe)
+class Arrow(Recipe):
 
     dimensions = (1, 3)
 
@@ -457,10 +416,8 @@ class Arrow(object):
     provides = (items["arrow"].key, 4)
 
 #Transportation
-class CartBoat(object):
+class CartBoat(Recipe):
     #at the time of creation, this only the cart and boat had this shape
-
-    implements(IPlugin, IRecipe)
 
     dimensions = (3, 2)
 
@@ -476,9 +433,7 @@ class CartBoat(object):
         )
         self.provides = (provides.key, 1)
 
-class Track(object):
-
-    implements(IPlugin, IRecipe)
+class Track(Recipe):
 
     dimensions = (3, 3)
 
@@ -498,9 +453,7 @@ class Track(object):
     provides = (blocks["tracks"].key, 4)
 
 #Mechanism
-class Door(object):
-
-    implements(IPlugin, IRecipe)
+class Door(Recipe):
 
     dimensions = (2, 3)
 
@@ -516,9 +469,7 @@ class Door(object):
         )
         self.provides = (provides.key, 1)
 
-class Dispenser(object):
-
-    implements(IPlugin, IRecipe)
+class Dispenser(Recipe):
 
     dimensions = (3, 3)
 
@@ -537,9 +488,7 @@ class Dispenser(object):
     provides = (blocks["dispenser"].key, 1)
 
 #Food
-class MushroomSoup(object):
-
-    implements(IPlugin, IRecipe)
+class MushroomSoup(Recipe):
 
     dimensions = (1, 3)
 
@@ -552,9 +501,7 @@ class MushroomSoup(object):
     )
     provides = (items["mushroom-soup"].key, 1)
 
-class Cake(object):
-
-    implements(IPlugin, IRecipe)
+class Cake(Recipe):
 
     dimensions = (3, 3)
 
@@ -573,9 +520,7 @@ class Cake(object):
     )
     provides = (items["cake"].key, 1)
 
-class Sign(object):
-
-    implements(IPlugin, IRecipe)
+class Sign(Recipe):
 
     dimensions = (3, 3)
 
@@ -594,9 +539,7 @@ class Sign(object):
     )
     provides = (items["sign"].key, 1)
 
-class Ladder(object):
-
-    implements(IPlugin, IRecipe)
+class Ladder(Recipe):
 
     dimensions = (3, 3)
 
@@ -614,9 +557,7 @@ class Ladder(object):
     )
     provides = (blocks["ladder"].key, 1)
 
-class Book(object):
-
-    implements(IPlugin, IRecipe)
+class Book(Recipe):
 
     dimensions = (1, 3)
 
@@ -629,9 +570,7 @@ class Book(object):
     )
     provides = (items["book"].key, 1)
 
-class Fence(object):
-
-    implements(IPlugin, IRecipe)
+class Fence(Recipe):
 
     name = "fence"
 
