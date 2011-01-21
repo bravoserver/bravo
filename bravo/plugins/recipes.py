@@ -7,11 +7,11 @@ from bravo.ibravo import IRecipe
 #Basics
 class OneBlock(object):
     #first used in basics, but also usable in Misc. Recipes
-    
+
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (1, 1)
-    
+
     def __init__(self, material, provides, amount, name=None):
         self.name = name
         self.recipe = (
@@ -22,9 +22,9 @@ class OneBlock(object):
 class OneByTwo(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (1, 2)
-    
+
     def __init__(self, topMat, btmMat, provides, amount, name=None):
         self.name = name
         self.recipe = (
@@ -36,9 +36,9 @@ class OneByTwo(object):
 class TwoByTwo(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (2, 2)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -52,9 +52,9 @@ class TwoByTwo(object):
 class ChestFurnace(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -69,15 +69,15 @@ class ChestFurnace(object):
             (material.key, 1),
         )
         self.provides = (provides.key, 1)
-        
+
 
 class ThreeByThree(object):
     #Not all 3x3s fit here, this is only center changable 3x3s.
-    
+
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     def __init__(self, material, center, provides, name=None):
         self.name = name
         self.recipe = (
@@ -97,11 +97,11 @@ class ThreeByThree(object):
 class TNT(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     name = "tnt"
-    
+
     recipe = (
         (items["sulphur"].key, 1),
         (blocks["sand"].key, 1),
@@ -117,9 +117,9 @@ class TNT(object):
 class ThreeByOne(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 1)
-    
+
     def __init__(self, material, provides, amount, name=None):
         self.name = name
         self.recipe = (
@@ -132,9 +132,9 @@ class ThreeByOne(object):
 class Stairs(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -153,11 +153,11 @@ class Stairs(object):
 class Bookshelf(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     name = "bookshelf"
-    
+
     recipe = (
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
@@ -175,9 +175,9 @@ class Bookshelf(object):
 class Helmet(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 2)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -193,9 +193,9 @@ class Helmet(object):
 class Chestplate(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -214,9 +214,9 @@ class Chestplate(object):
 class Leggings(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -235,9 +235,9 @@ class Leggings(object):
 class Boots(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 2)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -254,9 +254,9 @@ class Boots(object):
 class Axe(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (2, 3)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -272,9 +272,9 @@ class Axe(object):
 class Pickaxe(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -293,9 +293,9 @@ class Pickaxe(object):
 class Shovel(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 1)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -312,9 +312,9 @@ class Shovel(object):
 class Hoe(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 2)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -326,13 +326,13 @@ class Hoe(object):
             (items["stick"].key, 1),
         )
         self.provides = (provides.key, 1)
-            
+
 class ClockCompas(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -351,11 +351,11 @@ class ClockCompas(object):
 class FlintAndSteel(object):
 
     implements(IPlugin, IRecipe)
-    
+
     name = "flint-and-steel"
-    
+
     dimensions = (2, 2)
-    
+
     recipe = (
         (items["iron-ingot"].key, 1),
         (None),
@@ -367,11 +367,11 @@ class FlintAndSteel(object):
 class FishingRod(object):
 
     implements(IPlugin, IRecipe)
-    
+
     name = "fishing-rod"
-    
+
     dimensions = (3, 3)
-    
+
     recipe = (
         (None),
         (None),
@@ -389,9 +389,9 @@ class FishingRod(object):
 class BowlBucket(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (2, 3)
-    
+
     def __init__(self, material, provides, amount, name=None):
         self.name = name
         self.recipe = (
@@ -408,9 +408,9 @@ class BowlBucket(object):
 class Sword(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (1, 3)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -423,11 +423,11 @@ class Sword(object):
 class Bow(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3,3)
-    
+
     name = "bow"
-    
+
     recipe = (
         (items["string"].key, 1),
         (items["stick"].key, 1),
@@ -444,11 +444,11 @@ class Bow(object):
 class Arrow(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (1, 3)
-    
+
     name = "arrow"
-    
+
     recipe = (
         (items["coal"].key, 1),
         (items["stick"].key, 1),
@@ -459,11 +459,11 @@ class Arrow(object):
 #Transportation
 class CartBoat(object):
     #at the time of creation, this only the cart and boat had this shape
-    
+
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 2)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -479,11 +479,11 @@ class CartBoat(object):
 class Track(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     name = "track"
-    
+
     recipe = (
         (items["iron-ingot"].key, 1),
         (None),
@@ -501,9 +501,9 @@ class Track(object):
 class Door(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (2, 3)
-    
+
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
@@ -519,11 +519,11 @@ class Door(object):
 class Dispenser(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     name = "dispenser"
-    
+
     recipe = (
         (blocks["cobblestone"].key, 1),
         (blocks["cobblestone"].key, 1),
@@ -540,11 +540,11 @@ class Dispenser(object):
 class MushroomSoup(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (1, 3)
-    
+
     name = "shroomstew"
-    
+
     recipe = (
         (blocks["red-mushroom"].key, 1),
         (blocks["brown-mushroom"].key, 1),
@@ -555,11 +555,11 @@ class MushroomSoup(object):
 class Cake(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     name = "cake"
-    
+
     recipe = (
         (items["milk"].key, 1),
         (items["milk"].key, 1),
@@ -576,11 +576,11 @@ class Cake(object):
 class Sign(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     name = "sign"
-    
+
     recipe = (
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
@@ -597,11 +597,11 @@ class Sign(object):
 class Ladder(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (3, 3)
-    
+
     name = "ladder"
-    
+
     recipe = (
         (items["stick"].key, 1),
         (None),
@@ -617,11 +617,11 @@ class Ladder(object):
 class Book(object):
 
     implements(IPlugin, IRecipe)
-    
+
     dimensions = (1, 3)
-    
+
     name = "book"
-    
+
     recipe = (
         (items["paper"].key, 1),
         (items["paper"].key, 1),
@@ -632,11 +632,11 @@ class Book(object):
 class Fence(object):
 
     implements(IPlugin, IRecipe)
-    
+
     name = "fence"
-    
+
     dimensions = (3, 2)
-    
+
     recipe = (
         (items["stick"].key, 1),
         (items["stick"].key, 1),
@@ -650,7 +650,7 @@ class Fence(object):
 #--Recipies--
 
 #Basics
-planks = OneBlock(blocks["log"], blocks["wood"], 4, "planks")
+wood = OneBlock(blocks["log"], blocks["wood"], 4, "wood")
 sticks = OneByTwo(blocks["wood"], blocks["wood"], items["stick"], 4, "sticks")
 torches = OneByTwo(items["coal"], items["stick"], blocks["torch"], 4, "torches")
 workbench = TwoByTwo(blocks["wood"], blocks["workbench"], "workbench")
