@@ -1,4 +1,5 @@
-from itertools import chain
+from itertools import chain, izip_longest
+from operator import add
 
 from construct import Container, ListContainer
 
@@ -7,6 +8,11 @@ from bravo.ibravo import IRecipe
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_plugins
 from bravo.serialize import InventorySerializer
+
+def grouper(n, iterable, fillvalue=None):
+    "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return izip_longest(fillvalue=fillvalue, *args)
 
 class Inventory(InventorySerializer):
     """
@@ -260,11 +266,11 @@ class Inventory(InventorySerializer):
         # is just a state update.
         if l is self.crafting:
             # Crafting table changed...
-            self.fill_crafting_table()
             self.check_recipes()
             if self.recipe is None:
                 self.crafted[0] = None
             else:
+                self.fill_crafting_table()
                 crafted = self.apply_recipe()
                 self.crafted[0] = crafted[0][0], crafted[0][1], crafted[1]
 
@@ -279,27 +285,31 @@ class Inventory(InventorySerializer):
 
         # This isn't perfect, unfortunately, but correctness trumps algorithmic
         # perfection. (For now.)
-        crafting = self.crafting_table
-        for recipe in retrieve_plugins(IRecipe).itervalues():
+        for name, recipe in sorted(retrieve_plugins(IRecipe).iteritems()):
             dims = recipe.dimensions
+            recipe_stride = dims[0]
+            pad = (None,) * (self.crafting_stride - recipe_stride)
+            g = grouper(recipe_stride, recipe.recipe)
+            padded = list(next(g))
+            for row in g:
+                padded.extend(pad)
+                padded.extend(row)
 
-            for x, y in crafting.iterkeys():
-                if (x + dims[1] > self.crafting_stride or
-                    y + dims[0] > self.crafting_stride):
+            for offset in range(len(self.crafting) - len(padded) + 1):
+                nones = self.crafting[:offset]
+                nones += self.crafting[len(padded) + offset:]
+                if not all(i is None for i in nones):
                     continue
 
-                indices = product(xrange(x, x + dims[1]),
-                    xrange(y, y + dims[0]))
+                matches_needed = len(padded)
 
-                matches_needed = dims[0] * dims[1]
-
-                for index, slot in zip(indices, recipe.recipe):
-
-                    if crafting[index] is None and slot is None:
+                for i, j in zip(padded,
+                    self.crafting[offset:len(padded) + offset]):
+                    if i is None and j is None:
                         matches_needed -= 1
-                    elif crafting[index] is not None and slot is not None:
-                        cprimary, csecondary, ccount = crafting[index]
-                        skey, scount = slot
+                    elif i is not None and j is not None:
+                        cprimary, csecondary, ccount = j
+                        skey, scount = i
                         if ((cprimary, csecondary) == skey
                             and ccount >= scount):
                             matches_needed -= 1
@@ -307,6 +317,7 @@ class Inventory(InventorySerializer):
                     if matches_needed == 0:
                         # Jackpot!
                         self.recipe = recipe
+                        x, y = divmod(offset, self.crafting_stride)
                         self.recipe_offset = (x, y)
                         return
 
