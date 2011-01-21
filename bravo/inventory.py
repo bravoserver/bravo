@@ -14,9 +14,24 @@ def grouper(n, iterable, fillvalue=None):
 
 class Inventory(InventorySerializer):
     """
-    Item manager for a player.
+    Item manager.
 
-    The ``Inventory`` covers a player's armor, crafting box, and inventory.
+    The ``Inventory`` covers all kinds of inventory and crafting windows,
+    ranging from user inventories to furnaces to workbenches. It is completely
+    extensible and customizeable.
+
+    The main concept of the ``Inventory`` lies in **slots**, which are boxes
+    capable of holding items, and **tables**, which are groups of slots with
+    an associated semantic meaning. Currently, ``Inventory`` supports four
+    tables:
+
+     * Crafting: A rectangular arrangement of slots which can be used to
+       transmute items. Crafting tables are always preceded by a single slot
+       which is used for the output of the crafting table.
+     * Armor: A set of slots used to equip armor.
+     * Storage: A generalized table for storing arbitrary items. This is the
+       main region of chests and player inventories.
+     * Holdables: A region mapped to a player's usable items.
     """
 
     crafting = 0
@@ -60,7 +75,10 @@ class Inventory(InventorySerializer):
 
     def container_for_slot(self, slot):
         """
-        Retrieve the list and index for a given slot.
+        Retrieve the table and index for a given slot.
+
+        There is an isomorphism here which allows all of the tables of this
+        ``Inventory`` to be viewed as a single large table of slots.
         """
 
         metalist = [self.crafted, self.crafting, self.armor, self.storage,
@@ -171,6 +189,10 @@ class Inventory(InventorySerializer):
     def select(self, slot, alternate=False):
         """
         Handle a slot selection.
+
+        This method implements the basic public interface for interacting with
+        ``Inventory`` objects. It is directly equivalent to mouse clicks made
+        upon slots.
 
         :param int slot: which slot was selected
         :param bool alternate: whether the selection is alternate; e.g., if it
