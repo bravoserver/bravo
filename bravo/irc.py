@@ -26,6 +26,8 @@ class BravoIRCClient(IRCClient):
         self.host = configuration.get(self.config, "server")
         self.nickname = configuration.get(self.config, "nick")
 
+        self.channels = set()
+
         log.msg("Spawned IRC client '%s'!" % config)
 
     def signedOn(self):
@@ -38,6 +40,11 @@ class BravoIRCClient(IRCClient):
 
     def joined(self, channel):
         log.msg("Joined %s on %s" % (channel, self.host))
+        self.channels.add(channel)
+
+    def left(self, channel):
+        log.msg("Parted %s on %s" % (channel, self.host))
+        self.channels.discard(channel)
 
     def privmsg(self, user, channel, message):
         response = []
@@ -54,6 +61,16 @@ class BravoIRCClient(IRCClient):
         if response:
             for line in response:
                 self.msg(channel, line.encode("utf8"))
+
+    def write(self, data):
+        """
+        Called by factories telling us about chat messages.
+        """
+
+        factory, message = data
+
+        for channel in self.channels:
+            self.msg(channel, message.encode("utf8"))
 
 class BravoIRC(ClientFactory):
     protocol = BravoIRCClient

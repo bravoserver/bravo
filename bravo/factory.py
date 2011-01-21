@@ -146,7 +146,7 @@ class BetaFactory(Factory):
         """
 
         for consumer in self.chat_consumers:
-            consumer.write(message)
+            consumer.write((self, message))
 
         # Prepare the message for chat packeting.
         for user in self.protocols:
