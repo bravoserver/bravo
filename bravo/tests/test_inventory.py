@@ -116,7 +116,7 @@ class TestCraftingWood(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.select(2)
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, (0, 0))
+        self.assertEqual(self.i.recipe_offset, 0)
         self.assertEqual(self.i.crafted[0],
             (bravo.blocks.blocks["wood"].slot, 0, 4))
 
@@ -134,7 +134,7 @@ class TestCraftingWood(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.select(1)
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, (0, 1))
+        self.assertEqual(self.i.recipe_offset, 1)
 
 class TestCraftingSticks(unittest.TestCase):
     """
@@ -157,7 +157,7 @@ class TestCraftingSticks(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.select(2)
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, (0, 0))
+        self.assertEqual(self.i.recipe_offset, 0)
         self.assertEqual(self.i.crafted[0],
             (bravo.blocks.items["stick"].slot, 0, 4))
 
@@ -177,7 +177,7 @@ class TestCraftingSticks(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.select(1)
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, (0, 1))
+        self.assertEqual(self.i.recipe_offset, 1)
 
 class TestCraftingFurnace(unittest.TestCase):
     """
@@ -206,7 +206,7 @@ class TestCraftingFurnace(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.select(5)
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, (0, 0))
+        self.assertEqual(self.i.recipe_offset, 0)
         self.assertEqual(self.i.crafted[0],
             (bravo.blocks.blocks["furnace"].slot, 0, 1))
 

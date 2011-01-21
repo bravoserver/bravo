@@ -1,9 +1,7 @@
 from itertools import chain, izip_longest
-from operator import add
 
 from construct import Container, ListContainer
 
-from bravo.compat import product
 from bravo.ibravo import IRecipe
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_plugins
@@ -34,11 +32,6 @@ class Inventory(InventorySerializer):
         else:
             self.crafting = self.crafted = []
 
-        self.crafting_table = {}
-        """
-        A two-dimensional table for quickly and cleanly doing crafting.
-        """
-
         if self.armor:
             self.armor = [None] * self.armor
         else:
@@ -64,22 +57,6 @@ class Inventory(InventorySerializer):
         retval = len(self.crafted) + len(self.crafting) + len(self.armor)
         retval += len(self.storage) + len(self.holdables)
         return retval
-
-    def fill_crafting_table(self):
-        """
-        Copy the crafting array into the crafting table.
-        """
-
-        for i, slot in enumerate(self.crafting):
-            self.crafting_table[divmod(i, self.crafting_stride)] = slot
-
-    def sync_crafting_table(self):
-        """
-        Copy the crafting table into the crafting array.
-        """
-
-        for i, slot in self.crafting_table.iteritems():
-            self.crafting[i[0] * self.crafting_stride + i[1]] = slot
 
     def container_for_slot(self, slot):
         """
@@ -208,7 +185,6 @@ class Inventory(InventorySerializer):
                 self.selected = self.crafted[0]
 
                 self.reduce_recipe()
-                self.sync_crafting_table()
                 primary, secondary, count = self.crafted[0]
                 count -= self.recipe.provides[1]
                 if count <= 0:
@@ -270,7 +246,6 @@ class Inventory(InventorySerializer):
             if self.recipe is None:
                 self.crafted[0] = None
             else:
-                self.fill_crafting_table()
                 crafted = self.apply_recipe()
                 self.crafted[0] = crafted[0][0], crafted[0][1], crafted[1]
 
@@ -317,8 +292,7 @@ class Inventory(InventorySerializer):
                     if matches_needed == 0:
                         # Jackpot!
                         self.recipe = recipe
-                        x, y = divmod(offset, self.crafting_stride)
-                        self.recipe_offset = (x, y)
+                        self.recipe_offset = offset
                         return
 
         self.recipe = None
@@ -331,18 +305,15 @@ class Inventory(InventorySerializer):
         will not do additional checks to verify this assumption.
         """
 
-        crafting = self.crafting_table
         offset = self.recipe_offset
-        dims = self.recipe.dimensions
-        indices = product(xrange(offset[0], offset[0] + dims[1]),
-            xrange(offset[1], offset[1] + dims[0]))
         count = []
 
-        for index, slot in zip(indices, self.recipe.recipe):
-            if slot is not None and crafting[index] is not None:
-                scount = slot[1]
-                tcount = crafting[index][2]
-                count.append(tcount // scount)
+        for index, rslot in enumerate(self.recipe.recipe):
+            index += offset
+            if rslot is not None and self.crafting[index] is not None:
+                rcount = rslot[1]
+                ccount = self.crafting[index][2]
+                count.append(ccount // rcount)
 
         counted = min(count)
         if counted > 0:
@@ -358,21 +329,18 @@ class Inventory(InventorySerializer):
         will not do additional checks to verify this assumption.
         """
 
-        crafting = self.crafting_table
         offset = self.recipe_offset
-        dims = self.recipe.dimensions
-        indices = product(xrange(offset[0], offset[0] + dims[1]),
-            xrange(offset[1], offset[1] + dims[0]))
 
-        for index, slot in zip(indices, self.recipe.recipe):
+        for index, slot in enumerate(self.recipe.recipe):
             if slot is not None:
-                scount = slot[1]
-                primary, secondary, tcount = crafting[index]
-                tcount -= scount
-                if tcount:
-                    crafting[index] = primary, secondary, tcount
+                index += offset
+                rcount = slot[1]
+                primary, secondary, ccount = self.crafting[index]
+                ccount -= rcount
+                if ccount:
+                    self.crafting[index] = primary, secondary, ccount
                 else:
-                    crafting[index] = None
+                    self.crafting[index] = None
 
 class Equipment(Inventory):
 
