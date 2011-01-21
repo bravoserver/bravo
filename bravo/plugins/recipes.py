@@ -136,7 +136,7 @@ class Stairs(object):
     dimensions = (3, 3)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%s-name" % name
         self.recipe = (
             (material.key, 1),
             (None),
@@ -258,7 +258,7 @@ class Axe(object):
     dimensions = (2, 3)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%s-axe" % name
         self.recipe = (
             (material.key, 1),
             (material.key, 1),
@@ -276,7 +276,7 @@ class Pickaxe(object):
     dimensions = (3, 3)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%s-pickaxe" % name
         self.recipe = (
             (material.key, 1),
             (material.key, 1),
@@ -297,7 +297,7 @@ class Shovel(object):
     dimensions = (3, 1)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%s-shovel" % name
         self.recipe = (
             (material.key, 1),
             (None),
@@ -316,7 +316,7 @@ class Hoe(object):
     dimensions = (3, 2)
 
     def __init__(self, material, provides, name=None):
-        self.name = name
+        self.name = "%s-hoe" % name
         self.recipe = (
             (material.key, 1),
             (material.key, 1),
@@ -327,7 +327,7 @@ class Hoe(object):
         )
         self.provides = (provides.key, 1)
 
-class ClockCompas(object):
+class ClockCompass(object):
 
     implements(IPlugin, IRecipe)
 
@@ -665,8 +665,8 @@ glowstone = ThreeByThree(items["glowstone-dust"], items["glowstone-dust"], block
 wool = ThreeByThree(items["string"], items["string"], blocks["wool"], "wool")
 tnt = TNT()
 stoneslab = ThreeByOne(blocks["cobblestone"], blocks["step"], 1, "step")
-woodstairs = Stairs(blocks["wood"], blocks["wooden-stairs"], "wood-stairs")
-cstonestairs = Stairs(blocks["cobblestone"], blocks["stone-stairs"], "stone-stairs")
+woodstairs = Stairs(blocks["wood"], blocks["wooden-stairs"], "wood")
+cstonestairs = Stairs(blocks["cobblestone"], blocks["stone-stairs"], "stone")
 snowblock = TwoByTwo(items["snowball"], blocks["snow-block"], "snow-block")
 clayblock = TwoByTwo(items["clay-balls"], blocks["clay"], "clay-block")
 brick = TwoByTwo(items["clay-brick"], blocks["brick"], "brick")
@@ -675,28 +675,28 @@ sandstone = TwoByTwo(blocks["sand"], blocks["sandstone"], "sandstone")
 jackolantern = OneByTwo(blocks["pumpkin"], items["stick"], blocks["jack-o-lantern"], 1, "jack-o-lantern")
 
 #Tools
-woodaxe = Axe(blocks["wood"], items["wooden-axe"], "wood-axe")
-stoneaxe = Axe(blocks["cobblestone"], items["stone-axe"], "stone-axe")
-ironaxe = Axe(items["iron-ingot"], items["iron-axe"], "iron-axe")
-goldaxe = Axe(items["gold-ingot"], items["gold-axe"], "gold-axe")
-diamondaxe = Axe(items["diamond"], items["diamond-axe"], "diamond-axe")
-woodpickaxe = Pickaxe(blocks["wood"], items["wooden-pickaxe"], "wood-pickaxe")
-stonepickaxe = Pickaxe(blocks["cobblestone"], items["stone-pickaxe"], "stone-pickaxe")
-ironpickaxe = Pickaxe(items["iron-ingot"], items["iron-pickaxe"], "iron-pickaxe")
-goldpickaxe = Pickaxe(items["gold-ingot"], items["gold-pickaxe"], "gold-pickaxe")
-diamondpickaxe = Pickaxe(items["diamond"], items["diamond-pickaxe"], "diamond-pickaxe")
-woodshovel = Shovel(blocks["wood"], items["wooden-shovel"], "wood-shovel")
-stoneshovel = Shovel(blocks["cobblestone"], items["stone-shovel"], "stone-shovel")
-ironshovel = Shovel(items["iron-ingot"], items["iron-shovel"], "iron-shovel")
-goldshovel = Shovel(items["gold-ingot"], items["gold-shovel"], "gold-shovel")
-diamondshovel = Shovel(items["diamond"], items["diamond-shovel"], "diamond-shovel")
-woodhoe = Hoe(blocks["wood"], items["wooden-hoe"], "wood-hoe")
-stonehoe = Hoe(blocks["cobblestone"], items["stone-hoe"], "stone-hoe")
-ironhoe = Hoe(items["iron-ingot"], items["iron-hoe"], "iron-hoe")
-goldhoe = Hoe(items["gold-ingot"], items["gold-hoe"], "gold-hoe")
-diamondhoe = Hoe(items["diamond"], items["diamond-hoe"], "diamond-hoe")
-clock = ClockCompas(items["iron-ingot"], items["clock"], "clock")
-compas = ClockCompas(items["gold-ingot"], items["compass"], "compass")
+woodaxe = Axe(blocks["wood"], items["wooden-axe"], "wood")
+stoneaxe = Axe(blocks["cobblestone"], items["stone-axe"], "stone")
+ironaxe = Axe(items["iron-ingot"], items["iron-axe"], "iron")
+goldaxe = Axe(items["gold-ingot"], items["gold-axe"], "gold")
+diamondaxe = Axe(items["diamond"], items["diamond-axe"], "diamond")
+woodpickaxe = Pickaxe(blocks["wood"], items["wooden-pickaxe"], "wood")
+stonepickaxe = Pickaxe(blocks["cobblestone"], items["stone-pickaxe"], "stone")
+ironpickaxe = Pickaxe(items["iron-ingot"], items["iron-pickaxe"], "iron")
+goldpickaxe = Pickaxe(items["gold-ingot"], items["gold-pickaxe"], "gold")
+diamondpickaxe = Pickaxe(items["diamond"], items["diamond-pickaxe"], "diamond")
+woodshovel = Shovel(blocks["wood"], items["wooden-shovel"], "wood")
+stoneshovel = Shovel(blocks["cobblestone"], items["stone-shovel"], "stone")
+ironshovel = Shovel(items["iron-ingot"], items["iron-shovel"], "iron")
+goldshovel = Shovel(items["gold-ingot"], items["gold-shovel"], "gold")
+diamondshovel = Shovel(items["diamond"], items["diamond-shovel"], "diamond")
+woodhoe = Hoe(blocks["wood"], items["wooden-hoe"], "wood")
+stonehoe = Hoe(blocks["cobblestone"], items["stone-hoe"], "stone")
+ironhoe = Hoe(items["iron-ingot"], items["iron-hoe"], "iron")
+goldhoe = Hoe(items["gold-ingot"], items["gold-hoe"], "gold")
+diamondhoe = Hoe(items["diamond"], items["diamond-hoe"], "diamond")
+clock = ClockCompass(items["iron-ingot"], items["clock"], "clock")
+compass = ClockCompass(items["gold-ingot"], items["compass"], "compass")
 flintandsteel = FlintAndSteel()
 fishingrod = FishingRod()
 bucket = BowlBucket(items["iron-ingot"], items["bucket"], 1, "bucket")
@@ -769,4 +769,3 @@ ladder = Ladder()
 papers = ThreeByOne(blocks["sugar-cane"], items["paper"], 3, "paper")
 book = Book()
 fence = Fence()
-
