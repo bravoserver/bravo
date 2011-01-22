@@ -1,5 +1,14 @@
-import ConfigParser
+from ConfigParser import SafeConfigParser
 from os.path import expanduser
+
+class BravoConfigParser(SafeConfigParser):
+    """
+    Extended ``ConfigParser``.
+    """
+
+    def getlist(self, section, option, separator=","):
+        s = self.get(section, option)
+        return [i.strip() for i in s.split(separator)]
 
 defaults = {
     "authenticator": "offline",
@@ -11,7 +20,7 @@ defaults = {
     "serializer": "json",
 }
 
-configuration = ConfigParser.SafeConfigParser(defaults)
+configuration = BravoConfigParser(defaults)
 configuration.add_section("bravo")
 
 # XXX improve on this
