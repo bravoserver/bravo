@@ -1,4 +1,4 @@
-from itertools import chain, izip_longest
+from itertools import chain
 
 from construct import Container, ListContainer
 
@@ -7,10 +7,10 @@ from bravo.packets import make_packet
 from bravo.plugin import retrieve_plugins
 from bravo.serialize import InventorySerializer
 
-def grouper(n, iterable, fillvalue=None):
-    "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+def grouper(n, iterable):
     args = [iter(iterable)] * n
-    return izip_longest(fillvalue=fillvalue, *args)
+    for i in zip(*args):
+        yield i
 
 def pad_to_stride(recipe, rstride, cstride):
     """
