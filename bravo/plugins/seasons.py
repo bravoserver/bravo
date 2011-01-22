@@ -10,6 +10,7 @@ snow_resistant = set([
     blocks["flower"].slot,
     blocks["glass"].slot,
     blocks["ice"].slot,
+    blocks["ladder"].slot,
     blocks["lava"].slot,
     blocks["rose"].slot,
     blocks["spring"].slot,
