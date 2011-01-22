@@ -1,4 +1,4 @@
-from fractions import Fraction
+from __future__ import division
 
 class Block(object):
     """
@@ -19,7 +19,7 @@ class Block(object):
         "slot",
     )
 
-    def __init__(self, slot, name, drop=None, replace=0, ratio=None,
+    def __init__(self, slot, name, drop=None, replace=0, ratio=1,
             quantity=1):
         """
         A block in a chunk.
@@ -36,9 +36,8 @@ class Block(object):
             replace : int
                 The type of block to place in the map when instances of this
                 block are destroyed. Defaults to air.
-            ratio : `Fraction`
-                The probability of this block dropping a block on destruction,
-                or None if this block always drops a block when destroyed.
+            ratio : float
+                The probability of this block dropping a block on destruction.
             quantity : int
                 The number of blocks dropped when this block is destroyed.
         """
@@ -314,7 +313,7 @@ replaces[79] = 8 # Ice -> Water
 
 ratios = {}
 
-ratios[18] = Fraction(1, 9) # Leaves
+ratios[18] = 1 / 9 # Leaves
 
 quantities = {}
 

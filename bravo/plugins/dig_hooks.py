@@ -60,12 +60,10 @@ class Give(object):
         # ...and pixel coordinates.
         coords = (x * 32 + 16, y * 32, z * 32 + 16)
 
-        if block.ratio is None:
-            # Guaranteed drop.
-            factory.give(coords, (block.drop, 0), block.quantity)
-        elif (random.randint(1, block.ratio.denominator) <=
-                block.ratio.numerator):
-            # Random drop based on ratio.
+        # Drop a block, according to the block's drop ratio. It's important to
+        # remember that, for most blocks, the drop ratio is 1, so we should
+        # have a short-circuit for those cases.
+        if block.ratio == 1 or random.random() <= block.ratio:
             factory.give(coords, (block.drop, 0), block.quantity)
 
     name = "give"
