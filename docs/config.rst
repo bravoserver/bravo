@@ -13,8 +13,6 @@ General settings
 
 These settings apply to all of Bravo. This section is named ``[bravo]``.
 
-authenticator
-    Which authentication plugin to use.
 build_hooks
     Which build hooks to enable. Order matters!
 dig_hooks
@@ -45,3 +43,5 @@ port
     users.
 world
     The folder to use for loading and saving world data.
+authenticator
+    Which authentication plugin to use.

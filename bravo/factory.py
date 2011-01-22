@@ -69,7 +69,7 @@ class BetaFactory(Factory):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
 
-        authenticator = configuration.get("bravo", "authenticator")
+        authenticator = configuration.get("world %s" % name, "authenticator")
         selected = retrieve_named_plugins(IAuthenticator, [authenticator])[0]
 
         log.msg("Using authenticator %s" % selected.name)

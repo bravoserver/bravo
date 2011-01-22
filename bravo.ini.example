@@ -21,12 +21,6 @@ dig_hooks = give,replace,bravo_snow,alpha_sand_gravel
 # ~ torch: Orient torches
 build_hooks = build_snow,torch,tile,build,bravo_snow,alpha_sand_gravel
 
-# Authenticator. There are only two options:
-# ~ offline: anybody can log in, no authentication is done
-# ~ online: only people logged into minecraft.net can log in
-#authenticator = online
-authenticator = offline
-
 # Terrain generators.
 # Some important generators:
 # ~ erosion: make dirt appear
@@ -64,3 +58,11 @@ port = 25565
 # permissions to this folder. If it does not exist, it will be created.
 # Relative paths are allowed but discouraged.
 path = example-world
+
+# Authenticator. There are only two options:
+# ~ offline: anybody can log in, no authentication is done
+# ~ online: only people logged into minecraft.net can log in
+# Bravo also supports the password authentication scheme; see the docs for
+# details.
+#authenticator = online
+authenticator = offline
