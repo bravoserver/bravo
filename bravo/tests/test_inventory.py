@@ -127,7 +127,7 @@ class TestCraftingWood(unittest.TestCase):
         # Only checking count of crafted table; the previous test assured that
         # the recipe was selected.
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.blocks["wood"].slot, 0, 8))
+            (bravo.blocks.blocks["wood"].slot, 0, 4))
 
     def test_check_crafting_offset(self):
         self.i.crafting[1] = (bravo.blocks.blocks["log"].slot, 0, 1)
@@ -169,7 +169,7 @@ class TestCraftingSticks(unittest.TestCase):
         # Only checking count of crafted table; the previous test assured that
         # the recipe was selected.
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.items["stick"].slot, 0, 8))
+            (bravo.blocks.items["stick"].slot, 0, 4))
 
     def test_check_crafting_offset(self):
         self.i.crafting[1] = (bravo.blocks.blocks["wood"].slot, 0, 1)
@@ -211,7 +211,7 @@ class TestCraftingTorches(unittest.TestCase):
         # Only checking count of crafted table; the previous test assured that
         # the recipe was selected.
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.blocks["torch"].slot, 0, 8))
+            (bravo.blocks.blocks["torch"].slot, 0, 4))
 
     def test_check_crafting_offset(self):
         self.i.crafting[1] = (bravo.blocks.items["coal"].slot, 0, 1)
@@ -264,7 +264,7 @@ class TestCraftingFurnace(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.select(5)
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.blocks["furnace"].slot, 0, 2))
+            (bravo.blocks.blocks["furnace"].slot, 0, 1))
 
 class TestInventoryIntegration(unittest.TestCase):
 

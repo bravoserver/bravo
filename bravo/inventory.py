@@ -224,16 +224,27 @@ class Inventory(InventorySerializer):
 
         if l is self.crafted:
             # Special case for crafted output.
-            if self.selected is None and self.recipe and self.crafted[0]:
-                self.selected = self.crafted[0]
-
-                self.reduce_recipe()
-                primary, secondary, count = self.crafted[0]
-                count -= self.recipe.provides[1]
-                if count <= 0:
+            if self.recipe and self.crafted[0]:
+                if self.selected is None:
+                    self.selected = self.crafted[0]
                     self.crafted[0] = None
                 else:
-                    self.crafted[0] = primary, secondary, count
+                    sprimary, ssecondary, scount = self.selected
+                    if (sprimary, ssecondary) == self.recipe.provides[0]:
+                        scount += self.recipe.provides[1]
+                        self.selected = sprimary, ssecondary, scount
+                    else:
+                        # Mismatch; don't allow it.
+                        return False
+
+                self.reduce_recipe()
+                self.check_recipes()
+                if self.recipe is None:
+                    self.crafted[0] = None
+                else:
+                    provides = self.recipe.provides
+                    self.crafted[0] = provides[0][0], provides[0][1], provides[1]
+
                 return True
             else:
                 # Forbid placing things in the crafted slot.
@@ -289,8 +300,8 @@ class Inventory(InventorySerializer):
             if self.recipe is None:
                 self.crafted[0] = None
             else:
-                crafted = self.apply_recipe()
-                self.crafted[0] = crafted[0][0], crafted[0][1], crafted[1]
+                provides = self.recipe.provides
+                self.crafted[0] = provides[0][0], provides[0][1], provides[1]
 
         return True
 
@@ -341,39 +352,14 @@ class Inventory(InventorySerializer):
 
         self.recipe = None
 
-    def apply_recipe(self):
-        """
-        Return the crafted output of an applied recipe.
-
-        This function assumes that the recipe already fits the crafting table and
-        will not do additional checks to verify this assumption.
-        """
-
-        offset = self.recipe_offset
-        count = []
-
-        padded = pad_to_stride(self.recipe.recipe, self.recipe.dimensions[0],
-            self.crafting_stride)
-
-        for index, rslot in enumerate(padded):
-            index += offset
-            if rslot is not None:
-                rcount = rslot[1]
-                ccount = self.crafting[index][2]
-                count.append(ccount // rcount)
-
-        counted = min(count)
-        if counted > 0:
-            return self.recipe.provides[0], self.recipe.provides[1] * counted
-
     def reduce_recipe(self):
         """
         Reduce a crafting table according to a recipe.
 
         This function returns None; the crafting table is modified in-place.
 
-        This function assumes that the recipe already fits the crafting table and
-        will not do additional checks to verify this assumption.
+        This function assumes that the recipe already fits the crafting table
+        and will not do additional checks to verify this assumption.
         """
 
         offset = self.recipe_offset
@@ -391,6 +377,8 @@ class Inventory(InventorySerializer):
                     self.crafting[index] = primary, secondary, ccount
                 else:
                     self.crafting[index] = None
+
+
 
 class Equipment(Inventory):
 
