@@ -40,6 +40,36 @@ class Torch(object):
 
     name = "torch"
 
+class Ladder(object):
+    """
+    Update metadata for ladders.
+
+    You almost certainly want to enable this plugin.
+    """
+
+    implements(IPlugin, IBuildHook)
+
+    def build_hook(self, factory, player, builddata):
+        block, metadata, x, y, z, face = builddata
+
+        if block.slot == blocks["ladder"].slot:
+            # Update metadata according to face.
+            if face == "-x":
+                builddata = builddata._replace(metadata=0x4)
+            elif face == "+x":
+                builddata = builddata._replace(metadata=0x5)
+            elif face == "-z":
+                builddata = builddata._replace(metadata=0x2)
+            elif face == "+z":
+                builddata = builddata._replace(metadata=0x3)
+            else:
+                # What would a ceiling ladder even look like?
+                return False, builddata
+
+        return True, builddata
+
+    name = "ladder"
+
 class Tile(object):
     """
     Place tiles.
@@ -167,3 +197,4 @@ torch = Torch()
 tile = Tile()
 build = Build()
 build_snow = BuildSnow()
+ladder = Ladder()
