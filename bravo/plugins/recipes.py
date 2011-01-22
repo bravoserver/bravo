@@ -61,7 +61,7 @@ class ChestFurnace(Recipe):
             (material.key, 1),
             (material.key, 1),
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
             (material.key, 1),
             (material.key, 1),
@@ -130,11 +130,11 @@ class Stairs(Recipe):
         self.name = "%s-name" % name
         self.recipe = (
             (material.key, 1),
-            (None),
-            (None),
+            None,
+            None,
             (material.key, 1),
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
             (material.key, 1),
             (material.key, 1),
@@ -172,7 +172,7 @@ class Helmet(Recipe):
             (material.key, 1),
             (material.key, 1),
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
         )
         self.provides = (provides.key, 1)
@@ -185,7 +185,7 @@ class Chestplate(Recipe):
         self.name = "%s-chestplate" % name
         self.recipe = (
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
             (material.key, 1),
             (material.key, 1),
@@ -207,10 +207,10 @@ class Leggings(Recipe):
             (material.key, 1),
             (material.key, 1),
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
         )
         self.provides = (provides.key, 1)
@@ -223,10 +223,10 @@ class Boots(Recipe):
         self.name = "%s-boots" % name
         self.recipe = (
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
         )
         self.provides = (provides.key, 1)
@@ -243,7 +243,7 @@ class Axe(Recipe):
             (material.key, 1),
             (material.key, 1),
             (items["stick"].key, 1),
-            (None),
+            None,
             (items["stick"].key, 1),
         )
         self.provides = (provides.key, 1)
@@ -258,12 +258,12 @@ class Pickaxe(Recipe):
             (material.key, 1),
             (material.key, 1),
             (material.key, 1),
-            (None),
+            None,
             (items["stick"].key, 1),
-            (None),
-            (None),
+            None,
+            None,
             (items["stick"].key, 1),
-            (None),
+            None,
         )
         self.provides = (provides.key, 1)
 
@@ -275,12 +275,12 @@ class Shovel(Recipe):
         self.name = "%s-shovel" % name
         self.recipe = (
             (material.key, 1),
-            (None),
+            None,
             (items["stick"].key, 1),
-            (None),
-            (None),
+            None,
+            None,
             (items["stick"].key, 1),
-            (None),
+            None,
         )
         self.provides = (provides.key, 1)
 
@@ -293,9 +293,9 @@ class Hoe(Recipe):
         self.recipe = (
             (material.key, 1),
             (material.key, 1),
-            (None),
+            None,
             (items["stick"].key, 1),
-            (None),
+            None,
             (items["stick"].key, 1),
         )
         self.provides = (provides.key, 1)
@@ -307,15 +307,15 @@ class ClockCompass(Recipe):
     def __init__(self, material, provides, name=None):
         self.name = name
         self.recipe = (
-            (None),
+            None,
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
             (items["redstone"].key, 1),
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
-            (None),
+            None,
         )
         self.provides = (provides, 1)
 
@@ -327,8 +327,8 @@ class FlintAndSteel(Recipe):
 
     recipe = (
         (items["iron-ingot"].key, 1),
-        (None),
-        (None),
+        None,
+        None,
         (items["flint"].key, 1)
     )
     provides = (items["flint-and-steel"].key, 1)
@@ -340,15 +340,15 @@ class FishingRod(Recipe):
     dimensions = (3, 3)
 
     recipe = (
-        (None),
-        (None),
+        None,
+        None,
         (items["stick"].key, 1),
-        (None),
+        None,
         (items["stick"].key, 1),
         (items["string"].key, 1),
-        (None),
+        None,
         (items["stick"].key, 1),
-        (None),
+        None,
         (items["string"].key, 1),
     )
     provides = (items["fishing-rod"].key, 1)
@@ -361,11 +361,11 @@ class BowlBucket(Recipe):
         self.name = name
         self.recipe = (
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
-            (None),
+            None,
         )
         self.provides = (provides.key, amount)
 
@@ -375,7 +375,7 @@ class Sword(Recipe):
     dimensions = (1, 3)
 
     def __init__(self, material, provides, name=None):
-        self.name = "%-sword" % name
+        self.name = "%s-sword" % name
         self.recipe = (
             (material.key, 1),
             (material.key, 1),
@@ -392,13 +392,13 @@ class Bow(Recipe):
     recipe = (
         (items["string"].key, 1),
         (items["stick"].key, 1),
-        (None),
+        None,
         (items["string"].key, 1),
-        (None),
+        None,
         (items["stick"].key, 1),
         (items["string"].key, 1),
         (items["stick"].key, 1),
-        (None),
+        None,
     )
     provides = (items["bow"].key, 1)
 
@@ -425,7 +425,7 @@ class CartBoat(Recipe):
         self.name = name
         self.recipe = (
             (material.key, 1),
-            (None),
+            None,
             (material.key, 1),
             (material.key, 1),
             (material.key, 1),
@@ -441,13 +441,13 @@ class Track(Recipe):
 
     recipe = (
         (items["iron-ingot"].key, 1),
-        (None),
+        None,
         (items["iron-ingot"].key, 1),
         (items["iron-ingot"].key, 1),
         (items["stick"].key, 1),
         (items["iron-ingot"].key, 1),
         (items["iron-ingot"].key, 1),
-        (None),
+        None,
         (items["iron-ingot"].key, 1),
     )
     provides = (blocks["tracks"].key, 4)
@@ -533,9 +533,9 @@ class Sign(Recipe):
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
-        (None),
+        None,
         (items["stick"].key, 1),
-        (None),
+        None,
     )
     provides = (items["sign"].key, 1)
 
@@ -547,12 +547,12 @@ class Ladder(Recipe):
 
     recipe = (
         (items["stick"].key, 1),
-        (None),
+        None,
         (items["stick"].key, 1),
         (items["stick"].key, 1),
         (items["stick"].key, 1),
         (items["stick"].key, 1),
-        (None),
+        None,
         (items["stick"].key, 1),
     )
     provides = (blocks["ladder"].key, 1)
