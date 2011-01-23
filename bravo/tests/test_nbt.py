@@ -3,8 +3,7 @@ from StringIO import StringIO
 import tempfile
 import unittest
 
-from bravo.nbt import NBTFile
-from bravo.nbt import _TAG_Numeric
+from bravo.nbt import NBTFile, _TAG_Numeric, MalformedFileError
 
 bigtest = """
 H4sIAAAAAAAAAO1Uz08aQRR+wgLLloKxxBBjzKu1hKXbzUIRibGIFiyaDRrYqDGGuCvDgi67Znew
@@ -25,16 +24,16 @@ class BugfixTest(unittest.TestCase):
     These tend to not fit into nice categories.
     """
 
-    def test_issue4(self):
+    def test_empty_file(self):
         """
-        Opening an empty file causes an uncaught exception.
+        Opening an empty file causes an exception.
 
         https://github.com/twoolie/NBT/issues/issue/4
         """
 
         temp = tempfile.NamedTemporaryFile()
         temp.flush()
-        tag = NBTFile(temp.name)
+        self.assertRaises(MalformedFileError, NBTFile, temp.name)
 
 class ReadWriteTest(unittest.TestCase):
 
