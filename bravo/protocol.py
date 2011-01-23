@@ -47,9 +47,6 @@ class BetaProtocol(Protocol):
 
     chunk_tasks = None
 
-    time_loop = None
-    ping_loop = None
-
     player = None
     username = None
 
@@ -393,7 +390,26 @@ class BetaProtocol(Protocol):
         self.factory.eid += 1
 
     def authenticated(self):
+        """
+        Called when the client has successfully authenticated with the server.
+        """
+
         self.state = STATE_AUTHENTICATED
+
+    def error(self, message):
+        self.transport.write(make_error_packet(message))
+        self.transport.loseConnection()
+
+class BravoProtocol(BetaProtocol):
+    """
+    A ``BetaProtocol`` suitable for serving MC worlds to clients.
+    """
+
+    time_loop = None
+    ping_loop = None
+
+    def authenticated(self):
+        BetaProtocol.authenticated(self)
 
         self.factory.protocols[self.username] = self
 
@@ -419,12 +435,6 @@ class BetaProtocol(Protocol):
 
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
-
-    def error(self, message):
-        self.transport.write(make_error_packet(message))
-        self.transport.loseConnection()
-
-class BravoProtocol(BetaProtocol):
 
     def disable_chunk(self, x, z):
         del self.chunks[x, z]
