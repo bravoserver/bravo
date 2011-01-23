@@ -253,3 +253,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+The NBT handling code (bravo/nbt.py) is from Thomas Woolford's fantastic NBT
+library, located at http://github.com/twoolie/NBT, and is used here under the
+terms of the MIT/X11 license.
