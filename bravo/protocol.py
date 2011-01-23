@@ -367,44 +367,6 @@ class BetaProtocol(Protocol):
         log.msg("Client is quitting: %s" % container.message)
         self.transport.loseConnection()
 
-    def disable_chunk(self, x, z):
-        del self.chunks[x, z]
-
-        packet = make_packet("prechunk", x=x, z=z, enabled=0)
-        self.transport.write(packet)
-
-    def enable_chunk(self, x, z):
-        """
-        Request a chunk.
-
-        This function will asynchronously obtain the chunk, and send it on the
-        wire.
-
-        :returns: `Deferred` that will be fired when the chunk is obtained,
-                  with no arguments
-        """
-
-        if (x, z) in self.chunks:
-            return succeed(None)
-
-        d = self.factory.world.request_chunk(x, z)
-        d.addCallback(self.send_chunk)
-
-        return d
-
-    def send_chunk(self, chunk):
-        packet = make_packet("prechunk", x=chunk.x, z=chunk.z, enabled=1)
-        self.transport.write(packet)
-
-        packet = chunk.save_to_packet()
-        self.transport.write(packet)
-
-        for entity in chunk.tiles.itervalues():
-            packet = entity.save_to_packet()
-            self.transport.write(packet)
-
-        self.chunks[chunk.x, chunk.z] = chunk
-
     def dataReceived(self, data):
         self.buf += data
 
@@ -457,6 +419,50 @@ class BetaProtocol(Protocol):
 
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
+
+    def error(self, message):
+        self.transport.write(make_error_packet(message))
+        self.transport.loseConnection()
+
+class BravoProtocol(BetaProtocol):
+
+    def disable_chunk(self, x, z):
+        del self.chunks[x, z]
+
+        packet = make_packet("prechunk", x=x, z=z, enabled=0)
+        self.transport.write(packet)
+
+    def enable_chunk(self, x, z):
+        """
+        Request a chunk.
+
+        This function will asynchronously obtain the chunk, and send it on the
+        wire.
+
+        :returns: `Deferred` that will be fired when the chunk is obtained,
+                  with no arguments
+        """
+
+        if (x, z) in self.chunks:
+            return succeed(None)
+
+        d = self.factory.world.request_chunk(x, z)
+        d.addCallback(self.send_chunk)
+
+        return d
+
+    def send_chunk(self, chunk):
+        packet = make_packet("prechunk", x=chunk.x, z=chunk.z, enabled=1)
+        self.transport.write(packet)
+
+        packet = chunk.save_to_packet()
+        self.transport.write(packet)
+
+        for entity in chunk.tiles.itervalues():
+            packet = entity.save_to_packet()
+            self.transport.write(packet)
+
+        self.chunks[chunk.x, chunk.z] = chunk
 
     def send_initial_chunk_and_location(self):
         bigx, smallx, bigz, smallz = split_coords(self.player.location.x,
@@ -529,10 +535,6 @@ class BetaProtocol(Protocol):
         packet = make_packet("time", timestamp=int(self.factory.time))
         self.transport.write(packet)
 
-    def error(self, message):
-        self.transport.write(make_error_packet(message))
-        self.transport.loseConnection()
-
     def connectionLost(self, reason):
         if self.ping_loop:
             self.ping_loop.stop()
@@ -554,6 +556,3 @@ class BetaProtocol(Protocol):
 
         if self.username in self.factory.protocols:
             del self.factory.protocols[self.username]
-
-class BravoProtocol(BetaProtocol):
-    pass
