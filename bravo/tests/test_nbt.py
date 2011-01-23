@@ -1,9 +1,10 @@
-from nbt import *
-from nbt import _TAG_Numeric
-import unittest
-from StringIO import StringIO
 from gzip import GzipFile
+from StringIO import StringIO
 import tempfile
+import unittest
+
+from bravo.nbt import NBTFile
+from bravo.nbt import _TAG_Numeric
 
 class BugfixTest(unittest.TestCase):
     """

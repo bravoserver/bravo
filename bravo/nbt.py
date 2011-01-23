@@ -323,13 +323,9 @@ class NBTFile(TAG_Compound):
 			self.file.flush()
 		if filename and 'close' in dir(self.file): 
 			self.file.close()
-"""
-Useful utility functions for handling large NBT structures elegantly and
-Pythonically.
-"""
 
-# Yes, yes, I know. Fix it if you like.
-from nbt import *
+# Useful utility functions for handling large NBT structures elegantly and
+# Pythonically.
 
 def unpack_nbt(tag):
     """
