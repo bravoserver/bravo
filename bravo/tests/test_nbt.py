@@ -6,6 +6,18 @@ import unittest
 from bravo.nbt import NBTFile
 from bravo.nbt import _TAG_Numeric
 
+bigtest = """
+H4sIAAAAAAAAAO1Uz08aQRR+wgLLloKxxBBjzKu1hKXbzUIRibGIFiyaDRrYqDGGuCvDgi67Znew
+8dRLe2x66z/TI39Dz732v6DDL3tpz73wMsn35r1v5ntvJnkCBFRyTywOeMuxTY149ONwYj4Iex3H
+pZMYD4JH3e6EAmK1oqrHeHZcV8uoVQ8byNYeapWGhg2tflh7j4PPg0+Db88DEG5bjj6+pThMZP0Q
+6tp0piNA3GYuaeG107tz+nYLKdsL4O/oPR44W+8RCFb13l3fC0DgXrf6ZLcEAIxBTHPGCFVM0yAu
+faTAyMIQs7reWAtTo+5EjkUDMLEnU4xM8ekUo1OMheHZn+Oz8kSBpXwz3di7x6p1E18oHAjXLtFZ
+P68dG2AhWd/68QX+wc78nb0AvPFAyfiFQkBG/p7r6g+TOmiHYLvrMjejKAqOu/XQaWPKTtvp7Obm
+Kzu9Jb5kSQk9qruU/Rh+6NIO2m8VTLFoPivhm5yEmbyEBQllWRZFAP8vKK4v8sKypC4dIHdaO7mM
+yucp31FByRa1xW2hKq0sxTF/unqSjl6dX/gSBSMb0fa3d6rNlXK8nt9YXUuXrpIXuUTQgMj6Pr+z
+3FTLB3Vuo7Z2WZKTqdxRUJlrzDXmGv9XIwhCy+kb1njC7P78evt9eNOE39TypPsIBgAA
+""".decode("base64")
+
 class BugfixTest(unittest.TestCase):
     """
     Bugfix regression tests.
@@ -24,21 +36,27 @@ class BugfixTest(unittest.TestCase):
         temp.flush()
         tag = NBTFile(temp.name)
 
-class ReadWriteTest(unittest.TestCase):     # test that we can read the test file correctly
+class ReadWriteTest(unittest.TestCase):
+
+    def setUp(self):
+        self.f = tempfile.TemporaryFile()
+
+    def test_trivial(self):
+        pass
 
     def testReadBig(self):
-        mynbt = NBTFile("bigtest.nbt")
+        mynbt = NBTFile(fileobj=self.f)
         self.assertTrue(mynbt.filename != None)
         self.assertEqual(len(mynbt.tags), 11)
 
     def testWriteBig(self):
-        mynbt = NBTFile("bigtest.nbt")
+        mynbt = NBTFile(fileobj=self.f)
         output = StringIO()
         mynbt.write_file(buffer=output)
-        self.assertTrue(GzipFile("bigtest.nbt").read() == output.getvalue())
+        self.assertTrue(GzipFile(fileobj=self.f).read() == output.getvalue())
 
     def testWriteback(self):
-        mynbt = NBTFile("bigtest.nbt")
+        mynbt = NBTFile(fileobj=self.f)
         mynbt.write_file()
 
 class TreeManipulationTest(unittest.TestCase):
@@ -59,9 +77,6 @@ class TreeManipulationTest(unittest.TestCase):
                 self.nbtfile.tags.append(tagobj)
 
     #etcetera..... will finish later
-
-    def tearDown(self):
-        del self.nbtfile
 
 class EmptyStringTest(unittest.TestCase):
 
