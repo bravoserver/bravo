@@ -98,12 +98,6 @@ external libraries from PyPI:
  * numpy
  * Twisted, version 10.0 or later
 
-Bravo also uses the external NBT library
-(http://github.com/MostAwesomeDude/NBT) for reading and saving MC Alpha
-worlds. If this is a release version of Bravo, NBT is probably bundled;
-otherwise, you will have to retrieve it yourself. This library is only needed
-if you are using the NBT format for saving and loading worlds.
-
 **Important: Bravo's installation process is currently broken. Until this
 notice is removed, please don't install, just run directly from the git
 checkout. It's easier and runs just as well.**
