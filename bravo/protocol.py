@@ -554,3 +554,6 @@ class BetaProtocol(Protocol):
 
         if self.username in self.factory.protocols:
             del self.factory.protocols[self.username]
+
+class BravoProtocol(BetaProtocol):
+    pass

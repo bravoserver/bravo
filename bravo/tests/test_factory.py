@@ -5,7 +5,7 @@ import unittest
 import bravo.config
 import bravo.factory
 
-class TestBetaFactory(unittest.TestCase):
+class TestBravoFactory(unittest.TestCase):
 
     def setUp(self):
         # Same setup as World, because Factory is very automagical.
@@ -16,7 +16,7 @@ class TestBetaFactory(unittest.TestCase):
         bravo.config.configuration.set("world unittest", "path", self.d)
         bravo.config.configuration.set("world unittest", "port", "0")
 
-        self.f = bravo.factory.BetaFactory(self.name)
+        self.f = bravo.factory.BravoFactory(self.name)
 
     def tearDown(self):
         del self.f
