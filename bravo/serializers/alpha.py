@@ -2,9 +2,9 @@ from itertools import chain
 
 from numpy import array, fromstring, uint8
 
-from nbt.nbt import NBTFile
-from nbt.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
-from nbt.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
+from bravo.nbt import NBTFile
+from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
+from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 
 from bravo.utilities import unpack_nibbles, pack_nibbles
 

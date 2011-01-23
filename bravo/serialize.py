@@ -7,8 +7,8 @@ elif configuration.get("bravo", "serializer") in ("json",):
 else:
     print "Warning: Early start: Couldn't find preferred serializer %s" % (
         configuration.get("bravo", "serializer"))
-    print "Defaulting to JSON."
-    from bravo.serializers.json import *
+    print "Defaulting to NBT."
+    from bravo.serializers.alpha import *
 
 __all__ = (
     "ChestSerializer",
