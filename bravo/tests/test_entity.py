@@ -11,4 +11,4 @@ class TestPlayerEntity(unittest.TestCase):
         pass
 
     def test_player_serialization(self):
-        packet = self.p.save_to_packet()
+        self.p.save_to_packet()

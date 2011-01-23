@@ -2,7 +2,6 @@
 
 import os
 import sys
-import traceback
 
 from twisted.conch.insults.insults import ServerProtocol
 from twisted.conch.manhole import Manhole
@@ -14,10 +13,8 @@ from twisted.internet.task import LoopingCall
 from twisted.protocols.amp import AMP
 from twisted.protocols.basic import LineReceiver
 
-from bravo.amp import Version, Worlds, Commands, RunCommand
+from bravo.amp import Version, Worlds, RunCommand
 from bravo.config import configuration
-from bravo.ibravo import IConsoleCommand
-from bravo.plugin import retrieve_plugins
 from bravo.utilities import fancy_console_name
 
 try:
@@ -156,7 +153,7 @@ class BravoInterpreter(object):
         if line:
             params = line.split()
             command = params.pop(0).lower()
-            d = self.ag.call(command, params)
+            self.ag.call(command, params)
 
     def lastColorizedLine(self, line):
         s = []

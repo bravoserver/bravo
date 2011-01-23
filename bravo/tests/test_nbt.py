@@ -3,7 +3,7 @@ from StringIO import StringIO
 import tempfile
 import unittest
 
-from bravo.nbt import NBTFile, _TAG_Numeric, MalformedFileError
+from bravo.nbt import NBTFile, _TAG_Numeric, TAGLIST, MalformedFileError
 
 bigtest = """
 H4sIAAAAAAAAAO1Uz08aQRR+wgLLloKxxBBjzKu1hKXbzUIRibGIFiyaDRrYqDGGuCvDgi67Znew

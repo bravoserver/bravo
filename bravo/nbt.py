@@ -309,7 +309,7 @@ class NBTFile(TAG_Compound):
 					self.file.close()
 				else:
 					raise MalformedFileError("First record is not a Compound Tag")
-			except StructError as e:
+			except StructError:
 				raise MalformedFileError("Partial File Parse: file possibly truncated.")
 		else: ValueError("need a file!")
 
