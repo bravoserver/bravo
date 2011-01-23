@@ -45,8 +45,6 @@ class BetaProtocol(Protocol):
     parser = None
     handler = None
 
-    chunk_tasks = None
-
     player = None
     username = None
 
@@ -78,14 +76,6 @@ class BetaProtocol(Protocol):
             130: self.sign,
             255: self.quit,
         }
-
-        log.msg("Registering client hooks...")
-        names = configuration.get("bravo", "build_hooks").split(",")
-        self.build_hooks = retrieve_named_plugins(IBuildHook, names)
-        names = configuration.get("bravo", "dig_hooks").split(",")
-        self.dig_hooks = retrieve_named_plugins(IDigHook, names)
-
-        self.last_dig_build_timer = time()
 
     def ping(self, container):
         pass
@@ -200,90 +190,14 @@ class BetaProtocol(Protocol):
             self.transport.write(packet)
 
     def digging(self, container):
-        if container.state != 3:
-            return
-
-        if time() - self.last_dig_build_timer < 0.1:
-            self.error("You are digging too fast.")
-
-        self.last_dig_build_timer = time()
-
-        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
-
-        try:
-            chunk = self.chunks[bigx, bigz]
-        except KeyError:
-            self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
-            return
-
-        oldblock = blocks[chunk.get_block((smallx, container.y, smallz))]
-
-        for hook in self.dig_hooks:
-            hook.dig_hook(self.factory, chunk, smallx, container.y, smallz,
-                oldblock)
-
-        self.factory.flush_chunk(chunk)
+        """
+        Hook for digging packets.
+        """
 
     def build(self, container):
-        # Is the target being selected?
-        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
-        try:
-            chunk = self.chunks[bigx, bigz]
-        except KeyError:
-            self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
-            return
-
-        if (chunk.get_block((smallx, container.y, smallz)) ==
-            blocks["workbench"].slot):
-            i = Workbench()
-            sync_inventories(self.player.inventory, i)
-            self.windows[self.wid] = i
-            packet = make_packet("window-open", wid=self.wid, type="workbench",
-                title="Hurp", slots=2)
-            self.wid += 1
-            self.transport.write(packet)
-            return
-
-        # Ignore clients that think -1 is placeable.
-        if container.primary == -1:
-            return
-
-        # Special case when face is "noop": Update the status of the currently
-        # held block rather than placing a new block.
-        if container.face == "noop":
-            return
-
-        if container.primary in blocks:
-            block = blocks[container.primary]
-        elif container.primary in items:
-            block = items[container.primary]
-        else:
-            log.err("Ignoring request to place unknown block %d" %
-                container.primary)
-            return
-
-        if time() - self.last_dig_build_timer < 0.1:
-            self.error("You are building too fast.")
-
-        self.last_dig_build_timer = time()
-
-        builddata = BuildData(block, 0x0, container.x, container.y,
-            container.z, container.face)
-
-        for hook in self.build_hooks:
-            cont, builddata = hook.build_hook(self.factory, self.player,
-                builddata)
-            if not cont:
-                break
-
-        # Re-send inventory.
-        # XXX this could be optimized if/when inventories track damage.
-        packet = self.player.inventory.save_to_packet()
-        self.transport.write(packet)
-
-        # Flush damaged chunks.
-        for chunk in self.chunks.itervalues():
-            self.factory.flush_chunk(chunk)
+        """
+        Hook for build packets.
+        """
 
     def equip(self, container):
         self.player.equipped = container.item
@@ -405,8 +319,21 @@ class BravoProtocol(BetaProtocol):
     A ``BetaProtocol`` suitable for serving MC worlds to clients.
     """
 
+    chunk_tasks = None
+
     time_loop = None
     ping_loop = None
+
+    def __init__(self):
+        BetaProtocol.__init__(self)
+
+        log.msg("Registering client hooks...")
+        names = configuration.get("bravo", "build_hooks").split(",")
+        self.build_hooks = retrieve_named_plugins(IBuildHook, names)
+        names = configuration.get("bravo", "dig_hooks").split(",")
+        self.dig_hooks = retrieve_named_plugins(IDigHook, names)
+
+        self.last_dig_build_timer = time()
 
     def authenticated(self):
         BetaProtocol.authenticated(self)
@@ -435,6 +362,92 @@ class BravoProtocol(BetaProtocol):
 
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
+
+    def digging(self, container):
+        if container.state != 3:
+            return
+
+        if time() - self.last_dig_build_timer < 0.1:
+            self.error("You are digging too fast.")
+
+        self.last_dig_build_timer = time()
+
+        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
+
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        oldblock = blocks[chunk.get_block((smallx, container.y, smallz))]
+
+        for hook in self.dig_hooks:
+            hook.dig_hook(self.factory, chunk, smallx, container.y, smallz,
+                oldblock)
+
+        self.factory.flush_chunk(chunk)
+
+    def build(self, container):
+        # Is the target being selected?
+        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        if (chunk.get_block((smallx, container.y, smallz)) ==
+            blocks["workbench"].slot):
+            i = Workbench()
+            sync_inventories(self.player.inventory, i)
+            self.windows[self.wid] = i
+            packet = make_packet("window-open", wid=self.wid, type="workbench",
+                title="Hurp", slots=2)
+            self.wid += 1
+            self.transport.write(packet)
+            return
+
+        # Ignore clients that think -1 is placeable.
+        if container.primary == -1:
+            return
+
+        # Special case when face is "noop": Update the status of the currently
+        # held block rather than placing a new block.
+        if container.face == "noop":
+            return
+
+        if container.primary in blocks:
+            block = blocks[container.primary]
+        elif container.primary in items:
+            block = items[container.primary]
+        else:
+            log.err("Ignoring request to place unknown block %d" %
+                container.primary)
+            return
+
+        if time() - self.last_dig_build_timer < 0.1:
+            self.error("You are building too fast.")
+
+        self.last_dig_build_timer = time()
+
+        builddata = BuildData(block, 0x0, container.x, container.y,
+            container.z, container.face)
+
+        for hook in self.build_hooks:
+            cont, builddata = hook.build_hook(self.factory, self.player,
+                builddata)
+            if not cont:
+                break
+
+        # Re-send inventory.
+        # XXX this could be optimized if/when inventories track damage.
+        packet = self.player.inventory.save_to_packet()
+        self.transport.write(packet)
+
+        # Flush damaged chunks.
+        for chunk in self.chunks.itervalues():
+            self.factory.flush_chunk(chunk)
 
     def disable_chunk(self, x, z):
         del self.chunks[x, z]
