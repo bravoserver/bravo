@@ -5,8 +5,14 @@ from setuptools import setup
 setup(
     name="Bravo",
     version="1.1",
-    packages=["bravo", "bravo.plugins", "bravo.serializers", "bravo.tests",
-        "twisted.plugins"],
+    packages=[
+        "bravo",
+        "bravo.plugins",
+        "bravo.protocols",
+        "bravo.serializers",
+        "bravo.tests",
+        "twisted.plugins",
+    ],
     install_requires=[
         "numpy",
         "construct>=2.03",

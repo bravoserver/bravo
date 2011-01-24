@@ -3,7 +3,7 @@ import unittest
 import bravo.blocks
 import bravo.ibravo
 import bravo.plugin
-import bravo.protocol
+import bravo.protocols.beta
 
 class TestBuildHooks(unittest.TestCase):
 
@@ -18,7 +18,7 @@ class TestBuildHooks(unittest.TestCase):
             raise unittest.SkipTest("Plugin not present")
 
         torch = self.p["torch"]
-        builddata = bravo.protocol.BuildData(
+        builddata = bravo.protocols.beta.BuildData(
             bravo.blocks.blocks["torch"],
             0, 0, 0, 0, "+x"
         )
@@ -32,7 +32,7 @@ class TestBuildHooks(unittest.TestCase):
             raise unittest.SkipTest("Plugin not present")
 
         torch = self.p["torch"]
-        builddata = bravo.protocol.BuildData(
+        builddata = bravo.protocols.beta.BuildData(
             bravo.blocks.blocks["torch"],
             0, 0, 0, 0, "-y"
         )
@@ -44,7 +44,7 @@ class TestBuildHooks(unittest.TestCase):
             raise unittest.SkipTest("Plugin not present")
 
         torch = self.p["torch"]
-        builddata = bravo.protocol.BuildData(
+        builddata = bravo.protocols.beta.BuildData(
             bravo.blocks.blocks["wood"],
             0, 0, 0, 0, "+x"
         )

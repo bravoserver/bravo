@@ -12,7 +12,7 @@ from bravo.entity import Pickup, Player
 from bravo.ibravo import IAuthenticator, ISeason, ITerrainGenerator
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_named_plugins
-from bravo.protocol import BravoProtocol
+from bravo.protocols.beta import BravoProtocol
 from bravo.utilities import chat_name, sanitize_chat
 from bravo.world import World
 

@@ -1,11 +1,11 @@
 import unittest
 
-import bravo.protocol
+import bravo.protocols.beta
 
 class TestBetaServerProtocol(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.protocol.BetaServerProtocol()
+        self.p = bravo.protocols.beta.BetaServerProtocol()
 
     def test_trivial(self):
         pass
@@ -13,7 +13,7 @@ class TestBetaServerProtocol(unittest.TestCase):
 class TestBravoProtocol(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.protocol.BetaServerProtocol()
+        self.p = bravo.protocols.beta.BravoProtocol()
 
     def test_trivial(self):
         pass
