@@ -5,6 +5,13 @@ from bravo.packets import parse_infinipackets
 
 class InfiniNodeProtocol(Protocol):
 
+    def __init__(self):
+
+        self.handlers = {
+            0: self.ping,
+            255: self.disconnect,
+        }
+
     def ping(self, container):
         log.msg("Got a ping!")
 

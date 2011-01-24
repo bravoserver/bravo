@@ -528,7 +528,8 @@ infinipacket_parser = Struct("parser",
     OptionalGreedyRepeater(
         Struct("packets",
             Peek(UBInt8("header")),
-            Switch("packet", lambda context: context["header"], infinipackets),
+            Embed(Switch("packet", lambda context: context["header"],
+                infinipackets)),
         ),
     ),
     OptionalGreedyRepeater(
@@ -539,7 +540,7 @@ infinipacket_parser = Struct("parser",
 def parse_infinipackets(bytestream):
     container = infinipacket_parser.parse(bytestream)
 
-    l = [(i.header, i.payload) for i in container.full_packet]
+    l = [(i.header, i.payload) for i in container.packets]
     leftovers = "".join(chr(i) for i in container.leftovers)
 
     if DUMP_ALL_PACKETS:

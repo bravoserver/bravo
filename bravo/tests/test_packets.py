@@ -162,3 +162,9 @@ class TestInfiniPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.header.identifier, 0xff)
         self.assertEqual(parsed.payload.explanation,
             "Invalid client version!")
+
+class TestInfiniPacketStream(unittest.TestCase):
+
+    def test_ping_stream(self):
+        raw = "\x00\x01\x00\x00\x00\x06\x00\x10\x00\x4d\x3c\x7d\x7c"
+        packets, leftovers = bravo.packets.parse_infinipackets(raw)
