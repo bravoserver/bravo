@@ -38,24 +38,26 @@ class BugfixTest(unittest.TestCase):
 class ReadWriteTest(unittest.TestCase):
 
     def setUp(self):
-        self.f = tempfile.TemporaryFile()
+        self.f = tempfile.NamedTemporaryFile()
+        self.f.write(bigtest)
+        self.f.flush()
 
     def test_trivial(self):
         pass
 
     def testReadBig(self):
-        mynbt = NBTFile(fileobj=self.f)
+        mynbt = NBTFile(self.f.name)
         self.assertTrue(mynbt.filename != None)
         self.assertEqual(len(mynbt.tags), 11)
 
     def testWriteBig(self):
-        mynbt = NBTFile(fileobj=self.f)
+        mynbt = NBTFile(self.f.name)
         output = StringIO()
         mynbt.write_file(buffer=output)
-        self.assertTrue(GzipFile(fileobj=self.f).read() == output.getvalue())
+        self.assertTrue(GzipFile(self.f.name).read() == output.getvalue())
 
     def testWriteback(self):
-        mynbt = NBTFile(fileobj=self.f)
+        mynbt = NBTFile(self.f.name)
         mynbt.write_file()
 
 class TreeManipulationTest(unittest.TestCase):
