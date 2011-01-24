@@ -233,15 +233,28 @@ class BetaProxyProtocol(BetaServerProtocol):
         log.msg("Response: %s" % response)
         log.msg("Starting proxy...")
         address, port = response.split(":")
-        port = int(port)
-        endpoint = TCP4ClientEndpoint(reactor, address, port)
+        self.add_node(address, int(port))
+
+    def add_node(self, address, port):
+        """
+        Add a new node to this client.
+        """
+
+        log.msg("Adding node %s:%d" % (address, port))
+
+        endpoint = TCP4ClientEndpoint(reactor, address, port, 5)
 
         self.node_factory = InfiniClientFactory()
         d = endpoint.connect(self.node_factory)
         d.addCallback(self.node_connected)
+        d.addErrback(self.node_connect_error)
 
     def node_connected(self, protocol):
         log.msg("Connected new node!")
+
+    def node_connect_error(self, reason):
+        log.err("Couldn't connect node!")
+        log.err(reason)
 
 class BravoProtocol(BetaServerProtocol):
     """
