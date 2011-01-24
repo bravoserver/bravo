@@ -31,9 +31,12 @@ from the center.
 
 BuildData = namedtuple("BuildData", "block, metadata, x, y, z, face")
 
-class BetaProtocol(Protocol):
+class BetaServerProtocol(Protocol):
     """
-    The Minecraft Alpha protocol.
+    The Minecraft Alpha/Beta server protocol.
+
+    This class is mostly designed to be a skeleton for featureful clients. It
+    tries hard to not step on the toes of potential subclasses.
     """
 
     excess = ""
@@ -207,7 +210,9 @@ class BetaProtocol(Protocol):
             (container.primary, container.secondary), container.count)
 
     def animate(self, container):
-        pass
+        """
+        Hook for animate packets.
+        """
 
     def wclose(self, container):
         if container.wid in self.windows:
@@ -240,8 +245,9 @@ class BetaProtocol(Protocol):
         self.transport.write(packet)
 
     def inventory(self, container):
-        log.msg("Got inventory!")
-        log.msg(container)
+        """
+        Hook for inventory packets.
+        """
 
     def sign(self, container):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
@@ -293,16 +299,6 @@ class BetaProtocol(Protocol):
     def challenged(self):
         self.state = STATE_CHALLENGED
 
-        # Maybe the ugliest hack written thus far.
-        # We need an entity ID which will persist for the entire lifetime of
-        # this client. However, that entity ID is normally tied to an entity,
-        # which won't be allocated until after we get our username from the
-        # client. This is far too late to be able to look things up in a nice,
-        # orderly way, so for now (and maybe forever) we will allocate and
-        # increment the entity ID manually.
-        self.eid = self.factory.eid + 1
-        self.factory.eid += 1
-
     def authenticated(self):
         """
         Called when the client has successfully authenticated with the server.
@@ -314,9 +310,9 @@ class BetaProtocol(Protocol):
         self.transport.write(make_error_packet(message))
         self.transport.loseConnection()
 
-class BravoProtocol(BetaProtocol):
+class BravoProtocol(BetaServerProtocol):
     """
-    A ``BetaProtocol`` suitable for serving MC worlds to clients.
+    A ``BetaServerProtocol`` suitable for serving MC worlds to clients.
     """
 
     chunk_tasks = None
@@ -325,7 +321,7 @@ class BravoProtocol(BetaProtocol):
     ping_loop = None
 
     def __init__(self):
-        BetaProtocol.__init__(self)
+        BetaServerProtocol.__init__(self)
 
         log.msg("Registering client hooks...")
         names = configuration.get("bravo", "build_hooks").split(",")
@@ -335,8 +331,19 @@ class BravoProtocol(BetaProtocol):
 
         self.last_dig_build_timer = time()
 
+    def challenged(self):
+        # Maybe the ugliest hack written thus far.
+        # We need an entity ID which will persist for the entire lifetime of
+        # this client. However, that entity ID is normally tied to an entity,
+        # which won't be allocated until after we get our username from the
+        # client. This is far too late to be able to look things up in a nice,
+        # orderly way, so for now (and maybe forever) we will allocate and
+        # increment the entity ID manually.
+        self.eid = self.factory.eid + 1
+        self.factory.eid += 1
+
     def authenticated(self):
-        BetaProtocol.authenticated(self)
+        BetaServerProtocol.authenticated(self)
 
         self.factory.protocols[self.username] = self
 
