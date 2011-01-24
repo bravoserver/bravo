@@ -3,6 +3,7 @@ from time import time
 from urllib import urlencode
 from urlparse import urlunparse
 
+from twisted.internet import reactor
 from twisted.internet.interfaces import IPushProducer
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
@@ -38,6 +39,8 @@ class InfiniNodeFactory(Factory):
 
     protocol = InfiniNodeProtocol
 
+    ready = False
+
     def __init__(self, name):
         self.gateway = "server.wiki.vg"
         args = urlencode({
@@ -58,9 +61,16 @@ class InfiniNodeFactory(Factory):
         log.msg("Successfully said hi")
         log.msg("Response: %s" % response)
 
+        if response == "Ok":
+            # We're in business!
+            reactor.callLater(0, self.broadcasted)
+
     def error(self, reason):
         log.err("Couldn't talk to gateway %s" % self.gateway)
         log.err(reason)
+
+    def broadcasted(self):
+        self.ready = True
 
 class BravoFactory(Factory):
     """
