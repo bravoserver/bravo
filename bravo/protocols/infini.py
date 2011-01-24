@@ -5,8 +5,9 @@ from bravo.packets import parse_infinipackets
 
 class InfiniProtocol(Protocol):
 
-    def __init__(self):
+    buf = ""
 
+    def __init__(self):
         self.handlers = {
             0: self.ping,
             255: self.disconnect,
@@ -36,4 +37,8 @@ class InfiniClientProtocol(InfiniProtocol):
     pass
 
 class InfiniNodeProtocol(InfiniProtocol):
-    pass
+
+    def __init__(self):
+        InfiniProtocol.__init__(self)
+
+        log.msg("New node protocol established")

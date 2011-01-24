@@ -28,8 +28,7 @@ class BetaProxyFactory(Factory):
 # Start up our AMP.
 TCPServer(25600, ConsoleRPCFactory(worlds)).setServiceParent(service)
 
-TCPServer(25566, InfiniNodeFactory("test")).setServiceParent(service)
-TCPServer(25565, BetaProxyFactory()).setServiceParent(service)
+TCPServer(25565, InfiniNodeFactory("test")).setServiceParent(service)
 
 application = Application("Bravo")
 service.setServiceParent(application)
