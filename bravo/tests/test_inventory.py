@@ -339,3 +339,94 @@ class TestInventoryIntegration(unittest.TestCase):
             (bravo.blocks.blocks["torch"].slot, 0, 8))
         self.assertEqual(self.i.crafting[0], None)
         self.assertEqual(self.i.crafted[0], None)
+
+class TestWorkbenchIntegration(unittest.TestCase):
+    """
+    select() numbers
+    Crafted[0] = 0
+    Crafting[0-8] = 1-9
+    Storage[0-26] = 10-36
+    Holdables[0-8] = 37-45
+    """
+
+    def setUp(self):
+        self.i = bravo.inventory.Workbench()
+    
+    def test_trivial(self):
+        pass
+
+    def test_craft_golden_apple(self):
+        #Add 8 gold blocks and 1 apple to inventory
+        self.i.add(bravo.blocks.blocks["gold"].key, 8)
+        self.i.add(bravo.blocks.items["apple"].key, 1)
+        #Select all the gold, in the workbench, unlike Euqiopment(), holdables start at 37
+        self.i.select(37)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["gold"].slot, 0, 8))
+        #Select-alternate into crafting[0] and check for amounts
+        self.i.select(1, True)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["gold"].slot, 0, 7))
+        self.assertEqual(self.i.crafting[0],
+            (bravo.blocks.blocks["gold"].slot, 0, 1))
+        #Select-alternate gold into crafting[1] and check
+        self.i.select(2, True)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["gold"].slot, 0, 6))
+        self.assertEqual(self.i.crafting[1],
+            (bravo.blocks.blocks["gold"].slot, 0, 1))
+        #Select-alternate gold into crafting[2] and check
+        self.i.select(3, True)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["gold"].slot, 0, 5))
+        self.assertEqual(self.i.crafting[2],
+            (bravo.blocks.blocks["gold"].slot, 0, 1))
+        #Select-alternate gold into crafting[3] and check
+        self.i.select(4, True)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["gold"].slot, 0, 4))
+        self.assertEqual(self.i.crafting[3],
+            (bravo.blocks.blocks["gold"].slot, 0, 1))
+        #Select-alternate gold into crafting[5] and check, skipping [4] for the apple later
+        self.i.select(6, True)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["gold"].slot, 0, 3))
+        self.assertEqual(self.i.crafting[5],
+            (bravo.blocks.blocks["gold"].slot, 0, 1))
+        #Select-alternate gold into crafting[6] and check
+        self.i.select(7, True)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["gold"].slot, 0, 2))
+        self.assertEqual(self.i.crafting[6],
+            (bravo.blocks.blocks["gold"].slot, 0, 1))
+        #Select-alternate gold into crafting[7] and check
+        self.i.select(8, True)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.blocks["gold"].slot, 0, 1))
+        self.assertEqual(self.i.crafting[7],
+            (bravo.blocks.blocks["gold"].slot, 0, 1))
+        #Select-alternate gold into crafting[8] and check
+        self.i.select(9, True)
+        self.assertEqual(self.i.selected, None)
+        self.assertEqual(self.i.crafting[8],
+            (bravo.blocks.blocks["gold"].slot, 0, 1))
+        #All gold should be placed now, time to select the apple
+        self.i.select(38)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.items["apple"].slot, 0, 1))
+        #Place the apple into crafting[4]
+        self.i.select(5)
+        self.assertEqual(self.i.selected, None)
+        self.assertEqual(self.i.crafting[4],
+            (bravo.blocks.items["apple"].slot, 0, 1))
+        #Select golden-apples from select(0)
+        self.i.select(0)
+        self.assertEqual(self.i.selected,
+            (bravo.blocks.items["golden-apple"].slot, 0, 1))
+        #Select the golden-apple into the first holdable slot, select(37)/holdables[0]
+        self.i.select(37)
+        self.assertEqual(self.i.selected, None)
+        self.assertEqual(self.i.holdables[0],
+            (bravo.blocks.items["golden-apple"].slot, 0, 1))
+        self.assertEqual(self.i.crafting[0], None)
+        self.assertEqual(self.i.crafted[0], None)
