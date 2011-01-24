@@ -1,6 +1,7 @@
 from math import sqrt
 from time import time
 from urllib import urlencode
+from urlparse import urlunparse
 
 from twisted.internet.interfaces import IPushProducer
 from twisted.internet.protocol import Factory
@@ -38,7 +39,7 @@ class InfiniNodeFactory(Factory):
     protocol = InfiniNodeProtocol
 
     def __init__(self, name):
-        self.gateway = "http://server.wiki.vg"
+        self.gateway = "server.wiki.vg"
         args = urlencode({
             "max_clients": 10,
             "max_chunks": 256,
@@ -47,7 +48,9 @@ class InfiniNodeFactory(Factory):
             "node_agent": "Bravo %s" % bravo_version
         })
 
-        d = getPage("%s/broadcast/bravo_testing_key/?%s" % (self.gateway, args))
+        url = urlunparse(("http", self.gateway,
+            "/broadcast/bravo_testing_key/", None, args, None))
+        d = getPage(url)
         d.addCallback(self.online)
         d.addErrback(self.error)
 
