@@ -3,7 +3,7 @@ from twisted.application.service import Application, MultiService
 
 from bravo.amp import ConsoleRPCFactory
 from bravo.config import configuration
-from bravo.factory import BravoFactory
+from bravo.factory import BravoFactory, InfiniNodeFactory
 from bravo.irc import BravoIRC
 
 service = MultiService()
@@ -21,6 +21,8 @@ for section in configuration.sections():
 
 # Start up our AMP.
 TCPServer(25600, ConsoleRPCFactory(worlds)).setServiceParent(service)
+
+TCPServer(25565, InfiniNodeFactory("test")).setServiceParent(service)
 
 application = Application("Bravo")
 service.setServiceParent(application)

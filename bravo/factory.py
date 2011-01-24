@@ -1,10 +1,12 @@
 from math import sqrt
 from time import time
+from urllib import urlencode
 
 from twisted.internet.interfaces import IPushProducer
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 from twisted.python import log
+from twisted.web.client import getPage
 from zope.interface import implements
 
 from bravo.config import configuration
@@ -13,6 +15,7 @@ from bravo.ibravo import IAuthenticator, ISeason, ITerrainGenerator
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_named_plugins
 from bravo.protocols.beta import BravoProtocol
+from bravo.protocols.infini import InfiniNodeProtocol
 from bravo.utilities import chat_name, sanitize_chat
 from bravo.world import World
 
@@ -26,9 +29,37 @@ entities_by_name = {
     "Pickup": Pickup,
 }
 
+class InfiniNodeFactory(Factory):
+    """
+    A ``Factory`` that serves as an InfiniCraft node.
+    """
+
+    protocol = InfiniNodeProtocol
+
+    def __init__(self, name):
+        self.gateway = "http://api.wiki.vg"
+        args = urlencode({
+            "max_clients": 10,
+            "max_chunks": 256,
+            "client_count": 0,
+            "chunk_count": 0,
+        })
+
+        d = getPage("%s/broadcast/bravo_testing_key/?%s" % (self.gateway, args))
+        d.addCallback(self.online)
+        d.addErrback(self.error)
+
+    def online(self, response):
+        log.msg("Successfully said hi")
+        log.msg("Response: %s" % response)
+
+    def error(self, reason):
+        log.err("Couldn't talk to gateway %s" % self.gateway)
+        log.err(reason)
+
 class BravoFactory(Factory):
     """
-    A ``Factory`` that creates ``BetaProtocol`` objects when connected to.
+    A ``Factory`` that creates ``BravoProtocol`` objects when connected to.
     """
 
     implements(IPushProducer)
