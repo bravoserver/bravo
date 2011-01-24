@@ -26,6 +26,16 @@ class InfiniClientFactory(Factory):
 
     protocol = InfiniClientProtocol
 
+    def __init__(self, name):
+        self.protocols = set()
+
+        log.msg("InfiniClient started")
+
+    def buildProtocol(self, addr):
+        log.msg("Starting connection to %s" % addr)
+
+        return Factory.buildProtocol(self, addr)
+
 class InfiniNodeFactory(Factory):
     """
     A ``Factory`` that serves as an InfiniCraft node.

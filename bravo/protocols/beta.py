@@ -230,6 +230,7 @@ class BetaProxyProtocol(BetaServerProtocol):
         d.addCallback(self.start_proxy)
 
     def start_proxy(self, response):
+        log.msg("Response: %s" % response)
         log.msg("Starting proxy...")
         address, port = response.split(":")
         port = int(port)
