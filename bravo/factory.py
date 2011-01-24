@@ -9,6 +9,7 @@ from twisted.python import log
 from twisted.web.client import getPage
 from zope.interface import implements
 
+from bravo import version as bravo_version
 from bravo.config import configuration
 from bravo.entity import Pickup, Player
 from bravo.ibravo import IAuthenticator, ISeason, ITerrainGenerator
@@ -37,12 +38,13 @@ class InfiniNodeFactory(Factory):
     protocol = InfiniNodeProtocol
 
     def __init__(self, name):
-        self.gateway = "http://api.wiki.vg"
+        self.gateway = "http://server.wiki.vg"
         args = urlencode({
             "max_clients": 10,
             "max_chunks": 256,
             "client_count": 0,
             "chunk_count": 0,
+            "node_agent": "Bravo %s" % bravo_version
         })
 
         d = getPage("%s/broadcast/bravo_testing_key/?%s" % (self.gateway, args))
