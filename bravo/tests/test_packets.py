@@ -121,6 +121,11 @@ class TestPacketHelpers(unittest.TestCase):
         packet = bravo.packets.make_packet("ping")
         self.assertEqual(packet, "\x00")
 
+    def test_string(self):
+        s = "Just a test"
+        parser = bravo.packets.AlphaString("test")
+        self.assertEqual(parser.build(s), "\x00\x0bJust a test")
+
 class TestPacketIntegration(unittest.TestCase):
 
     def test_location_round_trip(self):
@@ -140,3 +145,20 @@ class TestPacketIntegration(unittest.TestCase):
         self.assertEqual(payload.flying.flying, 0)
         reconstructed = bravo.packets.make_packet("location", payload)
         self.assertEqual(packet, reconstructed)
+
+class TestInfiniPacketParsing(unittest.TestCase):
+
+    def test_ping(self):
+        raw = "\x00\x01\x00\x00\x00\x06\x00\x10\x00\x4d\x3c\x7d\x7c"
+        parsed = bravo.packets.infinipackets[0].parse(raw)
+        self.assertEqual(parsed.header.identifier, 0x00)
+        self.assertEqual(parsed.header.flags, 0x01)
+        self.assertEqual(parsed.payload.uid, 16)
+        self.assertEqual(parsed.payload.timestamp, 5061757)
+
+    def test_disconnect(self):
+        raw = "\xff\x00\x00\x00\x00\x19\x00\x17Invalid client version!"
+        parsed = bravo.packets.infinipackets[255].parse(raw)
+        self.assertEqual(parsed.header.identifier, 0xff)
+        self.assertEqual(parsed.payload.explanation,
+            "Invalid client version!")

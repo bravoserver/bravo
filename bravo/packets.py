@@ -1,7 +1,7 @@
 import functools
 
 from construct import Struct, Container, Embed, Enum
-from construct import MetaArray, If, Switch
+from construct import MetaArray, If, Switch, Const, Peek
 from construct import OptionalGreedyRepeater
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
@@ -476,3 +476,75 @@ def make_error_packet(message):
     """
 
     return make_packet("error", message=message)
+
+def String(name):
+    """
+    UTF-8 length-prefixed string.
+    """
+
+    return PascalString(name, length_field=UBInt16("length"),
+        encoding="utf-8")
+
+def InfiniPacket(name, identifier, subconstruct):
+    """
+    Common header structure for packets.
+
+    This is possibly not the best way to go about building these kinds of
+    things.
+    """
+
+    header = Struct("header",
+        # XXX Should this be Magic(chr(identifier))?
+        Const(UBInt8("identifier"), identifier),
+        UBInt8("flags"),
+        UBInt32("length"),
+    )
+
+    return Struct(name, header, subconstruct)
+
+infinipackets = {
+    0: InfiniPacket("ping", 0x00,
+        Struct("payload",
+            UBInt16("uid"),
+            UBInt32("timestamp"),
+        )
+    ),
+    255: InfiniPacket("disconnect", 0xff,
+        Struct("payload",
+            AlphaString("explanation"),
+        )
+    ),
+    "__default__": Struct("unknown",
+        Struct("header",
+            UBInt8("identifier"),
+            UBInt8("flags"),
+            UBInt32("length"),
+        ),
+        MetaArray(lambda context: context["length"], UBInt8("data")),
+    ),
+}
+
+infinipacket_parser = Struct("parser",
+    OptionalGreedyRepeater(
+        Struct("packets",
+            Peek(UBInt8("header")),
+            Switch("packet", lambda context: context["header"], infinipackets),
+        ),
+    ),
+    OptionalGreedyRepeater(
+        UBInt8("leftovers"),
+    ),
+)
+
+def parse_infinipackets(bytestream):
+    container = infinipacket_parser.parse(bytestream)
+
+    l = [(i.header, i.payload) for i in container.full_packet]
+    leftovers = "".join(chr(i) for i in container.leftovers)
+
+    if DUMP_ALL_PACKETS:
+        for packet in l:
+            print "Parsed packet %d" % packet[0]
+            print packet[1]
+
+    return l, leftovers
