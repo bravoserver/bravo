@@ -180,6 +180,33 @@ class GrassGenerator(object):
 
     name = "grass"
 
+class BeachGenerator(object):
+    """
+    Generates simple beaches.
+    
+    This generator relies on omplementation details of ``Chunk``.
+    """
+    
+    implements(IPlugin, ITerrainGenerator)
+    
+    def populate(self, chunk, seed):
+        """
+        Find water level and if the chunk at water level or water level minus 1
+        should be dirt, make it sand.
+        """
+        
+        chunk.regenerate_heightmap()
+        
+        for x, z in product(xrange(16), repeat=2):
+            y = chunk.heightmap[x, z]
+            
+            above = [blocks["air"].slot, blocks["water"].slot, blocks["spring"].slot, blocks["ice"].slot]
+            replace = [blocks["dirt"].slot, blocks["grass"].slot]
+            if y <= 64 and y > 55 and (chunk.get_block((x, y + 1, z)) in above) and (chunk.get_block((x, y, z)) in replace):
+                chunk.set_block((x, y, z), blocks["sand"].slot)
+    
+    name = "beaches"
+
 class SafetyGenerator(object):
     """
     Generates terrain features essential for the safety of clients.
@@ -207,4 +234,5 @@ complex = ComplexGenerator()
 watertable = WaterTableGenerator()
 erosion = ErosionGenerator()
 grass = GrassGenerator()
+beaches = BeachGenerator()
 safety = SafetyGenerator()
