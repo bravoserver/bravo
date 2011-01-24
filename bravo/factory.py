@@ -41,14 +41,25 @@ class InfiniNodeFactory(Factory):
 
     ready = False
 
+    broadcast_loop = None
+
     def __init__(self, name):
+        self.name = name
+        # XXX
         self.gateway = "server.wiki.vg"
+
+        self.broadcast_loop = LoopingCall(self.broadcast)
+        self.broadcast_loop.start(220)
+
+    def broadcast(self):
         args = urlencode({
             "max_clients": 10,
             "max_chunks": 256,
             "client_count": 0,
             "chunk_count": 0,
-            "node_agent": "Bravo %s" % bravo_version
+            "node_agent": "Bravo %s" % bravo_version,
+            "port": 25565, # XXX
+            "name": self.name,
         })
 
         url = urlunparse(("http", self.gateway,
@@ -56,6 +67,9 @@ class InfiniNodeFactory(Factory):
         d = getPage(url)
         d.addCallback(self.online)
         d.addErrback(self.error)
+
+    def broadcasted(self):
+        self.ready = True
 
     def online(self, response):
         log.msg("Successfully said hi")
@@ -68,9 +82,6 @@ class InfiniNodeFactory(Factory):
     def error(self, reason):
         log.err("Couldn't talk to gateway %s" % self.gateway)
         log.err(reason)
-
-    def broadcasted(self):
-        self.ready = True
 
 class BravoFactory(Factory):
     """
