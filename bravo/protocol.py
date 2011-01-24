@@ -81,7 +81,176 @@ class BetaServerProtocol(Protocol):
         }
 
     def ping(self, container):
-        pass
+        """
+        Hook for ping packets.
+        """
+
+    def login(self, container):
+        """
+        Hook for login packets.
+
+        Override this to customize how logins are handled.
+        """
+
+    def handshake(self, container):
+        """
+        Hook for handshake packets.
+        """
+
+    def chat(self, container):
+        """
+        Hook for chat packets.
+        """
+
+    def flying(self, container):
+        """
+        Hook for flying packets.
+        """
+
+    def position_look(self, container):
+        """
+        Hook for position and look packets.
+
+        XXX this design decision should be revisted
+        """
+
+    def digging(self, container):
+        """
+        Hook for digging packets.
+        """
+
+    def build(self, container):
+        """
+        Hook for build packets.
+        """
+
+    def equip(self, container):
+        """
+        Hook for equip packets.
+        """
+
+    def pickup(self, container):
+        """
+        Hook for pickup packets.
+        """
+
+    def animate(self, container):
+        """
+        Hook for animate packets.
+        """
+
+    def wclose(self, container):
+        """
+        Hook for wclose packets.
+        """
+
+    def waction(self, container):
+        """
+        Hook for waction packets.
+        """
+
+    def inventory(self, container):
+        """
+        Hook for inventory packets.
+        """
+
+    def sign(self, container):
+        """
+        Hook for sign packets.
+        """
+
+    def quit(self, container):
+        log.msg("Client is quitting: %s" % container.message)
+        self.transport.loseConnection()
+
+    def dataReceived(self, data):
+        self.buf += data
+
+        packets, self.buf = parse_packets(self.buf)
+
+        for header, payload in packets:
+            if header in self.handlers:
+                self.handlers[header](payload)
+            else:
+                log.err("Didn't handle parseable packet %d!" % header)
+                log.err(payload)
+
+    def challenged(self):
+        self.state = STATE_CHALLENGED
+
+    def authenticated(self):
+        """
+        Called when the client has successfully authenticated with the server.
+        """
+
+        self.state = STATE_AUTHENTICATED
+
+    def error(self, message):
+        self.transport.write(make_error_packet(message))
+        self.transport.loseConnection()
+
+class BravoProtocol(BetaServerProtocol):
+    """
+    A ``BetaServerProtocol`` suitable for serving MC worlds to clients.
+
+    This protocol really does need to be hooked up with a ``BravoFactory`` or
+    something very much like it.
+    """
+
+    chunk_tasks = None
+
+    time_loop = None
+    ping_loop = None
+
+    def __init__(self):
+        BetaServerProtocol.__init__(self)
+
+        log.msg("Registering client hooks...")
+        names = configuration.get("bravo", "build_hooks").split(",")
+        self.build_hooks = retrieve_named_plugins(IBuildHook, names)
+        names = configuration.get("bravo", "dig_hooks").split(",")
+        self.dig_hooks = retrieve_named_plugins(IDigHook, names)
+
+        self.last_dig_build_timer = time()
+
+    def challenged(self):
+        # Maybe the ugliest hack written thus far.
+        # We need an entity ID which will persist for the entire lifetime of
+        # this client. However, that entity ID is normally tied to an entity,
+        # which won't be allocated until after we get our username from the
+        # client. This is far too late to be able to look things up in a nice,
+        # orderly way, so for now (and maybe forever) we will allocate and
+        # increment the entity ID manually.
+        self.eid = self.factory.eid + 1
+        self.factory.eid += 1
+
+    def authenticated(self):
+        BetaServerProtocol.authenticated(self)
+
+        self.factory.protocols[self.username] = self
+
+        self.player = self.factory.world.load_player(self.username)
+        self.player.eid = self.eid
+        self.factory.entities.add(self.player)
+
+        packet = make_packet("chat",
+            message="%s is joining the game..." % self.username)
+        self.factory.broadcast(packet)
+
+        spawn = self.factory.world.spawn
+        packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
+        self.transport.write(packet)
+
+        packet = self.player.inventory.save_to_packet()
+        self.transport.write(packet)
+
+        self.send_initial_chunk_and_location()
+
+        self.ping_loop = LoopingCall(self.update_ping)
+        self.ping_loop.start(5)
+
+        self.time_loop = LoopingCall(self.update_time)
+        self.time_loop.start(10)
 
     def login(self, container):
         """
@@ -193,184 +362,6 @@ class BetaServerProtocol(Protocol):
             self.transport.write(packet)
 
     def digging(self, container):
-        """
-        Hook for digging packets.
-        """
-
-    def build(self, container):
-        """
-        Hook for build packets.
-        """
-
-    def equip(self, container):
-        self.player.equipped = container.item
-
-    def pickup(self, container):
-        self.factory.give((container.x, container.y, container.z),
-            (container.primary, container.secondary), container.count)
-
-    def animate(self, container):
-        """
-        Hook for animate packets.
-        """
-
-    def wclose(self, container):
-        if container.wid in self.windows:
-            i = self.windows[container.wid]
-            del self.windows[container.wid]
-            sync_inventories(i, self.player.inventory)
-        elif container.wid == 0:
-            pass
-        else:
-            self.error("Can't close non-existent window %d!" % container.wid)
-
-    def waction(self, container):
-        if container.wid == 0:
-            # Inventory.
-            i = self.player.inventory
-        elif container.wid in self.windows:
-            i = self.windows[container.wid]
-        else:
-            self.error("Couldn't find window %d" % container.wid)
-
-        selected = i.select(container.slot, bool(container.button))
-
-        if selected:
-            # XXX should be if there's any damage to the inventory
-            packet = i.save_to_packet()
-            self.transport.write(packet)
-
-        packet = make_packet("window-token", wid=0, token=container.token,
-            acknowledged=selected)
-        self.transport.write(packet)
-
-    def inventory(self, container):
-        """
-        Hook for inventory packets.
-        """
-
-    def sign(self, container):
-        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
-
-        try:
-            chunk = self.chunks[bigx, bigz]
-        except KeyError:
-            self.error("Couldn't handle sign in chunk (%d, %d)!" % (bigx, bigz))
-            return
-
-        if (smallx, container.y, smallz) in chunk.tiles:
-            s = chunk.tiles[smallx, container.y, smallz]
-        else:
-            s = Sign()
-
-        s.x = smallx
-        s.y = container.y
-        s.z = smallz
-
-        s.text1 = container.line1
-        s.text2 = container.line2
-        s.text3 = container.line3
-        s.text4 = container.line4
-
-        chunk.tiles[smallx, container.y, smallz] = s
-        chunk.dirty = True
-
-        # The best part of a sign isn't making one, it's showing everybody
-        # else on the server that you did.
-        packet = make_packet("sign", container)
-        self.factory.broadcast_for_chunk(packet, bigx, bigz)
-
-    def quit(self, container):
-        log.msg("Client is quitting: %s" % container.message)
-        self.transport.loseConnection()
-
-    def dataReceived(self, data):
-        self.buf += data
-
-        packets, self.buf = parse_packets(self.buf)
-
-        for header, payload in packets:
-            if header in self.handlers:
-                self.handlers[header](payload)
-            else:
-                log.err("Didn't handle parseable packet %d!" % header)
-                log.err(payload)
-
-    def challenged(self):
-        self.state = STATE_CHALLENGED
-
-    def authenticated(self):
-        """
-        Called when the client has successfully authenticated with the server.
-        """
-
-        self.state = STATE_AUTHENTICATED
-
-    def error(self, message):
-        self.transport.write(make_error_packet(message))
-        self.transport.loseConnection()
-
-class BravoProtocol(BetaServerProtocol):
-    """
-    A ``BetaServerProtocol`` suitable for serving MC worlds to clients.
-    """
-
-    chunk_tasks = None
-
-    time_loop = None
-    ping_loop = None
-
-    def __init__(self):
-        BetaServerProtocol.__init__(self)
-
-        log.msg("Registering client hooks...")
-        names = configuration.get("bravo", "build_hooks").split(",")
-        self.build_hooks = retrieve_named_plugins(IBuildHook, names)
-        names = configuration.get("bravo", "dig_hooks").split(",")
-        self.dig_hooks = retrieve_named_plugins(IDigHook, names)
-
-        self.last_dig_build_timer = time()
-
-    def challenged(self):
-        # Maybe the ugliest hack written thus far.
-        # We need an entity ID which will persist for the entire lifetime of
-        # this client. However, that entity ID is normally tied to an entity,
-        # which won't be allocated until after we get our username from the
-        # client. This is far too late to be able to look things up in a nice,
-        # orderly way, so for now (and maybe forever) we will allocate and
-        # increment the entity ID manually.
-        self.eid = self.factory.eid + 1
-        self.factory.eid += 1
-
-    def authenticated(self):
-        BetaServerProtocol.authenticated(self)
-
-        self.factory.protocols[self.username] = self
-
-        self.player = self.factory.world.load_player(self.username)
-        self.player.eid = self.eid
-        self.factory.entities.add(self.player)
-
-        packet = make_packet("chat",
-            message="%s is joining the game..." % self.username)
-        self.factory.broadcast(packet)
-
-        spawn = self.factory.world.spawn
-        packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
-        self.transport.write(packet)
-
-        packet = self.player.inventory.save_to_packet()
-        self.transport.write(packet)
-
-        self.send_initial_chunk_and_location()
-
-        self.ping_loop = LoopingCall(self.update_ping)
-        self.ping_loop.start(5)
-
-        self.time_loop = LoopingCall(self.update_time)
-        self.time_loop.start(10)
-
-    def digging(self, container):
         if container.state != 3:
             return
 
@@ -455,6 +446,74 @@ class BravoProtocol(BetaServerProtocol):
         # Flush damaged chunks.
         for chunk in self.chunks.itervalues():
             self.factory.flush_chunk(chunk)
+
+    def equip(self, container):
+        self.player.equipped = container.item
+
+    def pickup(self, container):
+        self.factory.give((container.x, container.y, container.z),
+            (container.primary, container.secondary), container.count)
+
+    def wclose(self, container):
+        if container.wid in self.windows:
+            i = self.windows[container.wid]
+            del self.windows[container.wid]
+            sync_inventories(i, self.player.inventory)
+        elif container.wid == 0:
+            pass
+        else:
+            self.error("Can't close non-existent window %d!" % container.wid)
+
+    def waction(self, container):
+        if container.wid == 0:
+            # Inventory.
+            i = self.player.inventory
+        elif container.wid in self.windows:
+            i = self.windows[container.wid]
+        else:
+            self.error("Couldn't find window %d" % container.wid)
+
+        selected = i.select(container.slot, bool(container.button))
+
+        if selected:
+            # XXX should be if there's any damage to the inventory
+            packet = i.save_to_packet()
+            self.transport.write(packet)
+
+        packet = make_packet("window-token", wid=0, token=container.token,
+            acknowledged=selected)
+        self.transport.write(packet)
+
+    def sign(self, container):
+        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
+
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't handle sign in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        if (smallx, container.y, smallz) in chunk.tiles:
+            s = chunk.tiles[smallx, container.y, smallz]
+        else:
+            s = Sign()
+
+        s.x = smallx
+        s.y = container.y
+        s.z = smallz
+
+        s.text1 = container.line1
+        s.text2 = container.line2
+        s.text3 = container.line3
+        s.text4 = container.line4
+
+        chunk.tiles[smallx, container.y, smallz] = s
+        chunk.dirty = True
+
+        # The best part of a sign isn't making one, it's showing everybody
+        # else on the server that you did.
+        packet = make_packet("sign", container)
+        self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
     def disable_chunk(self, x, z):
         del self.chunks[x, z]
