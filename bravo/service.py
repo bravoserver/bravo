@@ -3,7 +3,8 @@ from twisted.application.service import Application, MultiService
 
 from bravo.amp import ConsoleRPCFactory
 from bravo.config import configuration
-from bravo.factory import BravoFactory, InfiniNodeFactory
+from bravo.factories.beta import BravoFactory
+from bravo.factories.infini import InfiniNodeFactory
 from bravo.irc import BravoIRC
 
 service = MultiService()

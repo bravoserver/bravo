@@ -1,15 +1,20 @@
 from time import time
+from urlparse import urlunparse
 
+from twisted.internet import reactor
 from twisted.internet.defer import succeed
+from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import cooperate, LoopingCall
 from twisted.internet.task import TaskDone, TaskFailed
 from twisted.python import log
+from twisted.web.client import getPage
 
 from bravo.blocks import blocks, items
 from bravo.compat import namedtuple, product
 from bravo.config import configuration
 from bravo.entity import Sign
+from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook
 from bravo.inventory import Workbench, sync_inventories
 from bravo.packets import parse_packets, make_packet, make_error_packet
@@ -89,8 +94,20 @@ class BetaServerProtocol(Protocol):
         """
         Hook for login packets.
 
-        Override this to customize how logins are handled.
+        Override this to customize how logins are handled. By default, this
+        method will only confirm that the negotiated wire protocol is the
+        correct version, and then it will run the ``authenticated()``
+        callback.
         """
+
+        if container.protocol < 8:
+            # Kick old clients.
+            self.error("This server doesn't support your ancient client.")
+        elif container.protocol > 8:
+            # Kick new clients.
+            self.error("This server doesn't support your newfangled client.")
+
+        reactor.callLater(0, self.authenticated)
 
     def handshake(self, container):
         """
@@ -189,6 +206,42 @@ class BetaServerProtocol(Protocol):
         self.transport.write(make_error_packet(message))
         self.transport.loseConnection()
 
+class BetaProxyProtocol(BetaServerProtocol):
+    """
+    A ``BetaServerProtocol`` that proxies for an InfiniCraft client.
+    """
+
+    gateway = "server.wiki.vg"
+
+    def handshake(self, container):
+        packet = make_packet("handshake", username="-")
+        self.transport.write(packet)
+
+    def login(self, container):
+        self.username = container.username
+
+        packet = make_packet("login", protocol=0, username="", unused="",
+            seed=0, dimension=0)
+        self.transport.write(packet)
+
+        url = urlunparse(("http", self.gateway, "/node/0/0/", None, None,
+            None))
+        d = getPage(url)
+        d.addCallback(self.start_proxy)
+
+    def start_proxy(self, response):
+        log.msg("Starting proxy...")
+        address, port = response.split(":")
+        port = int(port)
+        endpoint = TCP4ClientEndpoint(reactor, address, port)
+
+        self.node_factory = InfiniClientFactory()
+        d = endpoint.connect(self.node_factory)
+        d.addCallback(self.node_connected)
+
+    def node_connected(self, protocol):
+        log.msg("Connected new node!")
+
 class BravoProtocol(BetaServerProtocol):
     """
     A ``BetaServerProtocol`` suitable for serving MC worlds to clients.
@@ -214,6 +267,8 @@ class BravoProtocol(BetaServerProtocol):
         self.last_dig_build_timer = time()
 
     def challenged(self):
+        BetaServerProtocol.challenged(self)
+
         # Maybe the ugliest hack written thus far.
         # We need an entity ID which will persist for the entire lifetime of
         # this client. However, that entity ID is normally tied to an entity,
@@ -261,13 +316,6 @@ class BravoProtocol(BetaServerProtocol):
         ``Deferred``, which is chained to authenticate the user or disconnect
         them depending on the results of the authentication.
         """
-
-        if container.protocol < 8:
-            # Kick old clients.
-            self.error("This server doesn't support your ancient client.")
-        elif container.protocol > 8:
-            # Kick new clients.
-            self.error("This server doesn't support your newfangled client.")
 
         d = self.factory.login_hook(self, container)
         d.addErrback(lambda *args, **kwargs: self.transport.loseConnection())

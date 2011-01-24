@@ -3,7 +3,7 @@ from twisted.python import log
 
 from bravo.packets import parse_infinipackets
 
-class InfiniNodeProtocol(Protocol):
+class InfiniProtocol(Protocol):
 
     def __init__(self):
 
@@ -31,3 +31,9 @@ class InfiniNodeProtocol(Protocol):
             else:
                 log.err("Didn't handle parseable packet %d!" % header)
                 log.err(payload)
+
+class InfiniClientProtocol(InfiniProtocol):
+    pass
+
+class InfiniNodeProtocol(InfiniProtocol):
+    pass

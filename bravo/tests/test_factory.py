@@ -3,7 +3,7 @@ import tempfile
 import unittest
 
 import bravo.config
-import bravo.factory
+import bravo.factories
 
 class TestBravoFactory(unittest.TestCase):
 
@@ -16,7 +16,7 @@ class TestBravoFactory(unittest.TestCase):
         bravo.config.configuration.set("world unittest", "path", self.d)
         bravo.config.configuration.set("world unittest", "port", "0")
 
-        self.f = bravo.factory.BravoFactory(self.name)
+        self.f = bravo.factories.beta.BravoFactory(self.name)
 
     def tearDown(self):
         del self.f
