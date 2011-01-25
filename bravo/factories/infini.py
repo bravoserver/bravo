@@ -8,6 +8,7 @@ from twisted.python import log
 from twisted.web.client import getPage
 
 from bravo import version as bravo_version
+from bravo.config import configuration
 from bravo.entity import Pickup, Player
 from bravo.protocols.infini import InfiniClientProtocol, InfiniNodeProtocol
 
@@ -47,10 +48,16 @@ class InfiniNodeFactory(Factory):
 
     broadcast_loop = None
 
+    private_key = None
+
     def __init__(self, name):
         self.name = name
-        # XXX
-        self.gateway = "server.wiki.vg"
+        self.port = configuration.getint("infininode %s" % name, "port")
+        self.gateway = configuration.get("infininode %s" % name, "gateway")
+
+        if configuration.has_option("infininode %s" % name, "private_key"):
+            self.private_key = configuration.get("infininode %s" % name,
+                "private_key")
 
         self.broadcast_loop = LoopingCall(self.broadcast)
         self.broadcast_loop.start(220)
@@ -62,12 +69,16 @@ class InfiniNodeFactory(Factory):
             "client_count": 0,
             "chunk_count": 0,
             "node_agent": "Bravo %s" % bravo_version,
-            "port": 25565, # XXX
+            "port": self.port,
             "name": self.name,
         })
 
-        url = urlunparse(("http", self.gateway,
-            "/broadcast/bravo_testing_key/", None, args, None))
+        if self.private_key:
+            url = urlunparse(("http", self.gateway,
+                "/broadcast/%s/" % self.private_key, None, args, None))
+        else:
+            url = urlunparse(("http", self.gateway, "/broadcast/", None, args,
+                None))
         d = getPage(url)
         d.addCallback(self.online)
         d.addErrback(self.error)
@@ -82,6 +93,20 @@ class InfiniNodeFactory(Factory):
         if response == "Ok":
             # We're in business!
             reactor.callLater(0, self.broadcasted)
+        elif response.startswith("Ok"):
+            # New keypair?
+            try:
+                okay, public, private = response.split(":")
+                self.public_key = public
+                self.private_key = private
+                self.save_keys()
+            except ValueError:
+                pass
+
+            reactor.callLater(0, self.broadcasted)
+
+    def save_keys(self):
+        pass
 
     def error(self, reason):
         log.err("Couldn't talk to gateway %s" % self.gateway)
