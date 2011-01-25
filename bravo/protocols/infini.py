@@ -44,4 +44,8 @@ class InfiniClientProtocol(InfiniProtocol):
         self.transport.write("\x00\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00")
 
 class InfiniNodeProtocol(InfiniProtocol):
-    pass
+
+    def __init__(self):
+        InfiniProtocol.__init__(self)
+
+        log.msg("New node protocol established")
