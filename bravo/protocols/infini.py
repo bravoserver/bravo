@@ -27,8 +27,8 @@ class InfiniProtocol(Protocol):
         packets, self.buf = parse_infinipackets(self.buf)
 
         for header, payload in packets:
-            if header in self.handlers:
-                self.handlers[header](payload)
+            if header.identifier in self.handlers:
+                self.handlers[header.identifier](payload)
             else:
                 log.err("Didn't handle parseable packet %d!" % header)
                 log.err(payload)
