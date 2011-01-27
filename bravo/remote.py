@@ -1,7 +1,7 @@
 from ampoule import AMPChild
 import ampoule.pool
 
-from twisted.protocols.amp import Command, Integer, String
+from twisted.protocols.amp import ListOf, Command, Integer, String
 
 from bravo.chunk import Chunk
 from bravo.ibravo import ITerrainGenerator
@@ -12,7 +12,7 @@ class MakeChunk(Command):
         ("x", Integer()),
         ("z", Integer()),
         ("seed", Integer()),
-        ("generators", String()),
+        ("generators", ListOf(String())),
     ]
     response = [
         ("blocks", String()),
@@ -36,7 +36,7 @@ class Slave(AMPChild):
         """
 
         plugins = retrieve_plugins(ITerrainGenerator)
-        stages = [plugins[g] for g in generators.split(",")]
+        stages = [plugins[g] for g in generators]
 
         chunk = Chunk(x, z)
 
