@@ -30,7 +30,7 @@ build_hooks = build_snow,torch,tile,build,bravo_snow,alpha_sand_gravel
 # You'll probably want simplex, complex, or some other terrain provider, as
 # well.
 #generators = boring,erosion,watertable,grass,safety
-generators = simplex,erosion,watertable,grass,safety
+generators = simplex,erosion,beaches,watertable,grass,safety
 
 # Try to enable Ampoule. This can massively improve server responsiveness, but
 # it can cause crashes, misrendering, and other weird bugs. You have been

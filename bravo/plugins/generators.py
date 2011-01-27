@@ -202,7 +202,7 @@ class BeachGenerator(object):
             
             above = [blocks["air"].slot, blocks["water"].slot, blocks["spring"].slot, blocks["ice"].slot]
             replace = [blocks["dirt"].slot, blocks["grass"].slot]
-            if y <= 64 and y > 55 and (chunk.get_block((x, y + 1, z)) in above) and (chunk.get_block((x, y, z)) in replace):
+            if y <= 64 and y >= 60 and (chunk.get_block((x, y + 1, z)) in above) and (chunk.get_block((x, y, z)) in replace):
                 chunk.set_block((x, y, z), blocks["sand"].slot)
     
     name = "beaches"
