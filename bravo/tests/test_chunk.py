@@ -81,3 +81,24 @@ class TestLightmaps(unittest.TestCase):
         for x, z in bravo.compat.product(xrange(16), repeat=2):
             self.assertEqual(chunk.skylight[x, z, 0], 15,
                 "Coordinate (%d, 0, %d) is bad!" % (x, z))
+
+class TestGenerators(unittest.TestCase):
+
+    def setUp(self):
+        self.chunk = bravo.chunk.Chunk(0, 0)
+
+    def test_trivial(self):
+        pass
+
+    def test_boring(self):
+        plugin = bravo.plugin.retrieve_named_plugins(
+            bravo.ibravo.ITerrainGenerator, ["boring"])[0]
+        plugin.populate(self.chunk, 0)
+        for x, y, z in bravo.compat.product(xrange(16), xrange(128),
+            xrange(16)):
+            if y < 64:
+                self.assertEqual(self.chunk.get_block((x, y, z)),
+                    bravo.blocks.blocks["stone"].slot)
+            else:
+                self.assertEqual(self.chunk.get_block((x, y, z)),
+                    bravo.blocks.blocks["air"].slot)
