@@ -267,3 +267,18 @@ def octaves3(x, y, z, count):
         divisor *= 2
         count -= 1
     return sigma
+
+def offset2(x, y, xoffset, yoffset, octaves=1):
+    """
+    Generate an offset noise difference field.
+
+    :param int x: X coordinate
+    :param int y: Y coordinate
+    :param int xoffset: X offset
+    :param int yoffset: Y offset
+
+    :returns: Difference of noises
+    """
+
+    return (octaves2(x, y, octaves) -
+        octaves2(x + xoffset, y + yoffset, octaves) + 1) * 0.5

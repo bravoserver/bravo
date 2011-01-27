@@ -1,8 +1,8 @@
 import functools
 
-from construct import Struct, Container, Embed, Enum
+from construct import Struct, Container, Embed, Enum, MetaField
 from construct import MetaArray, If, Switch, Const, Peek
-from construct import OptionalGreedyRepeater
+from construct import OptionalGreedyRange
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32
@@ -273,7 +273,7 @@ packets = {
         BFloat64("unknown3"),
         BFloat32("unknown4"),
         UBInt32("count"),
-        MetaArray(lambda context: context["length"] * 3, UBInt8("unknown5")),
+        MetaField("unknown5", lambda context: context["count"] * 3),
     ),
     100: Struct("window-open",
         UBInt8("wid"),
@@ -330,13 +330,13 @@ packets = {
 }
 
 packet_stream = Struct("packet_stream",
-    OptionalGreedyRepeater(
+    OptionalGreedyRange(
         Struct("full_packet",
             UBInt8("header"),
             Switch("payload", lambda context: context["header"], packets),
         ),
     ),
-    OptionalGreedyRepeater(
+    OptionalGreedyRange(
         UBInt8("leftovers"),
     ),
 )
@@ -367,7 +367,7 @@ incremental_packet_stream = Struct("incremental_packet_stream",
         UBInt8("header"),
         Switch("payload", lambda context: context["header"], packets),
     ),
-    OptionalGreedyRepeater(
+    OptionalGreedyRange(
         UBInt8("leftovers"),
     ),
 )
@@ -520,19 +520,24 @@ infinipackets = {
             UBInt8("flags"),
             UBInt32("length"),
         ),
-        MetaArray(lambda context: context["length"], UBInt8("data")),
+        MetaField("data", lambda context: context["length"]),
     ),
 }
 
+infinipackets_by_name = {
+    "ping"       : 0,
+    "disconnect" : 255,
+}
+
 infinipacket_parser = Struct("parser",
-    OptionalGreedyRepeater(
+    OptionalGreedyRange(
         Struct("packets",
             Peek(UBInt8("header")),
             Embed(Switch("packet", lambda context: context["header"],
                 infinipackets)),
         ),
     ),
-    OptionalGreedyRepeater(
+    OptionalGreedyRange(
         UBInt8("leftovers"),
     ),
 )
@@ -549,3 +554,28 @@ def parse_infinipackets(bytestream):
             print packet[1]
 
     return l, leftovers
+
+def make_infinipacket(packet, *args, **kwargs):
+    """
+    Constructs a packet bytestream from a packet header and payload.
+
+    The payload should be passed as keyword arguments. Additional containers
+    or dictionaries to be added to the payload may be passed positionally, as
+    well.
+    """
+
+    if packet not in infinipackets_by_name:
+        print "Couldn't find packet name %s!" % packet
+        return ""
+
+    header = packets_by_name[packet]
+
+    for arg in args:
+        kwargs.update(dict(arg))
+    payload = Container(**kwargs)
+
+    if DUMP_ALL_PACKETS:
+        print "Making packet %s (%d)" % (packet, header)
+        print container
+    payload = packets[header].build(container)
+    return chr(header) + payload

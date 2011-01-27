@@ -96,7 +96,7 @@ class ComplexGenerator(object):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
-            samples = array([octaves3(magx, y * factor, magz, 6)
+            samples = array([octaves3(magx, magz, y * factor, 6)
                     for y in xrange(column.size)])
 
             column = where(samples > 0, blocks["dirt"].slot, column)
@@ -180,6 +180,90 @@ class GrassGenerator(object):
 
     name = "grass"
 
+class BeachGenerator(object):
+    """
+    Generates simple beaches.
+
+    Beaches are areas of sand around bodies of water. This generator will form
+    beaches near all bodies of water regardless of size or composition; it
+    will form beaches at large seashores and frozen lakes. It will even place
+    beaches on one-block puddles.
+
+    This generator relies on implementation details of ``Chunk``.
+    """
+
+    implements(IPlugin, ITerrainGenerator)
+
+    above = set([blocks["air"].slot, blocks["water"].slot,
+        blocks["spring"].slot, blocks["ice"].slot])
+    replace = set([blocks["dirt"].slot, blocks["grass"].slot])
+
+    def populate(self, chunk, seed):
+        """
+        Find water level and if the chunk at water level or water level minus
+        1 should be dirt, make it sand.
+        """
+
+        chunk.regenerate_heightmap()
+
+        for x, z in product(xrange(16), repeat=2):
+            y = chunk.heightmap[x, z]
+
+            if (60 <= y <= 64 and
+                (chunk.get_block((x, y + 1, z)) in self.above) and
+                (chunk.get_block((x, y, z)) in self.replace)):
+                chunk.set_block((x, y, z), blocks["sand"].slot)
+
+    name = "beaches"
+
+class OreGenerator(object):
+    """
+    Place ores and clay.
+    """
+
+    implements(IPlugin, ITerrainGenerator)
+
+    def populate(self, chunk, seed):
+        reseed(seed)
+
+        factor = 1 / 64
+
+        for x, z in product(xrange(16), repeat=2):
+            for y in range(chunk.heightmap[x, z] + 1):
+                magx = (chunk.x * 16 + x) * factor
+                magz = (chunk.z * 16 + z) * factor
+
+                sample = octaves3(magx, magz, y, 3)
+
+                if sample > 0.9999:
+                    # Figure out what to place here.
+                    old = chunk.get_block((x, y, z))
+                    if old == blocks["sand"].slot:
+                        # Sand becomes clay.
+                        chunk.set_block((x, y, z), blocks["clay"].slot)
+                    elif old == blocks["dirt"].slot:
+                        # Dirt becomes gravel.
+                        chunk.set_block((x, y, z), blocks["gravel"].slot)
+                    elif old == blocks["stone"].slot:
+                        # Stone becomes one of the ores.
+                        if y < 12:
+                            chunk.set_block((x, y, z),
+                                blocks["diamond-ore"].slot)
+                        elif y < 24:
+                            chunk.set_block((x, y, z),
+                                blocks["gold-ore"].slot)
+                        elif y < 36:
+                            chunk.set_block((x, y, z),
+                                blocks["redstone-ore"].slot)
+                        elif y < 48:
+                            chunk.set_block((x, y, z),
+                                blocks["iron-ore"].slot)
+                        else:
+                            chunk.set_block((x, y, z),
+                                blocks["coal-ore"].slot)
+
+    name = "ore"
+
 class SafetyGenerator(object):
     """
     Generates terrain features essential for the safety of clients.
@@ -207,4 +291,6 @@ complex = ComplexGenerator()
 watertable = WaterTableGenerator()
 erosion = ErosionGenerator()
 grass = GrassGenerator()
+beaches = BeachGenerator()
+ore = OreGenerator()
 safety = SafetyGenerator()

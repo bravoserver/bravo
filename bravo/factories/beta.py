@@ -60,6 +60,8 @@ class BravoFactory(Factory):
         world_folder = configuration.get("world %s" % name, "path")
         self.world = World(world_folder)
         self.world.factory = self
+        if configuration.getboolean("world %s" % name, "perm_cache"):
+            self.world.enable_cache()
 
         self.protocols = dict()
 
@@ -76,7 +78,7 @@ class BravoFactory(Factory):
         self.handshake_hook = selected.handshake
         self.login_hook = selected.login
 
-        generators = configuration.get("bravo", "generators").split(",")
+        generators = configuration.getlist("bravo", "generators")
         generators = retrieve_named_plugins(ITerrainGenerator, generators)
 
         log.msg("Using generators %s" % ", ".join(i.name for i in generators))

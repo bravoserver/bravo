@@ -317,6 +317,23 @@ class Season(object):
     usage = "<season>"
     info = "Advance date to the beginning of the given season"
 
+class Me(object):
+    implements(IPlugin, IChatCommand)
+    
+    def dispatch(self, username, says):
+        say = " ".join(says)
+        msg = "* %s %s" % (username,say)
+        yield msg
+    
+    def chat_command(self, factory, username, parameters):
+        for i in self.dispatch(username, parameters):
+            yield i
+    
+    name = "me"
+    aliases = tuple()
+    usage = "<message>"
+    info = "/me like IRC"
+
 help = Help()
 list = List()
 time = Time()
@@ -328,3 +345,4 @@ save_off = SaveOff()
 save_on = SaveOn()
 write_config = WriteConfig()
 season = Season()
+me = Me()
