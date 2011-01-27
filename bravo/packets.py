@@ -1,6 +1,6 @@
 import functools
 
-from construct import Struct, Container, Embed, Enum
+from construct import Struct, Container, Embed, Enum, MetaField
 from construct import MetaArray, If, Switch, Const, Peek
 from construct import OptionalGreedyRange
 from construct import PascalString
@@ -273,7 +273,7 @@ packets = {
         BFloat64("unknown3"),
         BFloat32("unknown4"),
         UBInt32("count"),
-        MetaArray(lambda context: context["length"] * 3, UBInt8("unknown5")),
+        MetaField("unknown5", lambda context: context["count"] * 3),
     ),
     100: Struct("window-open",
         UBInt8("wid"),
@@ -520,7 +520,7 @@ infinipackets = {
             UBInt8("flags"),
             UBInt32("length"),
         ),
-        MetaArray(lambda context: context["length"], UBInt8("data")),
+        MetaField("data", lambda context: context["length"]),
     ),
 }
 
