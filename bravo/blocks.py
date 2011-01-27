@@ -286,16 +286,17 @@ drops = {}
 
 # Block -> block drops.
 # If the drop block is zero, then it drops nothing.
-drops[1]  = 4  # Stone           -> Cobblestone
-drops[2]  = 3  # Grass           -> Dirt
-drops[18] = 6  # Leaves          -> Sapling
-drops[20] = 0  # Glass
-drops[60] = 3  # Soil            -> Dirt
-drops[62] = 61 # Burning Furnace -> Furnace
-drops[78] = 0  # Snow
-drops[79] = 0  # Ice
+drops[1]  = 4   # Stone           -> Cobblestone
+drops[2]  = 3   # Grass           -> Dirt
+drops[18] = 6   # Leaves          -> Sapling
+drops[20] = 0   # Glass
+drops[60] = 3   # Soil            -> Dirt
+drops[62] = 61  # Burning Furnace -> Furnace
+drops[78] = 0   # Snow
+drops[79] = 0   # Ice
 
 # Block -> item drops.
+drops[13] = 318 # Gravel            -> Flint
 drops[16] = 263 # Coal Ore Block    -> Coal
 drops[56] = 264 # Diamond Ore Block -> Diamond
 drops[63] = 323 # Sign Post         -> Sign Item
@@ -304,6 +305,7 @@ drops[68] = 323 # Wall Sign         -> Sign Item
 drops[71] = 330 # Iron Door         -> Iron Door Item
 drops[73] = 331 # Redstone Ore      -> Redstone Dust
 drops[74] = 331 # Redstone Ore      -> Redstone Dust
+drops[82] = 337 # Clay              -> Clay Balls
 drops[83] = 338 # Reed              -> Reed Item
 drops[89] = 348 # Lightstone        -> Lightstone Dust
 
@@ -313,12 +315,14 @@ replaces[79] = 8 # Ice -> Water
 
 ratios = {}
 
-ratios[18] = 1 / 9 # Leaves
+ratios[13] = 1 / 10 # Gravel
+ratios[18] = 1 / 9  # Leaves
 
 quantities = {}
 
 quantities[73] = 5 # Redstone Ore -> Redstone Dust
 quantities[74] = 5 # Redstone Ore -> Redstone Dust
+quantities[82] = 4 # Clay         -> Clay Balls
 
 blocks = {}
 """
