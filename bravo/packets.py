@@ -2,7 +2,7 @@ import functools
 
 from construct import Struct, Container, Embed, Enum
 from construct import MetaArray, If, Switch, Const, Peek
-from construct import OptionalGreedyRepeater
+from construct import OptionalGreedyRange
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32
@@ -330,13 +330,13 @@ packets = {
 }
 
 packet_stream = Struct("packet_stream",
-    OptionalGreedyRepeater(
+    OptionalGreedyRange(
         Struct("full_packet",
             UBInt8("header"),
             Switch("payload", lambda context: context["header"], packets),
         ),
     ),
-    OptionalGreedyRepeater(
+    OptionalGreedyRange(
         UBInt8("leftovers"),
     ),
 )
@@ -367,7 +367,7 @@ incremental_packet_stream = Struct("incremental_packet_stream",
         UBInt8("header"),
         Switch("payload", lambda context: context["header"], packets),
     ),
-    OptionalGreedyRepeater(
+    OptionalGreedyRange(
         UBInt8("leftovers"),
     ),
 )
@@ -530,14 +530,14 @@ infinipackets_by_name = {
 }
 
 infinipacket_parser = Struct("parser",
-    OptionalGreedyRepeater(
+    OptionalGreedyRange(
         Struct("packets",
             Peek(UBInt8("header")),
             Embed(Switch("packet", lambda context: context["header"],
                 infinipackets)),
         ),
     ),
-    OptionalGreedyRepeater(
+    OptionalGreedyRange(
         UBInt8("leftovers"),
     ),
 )
