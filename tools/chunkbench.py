@@ -45,7 +45,7 @@ def repeated_seeds(p):
 
 def pipeline():
 
-    generators = configuration.get("bravo", "generators").split(",")
+    generators = configuration.getlist("bravo", "generators")
     generators = retrieve_named_plugins(ITerrainGenerator, generators)
 
     before = time.time()
