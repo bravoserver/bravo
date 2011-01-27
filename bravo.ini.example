@@ -44,7 +44,7 @@ fancy_console = true
 # Which serializer to use for saving worlds to disk.
 # ~ alpha: The Alpha NBT format
 # ~ json: JSON format, for debugging
-serializer = json
+serializer = alpha
 
 [world example]
 # This is just an example world. World names come from the name of the
