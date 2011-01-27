@@ -3,7 +3,7 @@ import tempfile
 import unittest
 
 import bravo.config
-import bravo.factories
+import bravo.factories.beta
 
 class TestBravoFactory(unittest.TestCase):
 

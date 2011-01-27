@@ -524,6 +524,11 @@ infinipackets = {
     ),
 }
 
+infinipackets_by_name = {
+    "ping"       : 0,
+    "disconnect" : 255,
+}
+
 infinipacket_parser = Struct("parser",
     OptionalGreedyRepeater(
         Struct("packets",
@@ -549,3 +554,28 @@ def parse_infinipackets(bytestream):
             print packet[1]
 
     return l, leftovers
+
+def make_infinipacket(packet, *args, **kwargs):
+    """
+    Constructs a packet bytestream from a packet header and payload.
+
+    The payload should be passed as keyword arguments. Additional containers
+    or dictionaries to be added to the payload may be passed positionally, as
+    well.
+    """
+
+    if packet not in infinipackets_by_name:
+        print "Couldn't find packet name %s!" % packet
+        return ""
+
+    header = packets_by_name[packet]
+
+    for arg in args:
+        kwargs.update(dict(arg))
+    payload = Container(**kwargs)
+
+    if DUMP_ALL_PACKETS:
+        print "Making packet %s (%d)" % (packet, header)
+        print container
+    payload = packets[header].build(container)
+    return chr(header) + payload
