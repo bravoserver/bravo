@@ -96,7 +96,7 @@ class ComplexGenerator(object):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
-            samples = array([octaves3(magx, y * factor, magz, 6)
+            samples = array([octaves3(magx, magz, y * factor, 6)
                     for y in xrange(column.size)])
 
             column = where(samples > 0, blocks["dirt"].slot, column)
@@ -216,6 +216,54 @@ class BeachGenerator(object):
 
     name = "beaches"
 
+class OreGenerator(object):
+    """
+    Place ores and clay.
+    """
+
+    implements(IPlugin, ITerrainGenerator)
+
+    def populate(self, chunk, seed):
+        reseed(seed)
+
+        factor = 1 / 64
+
+        for x, z in product(xrange(16), repeat=2):
+            for y in range(chunk.heightmap[x, z] + 1):
+                magx = (chunk.x * 16 + x) * factor
+                magz = (chunk.z * 16 + z) * factor
+
+                sample = octaves3(magx, magz, y, 3)
+
+                if sample > 0.9999:
+                    # Figure out what to place here.
+                    old = chunk.get_block((x, y, z))
+                    if old == blocks["sand"].slot:
+                        # Sand becomes clay.
+                        chunk.set_block((x, y, z), blocks["clay"].slot)
+                    elif old == blocks["dirt"].slot:
+                        # Dirt becomes gravel.
+                        chunk.set_block((x, y, z), blocks["gravel"].slot)
+                    elif old == blocks["stone"].slot:
+                        # Stone becomes one of the ores.
+                        if y < 12:
+                            chunk.set_block((x, y, z),
+                                blocks["diamond-ore"].slot)
+                        elif y < 24:
+                            chunk.set_block((x, y, z),
+                                blocks["gold-ore"].slot)
+                        elif y < 36:
+                            chunk.set_block((x, y, z),
+                                blocks["redstone-ore"].slot)
+                        elif y < 48:
+                            chunk.set_block((x, y, z),
+                                blocks["iron-ore"].slot)
+                        else:
+                            chunk.set_block((x, y, z),
+                                blocks["coal-ore"].slot)
+
+    name = "ore"
+
 class SafetyGenerator(object):
     """
     Generates terrain features essential for the safety of clients.
@@ -244,4 +292,5 @@ watertable = WaterTableGenerator()
 erosion = ErosionGenerator()
 grass = GrassGenerator()
 beaches = BeachGenerator()
+ore = OreGenerator()
 safety = SafetyGenerator()
