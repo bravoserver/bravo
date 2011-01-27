@@ -194,6 +194,10 @@ class BeachGenerator(object):
 
     implements(IPlugin, ITerrainGenerator)
 
+    above = set([blocks["air"].slot, blocks["water"].slot,
+        blocks["spring"].slot, blocks["ice"].slot])
+    replace = set([blocks["dirt"].slot, blocks["grass"].slot])
+
     def populate(self, chunk, seed):
         """
         Find water level and if the chunk at water level or water level minus
@@ -205,9 +209,9 @@ class BeachGenerator(object):
         for x, z in product(xrange(16), repeat=2):
             y = chunk.heightmap[x, z]
 
-            above = [blocks["air"].slot, blocks["water"].slot, blocks["spring"].slot, blocks["ice"].slot]
-            replace = [blocks["dirt"].slot, blocks["grass"].slot]
-            if y <= 64 and y >= 60 and (chunk.get_block((x, y + 1, z)) in above) and (chunk.get_block((x, y, z)) in replace):
+            if (60 <= y <= 64 and
+                (chunk.get_block((x, y + 1, z)) in self.above) and
+                (chunk.get_block((x, y, z)) in self.replace)):
                 chunk.set_block((x, y, z), blocks["sand"].slot)
 
     name = "beaches"
