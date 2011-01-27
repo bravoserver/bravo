@@ -6,10 +6,12 @@ from numpy import fromstring, uint8
 
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred, succeed
-from twisted.internet.task import deferLater, LoopingCall
+from twisted.internet.task import coiterate, deferLater, LoopingCall
+from twisted.python import log
 from twisted.python.filepath import FilePath
 
 from bravo.chunk import Chunk
+from bravo.compat import product
 from bravo.config import configuration
 from bravo.serialize import LevelSerializer
 from bravo.serialize import read_from_file, write_to_file, extension
@@ -106,6 +108,20 @@ class World(LevelSerializer):
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
+
+    def enable_cache(self):
+        """
+        Start up a rudimentary permanent cache.
+        """
+
+        self.permanent_cache = set()
+        def assign(chunk):
+            self.permanent_cache.add(chunk)
+
+        rx = xrange(self.spawn[0] - 3, self.spawn[0] + 3)
+        rz = xrange(self.spawn[2] - 3, self.spawn[2] + 3)
+        d = coiterate(assign(self.load_chunk(x, z)) for x, z in product(rx, rz))
+        d.addCallback(lambda chaff: log.msg("Cache is warmed up!"))
 
     def sort_chunks(self):
         """
