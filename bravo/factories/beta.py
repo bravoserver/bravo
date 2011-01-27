@@ -76,7 +76,7 @@ class BravoFactory(Factory):
         self.handshake_hook = selected.handshake
         self.login_hook = selected.login
 
-        generators = configuration.get("bravo", "generators").split(",")
+        generators = configuration.getlist("bravo", "generators")
         generators = retrieve_named_plugins(ITerrainGenerator, generators)
 
         log.msg("Using generators %s" % ", ".join(i.name for i in generators))
