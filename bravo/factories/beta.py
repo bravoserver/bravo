@@ -42,6 +42,8 @@ class BravoFactory(Factory):
     handshake_hook = None
     login_hook = None
 
+    interface = ""
+
     def __init__(self, name):
         """
         Create a factory and world.
@@ -56,6 +58,8 @@ class BravoFactory(Factory):
 
         self.name = name
         self.port = configuration.getint("world %s" % name, "port")
+        if configuration.has_option("world %s" % name, "host"):
+            self.interface = configuration.get("world %s" % name, "host")
 
         world_folder = configuration.get("world %s" % name, "path")
         self.world = World(world_folder)

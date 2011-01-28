@@ -22,7 +22,8 @@ worlds = []
 for section in configuration.sections():
     if section.startswith("world "):
         factory = BravoFactory(section[6:])
-        TCPServer(factory.port, factory).setServiceParent(service)
+        server = TCPServer(factory.port, factory, interface=factory.interface)
+        server.setServiceParent(service)
         worlds.append(factory)
     elif section.startswith("irc "):
         factory = BravoIRC(worlds, section[4:])
