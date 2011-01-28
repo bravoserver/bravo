@@ -71,6 +71,50 @@ class TestWorldChunks(unittest.TestCase):
             self.assertEqual(chunk.get_metadata((x, y, z)),
                 self.w.get_metadata((x, y, z)))
 
+    def test_get_block_readback(self):
+        chunk = self.w.load_chunk(0, 0)
+
+        # Fill the chunk with random stuff.
+        chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
+            dtype=numpy.uint8)
+        chunk.blocks.shape = (16, 16, 128)
+
+        # Evict the chunk and grab it again.
+        self.w.save_chunk(chunk)
+        del chunk
+        self.w.chunk_cache.clear()
+        self.w.dirty_chunk_cache.clear()
+        chunk = self.w.load_chunk(0, 0)
+
+        for x, y, z in bravo.compat.product(xrange(16), xrange(128),
+            xrange(16)):
+            # This works because the chunk is at (0, 0) so the coords don't
+            # need to be adjusted.
+            self.assertEqual(chunk.get_block((x, y, z)),
+                self.w.get_block((x, y, z)))
+
+    def test_get_metadata_readback(self):
+        chunk = self.w.load_chunk(0, 0)
+
+        # fill the chunk with random stuff.
+        chunk.metadata = numpy.fromstring(numpy.random.bytes(chunk.metadata.size),
+            dtype=numpy.uint8)
+        chunk.metadata.shape = (16, 16, 128)
+
+        # Evict the chunk and grab it again.
+        self.w.save_chunk(chunk)
+        del chunk
+        self.w.chunk_cache.clear()
+        self.w.dirty_chunk_cache.clear()
+        chunk = self.w.load_chunk(0, 0)
+
+        for x, y, z in bravo.compat.product(xrange(16), xrange(128),
+            xrange(16)):
+            # this works because the chunk is at (0, 0) so the coords don't
+            # need to be adjusted.
+            self.assertEqual(chunk.get_metadata((x, y, z)),
+                self.w.get_metadata((x, y, z)))
+
 class TestWorldUtilities(unittest.TestCase):
 
     def setUp(self):
