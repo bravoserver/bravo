@@ -228,7 +228,7 @@ class World(LevelSerializer):
             return succeed(chunk)
 
         d = deferToAMPProcess(MakeChunk, x=x, z=z, seed=self.seed,
-            generators=configuration.get("bravo", "generators"))
+            generators=configuration.getlist("bravo", "generators"))
         self._pending_chunks[x, z] = d
 
         def pp(kwargs):
