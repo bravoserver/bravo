@@ -89,34 +89,32 @@ def simplex2(x, y):
     i = int(math.floor(x + s))
     j = int(math.floor(y + s))
     t = (i + j) * g2
-    unskewed = i - t, j - t
+    x -= i - t
+    y -= j - t
 
     # Clamp to the size of the simplex array.
-    i = i % SIZE
-    j = j % SIZE
+    i %= SIZE
+    j %= SIZE
 
     # Look up coordinates and gradients for each contributing point in the
     # simplex space.
-    coords[0] = x - unskewed[0], y - unskewed[1]
-    gradients[0] = p[i + p[j]] % 12
-
-    x, y = coords[0]
+    coords[0] = x, y
+    gradients[0] = p[i + p[j]]
     if x > y:
         coords[1] = x - 1 + g2, y     + g2
-        gradients[1] = p[i + 1 + p[j    ]] % 12
+        gradients[1] = p[i + 1 + p[j    ]]
     else:
         coords[1] = x     + g2, y - 1 + g2
-        gradients[1] = p[i     + p[j + 1]] % 12
+        gradients[1] = p[i     + p[j + 1]]
     coords[2] = x - 1 + 2 * g2, y - 1 + 2 * g2
-    gradients[2] = p[i + 1 + p[j + 1]] % 12
+    gradients[2] = p[i + 1 + p[j + 1]]
 
     # Do our summation.
     n = 0
     for coord, gradient in zip(coords, gradients):
         t = 0.5 - coord[0] * coord[0] - coord[1] * coord[1]
-        if t >= 0:
-            t *= t
-            n += t * t * dot(edges2[gradient], coord)
+        if t > 0:
+            n += t**4 * dot(edges2[gradient % 12], coord)
 
     # Where's this scaling factor come from?
     return n * 70
@@ -154,66 +152,66 @@ def simplex3(x, y, z):
     k = int(math.floor(z + s))
     t = (i + j + k) * g
     unskewed = i - t, j - t, k - t
+    x -= i - t
+    y -= j - t
+    z -= k - t
 
-    i = i % SIZE
-    j = j % SIZE
-    k = k % SIZE
-
-    coords[0] = x - unskewed[0], y - unskewed[1], z - unskewed[2]
-    gradients[0] = p[i + p[j + p[k]]] % 12
+    i %= SIZE
+    j %= SIZE
+    k %= SIZE
 
     # Do the coord and gradient lookups. Unrolled for speed and clarity.
     # These should be + 2 * g, but instead we do + f because we already have
     # it calculated. (2g == 2/6 == 1/3 == f)
-    x, y, z = coords[0]
+    coords[0] = x, y, z
+    gradients[0] = p[i + p[j + p[k]]]
     if x >= y >= z:
         coords[1] = x - 1 + g, y     + g, z     + g
         coords[2] = x - 1 + f, y - 1 + f, z     + f
 
-        gradients[1] = p[i + 1 + p[j     + p[k    ]]] % 12
-        gradients[2] = p[i + 1 + p[j + 1 + p[k    ]]] % 12
+        gradients[1] = p[i + 1 + p[j     + p[k    ]]]
+        gradients[2] = p[i + 1 + p[j + 1 + p[k    ]]]
     elif x >= z >= y:
         coords[1] = x - 1 + g, y     + g, z     + g
         coords[2] = x - 1 + f, y     + f, z - 1 + f
 
-        gradients[1] = p[i + 1 + p[j     + p[k    ]]] % 12
-        gradients[2] = p[i + 1 + p[j     + p[k + 1]]] % 12
+        gradients[1] = p[i + 1 + p[j     + p[k    ]]]
+        gradients[2] = p[i + 1 + p[j     + p[k + 1]]]
     elif z >= x >= y:
         coords[1] = x     + g, y     + g, z - 1 + g
         coords[2] = x - 1 + f, y     + f, z - 1 + f
 
-        gradients[1] = p[i     + p[j     + p[k + 1]]] % 12
-        gradients[2] = p[i + 1 + p[j     + p[k + 1]]] % 12
+        gradients[1] = p[i     + p[j     + p[k + 1]]]
+        gradients[2] = p[i + 1 + p[j     + p[k + 1]]]
     elif z >= y >= x:
         coords[1] = x     + g, y     + g, z - 1 + g
         coords[2] = x     + f, y - 1 + f, z - 1 + f
 
-        gradients[1] = p[i     + p[j     + p[k + 1]]] % 12
-        gradients[2] = p[i     + p[j + 1 + p[k + 1]]] % 12
+        gradients[1] = p[i     + p[j     + p[k + 1]]]
+        gradients[2] = p[i     + p[j + 1 + p[k + 1]]]
     elif y >= z >= x:
         coords[1] = x     + g, y - 1 + g, z     + g
         coords[2] = x     + f, y - 1 + f, z - 1 + f
 
-        gradients[1] = p[i     + p[j + 1 + p[k    ]]] % 12
-        gradients[2] = p[i     + p[j + 1 + p[k + 1]]] % 12
+        gradients[1] = p[i     + p[j + 1 + p[k    ]]]
+        gradients[2] = p[i     + p[j + 1 + p[k + 1]]]
     elif y >= x >= z:
         coords[1] = x     + g, y - 1 + g, z     + g
         coords[2] = x - 1 + f, y - 1 + f, z     + f
 
-        gradients[1] = p[i     + p[j + 1 + p[k    ]]] % 12
-        gradients[2] = p[i + 1 + p[j + 1 + p[k    ]]] % 12
+        gradients[1] = p[i     + p[j + 1 + p[k    ]]]
+        gradients[2] = p[i + 1 + p[j + 1 + p[k    ]]]
     else:
         raise Exception("You broke maths. Good work.")
 
     coords[3] = x - 1 + 0.5, y - 1 + 0.5, z - 1 + 0.5
-    gradients[3] = p[i + 1 + p[j + 1 + p[k + 1]]] % 12
+    gradients[3] = p[i + 1 + p[j + 1 + p[k + 1]]]
 
     n = 0
     for coord, gradient in zip(coords, gradients):
         t = 0.6 - coord[0] * coord[0] - coord[1] * coord[1] - coord[2] * coord[2]
-        if t >= 0:
-            t *= t
-            n += t * t * dot(edges2[gradient], coord)
+        if t > 0:
+            n += t**4 * dot(edges2[gradient % 12], coord)
 
     # Where's this scaling factor come from?
     return n * 32
