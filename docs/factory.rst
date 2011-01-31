@@ -1,5 +1,15 @@
-==============================
-``factory`` -- Twisted factory
-==============================
+==================================
+``factories`` -- Twisted factories
+==================================
 
-.. automodule:: bravo.factory
+The ``factories`` package hosts factories for various protocols.
+
+MineCraft Beta factories
+========================
+
+.. automodule:: bravo.factories.beta
+
+InfiniCraft factories
+=====================
+
+.. automodule:: bravo.factories.infini
