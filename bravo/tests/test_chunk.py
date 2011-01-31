@@ -105,25 +105,33 @@ class TestGenerators(unittest.TestCase):
 
     def test_beaches_range(self):
         # Prepare chunk.
-        for i in range(4):
-            self.chunk.blocks[i, i, 60 + i] = bravo.blocks.blocks["dirt"].slot
+        for i in range(5):
+            self.chunk.blocks[i, i, 61 + i] = bravo.blocks.blocks["dirt"].slot
         plugin = bravo.plugin.retrieve_named_plugins(
             bravo.ibravo.ITerrainGenerator, ["beaches"])[0]
         plugin.populate(self.chunk, 0)
-        for i in range(4):
-            self.assertEqual(self.chunk.get_block((i, 60 + i, i)),
+        for i in range(5):
+            self.assertEqual(self.chunk.get_block((i, 61 + i, i)),
                 bravo.blocks.blocks["sand"].slot,
-                "%d, %d, %d is wrong" % (i, 60 + i, i))
+                "%d, %d, %d is wrong" % (i, 61 + i, i))
 
     def test_beaches_immersed(self):
+        """
+        Test that beaches still generate properly around pre-existing water
+        tables.
+
+        This test is meant to ensure that the order of beaches and watertable
+        does not matter.
+        """
+
         # Prepare chunk.
         self.chunk.blocks[:, :, 60:64].fill(bravo.blocks.blocks["spring"].slot)
-        for i in range(4):
-            self.chunk.blocks[i, i, 60 + i] = bravo.blocks.blocks["dirt"].slot
+        for i in range(5):
+            self.chunk.blocks[i, i, 61 + i] = bravo.blocks.blocks["dirt"].slot
         plugin = bravo.plugin.retrieve_named_plugins(
             bravo.ibravo.ITerrainGenerator, ["beaches"])[0]
         plugin.populate(self.chunk, 0)
-        for i in range(4):
-            self.assertEqual(self.chunk.get_block((i, 60 + i, i)),
+        for i in range(5):
+            self.assertEqual(self.chunk.get_block((i, 61 + i, i)),
                 bravo.blocks.blocks["sand"].slot,
-                "%d, %d, %d is wrong" % (i, 60 + i, i))
+                "%d, %d, %d is wrong" % (i, 61 + i, i))
