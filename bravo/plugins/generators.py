@@ -209,8 +209,13 @@ class BeachGenerator(object):
         for x, z in product(xrange(16), repeat=2):
             y = chunk.heightmap[x, z]
 
-            if (60 <= y <= 64 and
-                (chunk.get_block((x, y + 1, z)) in self.above) and
+            while y and chunk.get_block((x, y, z)) in self.above:
+                y -= 1
+
+            if not 60 <= y <= 66:
+                continue
+
+            if (chunk.get_block((x, y + 1, z)) in self.above and
                 (chunk.get_block((x, y, z)) in self.replace)):
                 chunk.set_block((x, y, z), blocks["sand"].slot)
 

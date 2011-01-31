@@ -114,3 +114,16 @@ class TestGenerators(unittest.TestCase):
             self.assertEqual(self.chunk.get_block((i, 60 + i, i)),
                 bravo.blocks.blocks["sand"].slot,
                 "%d, %d, %d is wrong" % (i, 60 + i, i))
+
+    def test_beaches_immersed(self):
+        # Prepare chunk.
+        self.chunk.blocks[:, :, 60:64].fill(bravo.blocks.blocks["spring"].slot)
+        for i in range(4):
+            self.chunk.blocks[i, i, 60 + i] = bravo.blocks.blocks["dirt"].slot
+        plugin = bravo.plugin.retrieve_named_plugins(
+            bravo.ibravo.ITerrainGenerator, ["beaches"])[0]
+        plugin.populate(self.chunk, 0)
+        for i in range(4):
+            self.assertEqual(self.chunk.get_block((i, 60 + i, i)),
+                bravo.blocks.blocks["sand"].slot,
+                "%d, %d, %d is wrong" % (i, 60 + i, i))
