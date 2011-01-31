@@ -188,8 +188,6 @@ class BeachGenerator(object):
     beaches near all bodies of water regardless of size or composition; it
     will form beaches at large seashores and frozen lakes. It will even place
     beaches on one-block puddles.
-
-    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(IPlugin, ITerrainGenerator)
