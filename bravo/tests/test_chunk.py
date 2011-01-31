@@ -102,3 +102,15 @@ class TestGenerators(unittest.TestCase):
             else:
                 self.assertEqual(self.chunk.get_block((x, y, z)),
                     bravo.blocks.blocks["air"].slot)
+
+    def test_beaches_range(self):
+        # Prepare chunk.
+        for i in range(4):
+            self.chunk.blocks[i, i, 60 + i] = bravo.blocks.blocks["dirt"].slot
+        plugin = bravo.plugin.retrieve_named_plugins(
+            bravo.ibravo.ITerrainGenerator, ["beaches"])[0]
+        plugin.populate(self.chunk, 0)
+        for i in range(4):
+            self.assertEqual(self.chunk.get_block((i, 60 + i, i)),
+                bravo.blocks.blocks["sand"].slot,
+                "%d, %d, %d is wrong" % (i, 60 + i, i))
