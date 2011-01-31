@@ -198,8 +198,9 @@ class BeachGenerator(object):
 
     def populate(self, chunk, seed):
         """
-        Find water level and if the chunk at water level or water level minus
-        1 should be dirt, make it sand.
+        Find blocks within a height range and turn them into sand if they are
+        dirt and underwater or exposed to air. If the height range is near the
+        water table level, this creates fairly good beaches.
         """
 
         chunk.regenerate_heightmap()
@@ -210,7 +211,7 @@ class BeachGenerator(object):
             while y and chunk.get_block((x, y, z)) in self.above:
                 y -= 1
 
-            if not 60 <= y <= 66:
+            if not 60 < y < 66:
                 continue
 
             if (chunk.get_block((x, y + 1, z)) in self.above and
