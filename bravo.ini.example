@@ -66,3 +66,12 @@ path = example-world
 # details.
 #authenticator = online
 authenticator = offline
+
+# This option enables a permanent cache of geometry, which persists regardless
+# of the number of clients connected to this world. It greatly speeds up login
+# at the cost of memory usage. This option will also cause the world to
+# generate geometry even when no clients are connected, to keep the cache
+# full. It is highly recommended to keep this cache enabled. The level of
+# caching done is dependent on the number used; 0 is next to no caching, 10 is
+# more than enough caching.
+perm_cache = 3
