@@ -135,7 +135,8 @@ class World(LevelSerializer):
 
         rx = xrange(self.spawn[0] - size, self.spawn[0] + size)
         rz = xrange(self.spawn[2] - size, self.spawn[2] + size)
-        d = coiterate(assign(self.load_chunk(x, z)) for x, z in product(rx, rz))
+        d = coiterate(self.request_chunk(x, z).addCallback(assign)
+            for x, z in product(rx, rz))
         d.addCallback(lambda chaff: log.msg("Cache size is now %d" % size))
 
     def sort_chunks(self):
