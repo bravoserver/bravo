@@ -113,19 +113,30 @@ class World(LevelSerializer):
         log.msg("World started in %s" % self.folder)
         log.msg("Using Ampoule: %s" % async)
 
-    def enable_cache(self):
+    def enable_cache(self, size):
         """
-        Start up a rudimentary permanent cache.
+        Set the permanent cache size.
+
+        Changing the size of the cache sets off a series of events which will
+        empty or fill the cache to make it the proper size.
+
+        For reference, 3 is a large-enough size to completely satisfy the
+        Notchian client's login demands. 10 is enough to completely fill the
+        Notchian client's chunk buffer.
+
+        :param int size: The taxicab radius of the cache, in chunks
         """
+
+        log.msg("Setting cache size to %d..." % size)
 
         self.permanent_cache = set()
         def assign(chunk):
             self.permanent_cache.add(chunk)
 
-        rx = xrange(self.spawn[0] - 3, self.spawn[0] + 3)
-        rz = xrange(self.spawn[2] - 3, self.spawn[2] + 3)
+        rx = xrange(self.spawn[0] - size, self.spawn[0] + size)
+        rz = xrange(self.spawn[2] - size, self.spawn[2] + size)
         d = coiterate(assign(self.load_chunk(x, z)) for x, z in product(rx, rz))
-        d.addCallback(lambda chaff: log.msg("Cache is warmed up!"))
+        d.addCallback(lambda chaff: log.msg("Cache size is now %d" % size))
 
     def sort_chunks(self):
         """

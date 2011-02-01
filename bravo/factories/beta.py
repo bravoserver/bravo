@@ -64,8 +64,9 @@ class BravoFactory(Factory):
         world_folder = configuration.get("world %s" % name, "path")
         self.world = World(world_folder)
         self.world.factory = self
-        if configuration.getboolean("world %s" % name, "perm_cache"):
-            self.world.enable_cache()
+        if configuration.has_option("world %s" % name, "perm_cache"):
+            cache_level = configuration.getint("world %s" % name, "perm_cache")
+            self.world.enable_cache(cache_level)
 
         self.protocols = dict()
 
