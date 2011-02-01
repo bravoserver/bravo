@@ -22,7 +22,7 @@ setup(
 )
 
 try:
-    from twisted.plugins import getPlugins, IPlugin
+    from twisted.plugin import getPlugins, IPlugin
     list(getPlugins(IPlugin))
 except:
     pass
