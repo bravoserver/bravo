@@ -319,16 +319,16 @@ class Season(object):
 
 class Me(object):
     implements(IPlugin, IChatCommand)
-    
+
     def dispatch(self, username, says):
         say = " ".join(says)
         msg = "* %s %s" % (username,say)
         yield msg
-    
+
     def chat_command(self, factory, username, parameters):
         for i in self.dispatch(username, parameters):
             yield i
-    
+
     name = "me"
     aliases = tuple()
     usage = "<message>"
