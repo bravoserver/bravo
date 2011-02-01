@@ -91,6 +91,7 @@ class World(LevelSerializer):
         self.folder = FilePath(folder)
         if not self.folder.exists():
             self.folder.makedirs()
+            log.msg("Creating new world in %s" % self.folder)
 
         self.chunk_cache = weakref.WeakValueDictionary()
         self.dirty_chunk_cache = dict()
@@ -108,6 +109,9 @@ class World(LevelSerializer):
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
+
+        log.msg("World started in %s" % self.folder)
+        log.msg("Using Ampoule: %s" % async)
 
     def enable_cache(self):
         """
