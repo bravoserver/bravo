@@ -22,14 +22,14 @@ class TestCoordHandling(unittest.TestCase):
 class TestBitTwiddling(unittest.TestCase):
 
     def test_unpack_nibbles(self):
-        self.assertEqual(bravo.utilities.unpack_nibbles(["a"]), [6, 1])
+        self.assertEqual(bravo.utilities.unpack_nibbles(["a"]), [1, 6])
         self.assertEqual(bravo.utilities.unpack_nibbles("nibbles"),
-            [6, 14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 7, 3])
+            [14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 6, 3, 7])
 
     def test_pack_nibbles(self):
-        self.assertEqual(bravo.utilities.pack_nibbles(array([6, 1])), "a")
+        self.assertEqual(bravo.utilities.pack_nibbles(array([1, 6])), "a")
         self.assertEqual(
-            bravo.utilities.pack_nibbles(array([6, 14, 6, 9, 6, 2, 7, 3])),
+            bravo.utilities.pack_nibbles(array([14, 6, 9, 6, 2, 6, 3, 7])),
             "nibs")
 
 class TestStringMunging(unittest.TestCase):

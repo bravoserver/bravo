@@ -78,8 +78,10 @@ class TestLightmaps(unittest.TestCase):
 
         # Make sure that all of the blocks at the bottom of the ambient
         # lightmap are set to 15 (fully illuminated).
+        # Note that skylight of a solid block is 0, the important value
+        # is the skylight of the transluscent (usually air) block above it.
         for x, z in bravo.compat.product(xrange(16), repeat=2):
-            self.assertEqual(chunk.skylight[x, z, 0], 15,
+            self.assertEqual(chunk.skylight[x, z, 1], 15,
                 "Coordinate (%d, 0, %d) is bad!" % (x, z))
 
 class TestGenerators(unittest.TestCase):
