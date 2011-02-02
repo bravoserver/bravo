@@ -1,2 +1,5 @@
 *.pyc
+*.swp
+bravo.ini
+twistd.pid
 dropin.cache
