@@ -32,6 +32,13 @@ class TestBitTwiddling(unittest.TestCase):
             bravo.utilities.pack_nibbles(array([14, 6, 9, 6, 2, 6, 3, 7])),
             "nibs")
 
+    def test_nibble_reflexivity(self):
+        self.assertEqual("nibbles",
+            bravo.utilities.pack_nibbles(
+                array(bravo.utilities.unpack_nibbles("nibbles"))
+            )
+        )
+
 class TestStringMunging(unittest.TestCase):
 
     def test_sanitize_chat_color_control_at_end(self):
