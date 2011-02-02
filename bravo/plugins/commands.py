@@ -334,6 +334,35 @@ class Me(object):
     usage = "<message>"
     info = "/me like IRC"
 
+class Kick(object):
+    """
+    /kick those players who should be kicked.
+
+    With great power comes greate responsibility, use this wisely.
+    """
+
+    implements(IPlugin, IConsoleCommand)
+
+    def dispatch(self, factory, parameters):
+        player = parse_player(factory, parameters[0])
+        if len(parameters) == 1:
+            msg = "%s has been kicked." % parameters[0]
+        elif len(parameters) > 1:
+            reason = " ".join(parameters[1:])
+            msg = "%s has been kicked for %s" % (parameters[0],reason)
+        packet = make_packet("error", message=msg)
+        player.transport.write(packet)
+        yield msg
+
+    def console_command(self, factory, parameters):
+        for i in self.dispatch(factory, parameters):
+            yield i
+
+    name = "kick"
+    aliases = tuple()
+    usage = "<player> [<reason>]"
+    info = "Kicks <player> from the server"
+
 help = Help()
 list = List()
 time = Time()
@@ -346,3 +375,4 @@ save_on = SaveOn()
 write_config = WriteConfig()
 season = Season()
 me = Me()
+kick = Kick()
