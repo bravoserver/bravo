@@ -35,7 +35,7 @@ class Location(object):
         self.midair = False
 
     def __repr__(self):
-        return "<Location(%s, (%.6f, %.6f (+%.6f), %.6f), (%.2f, %.2f))>" % (
+        return "<Location(%s, (%d, %d (+%.6f), %d), (%.2f, %.2f))>" % (
             "flying" if self.midair else "not flying", self.x, self.y,
             self.stance - self.y, self.z, self.theta, self.phi)
 
@@ -63,13 +63,13 @@ class Location(object):
         """
 
         if hasattr(container, "position"):
-            self.x = container.position.x
-            self.y = container.position.stance
-            self.z = container.position.z
+            self.x = int(container.position.x)
+            self.y = int(container.position.stance)
+            self.z = int(container.position.z)
             # Stance is the current jumping position, plus a small offset of
             # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
             # or the anti-flying code kicks the client.
-            self.y = container.position.stance
+            self.stance = container.position.y
         if hasattr(container, "look"):
             self.yaw = container.look.rotation
             self.pitch = container.look.pitch
