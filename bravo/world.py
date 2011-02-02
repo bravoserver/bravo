@@ -284,7 +284,6 @@ class World(LevelSerializer):
         # caller.
         forked = Deferred()
         d.chainDeferred(forked)
-        forked.addCallback(lambda none: chunk)
         return forked
 
     def load_chunk(self, x, z):
