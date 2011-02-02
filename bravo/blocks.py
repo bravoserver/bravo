@@ -17,10 +17,11 @@ class Block(object):
         "ratio",
         "replace",
         "slot",
+        "dim",
     )
 
     def __init__(self, slot, name, drop=None, replace=0, ratio=1,
-            quantity=1):
+            quantity=1, dim=16):
         """
         A block in a chunk.
 
@@ -40,6 +41,9 @@ class Block(object):
                 The probability of this block dropping a block on destruction.
             quantity : int
                 The number of blocks dropped when this block is destroyed.
+            dim : int
+                How much light dims when passing through this kind of block.
+                Defaults to 16 = opaque block.
         """
 
         self.slot = slot
@@ -56,6 +60,7 @@ class Block(object):
         self.replace = replace
         self.ratio = ratio
         self.quantity = quantity
+        self.dim = dim
 
 class Item(object):
     """
@@ -369,3 +374,8 @@ for i, name in enumerate(special_item_names):
 glowing_blocks = {
     blocks["torch"].slot: 14,
 }
+
+blocks["air"].dim = 0
+blocks["water"].dim = 3
+blocks["spring"].dim = 3
+blocks["ice"].dim = 3

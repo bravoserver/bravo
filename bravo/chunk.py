@@ -1,7 +1,7 @@
 from numpy import int8, uint8, uint32
 from numpy import cast, empty, where, zeros
 
-from bravo.blocks import glowing_blocks
+from bravo.blocks import blocks, glowing_blocks
 from bravo.compat import product
 from bravo.entity import tile_entities
 from bravo.packets import make_packet
@@ -175,14 +175,19 @@ class Chunk(ChunkSerializer):
         The height map must be valid for this method to produce valid results.
         """
 
-        lightmap = zeros((16, 16, 128), dtype=uint32)
+        lightmap = zeros((16, 16, 128), dtype=uint8)
 
         for x, z in product(xrange(16), repeat=2):
-            y = self.heightmap[x, z]
+            light = 15
+            for y in range(127, -1, -1):
+                dim = blocks[self.blocks[x, z, y]].dim
+                light -= dim
+                if light <= 0:
+                    break
+                
+                lightmap[x, z, y] = light
 
-            composite_glow(lightmap, 14, x, y, z)
-
-        self.skylight = cast[uint8](lightmap.clip(0, 15))
+        self.skylight = lightmap.clip(0, 15)
 
     def regenerate(self):
         """
