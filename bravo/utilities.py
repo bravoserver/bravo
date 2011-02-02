@@ -48,8 +48,8 @@ def unpack_nibbles(l):
     retval = []
     for i in l:
         i = ord(i)
-        retval.append(i >> 4)
         retval.append(i & 15)
+        retval.append(i >> 4)
     return retval
 
 def pack_nibbles(a):
@@ -66,7 +66,7 @@ def pack_nibbles(a):
     a = a.reshape(-1, 2)
     if a.dtype != uint8:
         a = cast[uint8](a)
-    return ((a[:, 0] << 4) | a[:, 1]).tostring()
+    return ((a[:, 1] << 4) | a[:, 0]).tostring()
 
 # Trig.
 
