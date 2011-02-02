@@ -18,7 +18,7 @@ defaults = {
     "fancy_console": "true",
     "ampoule": "true",
     "serializer": "nbt",
-    "perm_cache": "yes",
+    "perm_cache": "0",
 }
 
 configuration = BravoConfigParser(defaults)
