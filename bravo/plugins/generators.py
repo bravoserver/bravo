@@ -230,14 +230,16 @@ class OreGenerator(object):
     def populate(self, chunk, seed):
         reseed(seed)
 
-        factor = 1 / 64
+        xzfactor = 1 / 16
+        yfactor = 1 / 32
 
         for x, z in product(xrange(16), repeat=2):
             for y in range(chunk.heightmap[x, z] + 1):
-                magx = (chunk.x * 16 + x) * factor
-                magz = (chunk.z * 16 + z) * factor
+                magx = (chunk.x * 16 + x) * xzfactor
+                magz = (chunk.z * 16 + z) * xzfactor
+                magy = y * yfactor
 
-                sample = octaves3(magx, magz, y, 3)
+                sample = octaves3(magx, magz, magy, 3)
 
                 if sample > 0.9999:
                     # Figure out what to place here.
