@@ -216,6 +216,21 @@ It doesn't install? Okay, maybe it installed, but I'm having issues!
  think you have found a bug, you can directly report it on the Github issue
  tracker as well.
 
+ Please, please, please read the installation instructions first, as well as
+ the comments in bravo.ini.example. I did not type them out so that they could
+ be ignored. :3
+
+I have an error involving construct!
+ Install Construct.
+
+I have an error involving JSON!
+ Install python-json, or python-simplejson, or turn off the JSON serializer in
+ bravo.ini.
+
+I have an error involving IRC/AMP/ListOf!
+ Your Twisted is too old. You really do need a 10.x or newer version of
+ Twisted.
+
 Who are you guys, anyway?
  Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
  is the visionary and provider of network traffic dumps. Ben Kero and Mark
