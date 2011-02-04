@@ -85,6 +85,10 @@ class BetaServerProtocol(Protocol):
             255: self.quit,
         }
 
+    # Low-level packet handlers
+    # Try not to hook these if possible, since they offer no convenient
+    # abstractions or protections.
+
     def ping(self, container):
         """
         Hook for ping packets.
@@ -177,8 +181,22 @@ class BetaServerProtocol(Protocol):
         """
 
     def quit(self, container):
+        """
+        Hook for quit packets.
+
+        By default, merely logs the quit message and drops the connection.
+
+        Even if the connection is not dropped, it will be lost anyway since
+        the client will close the connection. It's better to explicitly let it
+        go here than to have zombie protocols.
+        """
+
         log.msg("Client is quitting: %s" % container.message)
         self.transport.loseConnection()
+
+    # Twisted-level data handlers and methods
+    # Please don't override these needlessly, as they are pretty solid and
+    # shouldn't need to be touched.
 
     def dataReceived(self, data):
         self.buf += data
@@ -192,6 +210,9 @@ class BetaServerProtocol(Protocol):
                 log.err("Didn't handle parseable packet %d!" % header)
                 log.err(payload)
 
+    # State-change callbacks
+    # Feel free to override these.
+
     def challenged(self):
         self.state = STATE_CHALLENGED
 
@@ -202,7 +223,16 @@ class BetaServerProtocol(Protocol):
 
         self.state = STATE_AUTHENTICATED
 
+    # Convenience methods
+
     def error(self, message):
+        """
+        Error out.
+
+        This method sends ``message`` to the client as a descriptive error
+        message, then closes the connection.
+        """
+
         self.transport.write(make_error_packet(message))
         self.transport.loseConnection()
 
