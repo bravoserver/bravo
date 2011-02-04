@@ -85,6 +85,8 @@ class BetaServerProtocol(Protocol):
             255: self.quit,
         }
 
+        self._ping_loop = LoopingCall(self.update_ping)
+
     # Low-level packet handlers
     # Try not to hook these if possible, since they offer no convenient
     # abstractions or protections.
@@ -210,8 +212,12 @@ class BetaServerProtocol(Protocol):
                 log.err("Didn't handle parseable packet %d!" % header)
                 log.err(payload)
 
+    def connectionLost(self, reason):
+        if self._ping_loop.running:
+            self._ping_loop.stop()
+
     # State-change callbacks
-    # Feel free to override these.
+    # Feel free to override these, but call them at some point.
 
     def challenged(self):
         self.state = STATE_CHALLENGED
@@ -223,7 +229,17 @@ class BetaServerProtocol(Protocol):
 
         self.state = STATE_AUTHENTICATED
 
+        self._ping_loop.start(5)
+
     # Convenience methods
+
+    def update_ping(self):
+        """
+        Send a keepalive to the client.
+        """
+
+        packet = make_packet("ping")
+        self.transport.write(packet)
 
     def error(self, message):
         """
@@ -297,7 +313,6 @@ class BravoProtocol(BetaServerProtocol):
     chunk_tasks = None
 
     time_loop = None
-    ping_loop = None
 
     def __init__(self):
         BetaServerProtocol.__init__(self)
@@ -344,9 +359,6 @@ class BravoProtocol(BetaServerProtocol):
         self.transport.write(packet)
 
         self.send_initial_chunk_and_location()
-
-        self.ping_loop = LoopingCall(self.update_ping)
-        self.ping_loop.start(5)
 
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
@@ -715,17 +727,11 @@ class BravoProtocol(BetaServerProtocol):
             (self.disable_chunk(i, j) for i, j in discarded)
         ]
 
-    def update_ping(self):
-        packet = make_packet("ping")
-        self.transport.write(packet)
-
     def update_time(self):
         packet = make_packet("time", timestamp=int(self.factory.time))
         self.transport.write(packet)
 
     def connectionLost(self, reason):
-        if self.ping_loop:
-            self.ping_loop.stop()
         if self.time_loop:
             self.time_loop.stop()
 
