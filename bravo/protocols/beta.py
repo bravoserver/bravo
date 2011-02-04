@@ -379,10 +379,17 @@ class BravoProtocol(BetaServerProtocol):
         oldx, chaff, oldz, chaff = split_coords(self.player.location.x,
             self.player.location.z)
 
+        oldpos = (self.player.location.x, self.player.location.y,
+            self.player.location.z)
+
         self.player.location.load_from_packet(container)
 
         pos = (self.player.location.x, self.player.location.y,
             self.player.location.z)
+
+        if oldpos == pos:
+            # We haven't actually moved...
+            return
 
         x, chaff, z, chaff = split_coords(pos[0], pos[2])
 
