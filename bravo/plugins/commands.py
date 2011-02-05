@@ -99,7 +99,7 @@ class List(object):
             yield i
 
     name = "list"
-    aliases = tuple()
+    aliases = ("playerlist",)
     usage = ""
     info = "Lists the currently connected players"
 
