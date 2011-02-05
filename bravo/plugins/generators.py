@@ -380,7 +380,7 @@ class FloatGenerator(object):
             # rotated cosine.
             #scale = rotated_cosine(magx, magz, seed, 16 * 10)
             height *= 15
-            height = int(height + 30)
+            height = int(height + 42)
 
             column = chunk.get_column(x, z)
             column[:height + 1].fill([blocks["air"].slot])
