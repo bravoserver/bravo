@@ -260,22 +260,30 @@ class Inventory(InventorySerializer):
         if self.selected is not None and l[index] is not None:
             sprimary, ssecondary, scount = self.selected
             iprimary, isecondary, icount = l[index]
-            if ((sprimary, ssecondary) == (iprimary, isecondary) and
-                scount + icount <= 64):
-                if alternate:
-                    icount += 1
-                    scount -= 1
-                    l[index] = iprimary, isecondary, icount + 1
-                    if scount <= 0:
-                        self.selected = None
+            if (sprimary, ssecondary) == (iprimary, isecondary):
+                # both contain the same item
+                if scount + icount <= 64:
+                    # sum of all items is less than 64
+                    if alternate:
+                        icount += 1
+                        scount -= 1
+                        l[index] = iprimary, isecondary, icount
+                        if scount <= 0:
+                            self.selected = None
+                        else:
+                            self.selected = sprimary, ssecondary, scount
                     else:
-                        self.selected = sprimary, ssecondary, scount
+                        l[index] = iprimary, isecondary, scount + icount
+                        self.selected = None
                 else:
-                    l[index] = iprimary, isecondary, scount + icount
-                    self.selected = None
+                    # fill up slot to 64, move left overs to selection
+                    # valid for left and right mouse click
+                    l[index] = iprimary, isecondary, 64
+                    self.selected = sprimary, ssecondary, scount + icount - 64
             else:
-                if not alternate:
-                    self.selected, l[index] = l[index], self.selected
+                # Default case: just swap
+                # valid for left and right mouse click
+                self.selected, l[index] = l[index], self.selected
         else:
             if alternate:
                 if self.selected is not None:

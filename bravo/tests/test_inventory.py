@@ -78,6 +78,15 @@ class TestEquipmentInternals(unittest.TestCase):
         self.assertEqual(self.i.holdables[0], (3, 0, 1))
         self.assertEqual(self.i.holdables[1], (2, 0, 1))
 
+    def test_select_secondary_switch(self):
+        self.i.holdables[0] = (2, 0, 1)
+        self.i.holdables[1] = (3, 0, 1)
+        self.i.select(36)
+        self.i.select(37, True)
+        self.i.select(36, True)
+        self.assertEqual(self.i.holdables[0], (3, 0, 1))
+        self.assertEqual(self.i.holdables[1], (2, 0, 1))
+
     def test_select_outside_window(self):
         self.assertFalse(self.i.select(64537))
 
@@ -105,6 +114,40 @@ class TestEquipmentInternals(unittest.TestCase):
         self.i.select(36, True)
         self.assertEqual(self.i.holdables[0], (2, 0, 1))
         self.assertEqual(self.i.selected, (2, 0, 2))
+
+    def test_select_fill_up_stack(self):
+        # create two stacks
+        self.i.holdables[0] = (2, 0, 40)
+        self.i.holdables[1] = (2, 0, 30)
+        # select first one
+        self.i.select(36)
+        # first slot is now empty - holding 40 items
+        self.assertEqual(self.i.selected, (2, 0, 40))
+        # second stack is untouched
+        self.assertEqual(self.i.holdables[1], (2, 0, 30))
+        # select second stack with right click
+        self.i.select(37)
+        # sums up to more than 64 items - fill up the second stack
+        self.assertEqual(self.i.holdables[1], (2, 0, 64))
+        # still hold the left overs
+        self.assertEqual(self.i.selected, (2, 0, 6))
+
+    def test_select_secondary_fill_up_stack(self):
+        # create two stacks
+        self.i.holdables[0] = (2, 0, 40)
+        self.i.holdables[1] = (2, 0, 30)
+        # select first one
+        self.i.select(36)
+        # first slot is now empty - holding 40 items
+        self.assertEqual(self.i.selected, (2, 0, 40))
+        # second stack is untouched
+        self.assertEqual(self.i.holdables[1], (2, 0, 30))
+        # select second stack with left click
+        self.i.select(37, True)
+        # sums up to more than 64 items - fill up the second stack
+        self.assertEqual(self.i.holdables[1], (2, 0, 64))
+        # still hold the left overs
+        self.assertEqual(self.i.selected, (2, 0, 6))
 
 class TestCraftingWood(unittest.TestCase):
     """
