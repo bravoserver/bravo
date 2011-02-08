@@ -78,11 +78,21 @@ class TestEquipmentInternals(unittest.TestCase):
         self.assertEqual(self.i.holdables[0], (3, 0, 1))
         self.assertEqual(self.i.holdables[1], (2, 0, 1))
 
+    def test_select_outside_window(self):
+        self.assertFalse(self.i.select(64537))
+
     def test_select_secondary(self):
         self.i.holdables[0] = (2, 0, 4)
         self.i.select(36, True)
         self.assertEqual(self.i.holdables[0], (2, 0, 2))
         self.assertEqual(self.i.selected, (2, 0, 2))
+
+    def test_select_secondary_empty(self):
+        for i in range(0, 45):
+            self.assertFalse(self.i.select(i, True))
+
+    def test_select_secondary_outside_window(self):
+        self.assertFalse(self.i.select(64537), True)
 
     def test_select_secondary_selected(self):
         self.i.selected = (2, 0, 2)
@@ -351,7 +361,7 @@ class TestWorkbenchIntegration(unittest.TestCase):
 
     def setUp(self):
         self.i = bravo.inventory.Workbench()
-    
+
     def test_trivial(self):
         pass
 
