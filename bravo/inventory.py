@@ -220,7 +220,14 @@ class Inventory(InventorySerializer):
                                was done with a right-click
         """
 
-        l, index = self.container_for_slot(slot)
+        # Look up the container and offset.
+        # If, for any reason, our slot is out-of-bounds, then
+        # container_for_slot will return None. In that case, catch the error
+        # and return False.
+        try:
+            l, index = self.container_for_slot(slot)
+        except TypeError:
+            return False
 
         if l is self.crafted:
             # Special case for crafted output.
