@@ -10,6 +10,7 @@ from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
 from bravo.plugin import retrieve_plugins, retrieve_named_plugins
 from bravo.plugin import PluginException
 from bravo.packets import make_packet
+from bravo.utilities import split_time
 
 def parse_player(factory, name):
     if name in factory.protocols:
@@ -107,11 +108,8 @@ class Time(object):
     implements(IPlugin, IChatCommand, IConsoleCommand)
 
     def dispatch(self, factory):
-        # 24000 ticks to the day
-        hours, minutes = divmod(factory.time, 1000)
-        # 0000 is noon, not midnight
-        hours = hours + 12 % 24
-        minutes = minutes * 6 / 100
+        hours, minutes = split_time(factory.time)
+
         # Find seasons, and figure out which season we're in.
         seasons = retrieve_plugins(ISeason).values()
         seasons.sort(reverse=True, key=lambda season: season.day)

@@ -45,3 +45,8 @@ class TestStringMunging(unittest.TestCase):
         message = u"§0Test§f"
         sanitized = u"§0Test"
         self.assertEqual(bravo.utilities.sanitize_chat(message), sanitized)
+
+class TestNumberMunching(unittest.TestCase):
+
+    def test_split_time_noon(self):
+        self.assertEqual(bravo.utilities.split_time(0), (12, 0))

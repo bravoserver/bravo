@@ -190,3 +190,24 @@ def sanitize_chat(s):
         s = s[:-2]
 
     return s
+
+# Time manglers.
+
+def split_time(timestamp):
+    """
+    Turn an MC timestamp into hours and minutes.
+
+    The time is calculated by interpolating the MC clock over the standard
+    24-hour clock.
+
+    :param int timestamp: MC timestamp, in the range 0-24000
+    :returns: a tuple of hours and minutes on the 24-hour clock
+    """
+
+    # 24000 ticks to the day
+    hours, minutes = divmod(timestamp, 1000)
+    # 0000 is noon, not midnight
+    hours = hours + 12 % 24
+    minutes = minutes * 6 / 100
+
+    return hours, minutes
