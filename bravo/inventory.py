@@ -285,14 +285,18 @@ class Inventory(InventorySerializer):
                         self.selected = None
                     else:
                         self.selected = sprimary, ssecondary, scount - 1
+                elif l[index] is None:
+                    # Right click on empty inventory slot does nothing
+                    return False
                 else:
                     # Logically, l[index] is not None, but self.selected is.
                     lprimary, lsecondary, lcount = l[index]
                     scount = lcount // 2
                     scount, lcount = lcount - scount, scount
-                    if lcount >= 0:
+                    if lcount > 0:
                         l[index] = lprimary, lsecondary, lcount
                     else:
+                        # remove original stack if no item is left
                         l[index] = None
                     self.selected = lprimary, lsecondary, scount
             else:
