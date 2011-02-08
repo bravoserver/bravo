@@ -204,10 +204,11 @@ def split_time(timestamp):
     :returns: a tuple of hours and minutes on the 24-hour clock
     """
 
-    # 24000 ticks to the day
+    # 24000 ticks per day
     hours, minutes = divmod(timestamp, 1000)
-    # 0000 is noon, not midnight
-    hours = (hours + 12) % 24
+
+    # 6:00 on a Christmas morning
+    hours = (hours + 6) % 24
     minutes = minutes * 6 // 100
 
     return hours, minutes
