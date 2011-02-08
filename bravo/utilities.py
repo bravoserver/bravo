@@ -207,7 +207,7 @@ def split_time(timestamp):
     # 24000 ticks to the day
     hours, minutes = divmod(timestamp, 1000)
     # 0000 is noon, not midnight
-    hours = hours + 12 % 24
-    minutes = minutes * 6 / 100
+    hours = (hours + 12) % 24
+    minutes = minutes * 6 // 100
 
     return hours, minutes

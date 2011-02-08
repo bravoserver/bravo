@@ -48,5 +48,12 @@ class TestStringMunging(unittest.TestCase):
 
 class TestNumberMunching(unittest.TestCase):
 
-    def test_split_time_noon(self):
+    def test_split_time(self):
+        # Noon.
         self.assertEqual(bravo.utilities.split_time(0), (12, 0))
+        # Sunset.
+        self.assertEqual(bravo.utilities.split_time(6000), (18, 0))
+        # Midnight.
+        self.assertEqual(bravo.utilities.split_time(12000), (0, 0))
+        # Sunrise.
+        self.assertEqual(bravo.utilities.split_time(18000), (6, 0))
