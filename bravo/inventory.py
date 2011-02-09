@@ -26,7 +26,7 @@ def pad_to_stride(recipe, rstride, cstride):
 
     pad = (None,) * (cstride - rstride)
     g = grouper(rstride, recipe)
-    padded = list(next(g))
+    padded = list(g.next())
     for row in g:
         padded.extend(pad)
         padded.extend(row)

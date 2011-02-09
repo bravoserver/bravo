@@ -121,7 +121,7 @@ class Time(object):
                     factory.day + 360 - seasons[0].day, seasons[0].name)
             else:
                 # Grab the closest season, Price-is-Right-style.
-                season = next(s for s in seasons if s.day <= factory.day)
+                season = (s for s in seasons if s.day <= factory.day).next()
                 date = "%d (%d %s)" % (factory.day, factory.day - season.day,
                     season.name)
         else:
