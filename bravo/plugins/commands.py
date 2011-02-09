@@ -99,7 +99,7 @@ class List(object):
             yield i
 
     name = "list"
-    aliases = tuple()
+    aliases = ("playerlist",)
     usage = ""
     info = "Lists the currently connected players"
 
@@ -361,6 +361,23 @@ class Kick(object):
     usage = "<player> [<reason>]"
     info = "Kicks <player> from the server"
 
+class GetPos(object):
+
+    implements(IPlugin, IChatCommand)
+
+    def chat_command(self, factory, username, parameters):
+        player = parse_player(factory, username)
+        protocol = factory.protocols[username]
+        l = protocol.player.location
+        locMsg = "Your location is <%d, %d, %d>" % (l.x, l.y, l.z)
+        packet = make_packet("chat", message=locMsg)
+        player.transport.write(packet)
+
+    name = "getpos"
+    aliases = tuple()
+    usage = ""
+    info = "Hey0 /getpos"
+
 help = Help()
 list = List()
 time = Time()
@@ -374,3 +391,4 @@ write_config = WriteConfig()
 season = Season()
 me = Me()
 kick = Kick()
+getpos = GetPos()
