@@ -308,26 +308,23 @@ class CliffGenerator(object):
         Make smooth waves of stone.
         """
 
-        reseed(seed+5000)
+        reseed(seed + 5000)
         chunk.regenerate_heightmap()
 
         factor = 1 / 256
-        thre1 = randint(-10,0)
-        thre2 = randint(0,10)
+        thre1 = randint(-10, 0)
+        thre2 = randint(0, 10)
         for x, z in product(xrange(16), repeat=2):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
             height = octaves2(magx, magz, 9)
-            # Normalize around 70. Normalization is scaled according to a
-            # rotated cosine.
-            #scale = rotated_cosine(magx, magz, seed, 16 * 10)
             height *= 15
             height = int(height + 70)
-            if thre1<(chunk.heightmap[x,z] - height)<thre2:
+            if thre1 < (chunk.heightmap[x,z] - height) < thre2:
                 column = chunk.get_column(x, z)
-                column[:].fill([blocks["air"].slot])
-                column[:height + 1].fill([blocks["stone"].slot])
+                column[:].fill(blocks["air"].slot)
+                column[:height + 1].fill(blocks["stone"].slot)
 
     name = "cliffs"
 
@@ -346,44 +343,40 @@ class FloatGenerator(object):
         Eat moar stone
         """
 
-        reseed(seed+250)
+        reseed(seed + 250)
         chunk.regenerate_heightmap()
+
         # The world is full of things worth more than gold. But we dig the
         # stuff up and then bury it in a different hole. Where's the sense in
         # that? What are we, magpies? Is it all about the gleam? Good heavens,
         # potatoes are worth more than gold!
 
         factor = 1 / 256
-        thre1 = randint(-10,0)
-        thre2 = randint(0,2)
+        thre1 = randint(-10, 0)
+        thre2 = randint(0, 2)
         for x, z in product(xrange(16), repeat=2):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
             height = octaves2(magx, magz, 9)
-            # Normalize around 70. Normalization is scaled according to a
-            # rotated cosine.
-            #scale = rotated_cosine(magx, magz, seed, 16 * 10)
             height *= 15
             height = int(height + 70)
+            # XXX This line needs parens, maybe?
             if chunk.x or chunk.z > 2 or chunk.x + chunk.z < -2:
-                if -10<(chunk.heightmap[x,z] - height)<10:
+                if -10 < (chunk.heightmap[x,z] - height) < 10:
                     column = chunk.get_column(x, z)
-                    column[:].fill([blocks["air"].slot])
+                    column[:].fill(blocks["air"].slot)
 
         for x, z in product(xrange(16), repeat=2):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
             height = octaves2(magx, magz, 6)
-            # Normalize around 70. Normalization is scaled according to a
-            # rotated cosine.
-            #scale = rotated_cosine(magx, magz, seed, 16 * 10)
             height *= 15
             height = int(height + 42)
 
             column = chunk.get_column(x, z)
-            column[:height + 1].fill([blocks["air"].slot])
+            column[:height + 1].fill(blocks["air"].slot)
 
     name = "float"
 
