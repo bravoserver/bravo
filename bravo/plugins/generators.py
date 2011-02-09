@@ -361,9 +361,8 @@ class FloatGenerator(object):
             height = octaves2(magx, magz, 9)
             height *= 15
             height = int(height + 70)
-            # XXX This line needs parens, maybe?
-            if chunk.x or chunk.z > 2 or chunk.x + chunk.z < -2:
-                if -10 < (chunk.heightmap[x,z] - height) < 10:
+            if chunk.x > 2 or chunk.z > 2 or chunk.x + chunk.z < -2:
+                if abs(chunk.heightmap[x,z] - height) < 10:
                     column = chunk.get_column(x, z)
                     column[:].fill(blocks["air"].slot)
 
