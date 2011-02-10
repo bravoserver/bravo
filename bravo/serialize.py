@@ -3,7 +3,7 @@ from bravo.config import configuration
 if configuration.get("bravo", "serializer") in ("alpha", "nbt"):
     from bravo.serializers.alpha import *
 elif configuration.get("bravo", "serializer") in ("json",):
-    from bravo.serializers.json import *
+    from bravo.serializers.json_serializer import *
 else:
     print "Warning: Early start: Couldn't find preferred serializer %s" % (
         configuration.get("bravo", "serializer"))
