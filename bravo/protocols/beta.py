@@ -1,5 +1,6 @@
 from time import time
 from urlparse import urlunparse
+import math
 
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
@@ -568,6 +569,21 @@ class BravoProtocol(BetaServerProtocol):
     def wclose(self, container):
         if container.wid in self.windows:
             i = self.windows[container.wid]
+            if i.identifier == 1:
+                # closing workbench
+                # XXX: this should be re-factored into an extra utility function
+                # Do some trig to put the pickup one block ahead of the player
+                # in the direction they are facing.
+                l = self.player.location
+                x = l.x - math.sin(l.theta)
+                y = l.y + 1
+                z = l.z + math.cos(l.theta)
+                coords = (int(x * 32) + 16, int(y * 32) + 16, int(z * 32) + 16)
+                # loop over items left in workbench
+                for item in i.crafting:
+                    if item is None:
+                        continue
+                    self.factory.give(coords, (item[0], item[1]), item[2])
             del self.windows[container.wid]
             sync_inventories(i, self.player.inventory)
         elif container.wid == 0:
