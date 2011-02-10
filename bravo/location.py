@@ -1,4 +1,4 @@
-from math import degrees, radians
+from math import degrees, radians, pi
 
 from construct import Container
 
@@ -11,9 +11,9 @@ class Location(object):
 
     __slots__ = (
         "midair",
-        "phi",
+        "_phi",
         "stance",
-        "theta",
+        "_theta",
         "x",
         "_y",
         "z",
@@ -28,8 +28,8 @@ class Location(object):
 
         # Orientation, in radians.
         # Theta and phi are like the theta and phi of spherical coordinates.
-        self.theta = 0
-        self.phi = 0
+        self._theta = 0
+        self._phi = 0
 
         # Whether we are in the air.
         self.midair = False
@@ -49,11 +49,22 @@ class Location(object):
 
     def _yaw_setter(self, value):
         self.theta = radians(value)
-    yaw = property(lambda self: degrees(self.theta), _yaw_setter)
+    yaw = property(lambda self: int(round(degrees(self.theta))), _yaw_setter)
+
+    def _theta_setter(self, value):
+        # Radial clamp.
+        self._theta = value % (pi * 2)
+    theta = property(lambda self: self._theta, _theta_setter)
 
     def _pitch_setter(self, value):
         self.phi = radians(value)
-    pitch = property(lambda self: degrees(self.phi), _pitch_setter)
+    pitch = property(lambda self: int(round(degrees(self.phi))),
+        _pitch_setter)
+
+    def _phi_setter(self, value):
+        # Radial clamp.
+        self._phi = value % (pi * 2)
+    phi = property(lambda self: self._phi, _phi_setter)
 
     def load_from_packet(self, container):
         """
