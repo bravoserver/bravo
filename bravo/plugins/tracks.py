@@ -76,16 +76,16 @@ class Tracks(object):
             return False, builddata
         y += 1
         # Use facing direction of player to set correct track tile
-        yaw = player.location.yaw % 360
-        if yaw > 30 and yaw < 60:
+        yaw = player.location.yaw
+        if 30 < yaw < 60:
             metadata = CORNER_SE
-        elif yaw > 120 and yaw < 150:
+        elif 120 < yaw < 150:
             metadata = CORNER_SW
-        elif yaw > 210 and yaw < 240:
+        elif 210 < yaw < 240:
             metadata = CORNER_NW
-        elif yaw > 300 and yaw < 330:
+        elif 300 < yaw < 330:
             metadata = CORNER_NE
-        elif (yaw >= 60 and yaw <= 120) or (yaw >= 240 and yaw <= 300):
+        elif 60 <= yaw <= 120 or 240 <= yaw <= 300:
             # north or south
             if world.get_block((x - 1, y + 1, z)) == blocks["tracks"].slot:
                 metadata = ASCEND_N
@@ -100,7 +100,7 @@ class Tracks(object):
             if world.get_block((x + 1, y - 1, z)) == blocks["tracks"].slot:
                 if world.get_metadata((x + 1, y - 1, z)) == FLAT_NS:
                     world.set_metadata((x + 1, y - 1, z), ASCEND_N)
-        else:
+        else: # (0, 30) or (330, 0)
             # east or west
             if world.get_block((x, y + 1, z + 1)) == blocks["tracks"].slot:
                 metadata = ASCEND_W
