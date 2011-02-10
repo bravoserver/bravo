@@ -151,7 +151,6 @@ def simplex3(x, y, z):
     j = int(math.floor(y + s))
     k = int(math.floor(z + s))
     t = (i + j + k) * g
-    unskewed = i - t, j - t, k - t
     x -= i - t
     y -= j - t
     z -= k - t
