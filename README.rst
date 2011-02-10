@@ -233,9 +233,8 @@ I have an error involving JSON!
  Install python-json, or python-simplejson, or turn off the JSON serializer in
  bravo.ini.
 
-I have an error involving IRC/AMP/ListOf!
- Your Twisted is too old. You really do need a 10.x or newer version of
- Twisted.
+I have an error involving IRC/AMP/ListOf/endpoints!
+ Your Twisted is too old. You really do need Twisted 10.1 or newer.
 
 Who are you guys, anyway?
  Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
