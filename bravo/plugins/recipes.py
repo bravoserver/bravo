@@ -385,7 +385,7 @@ class Sword(Recipe):
 
 class Bow(Recipe):
 
-    dimensions = (3,3)
+    dimensions = (3, 3)
 
     name = "bow"
 
@@ -450,7 +450,7 @@ class Track(Recipe):
         None,
         (items["iron-ingot"].key, 1),
     )
-    provides = (blocks["tracks"].key, 4)
+    provides = (blocks["tracks"].key, 16)
 
 #Mechanism
 class Door(Recipe):
