@@ -171,7 +171,7 @@ And then run the TAC to start Bravo!
 
 ::
 
- $ twisted -ny bravo.tac
+ $ twistd -ny bravo.tac
 
 Alternatively, a Twisted plugin is provided as well:
 
