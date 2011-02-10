@@ -17,7 +17,7 @@ tracks_allowed_on = set([
     blocks["iron-ore"].slot,
     blocks["coal-ore"].slot,
     blocks["log"].slot,                 # XXX: not sure
-    blocks["glass"].slot,               
+    blocks["glass"].slot,
     blocks["lapis-lazuli-ore"].slot,    # not on Notchian server - yeah!
     blocks["lapis-lazuli"].slot,
     blocks["sandstone"].slot,
