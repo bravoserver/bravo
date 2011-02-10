@@ -37,6 +37,7 @@ class Replace(object):
 
     def dig_hook(self, factory, chunk, x, y, z, block):
         chunk.set_block((x, y, z), block.replace)
+        chunk.set_metadata((x, y, z), 0)
 
     name = "replace"
 
