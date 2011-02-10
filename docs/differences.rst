@@ -40,3 +40,15 @@ secondary key, keeping items with differing amounts of damage from occupying
 the same slot. This avoids an entire class of bugs, where items can be
 stacked and unstacked to change the amount of damage on them, which have
 historically plagued the Notchian codebase.
+
+Minecarts
+=========
+
+The following blocks may have minecart tracks placed on them in Bravo, but not
+in the Notchian server:
+
+ * Lapis lazuli ore
+ * Lightstone
+ * Log
+ * Soil
+ * Wool
