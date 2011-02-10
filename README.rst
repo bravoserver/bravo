@@ -96,7 +96,7 @@ external libraries from PyPI:
 
  * construct, version 2.03 or later
  * numpy
- * Twisted, version 10.0 or later
+ * Twisted, version 10.1 or later
 
 **Important: Bravo's installation process is currently broken. Until this
 notice is removed, please don't install, just run directly from the git
@@ -117,6 +117,12 @@ If you are tight on space, you can install only part of Twisted.
 ::
 
  $ sudo aptitude install python-numpy python-twisted-core python-twisted-bin python-twisted-conch
+
+A Note about Ubuntu
+^^^^^^^^^^^^^^^^^^^
+
+You will need Ubuntu 10.10, for Twisted 10.1. Ubuntu 10.04 LTS is not
+suitable, unless the Twisted 10.1 package from Ubuntu 10.10 is installed.
 
 Fedora
 ------
