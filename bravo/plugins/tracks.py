@@ -32,7 +32,6 @@ tracks_allowed_on = set([
     blocks["sand"].slot,
     blocks["sandstone"].slot,
     blocks["slow-sand"].slot,
-    blocks["snow"].slot,              # XXX: depends on ground underneath
     blocks["soil"].slot,              # XXX: not sure
     blocks["stone"].slot,
     blocks["wood"].slot,
