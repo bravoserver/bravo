@@ -5,38 +5,38 @@ from bravo.blocks import blocks
 from bravo.ibravo import IBuildHook, IDigHook
 
 tracks_allowed_on = set([
-    blocks["stone"].slot,
-    blocks["grass"].slot,
-    blocks["dirt"].slot,
-    blocks["cobblestone"].slot,
-    blocks["wood"].slot,
     blocks["bedrock"].slot,
-    blocks["sand"].slot,
-    blocks["gravel"].slot,
-    blocks["gold-ore"].slot,
-    blocks["iron-ore"].slot,
-    blocks["coal-ore"].slot,
-    blocks["log"].slot,                 # XXX: not sure
-    blocks["glass"].slot,
-    blocks["lapis-lazuli-ore"].slot,    # not on Notchian server - yeah!
-    blocks["lapis-lazuli"].slot,
-    blocks["sandstone"].slot,
-    blocks["wool"].slot,                # for compatibility w/ Minecart Mania!
-    blocks["gold"].slot,
-    blocks["iron"].slot,
     blocks["brick"].slot,
-    blocks["mossy-cobblestone"].slot,   # what a waste!
-    blocks["obsidian"].slot,
-    blocks["diamond-ore"].slot,
-    blocks["diamond"].slot,
-    blocks["soil"].slot,                # XXX: not sure
-    blocks["redstone-ore"].slot,
-    blocks["glowing-redstone-ore"].slot,
-    blocks["snow"].slot,                # XXX: depends on ground underneath
-    blocks["clay"].slot,
     blocks["brimstone"].slot,
+    blocks["clay"].slot,
+    blocks["coal-ore"].slot,
+    blocks["cobblestone"].slot,
+    blocks["diamond"].slot,
+    blocks["diamond-ore"].slot,
+    blocks["dirt"].slot,
+    blocks["glass"].slot,
+    blocks["glowing-redstone-ore"].slot,
+    blocks["gold"].slot,
+    blocks["gold-ore"].slot,
+    blocks["grass"].slot,
+    blocks["gravel"].slot,
+    blocks["iron"].slot,
+    blocks["iron-ore"].slot,
+    blocks["lapis-lazuli"].slot,
+    blocks["lapis-lazuli-ore"].slot,  # not on Notchian server - yeah!
+    blocks["lightstone"].slot,        # XXX: not sure
+    blocks["log"].slot,               # XXX: not sure
+    blocks["mossy-cobblestone"].slot, # what a waste!
+    blocks["obsidian"].slot,
+    blocks["redstone-ore"].slot,
+    blocks["sand"].slot,
+    blocks["sandstone"].slot,
     blocks["slow-sand"].slot,
-    blocks["lightstone"].slot,          # XXX: not sure
+    blocks["snow"].slot,              # XXX: depends on ground underneath
+    blocks["soil"].slot,              # XXX: not sure
+    blocks["stone"].slot,
+    blocks["wood"].slot,
+    blocks["wool"].slot,              # for compatibility w/ Minecart Mania!
 ])
 
 # metadata
