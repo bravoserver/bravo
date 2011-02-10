@@ -23,19 +23,19 @@ tracks_allowed_on = set([
     blocks["iron"].slot,
     blocks["iron-ore"].slot,
     blocks["lapis-lazuli"].slot,
-    blocks["lapis-lazuli-ore"].slot,  # not on Notchian server - yeah!
-    blocks["lightstone"].slot,        # XXX: not sure
-    blocks["log"].slot,               # XXX: not sure
+    blocks["lapis-lazuli-ore"].slot,  # Bravo only -- not Notchy
+    blocks["lightstone"].slot,        # Bravo only -- not Notchy
+    blocks["log"].slot,               # Bravo only -- not Notchy
     blocks["mossy-cobblestone"].slot, # what a waste!
     blocks["obsidian"].slot,
     blocks["redstone-ore"].slot,
     blocks["sand"].slot,
     blocks["sandstone"].slot,
     blocks["slow-sand"].slot,
-    blocks["soil"].slot,              # XXX: not sure
+    blocks["soil"].slot,              # Bravo only -- not Notchy
     blocks["stone"].slot,
     blocks["wood"].slot,
-    blocks["wool"].slot,              # for compatibility w/ Minecart Mania!
+    blocks["wool"].slot,              # Minecraft Mania compatibility
 ])
 
 # metadata
