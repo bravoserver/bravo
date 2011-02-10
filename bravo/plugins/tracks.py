@@ -39,8 +39,8 @@ tracks_allowed_on = set([
 ])
 
 # metadata
-FLAT_EW = 0x0 # flat track going east-west
-FLAT_NS = 0x1 # flat track going north-south
+FLAT_EW = 0x0   # flat track going east-west
+FLAT_NS = 0x1   # flat track going north-south
 ASCEND_S = 0x2  # track ascending to the south
 ASCEND_N = 0x3  # track ascending to the north
 ASCEND_E = 0x4  # track ascending to the east
