@@ -133,7 +133,10 @@ class TestPacketIntegration(unittest.TestCase):
         Test whether we are affected by an older Construct bug.
         """
 
-        packet = "\x0d@\x1a\x00\x00\x00\x00\x00\x00@P\xcf\\)\x00\x00\x00@Pg\xae\x14\x80\x00\x00@\x1e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        packet = """
+        DUAaAAAAAAAAQFDPXCkAAABAUGeuFIAAAEAeAAAAAAAAAAAAAAAAAAAA
+        """.decode("base64")
+
         header, payload = bravo.packets.parse_packets(packet)[0][0]
         self.assertEqual(header, 13)
         self.assertEqual(payload.position.x, 6.5)
