@@ -12,6 +12,23 @@ class PluginException(Exception):
     Signal an error encountered during plugin handling.
     """
 
+def add_plugin_edges(d):
+    """
+    Mirror edges to all plugins in a dictionary.
+    """
+
+    for plugin in d.itervalues():
+        plugin.after = set(plugin.after)
+        plugin.before = set(plugin.before)
+
+    for name, plugin in d.iteritems():
+        for edge in plugin.before:
+            d[edge].after.add(name)
+        for edge in plugin.after:
+            d[edge].before.add(name)
+
+    return d
+
 def retrieve_plugins(interface, cached=True, cache={}):
     """
     Look up all plugins for a certain interface.
