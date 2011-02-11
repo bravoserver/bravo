@@ -2,6 +2,7 @@ import functools
 
 from construct import Struct, Container, Embed, Enum, MetaField
 from construct import MetaArray, If, Switch, Const, Peek
+from construct import StringAdapter, RepeatUntil, Field
 from construct import OptionalGreedyRange
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
@@ -38,6 +39,10 @@ items = Struct("items",
         )),
     ),
 )
+
+# Metadata subconstruct.
+metadata = StringAdapter(RepeatUntil(lambda obj, ctx: obj == "\x7f",
+    Field("metadata", 1)))
 
 # Build faces, used during dig and build.
 faces = {
@@ -169,6 +174,7 @@ packets = {
         SBInt32("z"),
         SBInt8("yaw"),
         SBInt8("pitch"),
+        metadata,
     ),
     25: Struct("painting",
         UBInt32("eid"),
@@ -224,6 +230,10 @@ packets = {
     39: Struct("attach",
         UBInt32("eid"),
         UBInt32("vid"),
+    ),
+    40: Struct("metadata",
+        UBInt32("eid"),
+        metadata,
     ),
     50: Struct("prechunk",
         SBInt32("x"),
@@ -428,6 +438,7 @@ packets_by_name = {
     "teleport"           : 34,
     "status"             : 38,
     "attach"             : 39,
+    "metadata"           : 40,
     "prechunk"           : 50,
     "chunk"              : 51,
     "batch"              : 52,
