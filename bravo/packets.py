@@ -192,9 +192,9 @@ packets = {
     ),
     31: Struct("entity-position",
         UBInt32("eid"),
-        UBInt8("x"),
-        UBInt8("y"),
-        UBInt8("z")
+        SBInt8("x"),
+        SBInt8("y"),
+        SBInt8("z")
     ),
     32: Struct("entity-orientation",
         UBInt32("eid"),
@@ -203,9 +203,9 @@ packets = {
     ),
     33: Struct("entity-location",
         UBInt32("eid"),
-        UBInt8("x"),
-        UBInt8("y"),
-        UBInt8("z"),
+        SBInt8("x"),
+        SBInt8("y"),
+        SBInt8("z"),
         UBInt8("rotation"),
         UBInt8("pitch")
     ),
