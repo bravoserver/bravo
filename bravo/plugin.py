@@ -111,3 +111,15 @@ def retrieve_named_plugins(interface, names):
     except KeyError, e:
         raise PluginException("Couldn't find plugin %s for interface %s!" %
             (e.args[0], interface))
+
+def retrieve_sorted_plugins(interface, names):
+    """
+    Look up a list of plugins, sorted by interdependencies.
+    """
+
+    d = retrieve_plugins(interface)
+    try:
+        return sort_plugins([d[name] for name in names])
+    except KeyError, e:
+        raise PluginException("Couldn't find plugin %s for interface %s!" %
+            (e.args[0], interface))
