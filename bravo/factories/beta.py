@@ -11,7 +11,7 @@ from bravo.config import configuration
 from bravo.entity import Pickup, Player
 from bravo.ibravo import IAuthenticator, ISeason, ITerrainGenerator
 from bravo.packets import make_packet
-from bravo.plugin import retrieve_named_plugins
+from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
 from bravo.protocols.beta import BravoProtocol
 from bravo.utilities import chat_name, sanitize_chat
 from bravo.world import World
@@ -84,7 +84,7 @@ class BravoFactory(Factory):
         self.login_hook = selected.login
 
         generators = configuration.getlist("bravo", "generators")
-        generators = retrieve_named_plugins(ITerrainGenerator, generators)
+        generators = retrieve_sorted_plugins(ITerrainGenerator, generators)
 
         log.msg("Using generators %s" % ", ".join(i.name for i in generators))
         self.world.pipeline = generators

@@ -50,7 +50,7 @@ class IAuthenticator(IBravoPlugin):
         on whether the login was successful.
         """
 
-class ITerrainGenerator(IBravoPlugin):
+class ITerrainGenerator(ISortedPlugin):
     """
     Interface for terrain generators.
     """

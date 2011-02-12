@@ -28,6 +28,9 @@ class BoringGenerator(object):
 
     name = "boring"
 
+    before = tuple()
+    after = tuple()
+
 class SimplexGenerator(object):
     """
     Generates waves of stone.
@@ -70,6 +73,9 @@ class SimplexGenerator(object):
 
     name = "simplex"
 
+    before = tuple()
+    after = tuple()
+
 class ComplexGenerator(object):
     """
     Generate islands of stone.
@@ -106,6 +112,9 @@ class ComplexGenerator(object):
 
     name = "complex"
 
+    before = tuple()
+    after = tuple()
+
 
 class WaterTableGenerator(object):
     """
@@ -127,6 +136,9 @@ class WaterTableGenerator(object):
             chunk.blocks[:, :, :64])
 
     name = "watertable"
+
+    before = tuple()
+    after = tuple()
 
 class ErosionGenerator(object):
     """
@@ -154,6 +166,9 @@ class ErosionGenerator(object):
 
     name = "erosion"
 
+    before = tuple()
+    after = tuple()
+
 class GrassGenerator(object):
     """
     Find exposed dirt and grow grass.
@@ -179,6 +194,9 @@ class GrassGenerator(object):
                         chunk.set_block((x, y, z), blocks["grass"].slot)
 
     name = "grass"
+
+    before = tuple()
+    after = tuple()
 
 class BeachGenerator(object):
     """
@@ -219,6 +237,9 @@ class BeachGenerator(object):
                 chunk.set_block((x, y, z), blocks["sand"].slot)
 
     name = "beaches"
+
+    before = tuple()
+    after = tuple()
 
 class OreGenerator(object):
     """
@@ -270,6 +291,9 @@ class OreGenerator(object):
 
     name = "ore"
 
+    before = tuple()
+    after = tuple()
+
 class SafetyGenerator(object):
     """
     Generates terrain features essential for the safety of clients.
@@ -290,6 +314,9 @@ class SafetyGenerator(object):
         chunk.blocks[:, :, 127].fill(blocks["air"].slot)
 
     name = "safety"
+
+    before = tuple()
+    after = tuple()
 
 class CliffGenerator(object):
     """
@@ -328,6 +355,8 @@ class CliffGenerator(object):
 
     name = "cliffs"
 
+    before = tuple()
+    after = tuple()
 
 class FloatGenerator(object):
     """
@@ -378,6 +407,9 @@ class FloatGenerator(object):
             column[:height + 1].fill(blocks["air"].slot)
 
     name = "float"
+
+    before = tuple()
+    after = tuple()
 
 float = FloatGenerator()
 cliffs = CliffGenerator()
