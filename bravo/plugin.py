@@ -80,7 +80,7 @@ def retrieve_plugins(interface, cached=True, cache={}):
             d[p.name] = p
         except BrokenImplementation, bi:
             if hasattr(p, "name"):
-                log.msg(" ( ~~) Plugin %s is missing attribute \"\"!" %
+                log.msg(" ( ~~) Plugin %s is missing attribute %r!" %
                     (p.name, bi.name))
             else:
                 log.msg(" ( >&) Plugin %s is unnamed and useless!" % p)
