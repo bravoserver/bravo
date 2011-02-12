@@ -51,6 +51,9 @@ class Fallables(object):
 
     name = "fallables"
 
+    before = tuple()
+    after = tuple()
+
 class AlphaSandGravel(Fallables):
     """
     Notch-style falling sand and gravel.

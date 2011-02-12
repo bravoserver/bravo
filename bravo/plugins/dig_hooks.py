@@ -26,6 +26,9 @@ class AlphaSnow(object):
 
     name = "alpha_snow"
 
+    before = tuple()
+    after = tuple()
+
 class Replace(object):
     """
     Change a block to another block when dug out.
@@ -40,6 +43,9 @@ class Replace(object):
         chunk.set_metadata((x, y, z), 0)
 
     name = "replace"
+
+    before = tuple()
+    after = tuple()
 
 class Give(object):
     """
@@ -68,6 +74,9 @@ class Give(object):
             factory.give(coords, (block.drop, 0), block.quantity)
 
     name = "give"
+
+    before = tuple()
+    after = tuple()
 
 alpha_snow = AlphaSnow()
 replace = Replace()

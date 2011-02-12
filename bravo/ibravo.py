@@ -155,7 +155,7 @@ class ISeason(IBravoPlugin):
         Day of the year on which to switch to this season.
         """)
 
-class IBuildHook(IBravoPlugin):
+class IBuildHook(ISortedPlugin):
     """
     Hook for actions to be taken after a block is placed.
     """
@@ -192,7 +192,7 @@ class IBuildHook(IBravoPlugin):
         :returns: tuple of build data and whether subsequent hooks will run
         """
 
-class IDigHook(IBravoPlugin):
+class IDigHook(ISortedPlugin):
     """
     Hook for actions to be taken after a block is dug up.
     """

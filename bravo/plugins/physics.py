@@ -103,6 +103,9 @@ class Fluid(object):
     def dig_hook(self, factory, chunk, x, y, z, block):
         pass
 
+    before = tuple()
+    after = tuple()
+
 class Water(Fluid):
 
     spring = blocks["spring"].slot
@@ -182,6 +185,9 @@ class Redstone(object):
         pass
 
     name = "redstone"
+
+    before = tuple()
+    after = tuple()
 
 water = Water()
 lava = Lava()

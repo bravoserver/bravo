@@ -40,6 +40,9 @@ class Torch(object):
 
     name = "torch"
 
+    before = tuple()
+    after = tuple()
+
 class Ladder(object):
     """
     Update metadata for ladders.
@@ -69,6 +72,9 @@ class Ladder(object):
         return True, builddata
 
     name = "ladder"
+
+    before = tuple()
+    after = tuple()
 
 class Tile(object):
     """
@@ -126,6 +132,9 @@ class Tile(object):
 
     name = "tile"
 
+    before = tuple()
+    after = tuple()
+
 class Build(object):
     """
     Place a block in a given location.
@@ -171,6 +180,9 @@ class Build(object):
 
     name = "build"
 
+    before = tuple()
+    after = tuple()
+
 class BuildSnow(object):
     """
     Makes building on snow behave correctly.
@@ -192,6 +204,9 @@ class BuildSnow(object):
         return True, builddata
 
     name = "build_snow"
+
+    before = tuple()
+    after = tuple()
 
 torch = Torch()
 tile = Tile()

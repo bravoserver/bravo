@@ -150,4 +150,7 @@ class Tracks(object):
             pixcoords = ((x + dx) * 32 + 16, (y + 1) * 32, (z + dz) * 32 + 16)
             factory.give(pixcoords, (blocks["tracks"].slot, 0), 1)
 
+    before = tuple()
+    after = tuple()
+
 tracks = Tracks()
