@@ -50,15 +50,27 @@ class TestEquipmentInternals(unittest.TestCase):
 
     def test_consume_holdable(self):
         self.i.holdables[0] = (2, 0, 1)
-        self.assertTrue(self.i.consume((2, 0)))
+        self.assertTrue(self.i.consume((2, 0), 0))
         self.assertEqual(self.i.holdables[0], None)
 
     def test_consume_holdable_empty(self):
-        self.assertFalse(self.i.consume((2, 0)))
+        self.assertFalse(self.i.consume((2, 0), 0))
 
     def test_consume_holdable_second_slot(self):
         self.i.holdables[1] = (2, 0, 1)
-        self.assertTrue(self.i.consume((2, 0)))
+        self.assertTrue(self.i.consume((2, 0), 1))
+        self.assertEqual(self.i.holdables[1], None)
+
+    def test_consume_holdable_multiple_stacks(self):
+        self.i.holdables[0] = (2, 0, 1)
+        self.i.holdables[1] = (2, 0, 1)
+        # consume second stack
+        self.assertTrue(self.i.consume((2, 0), 1))
+        self.assertEqual(self.i.holdables[0], (2, 0, 1))
+        self.assertEqual(self.i.holdables[1], None)
+        # consume second stack a second time
+        self.assertFalse(self.i.consume((2, 0), 1))
+        self.assertEqual(self.i.holdables[0], (2, 0, 1))
         self.assertEqual(self.i.holdables[1], None)
 
     def test_select_stack(self):

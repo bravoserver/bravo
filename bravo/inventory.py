@@ -182,28 +182,30 @@ class Inventory(InventorySerializer):
 
         return False
 
-    def consume(self, item):
+    def consume(self, item, slot):
         """
         Attempt to remove a used holdable from the inventory.
 
         A return value of ``False`` indicates that there were no holdables of
-        the given type to consume.
+        the given type and slot to consume.
 
         :param tuple item: a key representing the type of the item
+        :param int slot: which slot was selected
         :returns: whether the item was successfully removed
         """
 
-        for i, t in enumerate(self.holdables):
-            if t is not None:
-                primary, secondary, count = t
+        try:
+            primary, secondary, count = self.holdables[slot]
+        except:
+            return False
 
-                if (primary, secondary) == item and count:
-                    count -= 1
-                    if count:
-                        self.holdables[i] = primary, secondary, count
-                    else:
-                        self.holdables[i] = None
-                    return True
+        if (primary, secondary) == item and count:
+            count -= 1
+            if count:
+                self.holdables[slot] = primary, secondary, count
+            else:
+                self.holdables[slot] = None
+            return True
 
         return False
 

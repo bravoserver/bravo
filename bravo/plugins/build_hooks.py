@@ -143,7 +143,7 @@ class Build(object):
             return True, builddata
 
         # Make sure we can remove it from the inventory first.
-        if not player.inventory.consume((block.slot, 0)):
+        if not player.inventory.consume((block.slot, 0), player.equipped):
             return True, builddata
 
         # Offset coords according to face.
