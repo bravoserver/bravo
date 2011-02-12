@@ -1,6 +1,17 @@
 from zope.interface import Interface, Attribute
 
-class IAuthenticator(Interface):
+class IBravoPlugin(Interface):
+    """
+    Interface for plugins.
+
+    This interface stores common metadata used during plugin discovery.
+    """
+
+    name = Attribute("""
+        The name of the plugin.
+        """)
+
+class IAuthenticator(IBravoPlugin):
     """
     Interface for authenticators.
 
@@ -23,11 +34,7 @@ class IAuthenticator(Interface):
         on whether the login was successful.
         """
 
-    name = Attribute("""
-        The name of the plugin.
-        """)
-
-class ITerrainGenerator(Interface):
+class ITerrainGenerator(IBravoPlugin):
     """
     Interface for terrain generators.
     """
@@ -40,17 +47,7 @@ class ITerrainGenerator(Interface):
         that the chunk may already be partially or totally populated.
         """
 
-    name = Attribute("""
-        The name of the plugin.
-        """)
-
-class ICommand(Interface):
-
-    name = Attribute("""
-        The name of the plugin.
-
-        Command names are also used as the keyword for this command.
-        """)
+class ICommand(IBravoPlugin):
 
     aliases = Attribute("""
         Additional keywords which may be used to alias this command.
@@ -102,14 +99,10 @@ class IConsoleCommand(ICommand):
         :param list parameters: additional parameters passed to the command
         """
 
-class IRecipe(Interface):
+class IRecipe(IBravoPlugin):
     """
     Recipe for crafting materials from other materials.
     """
-
-    name = Attribute("""
-        Name of the recipe.
-        """)
 
     dimensions = Attribute("""
         Tuple representing the size of the recipe.
@@ -131,7 +124,7 @@ class IRecipe(Interface):
         This tuple must be of the format (slot, count).
         """)
 
-class ISeason(Interface):
+class ISeason(IBravoPlugin):
     """
     Seasons are transformational stages run during certain days to emulate an
     environment.
@@ -142,15 +135,11 @@ class ISeason(Interface):
         Apply the season to the given chunk.
         """
 
-    name = Attribute("""
-        Name of the season.
-        """)
-
     day = Attribute("""
         Day of the year on which to switch to this season.
         """)
 
-class IBuildHook(Interface):
+class IBuildHook(IBravoPlugin):
     """
     Hook for actions to be taken after a block is placed.
     """
@@ -187,11 +176,7 @@ class IBuildHook(Interface):
         :returns: tuple of build data and whether subsequent hooks will run
         """
 
-    name = Attribute("""
-        Name of the hook.
-        """)
-
-class IDigHook(Interface):
+class IDigHook(IBravoPlugin):
     """
     Hook for actions to be taken after a block is dug up.
     """
@@ -207,7 +192,3 @@ class IDigHook(Interface):
         :param int z: Z coordinate
         :param `Block` block: dug block
         """
-
-    name = Attribute("""
-        Name of the hook.
-        """)

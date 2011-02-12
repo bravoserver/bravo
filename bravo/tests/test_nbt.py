@@ -3,7 +3,7 @@ from StringIO import StringIO
 import tempfile
 import unittest
 
-from bravo.nbt import NBTFile, _TAG_Numeric, TAGLIST, MalformedFileError
+from bravo.nbt import NBTFile, MalformedFileError
 
 bigtest = """
 H4sIAAAAAAAAAO1Uz08aQRR+wgLLloKxxBBjzKu1hKXbzUIRibGIFiyaDRrYqDGGuCvDgi67Znew
@@ -68,16 +68,6 @@ class TreeManipulationTest(unittest.TestCase):
     def testRootNodeSetup(self):
         self.nbtfile.name = "Hello World"
         self.assertEqual(self.nbtfile.name, "Hello World")
-
-    def testTagNumeric(self):
-        for tag in TAGLIST:
-            if isinstance(TAGLIST[tag], _TAG_Numeric):
-                tagobj = TAGLIST[tag](name="Test", value=10)
-                self.assertEqual(byte.name, "Test", "Name not set correctly for %s" % TAGLIST[tag].__class__.__name__)
-                self.assertEqual(byte.value, 10, "Value not set correctly for %s" % TAGLIST[tag].__class__.__name__)
-                self.nbtfile.tags.append(tagobj)
-
-    #etcetera..... will finish later
 
 class EmptyStringTest(unittest.TestCase):
 

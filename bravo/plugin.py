@@ -12,6 +12,48 @@ class PluginException(Exception):
     Signal an error encountered during plugin handling.
     """
 
+def sort_plugins(plugins):
+    """
+    Make a sorted list of plugins by dependency.
+
+    If the list cannot be arranged into a DAG, an error will be raised. This
+    usually means that a cyclic dependency was found.
+
+    :raises PluginException: cyclic dependency detected
+    """
+
+    l = []
+    d = dict((plugin.name, plugin) for plugin in plugins)
+
+    def visit(plugin):
+        if plugin not in l:
+            for name in plugin.before:
+                visit(d[name])
+            l.append(plugin)
+
+    for plugin in plugins:
+        if not plugin.after:
+            visit(plugin)
+
+    return l
+
+def add_plugin_edges(d):
+    """
+    Mirror edges to all plugins in a dictionary.
+    """
+
+    for plugin in d.itervalues():
+        plugin.after = set(plugin.after)
+        plugin.before = set(plugin.before)
+
+    for name, plugin in d.iteritems():
+        for edge in plugin.before:
+            d[edge].after.add(name)
+        for edge in plugin.after:
+            d[edge].before.add(name)
+
+    return d
+
 def retrieve_plugins(interface, cached=True, cache={}):
     """
     Look up all plugins for a certain interface.
