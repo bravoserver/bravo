@@ -19,7 +19,6 @@ class Fluid(object):
         self.tracked = set()
 
         self.loop = LoopingCall(self.process)
-        self.loop.start(self.step)
 
     def process(self):
         new = set()
@@ -96,6 +95,9 @@ class Fluid(object):
             factory.world.get_block((x, y, z)) in (self.spring, self.fluid)):
             self.tracked.add((factory, x, y, z))
 
+        if self.tracked and not self.loop.running:
+            self.loop.start(self.step)
+
         return True, builddata
 
     def dig_hook(self, factory, chunk, x, y, z, block):
@@ -137,7 +139,6 @@ class Redstone(object):
         self.tracked = set()
 
         self.loop = LoopingCall(self.process)
-        self.loop.start(self.step)
 
     def process(self):
         pass
@@ -171,6 +172,9 @@ class Redstone(object):
 
             factory.world.set_block((x, y, z), blocks["redstone-wire"].slot)
             factory.world.set_metadata((x, y, z), 0x0)
+
+        if self.tracked and not self.loop.running:
+            self.loop.start(self.step)
 
         return True, builddata
 
