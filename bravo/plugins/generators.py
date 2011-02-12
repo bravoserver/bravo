@@ -167,7 +167,7 @@ class ErosionGenerator(object):
     name = "erosion"
 
     before = ("boring", "simplex")
-    after = tuple()
+    after = ("watertable",)
 
 class GrassGenerator(object):
     """
