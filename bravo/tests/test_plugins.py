@@ -1,4 +1,5 @@
-import unittest
+# This test suite *does* require trial, for sane conditional test skipping.
+from twisted.trial import unittest
 
 import bravo.blocks
 import bravo.ibravo
@@ -51,3 +52,15 @@ class TestBuildHooks(unittest.TestCase):
         success, newdata = torch.build_hook(None, None, builddata)
         self.assertTrue(success)
         self.assertEqual(builddata, newdata)
+
+class TestRecipes(unittest.TestCase):
+
+    def setUp(self):
+        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IRecipe)
+
+    def test_compass_provides(self):
+        if "compass" not in self.p:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.assertEqual(self.p["compass"].provides,
+            (bravo.blocks.items["compass"].key, 1))

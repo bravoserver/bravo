@@ -317,7 +317,7 @@ class ClockCompass(Recipe):
             (material.key, 1),
             None,
         )
-        self.provides = (provides, 1)
+        self.provides = (provides.key, 1)
 
 class FlintAndSteel(Recipe):
 
