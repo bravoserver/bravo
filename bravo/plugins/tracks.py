@@ -14,7 +14,8 @@ tracks_allowed_on = set([
     blocks["diamond"].slot,
     blocks["diamond-ore"].slot,
     blocks["dirt"].slot,
-    blocks["glass"].slot,
+    blocks["double-step"].slot,
+    blocks["glass"].slot,                # Bravo only -- not Notchy
     blocks["glowing-redstone-ore"].slot,
     blocks["gold"].slot,
     blocks["gold-ore"].slot,
@@ -22,20 +23,23 @@ tracks_allowed_on = set([
     blocks["gravel"].slot,
     blocks["iron"].slot,
     blocks["iron-ore"].slot,
+    blocks["jack-o-lantern"].slot,
     blocks["lapis-lazuli"].slot,
-    blocks["lapis-lazuli-ore"].slot,  # Bravo only -- not Notchy
-    blocks["lightstone"].slot,        # Bravo only -- not Notchy
-    blocks["log"].slot,               # Bravo only -- not Notchy
-    blocks["mossy-cobblestone"].slot, # what a waste!
+    blocks["lapis-lazuli-ore"].slot,
+    blocks["leaves"].slot,
+    blocks["lightstone"].slot,
+    blocks["log"].slot,
+    blocks["mossy-cobblestone"].slot,
     blocks["obsidian"].slot,
     blocks["redstone-ore"].slot,
     blocks["sand"].slot,
     blocks["sandstone"].slot,
     blocks["slow-sand"].slot,
-    blocks["soil"].slot,              # Bravo only -- not Notchy
+    blocks["snow-block"].slot,
+    blocks["sponge"].slot,
     blocks["stone"].slot,
     blocks["wood"].slot,
-    blocks["wool"].slot,              # Minecraft Mania compatibility
+    blocks["wool"].slot,
 ])
 
 # metadata
