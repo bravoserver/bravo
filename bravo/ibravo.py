@@ -11,6 +11,22 @@ class IBravoPlugin(Interface):
         The name of the plugin.
         """)
 
+class ISortedPlugin(IBravoPlugin):
+    """
+    Parent interface for sorted plugins.
+
+    Sorted plugins have an innate and automatic ordering inside lists thanks
+    to dependency lists.
+    """
+
+    before = Attribute("""
+        Plugins which must come before this plugin in the pipeline.
+        """)
+
+    after = Attribute("""
+        Plugins which must come after this plugin in the pipeline.
+        """)
+
 class IAuthenticator(IBravoPlugin):
     """
     Interface for authenticators.
