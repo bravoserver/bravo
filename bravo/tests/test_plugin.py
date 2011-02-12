@@ -31,6 +31,15 @@ class TestDependencyHelpers(unittest.TestCase):
 
         self.assertEqual(d["second"].after, set(["first"]))
 
+    def test_add_plugin_edges_bogus(self):
+        d = {
+            "first": EdgeHolder("first", ("second",), tuple()),
+        }
+
+        bravo.plugin.add_plugin_edges(d)
+
+        self.assertEqual(d["first"].before, set())
+
     def test_sort_plugins(self):
         l = [
             EdgeHolder("first", ("second",), tuple()),

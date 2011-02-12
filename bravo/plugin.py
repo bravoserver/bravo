@@ -48,10 +48,16 @@ def add_plugin_edges(d):
         plugin.before = set(plugin.before)
 
     for name, plugin in d.iteritems():
-        for edge in plugin.before:
-            d[edge].after.add(name)
-        for edge in plugin.after:
-            d[edge].before.add(name)
+        for edge in list(plugin.before):
+            if edge in d:
+                d[edge].after.add(name)
+            else:
+                plugin.before.discard(edge)
+        for edge in list(plugin.after):
+            if edge in d:
+                d[edge].before.add(name)
+            else:
+                plugin.after.discard(edge)
 
     return d
 
