@@ -28,7 +28,8 @@ def sort_plugins(plugins):
     def visit(plugin):
         if plugin not in l:
             for name in plugin.before:
-                visit(d[name])
+                if name in d:
+                    visit(d[name])
             l.append(plugin)
 
     for plugin in plugins:
@@ -117,7 +118,7 @@ def retrieve_sorted_plugins(interface, names):
     Look up a list of plugins, sorted by interdependencies.
     """
 
-    d = retrieve_plugins(interface)
+    d = add_plugin_edges(retrieve_plugins(interface))
     try:
         return sort_plugins([d[name] for name in names])
     except KeyError, e:

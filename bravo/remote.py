@@ -5,7 +5,7 @@ from twisted.protocols.amp import ListOf, Command, Integer, String
 
 from bravo.chunk import Chunk
 from bravo.ibravo import ITerrainGenerator
-from bravo.plugin import retrieve_plugins
+from bravo.plugin import retrieve_sorted_plugins
 
 class MakeChunk(Command):
     arguments = [
@@ -35,12 +35,11 @@ class Slave(AMPChild):
         Create a chunk using the given parameters.
         """
 
-        plugins = retrieve_plugins(ITerrainGenerator)
-        stages = [plugins[g] for g in generators]
+        generators = retrieve_sorted_plugins(ITerrainGenerator, generators)
 
         chunk = Chunk(x, z)
 
-        for stage in stages:
+        for stage in generators:
             stage.populate(chunk, seed)
 
         return {

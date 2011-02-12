@@ -166,7 +166,7 @@ class ErosionGenerator(object):
 
     name = "erosion"
 
-    before = tuple()
+    before = ("boring", "simplex")
     after = tuple()
 
 class GrassGenerator(object):
@@ -195,7 +195,7 @@ class GrassGenerator(object):
 
     name = "grass"
 
-    before = tuple()
+    before = ("erosion", "complex")
     after = tuple()
 
 class BeachGenerator(object):
@@ -238,7 +238,7 @@ class BeachGenerator(object):
 
     name = "beaches"
 
-    before = tuple()
+    before = ("erosion", "complex")
     after = tuple()
 
 class OreGenerator(object):
@@ -291,7 +291,7 @@ class OreGenerator(object):
 
     name = "ore"
 
-    before = tuple()
+    before = ("erosion", "complex", "beaches")
     after = tuple()
 
 class SafetyGenerator(object):
@@ -315,7 +315,7 @@ class SafetyGenerator(object):
 
     name = "safety"
 
-    before = tuple()
+    before = ("boring", "simplex", "complex", "cliffs", "float")
     after = tuple()
 
 class CliffGenerator(object):
@@ -355,7 +355,7 @@ class CliffGenerator(object):
 
     name = "cliffs"
 
-    before = tuple()
+    before = ("simplex",)
     after = tuple()
 
 class FloatGenerator(object):
@@ -408,7 +408,7 @@ class FloatGenerator(object):
 
     name = "float"
 
-    before = tuple()
+    before = ("simplex",)
     after = tuple()
 
 float = FloatGenerator()
