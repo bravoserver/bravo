@@ -206,7 +206,7 @@ class BuildSnow(object):
     name = "build_snow"
 
     before = tuple()
-    after = tuple()
+    after = ("build",)
 
 torch = Torch()
 tile = Tile()

@@ -19,7 +19,7 @@ from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook
 from bravo.inventory import Workbench, sync_inventories
 from bravo.packets import parse_packets, make_packet, make_error_packet
-from bravo.plugin import retrieve_plugins, retrieve_named_plugins
+from bravo.plugin import retrieve_plugins, retrieve_sorted_plugins
 from bravo.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
@@ -320,9 +320,9 @@ class BravoProtocol(BetaServerProtocol):
 
         log.msg("Registering client hooks...")
         names = configuration.getlist("bravo", "build_hooks")
-        self.build_hooks = retrieve_named_plugins(IBuildHook, names)
+        self.build_hooks = retrieve_sorted_plugins(IBuildHook, names)
         names = configuration.getlist("bravo", "dig_hooks")
-        self.dig_hooks = retrieve_named_plugins(IDigHook, names)
+        self.dig_hooks = retrieve_sorted_plugins(IDigHook, names)
 
         self.last_dig_build_timer = time()
 
