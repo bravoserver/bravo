@@ -30,3 +30,13 @@ class TestDependencyHelpers(unittest.TestCase):
         bravo.plugin.add_plugin_edges(d)
 
         self.assertEqual(d["second"].after, set(["first"]))
+
+    def test_sort_plugins(self):
+        l = [
+            EdgeHolder("first", ("second",), tuple()),
+            EdgeHolder("second", tuple(), ("first",)),
+        ]
+
+        sorted = bravo.plugin.sort_plugins(l)
+        l.reverse()
+        self.assertEqual(l, sorted)
