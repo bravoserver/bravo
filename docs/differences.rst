@@ -47,8 +47,4 @@ Minecarts
 The following blocks may have minecart tracks placed on them in Bravo, but not
 in the Notchian server:
 
- * Lapis lazuli ore
- * Lightstone
- * Log
- * Soil
- * Wool
+ * Glass
