@@ -1,6 +1,7 @@
 import shutil
 import tempfile
-import unittest
+
+from twisted.trial import unittest
 
 import bravo.config
 import bravo.factories.beta
@@ -19,7 +20,9 @@ class TestBravoFactory(unittest.TestCase):
         self.f = bravo.factories.beta.BravoFactory(self.name)
 
     def tearDown(self):
-        del self.f
+        self.f.world.chunk_management_loop.stop()
+        self.f.time_loop.stop()
+
         shutil.rmtree(self.d)
 
         bravo.config.configuration.remove_section("world unittest")
