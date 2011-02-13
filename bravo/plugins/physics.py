@@ -169,7 +169,7 @@ class Redstone(object):
             # customized.
             print "Placing wire..."
             if not player.inventory.consume((items["redstone"].slot, 0),
-                                            player.equiped):
+                                            player.equipped):
                 return True, builddata
 
             self.tracked.add((factory, x, y, z))
