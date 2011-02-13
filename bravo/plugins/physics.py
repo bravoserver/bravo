@@ -168,7 +168,8 @@ class Redstone(object):
             # Override the normal block placement, because it's so heavily
             # customized.
             print "Placing wire..."
-            if not player.inventory.consume((items["redstone"].slot, 0)):
+            if not player.inventory.consume((items["redstone"].slot, 0),
+                                            player.equiped):
                 return True, builddata
 
             self.tracked.add((factory, x, y, z))
