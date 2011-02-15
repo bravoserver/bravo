@@ -53,8 +53,8 @@ class TestPacketParsing(unittest.TestCase):
     def test_orientation(self):
         packet = "\x45\xc5\x66\x76\x42\x2d\xff\xfc\x01"
         parsed = bravo.packets.packets[12].parse(packet)
-        self.assertEqual(parsed.look.pitch, 43.49998474121094)
-        self.assertEqual(parsed.look.rotation, 6316.8076171875)
+        self.assertEqual(parsed.orientation.pitch, 43.49998474121094)
+        self.assertEqual(parsed.orientation.rotation, 6316.8076171875)
 
     def test_build(self):
         packet = "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x00\x12"
@@ -143,8 +143,8 @@ class TestPacketIntegration(unittest.TestCase):
         self.assertEqual(payload.position.y, 67.24000000953674)
         self.assertEqual(payload.position.stance, 65.62000000476837)
         self.assertEqual(payload.position.z, 7.5)
-        self.assertEqual(payload.look.rotation, 0.0)
-        self.assertEqual(payload.look.pitch, 0.0)
+        self.assertEqual(payload.orientation.rotation, 0.0)
+        self.assertEqual(payload.orientation.pitch, 0.0)
         self.assertEqual(payload.flying.flying, 0)
         reconstructed = bravo.packets.make_packet("location", payload)
         self.assertEqual(packet, reconstructed)

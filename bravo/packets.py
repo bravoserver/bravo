@@ -27,7 +27,7 @@ position = Struct("position",
     BFloat64("stance"),
     BFloat64("z")
 )
-look = Struct("look", BFloat32("rotation"), BFloat32("pitch"))
+orientation = Struct("orientation", BFloat32("rotation"), BFloat32("pitch"))
 
 # Notchian item packing
 items = Struct("items",
@@ -96,8 +96,8 @@ packets = {
     9: Struct("respawn"),
     10: flying,
     11: Struct("position", position, flying),
-    12: Struct("orientation", look, flying),
-    13: Struct("location", position, look, flying),
+    12: Struct("orientation", orientation, flying),
+    13: Struct("location", position, orientation, flying),
     14: Struct("digging",
         UBInt8("state"),
         SBInt32("x"),
