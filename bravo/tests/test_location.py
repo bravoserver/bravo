@@ -14,6 +14,17 @@ class TestLocation(unittest.TestCase):
     def test_default_stance(self):
         self.assertEqual(self.l.stance, 1.0)
 
+    def test_save_to_packet(self):
+        self.assertTrue(self.l.save_to_packet())
+
+class TestLocationProperties(unittest.TestCase):
+
+    def setUp(self):
+        self.l = bravo.location.Location()
+
+    def test_trivial(self):
+        pass
+
     def test_y_property(self):
         self.l.stance = 2
         self.l.y = 1

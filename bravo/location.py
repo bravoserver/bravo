@@ -93,9 +93,10 @@ class Location(object):
         """
 
         position = Container(x=self.x, y=self.y, z=self.z, stance=self.stance)
-        look = Container(rotation=self.yaw, pitch=self.pitch)
+        orientation = Container(rotation=self.yaw, pitch=self.pitch)
         flying = Container(flying=self.midair)
 
-        packet = make_packet("location", position=position, look=look, flying=flying)
+        packet = make_packet("location", position=position,
+            orientation=orientation, flying=flying)
 
         return packet
