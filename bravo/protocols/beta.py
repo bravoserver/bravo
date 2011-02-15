@@ -536,7 +536,7 @@ class BravoProtocol(BetaServerProtocol):
                 container.primary)
             return
 
-        if time() - self.last_dig_build_timer < 0.2:
+        if time() - self.last_dig_build_timer < 0.05:
             self.error("You are building too fast.")
 
         self.last_dig_build_timer = time()
