@@ -47,20 +47,5 @@ class Status(object):
     usage = ""
     info = "Print a quick summary of the server's status"
 
-class PDB(object):
-
-    implements(IPlugin, IConsoleCommand)
-
-    def console_command(self, factory, parameters):
-        import pdb; pdb.set_trace()
-
-        return tuple()
-
-    name = "pdb"
-    aliases = tuple()
-    usage = ""
-    info = "Drop into a PDB shell"
-
 meliae = Meliae()
 status = Status()
-pdb = PDB()
