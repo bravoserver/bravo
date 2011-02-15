@@ -18,6 +18,7 @@ from bravo.entity import Sign
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook
 from bravo.inventory import Workbench, sync_inventories
+from bravo.location import Location
 from bravo.packets import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins, retrieve_sorted_plugins
 from bravo.utilities import split_coords
@@ -65,15 +66,17 @@ class BetaServerProtocol(Protocol):
         self.windows = dict()
         self.wid = 1
 
+        self.location = Location()
+
         self.handlers = {
             0: self.ping,
             1: self.login,
             2: self.handshake,
             3: self.chat,
             10: self.flying,
-            11: self.position_look,
-            12: self.position_look,
-            13: self.position_look,
+            11: self.position,
+            12: self.orientation,
+            13: self.location_packet,
             14: self.digging,
             15: self.build,
             16: self.equip,
@@ -131,12 +134,38 @@ class BetaServerProtocol(Protocol):
         Hook for flying packets.
         """
 
-    def position_look(self, container):
-        """
-        Hook for position and look packets.
+        self.location.load_from_packet(container)
 
-        XXX this design decision should be revisted
+    def position(self, container):
         """
+        Hook for position packets.
+        """
+
+        old_position = self.location.x, self.location.y, self.location.z
+
+        self.location.load_from_packet(container)
+
+        position = self.location.x, self.location.y, self.location.z
+
+        self.flying(container.flying)
+
+        if old_position != position:
+            self.position_changed()
+
+    def orientation(self, container):
+        """
+        Hook for orientation packets.
+        """
+
+        self.flying(container.flying)
+
+    def location_packet(self, container):
+        """
+        Hook for location packets.
+        """
+
+        self.position(container)
+        self.orientation(container)
 
     def digging(self, container):
         """
@@ -221,6 +250,10 @@ class BetaServerProtocol(Protocol):
     # Feel free to override these, but call them at some point.
 
     def challenged(self):
+        """
+        Called when the client has started authentication with the server.
+        """
+
         self.state = STATE_CHALLENGED
 
     def authenticated(self):
@@ -231,6 +264,18 @@ class BetaServerProtocol(Protocol):
         self.state = STATE_AUTHENTICATED
 
         self._ping_loop.start(5)
+
+    # Event callbacks
+    # These are meant to be overriden.
+
+    def position_changed(self):
+        """
+        Called when the client moves.
+
+        This callback is only for position, not orientation.
+        """
+
+        pass
 
     # Convenience methods
 
@@ -252,6 +297,7 @@ class BetaServerProtocol(Protocol):
 
         self.transport.write(make_error_packet(message))
         self.transport.loseConnection()
+
 
 class BetaProxyProtocol(BetaServerProtocol):
     """
@@ -303,6 +349,7 @@ class BetaProxyProtocol(BetaServerProtocol):
         log.err("Couldn't connect node!")
         log.err(reason)
 
+
 class BravoProtocol(BetaServerProtocol):
     """
     A ``BetaServerProtocol`` suitable for serving MC worlds to clients.
@@ -344,8 +391,12 @@ class BravoProtocol(BetaServerProtocol):
 
         self.factory.protocols[self.username] = self
 
+        # Init player, and copy data into it.
         self.player = self.factory.world.load_player(self.username)
         self.player.eid = self.eid
+        # Since location is a complex object, we'll just be loaning it to our
+        # player.
+        self.player.location = self.location
         self.factory.entities.add(self.player)
 
         packet = make_packet("chat",
@@ -363,6 +414,47 @@ class BravoProtocol(BetaServerProtocol):
 
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
+
+    def position_changed(self):
+        pos = self.location.x, self.location.y, self.location.z
+
+        x, chaff, z, chaff = split_coords(pos[0], pos[2])
+
+        self.update_chunks()
+
+        for entity in self.factory.entities_near(pos[0] * 32,
+            pos[1] * 32, pos[2] * 32, 2 * 32):
+            if entity.name != "Pickup":
+                continue
+
+            if self.player.inventory.add(entity.block, entity.quantity):
+                packet = self.player.inventory.save_to_packet()
+                self.transport.write(packet)
+
+                packet = make_packet("collect", eid=entity.eid,
+                    destination=self.player.eid)
+                self.transport.write(packet)
+
+                packet = make_packet("destroy", eid=entity.eid)
+                self.transport.write(packet)
+
+                self.factory.destroy_entity(entity)
+
+        for entity in self.factory.entities_near(pos[0] * 32,
+            pos[1] * 32, pos[2] * 32, 160 * 32):
+
+            if (entity is self.player or
+                entity.name != "Player" or
+                entity.eid in self.entities):
+                continue
+
+            self.entities.add(entity.eid)
+
+            packet = entity.save_to_packet()
+            self.transport.write(packet)
+
+            packet = make_packet("create", eid=entity.eid)
+            self.transport.write(packet)
 
     def login(self, container):
         """
@@ -414,64 +506,6 @@ class BravoProtocol(BetaServerProtocol):
             # Send the message up to the factory to be chatified.
             message = "<%s> %s" % (self.username, container.message)
             self.factory.chat(message)
-
-    def flying(self, container):
-        self.player.location.load_from_packet(container)
-
-    def position_look(self, container):
-        oldx, chaff, oldz, chaff = split_coords(self.player.location.x,
-            self.player.location.z)
-
-        oldpos = (self.player.location.x, self.player.location.y,
-            self.player.location.z)
-
-        self.player.location.load_from_packet(container)
-
-        pos = (self.player.location.x, self.player.location.y,
-            self.player.location.z)
-
-        if oldpos == pos:
-            # We haven't actually moved...
-            return
-
-        x, chaff, z, chaff = split_coords(pos[0], pos[2])
-
-        if oldx != x or oldz != z:
-            self.update_chunks()
-
-        for entity in self.factory.entities_near(pos[0] * 32,
-            pos[1] * 32, pos[2] * 32, 2 * 32):
-            if entity.name != "Pickup":
-                continue
-
-            if self.player.inventory.add(entity.block, entity.quantity):
-                packet = self.player.inventory.save_to_packet()
-                self.transport.write(packet)
-
-                packet = make_packet("collect", eid=entity.eid,
-                    destination=self.player.eid)
-                self.transport.write(packet)
-
-                packet = make_packet("destroy", eid=entity.eid)
-                self.transport.write(packet)
-
-                self.factory.destroy_entity(entity)
-
-        for entity in self.factory.entities_near(pos[0] * 32,
-            pos[1] * 32, pos[2] * 32, 160 * 32):
-
-            if (entity is self.player or
-                entity.name != "Player" or
-                entity.eid in self.entities):
-                continue
-
-            self.entities.add(entity.eid)
-
-            packet = entity.save_to_packet()
-            self.transport.write(packet)
-
-            packet = make_packet("create", eid=entity.eid)
-            self.transport.write(packet)
 
     def digging(self, container):
         if container.state != 3:
@@ -574,7 +608,7 @@ class BravoProtocol(BetaServerProtocol):
                 # XXX: this should be re-factored into an extra utility function
                 # Do some trig to put the pickup one block ahead of the player
                 # in the direction they are facing.
-                l = self.player.location
+                l = self.location
                 x = l.x - math.sin(l.theta)
                 y = l.y + 1
                 z = l.z + math.cos(l.theta)
@@ -681,8 +715,8 @@ class BravoProtocol(BetaServerProtocol):
         self.chunks[chunk.x, chunk.z] = chunk
 
     def send_initial_chunk_and_location(self):
-        bigx, smallx, bigz, smallz = split_coords(self.player.location.x,
-            self.player.location.z)
+        bigx, smallx, bigz, smallz = split_coords(self.location.x,
+            self.location.z)
 
         # Spawn the 25 chunks in a square around the spawn, *before* spawning
         # the player. Otherwise, there's a funky Beta 1.2 bug which causes the
@@ -701,20 +735,19 @@ class BravoProtocol(BetaServerProtocol):
         d.addCallback(lambda none: self.update_chunks())
 
     def update_location(self):
-        bigx, smallx, bigz, smallz = split_coords(self.player.location.x,
-            self.player.location.z)
+        bigx, smallx, bigz, smallz = split_coords(self.location.x,
+            self.location.z)
 
         chunk = self.chunks[bigx, bigz]
 
         height = chunk.height_at(smallx, smallz) + 2
-        self.player.location.y = height
+        self.location.y = height
 
-        packet = self.player.location.save_to_packet()
+        packet = self.location.save_to_packet()
         self.transport.write(packet)
 
     def update_chunks(self):
-        x, chaff, z, chaff = split_coords(self.player.location.x,
-            self.player.location.z)
+        x, chaff, z, chaff = split_coords(self.location.x, self.location.z)
 
         new = set((i + x, j + z) for i, j in circle)
         old = set(self.chunks.iterkeys())
