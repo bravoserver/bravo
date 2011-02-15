@@ -196,7 +196,7 @@ class Inventory(InventorySerializer):
 
         try:
             primary, secondary, count = self.holdables[slot]
-        except ValueError:
+        except (TypeError, ValueError):
             return False
 
         if (primary, secondary) == item and count:
