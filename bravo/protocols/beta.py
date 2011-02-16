@@ -157,6 +157,8 @@ class BetaServerProtocol(Protocol):
         Hook for orientation packets.
         """
 
+        self.location.load_from_packet(container)
+
         self.flying(container.flying)
 
     def location_packet(self, container):
