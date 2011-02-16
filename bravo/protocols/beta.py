@@ -134,7 +134,7 @@ class BetaServerProtocol(Protocol):
         Hook for flying packets.
         """
 
-        self.location.load_from_packet(container)
+        self.location.midair = bool(container.flying)
 
     def position(self, container):
         """
@@ -143,7 +143,13 @@ class BetaServerProtocol(Protocol):
 
         old_position = self.location.x, self.location.y, self.location.z
 
-        self.location.load_from_packet(container)
+        self.location.x = int(container.position.x)
+        self.location.y = int(container.position.stance)
+        self.location.z = int(container.position.z)
+        # Stance is the current jumping position, plus a small offset of
+        # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
+        # or the anti-flying code kicks the client.
+        self.location.stance = container.position.y
 
         position = self.location.x, self.location.y, self.location.z
 
@@ -157,7 +163,8 @@ class BetaServerProtocol(Protocol):
         Hook for orientation packets.
         """
 
-        self.location.load_from_packet(container)
+        self.location.yaw = container.orientation.rotation
+        self.location.pitch = container.orientation.pitch
 
         self.flying(container.flying)
 

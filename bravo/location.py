@@ -66,27 +66,6 @@ class Location(object):
         self._phi = value % (pi * 2)
     phi = property(lambda self: self._phi, _phi_setter)
 
-    def load_from_packet(self, container):
-        """
-        Update from a packet container.
-
-        Position, look, and flying packets are all handled.
-        """
-
-        if hasattr(container, "position"):
-            self.x = int(container.position.x)
-            self.y = int(container.position.stance)
-            self.z = int(container.position.z)
-            # Stance is the current jumping position, plus a small offset of
-            # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
-            # or the anti-flying code kicks the client.
-            self.stance = container.position.y
-        if hasattr(container, "look"):
-            self.yaw = container.look.rotation
-            self.pitch = container.look.pitch
-        if hasattr(container, "flying"):
-            self.midair = bool(container.flying)
-
     def save_to_packet(self):
         """
         Returns a position/look/flying packet.
