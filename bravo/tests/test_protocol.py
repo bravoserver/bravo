@@ -22,16 +22,15 @@ class TestBetaServerProtocol(unittest.TestCase):
         DT/wAAAAAAAAQAAAAAAAAABACAAAAAAAAEAQAAAAAAAAQKAAAEDAAAAB
         """.decode("base64")
 
-        import pdb; pdb.set_trace()
         self.p.dataReceived(location_packet)
-
-        print self.p.location
 
         self.assertEqual(self.p.location.x, 1)
         self.assertEqual(self.p.location.y, 2)
+        self.assertEqual(self.p.location.stance, 3)
         self.assertEqual(self.p.location.z, 4)
         self.assertEqual(self.p.location.yaw, 5)
         self.assertEqual(self.p.location.pitch, 6)
+        self.assertTrue(self.p.midair)
 
 class TestBravoProtocol(unittest.TestCase):
 
