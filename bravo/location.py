@@ -71,7 +71,7 @@ class Location(object):
         Returns a position/look/flying packet.
         """
 
-        position = Container(x=self.x, y=self.y, z=self.z, stance=self.stance)
+        position = Container(x=self.x, y=self.stance, z=self.z, stance=self.y)
         orientation = Container(rotation=self.yaw, pitch=self.pitch)
         flying = Container(flying=self.midair)
 

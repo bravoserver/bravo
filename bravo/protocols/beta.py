@@ -144,12 +144,12 @@ class BetaServerProtocol(Protocol):
         old_position = self.location.x, self.location.y, self.location.z
 
         self.location.x = int(container.position.x)
-        self.location.y = int(container.position.stance)
+        self.location.y = int(container.position.y)
         self.location.z = int(container.position.z)
         # Stance is the current jumping position, plus a small offset of
         # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
         # or the anti-flying code kicks the client.
-        self.location.stance = container.position.y
+        self.location.stance = container.position.stance
 
         position = self.location.x, self.location.y, self.location.z
 
