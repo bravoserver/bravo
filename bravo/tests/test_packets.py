@@ -56,6 +56,19 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.orientation.pitch, 43.49998474121094)
         self.assertEqual(parsed.orientation.rotation, 6316.8076171875)
 
+    def test_location(self):
+        packet = """
+        P/AAAAAAAABAAAAAAAAAAEAIAAAAAAAAQBAAAAAAAABAoAAAQMAAAAE=
+        """.decode("base64")
+        parsed = bravo.packets.packets[13].parse(packet)
+        self.assertEqual(parsed.position.x, 1)
+        self.assertEqual(parsed.position.y, 2)
+        self.assertEqual(parsed.position.stance, 3)
+        self.assertEqual(parsed.position.z, 4)
+        self.assertEqual(parsed.orientation.rotation, 5)
+        self.assertEqual(parsed.orientation.pitch, 6)
+        self.assertEqual(parsed.flying.flying, 1)
+
     def test_build(self):
         packet = "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x00\x12"
         parsed = bravo.packets.packets[15].parse(packet)
