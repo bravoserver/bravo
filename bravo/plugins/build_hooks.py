@@ -41,7 +41,7 @@ class Torch(object):
     name = "torch"
 
     before = tuple()
-    after = tuple()
+    after = ("build",)
 
 class Ladder(object):
     """
@@ -74,7 +74,7 @@ class Ladder(object):
     name = "ladder"
 
     before = tuple()
-    after = tuple()
+    after = ("build",)
 
 class Tile(object):
     """
@@ -124,16 +124,12 @@ class Tile(object):
 
             chunk.tiles[x, y, z] = s
 
-            # We handled this build correctly, but the signpost still needs to
-            # get placed.
-            return True, builddata
-
         return True, builddata
 
     name = "tile"
 
     before = tuple()
-    after = tuple()
+    after = ("build",)
 
 class Build(object):
     """
