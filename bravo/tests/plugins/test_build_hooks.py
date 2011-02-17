@@ -6,6 +6,46 @@ import bravo.ibravo
 import bravo.plugin
 import bravo.protocols.beta
 
+class TileMockFactory(object):
+
+    def __init__(self):
+        class TileMockWorld(object):
+
+            def load_chunk(self, x, z):
+                class TileMockChunk(object):
+
+                    def __init__(self):
+                        self.tiles = {}
+
+                return TileMockChunk()
+
+        self.world = TileMockWorld()
+
+class TestTile(unittest.TestCase):
+
+    def setUp(self):
+        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IBuildHook)
+
+        if "tile" not in self.p:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.hook = self.p["tile"]
+
+    def test_trivial(self):
+        pass
+
+    def test_sign(self):
+        builddata = bravo.protocols.beta.BuildData(
+            bravo.blocks.items["sign"],
+            0, 0, 0, 0, "+x"
+        )
+        success, newdata = self.hook.build_hook(TileMockFactory(), None,
+            builddata)
+        self.assertTrue(success)
+        builddata = builddata._replace(block=bravo.blocks.blocks["wall-sign"],
+            metadata=0x5)
+        self.assertEqual(builddata, newdata)
+
 class TestTorch(unittest.TestCase):
 
     def setUp(self):
