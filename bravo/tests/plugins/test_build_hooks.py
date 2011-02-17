@@ -6,18 +6,18 @@ import bravo.ibravo
 import bravo.plugin
 import bravo.protocols.beta
 
-class TestBuildHooks(unittest.TestCase):
+class TestTorch(unittest.TestCase):
 
     def setUp(self):
         self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IBuildHook)
+
+        if "torch" not in self.p:
+            raise unittest.SkipTest("Plugin not present")
 
     def test_trivial(self):
         pass
 
     def test_torch(self):
-        if "torch" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
         torch = self.p["torch"]
         builddata = bravo.protocols.beta.BuildData(
             bravo.blocks.blocks["torch"],
@@ -29,9 +29,6 @@ class TestBuildHooks(unittest.TestCase):
         self.assertEqual(builddata, newdata)
 
     def test_torch_ceiling(self):
-        if "torch" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
         torch = self.p["torch"]
         builddata = bravo.protocols.beta.BuildData(
             bravo.blocks.blocks["torch"],
@@ -41,9 +38,6 @@ class TestBuildHooks(unittest.TestCase):
         self.assertFalse(success)
 
     def test_torch_noop(self):
-        if "torch" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
         torch = self.p["torch"]
         builddata = bravo.protocols.beta.BuildData(
             bravo.blocks.blocks["wood"],
@@ -52,15 +46,3 @@ class TestBuildHooks(unittest.TestCase):
         success, newdata = torch.build_hook(None, None, builddata)
         self.assertTrue(success)
         self.assertEqual(builddata, newdata)
-
-class TestRecipes(unittest.TestCase):
-
-    def setUp(self):
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IRecipe)
-
-    def test_compass_provides(self):
-        if "compass" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
-        self.assertEqual(self.p["compass"].provides,
-            (bravo.blocks.items["compass"].key, 1))
