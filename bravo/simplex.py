@@ -84,17 +84,16 @@ def simplex2(x, y):
     coords = [None] * 3
     gradients = [None] * 3
 
-    # XXX ???
     s = (x + y) * f2
-    i = int(math.floor(x + s))
-    j = int(math.floor(y + s))
+    i = math.floor(x + s)
+    j = math.floor(y + s)
     t = (i + j) * g2
     x -= i - t
     y -= j - t
 
     # Clamp to the size of the simplex array.
-    i %= SIZE
-    j %= SIZE
+    i = int(i) % SIZE
+    j = int(j) % SIZE
 
     # Look up coordinates and gradients for each contributing point in the
     # simplex space.
@@ -147,17 +146,17 @@ def simplex3(x, y, z):
     gradients = [None] * 4
 
     s = (x + y + z) * f
-    i = int(math.floor(x + s))
-    j = int(math.floor(y + s))
-    k = int(math.floor(z + s))
+    i = math.floor(x + s)
+    j = math.floor(y + s)
+    k = math.floor(z + s)
     t = (i + j + k) * g
     x -= i - t
     y -= j - t
     z -= k - t
 
-    i %= SIZE
-    j %= SIZE
-    k %= SIZE
+    i = int(i) % SIZE
+    j = int(j) % SIZE
+    k = int(k) % SIZE
 
     # Do the coord and gradient lookups. Unrolled for speed and clarity.
     # These should be + 2 * g, but instead we do + f because we already have
