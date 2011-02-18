@@ -7,6 +7,7 @@ from functools import wraps
 from itertools import izip, tee
 from time import time
 
+import numpy
 from numpy import uint8, cast
 
 # Coord handling.
@@ -44,13 +45,10 @@ def unpack_nibbles(l):
 
     :returns: list of nibbles
     """
-
-    retval = []
-    for i in l:
-        i = ord(i)
-        retval.append(i & 15)
-        retval.append(i >> 4)
-    return retval
+    data = numpy.fromstring(l, dtype=uint8)
+    lower = numpy.bitwise_and(data, 15)
+    upper = numpy.right_shift(data, 4)
+    return numpy.dstack((lower, upper))
 
 def pack_nibbles(a):
     """
