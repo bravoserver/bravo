@@ -46,9 +46,7 @@ def unpack_nibbles(l):
     :returns: list of nibbles
     """
     data = numpy.fromstring(l, dtype=uint8)
-    lower = numpy.bitwise_and(data, 15)
-    upper = numpy.right_shift(data, 4)
-    return numpy.dstack((lower, upper)).flat
+    return numpy.dstack((data & 0xf, data >> 4)).flat
 
 def pack_nibbles(a):
     """
