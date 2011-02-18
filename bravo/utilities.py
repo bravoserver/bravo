@@ -36,7 +36,7 @@ def unpack_nibbles(l):
     Nibbles are half-byte quantities. The nibbles unpacked by this function
     are returned as unsigned numeric values.
 
-    >>> unpack_nibbles(["a"])
+    >>> unpack_nibbles("a")
     [6, 1]
     >>> unpack_nibbles("nibbles")
     [6, 14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 7, 3]
@@ -48,7 +48,7 @@ def unpack_nibbles(l):
     data = numpy.fromstring(l, dtype=uint8)
     lower = numpy.bitwise_and(data, 15)
     upper = numpy.right_shift(data, 4)
-    return numpy.dstack((lower, upper))
+    return numpy.dstack((lower, upper)).flat
 
 def pack_nibbles(a):
     """

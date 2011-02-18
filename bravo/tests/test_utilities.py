@@ -3,6 +3,7 @@
 import unittest
 
 from numpy import array
+from numpy.testing import assert_array_equal
 
 import bravo.utilities
 
@@ -22,8 +23,8 @@ class TestCoordHandling(unittest.TestCase):
 class TestBitTwiddling(unittest.TestCase):
 
     def test_unpack_nibbles(self):
-        self.assertEqual(bravo.utilities.unpack_nibbles(["a"]), [1, 6])
-        self.assertEqual(bravo.utilities.unpack_nibbles("nibbles"),
+        assert_array_equal(bravo.utilities.unpack_nibbles("a"), [1, 6])
+        assert_array_equal(bravo.utilities.unpack_nibbles("nibbles"),
             [14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 6, 3, 7])
 
     def test_pack_nibbles(self):
