@@ -46,6 +46,33 @@ class TestTile(unittest.TestCase):
             metadata=0x5)
         self.assertEqual(builddata, newdata)
 
+    def test_sign_floor(self):
+        builddata = bravo.protocols.beta.BuildData(
+            bravo.blocks.items["sign"],
+            0, 0, 0, 0, "+y"
+        )
+        success, newdata = self.hook.build_hook(TileMockFactory(), None,
+            builddata)
+        self.assertTrue(success)
+        builddata = builddata._replace(block=bravo.blocks.blocks["signpost"])
+        self.assertEqual(builddata, newdata)
+
+    def test_passthrough(self):
+        """
+        Check that non-tile items and blocks pass through untouched.
+
+        Using ladders because of #89.
+        """
+
+        builddata = bravo.protocols.beta.BuildData(
+            bravo.blocks.blocks["ladder"],
+            0, 0, 0, 0, "+x"
+        )
+        success, newdata = self.hook.build_hook(TileMockFactory(), None,
+            builddata)
+        self.assertTrue(success)
+        self.assertEqual(builddata, newdata)
+
 class TestTorch(unittest.TestCase):
 
     def setUp(self):
