@@ -42,8 +42,9 @@ class ConsoleRPCProtocol(AMP):
     Simple AMP server for clients implementing console services.
     """
 
-    def __init__(self, worlds):
-        self.factories = dict((factory.name, factory) for factory in worlds)
+    def __init__(self, factories):
+        self.factories = factories
+
         # XXX hax
         self.commands = retrieve_plugins(IConsoleCommand)
         # Register aliases.
@@ -80,10 +81,10 @@ class ConsoleRPCProtocol(AMP):
 class ConsoleRPCFactory(Factory):
     protocol = ConsoleRPCProtocol
 
-    def __init__(self, worlds):
-        self.worlds = worlds
+    def __init__(self, service):
+        self.factories = service.namedServices
 
     def buildProtocol(self, addr):
-        protocol = self.protocol(self.worlds)
+        protocol = self.protocol(self.factories)
         protocol.factory = self
         return protocol
