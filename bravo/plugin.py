@@ -5,6 +5,7 @@ from zope.interface.exceptions import BrokenImplementation
 from zope.interface.exceptions import BrokenMethodImplementation
 from zope.interface.verify import verifyObject
 
+from bravo.ibravo import ISortedPlugin
 import bravo.plugins
 
 class PluginException(Exception):
@@ -96,6 +97,10 @@ def retrieve_plugins(interface, cached=True, cache={}):
                 bmi.method))
             log.err()
 
+    if issubclass(interface, ISortedPlugin):
+        # Sortable plugins need their edges mirrored.
+        d = add_plugin_edges(d)
+
     cache[interface] = d
     return d
 
@@ -124,9 +129,9 @@ def retrieve_sorted_plugins(interface, names):
     Look up a list of plugins, sorted by interdependencies.
     """
 
-    d = add_plugin_edges(retrieve_plugins(interface))
+    l = retrieve_named_plugins(interface, names)
     try:
-        return sort_plugins([d[name] for name in names])
+        return sort_plugins(l)
     except KeyError, e:
         raise PluginException("Couldn't find plugin %s for interface %s!" %
             (e.args[0], interface))
