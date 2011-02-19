@@ -517,6 +517,10 @@ class BravoProtocol(BetaServerProtocol):
             self.factory.chat(message)
 
     def digging(self, container):
+        if container.x == -1 and container.z == -1 and container.y == 255:
+            # Lala-land dig packet. Discard it for now.
+            return
+
         if container.state != 3:
             return
 
@@ -542,6 +546,10 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.flush_chunk(chunk)
 
     def build(self, container):
+        if container.x == -1 and container.z == -1 and container.y == 255:
+            # Lala-land build packet. Discard it for now.
+            return
+
         # Is the target being selected?
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
         try:

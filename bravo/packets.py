@@ -107,7 +107,7 @@ packets = {
     ),
     15: Struct("build",
         SBInt32("x"),
-        SBInt8("y"),
+        UBInt8("y"),
         SBInt32("z"),
         face,
         Embed(items),
