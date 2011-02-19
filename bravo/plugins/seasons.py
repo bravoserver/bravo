@@ -4,7 +4,6 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.compat import product
 from bravo.ibravo import ISeason
-from bravo.utilities import pairwise
 
 snow_resistant = set([
     blocks["flower"].slot,
@@ -28,17 +27,12 @@ class Winter(object):
 
         # Lay snow over anything not already snowed and not snow-resistant.
         for x, z in product(xrange(16), xrange(16)):
-            column = chunk.get_column(x, z)
+            height = chunk.height_at(x, z)
+            top_block = chunk.get_block((x, height, z))
 
-            # First is above second.
-            for first, second in pairwise(enumerate(reversed(column))):
-                if second[1] not in (blocks["snow"].slot, blocks["air"].slot):
-                    # Solid ground! Is it snowable?
-                    if second[1] not in snow_resistant:
-                        # Yay!
-                        y = len(column) - 1 - first[0]
-                        chunk.set_block((x, y, z), blocks["snow"].slot)
-                    break
+            if top_block != blocks["snow"].slot:
+                if top_block not in snow_resistant:
+                    chunk.set_block((x, height + 1, z), blocks["snow"].slot)
 
     name = "winter"
 
