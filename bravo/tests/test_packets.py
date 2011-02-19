@@ -72,7 +72,7 @@ class TestPacketParsing(unittest.TestCase):
     def test_digging(self):
         packet = "\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01"
         parsed = bravo.packets.packets[14].parse(packet)
-        self.assertEqual(parsed.state, 3)
+        self.assertEqual(parsed.state, "broken")
         self.assertEqual(parsed.x, -1)
         self.assertEqual(parsed.y, 255)
         self.assertEqual(parsed.z, -1)

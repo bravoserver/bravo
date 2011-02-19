@@ -521,7 +521,8 @@ class BravoProtocol(BetaServerProtocol):
             # Lala-land dig packet. Discard it for now.
             return
 
-        if container.state != 3:
+        if container.state != "broken":
+            # We only care about digs which break blocks.
             return
 
         if time() - self.last_dig_build_timer < 0.1:
