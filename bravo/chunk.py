@@ -178,7 +178,7 @@ class Chunk(ChunkSerializer):
         lightmap = zeros((16, 16, 128), dtype=uint8)
 
         for x, z in product(xrange(16), repeat=2):
-            height = self.height_at(x, z)
+            height = self.heightmap[x, z]
 
             # fill all air blocks with light
             lightmap[x, z, height + 1:] = 15
@@ -190,7 +190,7 @@ class Chunk(ChunkSerializer):
                 light -= dim
                 if light <= 0:
                     break
-                
+
                 lightmap[x, z, y] = light
 
         self.skylight = lightmap.clip(0, 15)
