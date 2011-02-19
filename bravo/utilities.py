@@ -111,20 +111,6 @@ def timed(f):
         return retval
     return deco
 
-# Itertools.
-
-def pairwise(iterable):
-    """
-    From itertools recipes.
-    """
-
-    a, b = tee(iterable)
-    try:
-        b.next()
-    except StopIteration:
-        pass
-    return izip(a, b)
-
 # Colorizers.
 
 chat_colors = [
