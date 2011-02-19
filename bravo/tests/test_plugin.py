@@ -49,3 +49,32 @@ class TestDependencyHelpers(unittest.TestCase):
         sorted = bravo.plugin.sort_plugins(l)
         l.reverse()
         self.assertEqual(l, sorted)
+
+    def test_sort_plugins_no_dependency(self):
+        """
+        Test whether a plugin with no dependencies is excluded.
+        """
+
+        l = [
+            EdgeHolder("first", ("second",), tuple()),
+            EdgeHolder("second", tuple(), ("first",)),
+            EdgeHolder("third", tuple(), tuple()),
+        ]
+
+        sorted = bravo.plugin.sort_plugins(l)
+        self.assertEqual(set(l), set(sorted))
+
+    def test_sort_plugins_missing_dependency(self):
+        """
+        Test whether a missing "after" dependency causes a plugin to be
+        excluded.
+        """
+
+        l = [
+            EdgeHolder("first", ("second",), tuple()),
+            EdgeHolder("second", tuple(), ("first",)),
+            EdgeHolder("third", tuple(), ("missing",)),
+        ]
+
+        sorted = bravo.plugin.sort_plugins(l)
+        self.assertEqual(set(l), set(sorted))

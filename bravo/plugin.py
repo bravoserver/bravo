@@ -34,7 +34,7 @@ def sort_plugins(plugins):
             l.append(plugin)
 
     for plugin in plugins:
-        if not plugin.after:
+        if not any(name in d for name in plugin.after):
             visit(plugin)
 
     return l
