@@ -69,6 +69,15 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.orientation.pitch, 6)
         self.assertEqual(parsed.flying.flying, 1)
 
+    def test_digging(self):
+        packet = "\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01"
+        parsed = bravo.packets.packets[14].parse(packet)
+        self.assertEqual(parsed.state, 3)
+        self.assertEqual(parsed.x, -1)
+        self.assertEqual(parsed.y, 255)
+        self.assertEqual(parsed.z, -1)
+        self.assertEqual(parsed.face, "+y")
+
     def test_build(self):
         packet = "\x00\x00\x00\x19@\x00\x00\x00@\x05\x00\x04@\x00\x12"
         parsed = bravo.packets.packets[15].parse(packet)
@@ -134,7 +143,7 @@ class TestPacketHelpers(unittest.TestCase):
         packet = bravo.packets.make_packet("ping")
         self.assertEqual(packet, "\x00")
 
-    def test_string(self):
+    def test_alphastring(self):
         s = "Just a test"
         parser = bravo.packets.AlphaString("test")
         self.assertEqual(parser.build(s), "\x00\x0bJust a test")
