@@ -809,8 +809,6 @@ class BravoProtocol(BetaServerProtocol):
                 except (TaskDone, TaskFailed):
                     pass
 
-        del self.chunks
-
         if self.player:
             self.factory.world.save_player(self.username, self.player)
             self.factory.destroy_entity(self.player)
