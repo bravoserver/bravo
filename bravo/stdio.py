@@ -91,6 +91,11 @@ class AMPGateway(object):
                 # Quit.
                 stop_console()
                 reactor.stop()
+            elif command == "worlds":
+                # Print list of available worlds.
+                self.sendLine("Worlds:")
+                for world in self.worlds:
+                    self.sendLine(world)
             elif command == "select":
                 # World selection.
                 world = params[0]
