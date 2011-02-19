@@ -178,8 +178,14 @@ class Chunk(ChunkSerializer):
         lightmap = zeros((16, 16, 128), dtype=uint8)
 
         for x, z in product(xrange(16), repeat=2):
+            height = self.height_at(x, z)
+
+            # fill all air blocks with light
+            lightmap[x, z, height + 1:] = 15
+
+            # dim the light going through the remaining blocks
             light = 15
-            for y in range(127, -1, -1):
+            for y in range(height, -1, -1):
                 dim = blocks[self.blocks[x, z, y]].dim
                 light -= dim
                 if light <= 0:
