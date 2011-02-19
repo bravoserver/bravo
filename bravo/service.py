@@ -25,6 +25,8 @@ class BravoService(MultiService):
         self.amp = TCPServer(25600, ConsoleRPCFactory(self))
         MultiService.addService(self, self.amp)
 
+        self.configure_services(configuration)
+
     def addService(self, service):
         MultiService.addService(self, service)
 
