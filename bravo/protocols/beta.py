@@ -520,7 +520,7 @@ class BravoProtocol(BetaServerProtocol):
         if container.state != 3:
             return
 
-        if time() - self.last_dig_build_timer < 0.2:
+        if time() - self.last_dig_build_timer < 0.1:
             self.error("You are digging too fast.")
 
         self.last_dig_build_timer = time()
