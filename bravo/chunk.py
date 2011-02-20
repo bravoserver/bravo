@@ -332,6 +332,9 @@ class Chunk(ChunkSerializer):
         if self.blocks[x, z, y] != block:
             self.blocks[x, z, y] = block
 
+            if not self.populated:
+                return
+
             # Regenerate heightmap at this coordinate. Honestly not sure
             # whether or not this is cheaper than the set of conditional
             # statements required to update it in relative terms instead of
