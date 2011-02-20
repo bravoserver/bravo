@@ -207,7 +207,8 @@ def simplex3(x, y, z):
 
     n = 0
     for coord, gradient in zip(coords, gradients):
-        t = 0.6 - coord[0] * coord[0] - coord[1] * coord[1] - coord[2] * coord[2]
+        t = (0.6 - coord[0] * coord[0] - coord[1] * coord[1] - coord[2] *
+            coord[2])
         if t > 0:
             n += t**4 * dot(edges2[gradient % 12], coord)
 
