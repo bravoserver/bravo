@@ -191,7 +191,7 @@ class GrassGenerator(object):
             if (chunk.get_block((x, y, z)) == blocks["dirt"].slot and
                 (y == 127 or
                     chunk.get_block((x, y + 1, z)) == blocks["air"].slot)):
-                        chunk.set_block((x, y, z), blocks["grass"].slot)
+                        chunk.blocks[x, z, y] = blocks["grass"].slot
 
     name = "grass"
 
@@ -206,6 +206,8 @@ class BeachGenerator(object):
     beaches near all bodies of water regardless of size or composition; it
     will form beaches at large seashores and frozen lakes. It will even place
     beaches on one-block puddles.
+
+    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(IPlugin, ITerrainGenerator)
@@ -234,7 +236,7 @@ class BeachGenerator(object):
 
             if (chunk.get_block((x, y + 1, z)) in self.above and
                 (chunk.get_block((x, y, z)) in self.replace)):
-                chunk.set_block((x, y, z), blocks["sand"].slot)
+                chunk.blocks[x, z, y] = blocks["sand"].slot
 
     name = "beaches"
 
@@ -244,6 +246,8 @@ class BeachGenerator(object):
 class OreGenerator(object):
     """
     Place ores and clay.
+
+    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(IPlugin, ITerrainGenerator)
@@ -264,30 +268,29 @@ class OreGenerator(object):
 
                 if sample > 0.9999:
                     # Figure out what to place here.
-                    old = chunk.get_block((x, y, z))
+                    old = chunk.blocks[x, z, y]
+                    new = None
                     if old == blocks["sand"].slot:
                         # Sand becomes clay.
-                        chunk.set_block((x, y, z), blocks["clay"].slot)
+                        new = blocks["clay"].slot
                     elif old == blocks["dirt"].slot:
                         # Dirt becomes gravel.
-                        chunk.set_block((x, y, z), blocks["gravel"].slot)
+                        new = blocks["gravel"].slot
                     elif old == blocks["stone"].slot:
                         # Stone becomes one of the ores.
                         if y < 12:
-                            chunk.set_block((x, y, z),
-                                blocks["diamond-ore"].slot)
+                            new = blocks["diamond-ore"].slot
                         elif y < 24:
-                            chunk.set_block((x, y, z),
-                                blocks["gold-ore"].slot)
+                            new = blocks["gold-ore"].slot
                         elif y < 36:
-                            chunk.set_block((x, y, z),
-                                blocks["redstone-ore"].slot)
+                            new = blocks["redstone-ore"].slot
                         elif y < 48:
-                            chunk.set_block((x, y, z),
-                                blocks["iron-ore"].slot)
+                            new = blocks["iron-ore"].slot
                         else:
-                            chunk.set_block((x, y, z),
-                                blocks["coal-ore"].slot)
+                            new = blocks["coal-ore"].slot
+
+                    if new:
+                        chunk.blocks[x, z, y] = new
 
     name = "ore"
 
