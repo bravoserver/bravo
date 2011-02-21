@@ -593,6 +593,10 @@ class BravoProtocol(BetaServerProtocol):
 
         self.last_dig_build_timer = time()
 
+        # it's the top of the world, you can't build here
+        if container.y == 127 and container.face == '+y':
+            return
+
         builddata = BuildData(block, 0x0, container.x, container.y,
             container.z, container.face)
 
