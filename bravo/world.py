@@ -415,3 +415,13 @@ class World(LevelSerializer):
         bigx, smallx, bigz, smallz = split_coords(x, z)
         chunk = self.load_chunk(bigx, bigz)
         chunk.set_metadata((smallx, y, smallz), value)
+
+    def destroy(self, coords):
+        """
+        Destroy a block in an unknown chunk.
+        """
+
+        x, y, z = coords
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+        chunk = self.load_chunk(bigx, bigz)
+        chunk.destroy((smallx, y, smallz))
