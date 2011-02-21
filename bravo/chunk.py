@@ -383,6 +383,24 @@ class Chunk(ChunkSerializer):
             self.dirty = True
             self.damage(coords)
 
+    def destroy(self, coords):
+        """
+        Destroy the block at the given coordinates.
+
+        This may or may not set the block to be full of air; it uses the
+        block's preferred replacement. For example, ice generally turns to
+        water when destroyed.
+
+        This is safe as a no-op; for example, destroying a block of air with
+        no metadata is not going to cause state changes.
+        """
+
+        x, y, z = coords
+
+        block = blocks[self.blocks[x, z, y]]
+        self.set_block((x, y, z), block.replace)
+        self.set_metadata((x, y, z), 0)
+
     def height_at(self, x, z):
         """
         Get the height of an xz-column of blocks.

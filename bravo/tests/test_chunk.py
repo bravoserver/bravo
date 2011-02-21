@@ -29,6 +29,17 @@ class TestChunkBlocks(unittest.TestCase):
         self.assertEqual(self.c.blocks[0, 1, 0], 3)
         self.assertEqual(self.c.blocks[0, 0, 1], 2)
 
+    def test_destroy(self):
+        """
+        Test block destruction.
+        """
+
+        self.c.set_block((0, 0, 0), 1)
+        self.c.set_metadata((0, 0, 0), 1)
+        self.c.destroy((0, 0, 0))
+        self.assertEqual(self.c.blocks[0, 0, 0], 0)
+        self.assertEqual(self.c.metadata[0, 0, 0], 0)
+
 class TestNumpyQuirks(unittest.TestCase):
     """
     Tests for the bad interaction between several components of Bravo.
