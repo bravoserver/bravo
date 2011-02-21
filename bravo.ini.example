@@ -11,7 +11,7 @@
 # Additionally, you probably want either alpha_snow or bravo_snow for snow
 # support.
 #dig_hooks = give, replace, alpha_snow
-dig_hooks = give, replace, bravo_snow, alpha_sand_gravel
+dig_hooks = give, replace, bravo_snow, alpha_sand_gravel, torch
 
 # Build hooks. The important ones:
 # ~ build: place blocks
