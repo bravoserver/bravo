@@ -6,43 +6,6 @@ from bravo.entity import tile_entities
 from bravo.ibravo import IBuildHook
 from bravo.utilities import split_coords
 
-class Torch(object):
-    """
-    Update metadata for torches.
-
-    You almost certainly want to enable this plugin.
-    """
-
-    implements(IPlugin, IBuildHook)
-
-    def build_hook(self, factory, player, builddata):
-        block, metadata, x, y, z, face = builddata
-
-        if block.slot in (blocks["torch"].slot,
-            blocks["redstone-torch"].slot):
-
-            # Update metadata according to face.
-            if face == "-x":
-                builddata = builddata._replace(metadata=0x2)
-            elif face == "+x":
-                builddata = builddata._replace(metadata=0x1)
-            elif face == "-y":
-                # At the moment, you cannot mount torches on the ceiling. :c
-                return False, builddata
-            elif face == "+y":
-                builddata = builddata._replace(metadata=0x5)
-            elif face == "-z":
-                builddata = builddata._replace(metadata=0x4)
-            elif face == "+z":
-                builddata = builddata._replace(metadata=0x3)
-
-        return True, builddata
-
-    name = "torch"
-
-    before = tuple()
-    after = ("build",)
-
 class Ladder(object):
     """
     Update metadata for ladders.
@@ -204,7 +167,6 @@ class BuildSnow(object):
     before = tuple()
     after = ("build",)
 
-torch = Torch()
 tile = Tile()
 build = Build()
 build_snow = BuildSnow()
