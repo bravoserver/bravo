@@ -148,8 +148,7 @@ class Tracks(object):
             elif dz == -1 and metadata != ASCEND_W:
                 continue
             # Remove track and metadata
-            world.set_metadata(coords, 0)
-            world.set_block(coords, blocks["air"].slot)
+            world.destroy(coords)
             # Drop track on ground - needs pixel coordinates
             pixcoords = ((x + dx) * 32 + 16, (y + 1) * 32, (z + dz) * 32 + 16)
             factory.give(pixcoords, (blocks["tracks"].slot, 0), 1)

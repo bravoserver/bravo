@@ -39,8 +39,7 @@ class Replace(object):
     implements(IPlugin, IDigHook)
 
     def dig_hook(self, factory, chunk, x, y, z, block):
-        chunk.set_block((x, y, z), block.replace)
-        chunk.set_metadata((x, y, z), 0)
+        chunk.destroy((x, y, z))
 
     name = "replace"
 
