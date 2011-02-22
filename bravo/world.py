@@ -1,3 +1,4 @@
+from functools import wraps
 import random
 import sys
 import weakref
@@ -23,6 +24,23 @@ try:
     async = configuration.getboolean("bravo", "ampoule")
 except ImportError:
     async = False
+
+def coords_to_chunk(f):
+    """
+    Automatically look up the chunk for the coordinates, and convert world
+    coordinates to chunk coordinates.
+    """
+
+    @wraps(f)
+    def decorated(self, coords, *args, **kwargs):
+        x, y, z = coords
+
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+        chunk = self.load_chunk(bigx, bigz)
+
+        return f(self, chunk, (smallx, y, smallz), *args, **kwargs)
+
+    return decorated
 
 def base36(i):
     """
@@ -372,56 +390,46 @@ class World(LevelSerializer):
         f = f.child("%s%s" % (username, extension()))
         write_to_file(player.save_to_tag(), f.open("w"))
 
-    def get_block(self, coords):
+    # World-level geometry access.
+    # These methods let external API users refrain from going through the
+    # standard motions of looking up and loading chunk information.
+
+    @coords_to_chunk
+    def get_block(self, chunk, coords):
         """
         Get a block from an unknown chunk.
         """
 
-        x, y, z = coords
+        return chunk.get_block(coords)
 
-        bigx, smallx, bigz, smallz = split_coords(x, z)
-        chunk = self.load_chunk(bigx, bigz)
-        return chunk.get_block((smallx, y, smallz))
-
-    def set_block(self, coords, value):
+    @coords_to_chunk
+    def set_block(self, chunk, coords, value):
         """
         Set a block in an unknown chunk.
         """
 
-        x, y, z = coords
+        chunk.set_block(coords, value)
 
-        bigx, smallx, bigz, smallz = split_coords(x, z)
-        chunk = self.load_chunk(bigx, bigz)
-        chunk.set_block((smallx, y, smallz), value)
-
-    def get_metadata(self, coords):
+    @coords_to_chunk
+    def get_metadata(self, chunk, coords):
         """
         Get a block's metadata from an unknown chunk.
         """
 
-        x, y, z = coords
+        return chunk.get_metadata(coords)
 
-        bigx, smallx, bigz, smallz = split_coords(x, z)
-        chunk = self.load_chunk(bigx, bigz)
-        return chunk.get_metadata((smallx, y, smallz))
-
-    def set_metadata(self, coords, value):
+    @coords_to_chunk
+    def set_metadata(self, chunk, coords, value):
         """
         Set a block's metadata in an unknown chunk.
         """
 
-        x, y, z = coords
+        chunk.set_metadata(coords, value)
 
-        bigx, smallx, bigz, smallz = split_coords(x, z)
-        chunk = self.load_chunk(bigx, bigz)
-        chunk.set_metadata((smallx, y, smallz), value)
-
-    def destroy(self, coords):
+    @coords_to_chunk
+    def destroy(self, chunk, coords):
         """
         Destroy a block in an unknown chunk.
         """
 
-        x, y, z = coords
-        bigx, smallx, bigz, smallz = split_coords(x, z)
-        chunk = self.load_chunk(bigx, bigz)
-        chunk.destroy((smallx, y, smallz))
+        chunk.destroy(coords)
