@@ -31,6 +31,46 @@ there are several advantages to Python which are too important to sacrifice:
 Additionally, with the advent of PyPy, the question of whether a full-fledged
 Python application is too slow for consumer hardware is rapidly fading.
 
+No Extension Modules
+^^^^^^^^^^^^^^^^^^^^
+
+There are several good reasons to not ship "extension modules," pieces of code
+written in Fortran, C, or C++ which are compiled and dynamically linked
+against the CPython extension API. Some of them are:
+
+Portability
+ Python and C have different scopes of portability, and the scope of the C API
+ for Python is limited practically to CPython. Each module we depend on
+ externally has the potential to reduce the number of platforms we can
+ support.
+Maintainability
+ C is not maintainable on the same scale as Python, even with (and, some would
+ argue, especially with) the extremely structured syntax required to interface
+ with the C API for Python. Cython is maintainable, but does not solve the
+ other problems.
+Dependencies
+ Somebody has to provide binary versions of the modules for all the people
+ without compilers. Practically, this does mean that Win32 users need to have
+ binaries provided for them, as long as our thin veneer of Win32 compatibility
+ holds up.
+Forward-compatibility
+ Frankly, extension modules are forever incompatible with the spirit of PyPy,
+ and require, at bare minimum, a recompile and prayer before they'll
+ cooperate. This is another hurdle to jump over in the ongoing quest to make
+ PyPy a supported Python interpreter for the entire package.
+
+Frankly, most extension modules aren't worth this trouble. Extension modules
+which are well-tested, ubiquitous, and actively maintained, are generally
+going to be favored more than extensions which break, are hard to obtain or
+compile, or are derelict.
+
+At the moment, the only extension modules required are in the numpy package,
+which has benefits far outweighing the above complaints.
+
+I am expressly vetoing noise. In addition to the above complaints, its API
+doesn't even provide an equivalent to the pure-Python code in Bravo's core
+which it would supposedly supplant.
+
 No Threads
 ----------
 
