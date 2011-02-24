@@ -218,16 +218,6 @@ class ISerializer(IBravoPlugin):
     implementation of their serialization technique.
     """
 
-    def save_chest(chest):
-        """
-        Save a chest.
-        """
-
-    def load_chest(chest):
-        """
-        Load a chest.
-        """
-
     def save_chunk(chunk):
         """
         Save a chunk.
@@ -236,16 +226,6 @@ class ISerializer(IBravoPlugin):
     def load_chunk(chunk):
         """
         Load a chunk.
-        """
-
-    def save_inventory(inventory):
-        """
-        Save an inventory.
-        """
-
-    def load_inventory(inventory):
-        """
-        Load an inventory.
         """
 
     def save_level(level):
@@ -266,16 +246,6 @@ class ISerializer(IBravoPlugin):
     def load_player(player):
         """
         Load a player.
-        """
-
-    def save_sign(sign):
-        """
-        Save a sign.
-        """
-
-    def load_sign(sign):
-        """
-        Load a sign.
         """
 
 class ISerializerFactory(IBravoPlugin):
