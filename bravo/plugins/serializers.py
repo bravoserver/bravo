@@ -1,8 +1,10 @@
 from itertools import chain
+from urlparse import urlparse
 
 from numpy import array, fromstring, uint8
 
 from twisted.plugin import IPlugin
+from twisted.python import log
 from twisted.python.filepath import FilePath
 from zope.interface import implements, classProvides
 
@@ -72,8 +74,16 @@ class Alpha(object):
 
     name = "alpha"
 
-    def __init__(self, folder):
-        self.folder = FilePath(folder)
+    def __init__(self, url):
+        parsed = urlparse(url)
+        if parsed.scheme != "file":
+            raise Exception("I am not okay with scheme %s" % parsed.scheme)
+
+        self.folder = FilePath(parsed.path)
+        if not self.folder.exists():
+            self.folder.makedirs()
+            log.msg("Creating new world in %s" % self.folder)
+
 
     def _read_tag(self, fp):
         if fp.exists() and fp.getsize():

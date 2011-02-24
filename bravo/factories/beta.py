@@ -61,8 +61,7 @@ class BravoFactory(Factory):
         if configuration.has_option("world %s" % name, "host"):
             self.interface = configuration.get("world %s" % name, "host")
 
-        world_folder = configuration.get("world %s" % name, "path")
-        self.world = World(world_folder)
+        self.world = World(name)
         self.world.factory = self
         if configuration.has_option("world %s" % name, "perm_cache"):
             cache_level = configuration.getint("world %s" % name, "perm_cache")

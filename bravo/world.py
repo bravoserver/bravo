@@ -14,6 +14,8 @@ from twisted.python.filepath import FilePath
 from bravo.chunk import Chunk
 from bravo.compat import product
 from bravo.config import configuration
+from bravo.ibravo import ISerializerFactory
+from bravo.plugin import retrieve_named_plugins
 from bravo.serialize import LevelSerializer
 from bravo.serialize import read_from_file, write_to_file, extension
 from bravo.utilities import split_coords
@@ -42,44 +44,7 @@ def coords_to_chunk(f):
 
     return decorated
 
-def base36(i):
-    """
-    Return the string representation of i in base 36, using lowercase letters.
-    """
-
-    letters = "0123456789abcdefghijklmnopqrstuvwxyz"
-
-    if i < 0:
-        i = -i
-        signed = True
-    elif i == 0:
-        return "0"
-    else:
-        signed = False
-
-    s = ""
-
-    while i:
-        i, digit = divmod(i, 36)
-        s = letters[digit] + s
-
-    if signed:
-        s = "-" + s
-
-    return s
-
-def names_for_chunk(x, z):
-    """
-    Calculate the folder and file names for given chunk coordinates.
-    """
-
-    first = base36(x & 63)
-    second = base36(z & 63)
-    third = "c.%s.%s%s" % (base36(x), base36(z), extension())
-
-    return first, second, third
-
-class World(LevelSerializer):
+class World(object):
     """
     Object representing a world on disk.
 
@@ -97,19 +62,20 @@ class World(LevelSerializer):
     Whether objects belonging to this world may be written out to disk.
     """
 
-    def __init__(self, folder):
+    def __init__(self, name):
         """
         Load a world from disk.
 
         :Parameters:
-            folder : str
-                The directory containing the world.
+            name : str
+                The configuration key to use to look up configuration data.
         """
 
-        self.folder = FilePath(folder)
-        if not self.folder.exists():
-            self.folder.makedirs()
-            log.msg("Creating new world in %s" % self.folder)
+        world_url = configuration.get("world %s" % name, "url")
+        world_sf_name = configuration.get("world %s" % name, "serializer")
+
+        sf = retrieve_named_plugins(ISerializerFactory, [world_sf_name])[0]
+        self.serializer = sf(world_url)
 
         self.chunk_cache = weakref.WeakValueDictionary()
         self.dirty_chunk_cache = dict()
@@ -119,16 +85,14 @@ class World(LevelSerializer):
         self.spawn = (0, 0, 0)
         self.seed = random.randint(0, sys.maxint)
 
-        level = self.folder.child("level%s" % extension())
-        if level.exists() and level.getsize():
-            self.load_from_tag(read_from_file(level.open("r")))
-
-        write_to_file(self.save_to_tag(), level.open("w"))
+        self.serializer.load_level(self)
+        self.serializer.save_level(self)
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
 
-        log.msg("World started in %s" % self.folder)
+        log.msg("World started on %s, using serializer %s" %
+            (world_url, self.serializer.name))
         log.msg("Using Ampoule: %s" % async)
 
     def enable_cache(self, size):
@@ -248,14 +212,7 @@ class World(LevelSerializer):
             return d
 
         chunk = Chunk(x, z)
-
-        first, second, filename = names_for_chunk(x, z)
-        f = self.folder.child(first).child(second)
-        if not f.exists():
-            f.makedirs()
-        f = f.child(filename)
-        if f.exists() and f.getsize():
-            chunk.load_from_tag(read_from_file(f.open("r")))
+        self.serializer.load_chunk(chunk)
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
@@ -318,14 +275,7 @@ class World(LevelSerializer):
             return self.dirty_chunk_cache[x, z]
 
         chunk = Chunk(x, z)
-
-        first, second, filename = names_for_chunk(x, z)
-        f = self.folder.child(first).child(second)
-        if not f.exists():
-            f.makedirs()
-        f = f.child(filename)
-        if f.exists() and f.getsize():
-            chunk.load_from_tag(read_from_file(f.open("r")))
+        self.serializer.load_chunk(chunk)
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
@@ -353,12 +303,7 @@ class World(LevelSerializer):
         if not chunk.dirty:
             return
 
-        first, second, filename = names_for_chunk(chunk.x, chunk.z)
-        f = self.folder.child(first).child(second)
-        if not f.exists():
-            f.makedirs()
-        f = f.child(filename)
-        write_to_file(chunk.save_to_tag(), f.open("w"))
+        self.serializer.save_chunk(chunk)
 
         chunk.dirty = False
 
@@ -373,22 +318,12 @@ class World(LevelSerializer):
         player.location.stance = self.spawn[1]
         player.username = username
 
-        f = self.folder.child("players")
-        if not f.exists():
-            f.makedirs()
-        f = f.child("%s%s" % (username, extension()))
-        if f.exists() and f.getsize():
-            player.load_from_tag(read_from_file(f.open("r")))
+        self.serializer.load_player(player)
 
         return player
 
     def save_player(self, username, player):
-
-        f = self.folder.child("players")
-        if not f.exists():
-            f.makedirs()
-        f = f.child("%s%s" % (username, extension()))
-        write_to_file(player.save_to_tag(), f.open("w"))
+        self.serializer.save_player(player)
 
     # World-level geometry access.
     # These methods let external API users refrain from going through the
