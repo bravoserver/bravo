@@ -3,7 +3,6 @@ from math import pi
 from bravo.inventory import Equipment, ChestStorage
 from bravo.location import Location
 from bravo.packets import make_packet
-from bravo.serialize import ChestSerializer, PlayerSerializer, SignSerializer
 
 class Entity(object):
     """
@@ -28,7 +27,7 @@ class Entity(object):
 
         self.location = Location()
 
-class Player(Entity, PlayerSerializer):
+class Player(Entity):
     """
     A player entity.
     """
@@ -78,7 +77,7 @@ class Pickup(Entity):
 
     name = "Pickup"
 
-class Chest(ChestSerializer):
+class Chest(object):
     """
     A tile that holds items.
     """
@@ -97,7 +96,7 @@ class Chest(ChestSerializer):
 
         return ""
 
-class Sign(SignSerializer):
+class Sign(object):
     """
     A tile that stores text.
     """

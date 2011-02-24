@@ -5,7 +5,6 @@ from construct import Container, ListContainer
 from bravo.ibravo import IRecipe
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_plugins
-from bravo.serialize import InventorySerializer
 
 def grouper(n, iterable):
     args = [iter(iterable)] * n
@@ -33,7 +32,7 @@ def pad_to_stride(recipe, rstride, cstride):
 
     return padded
 
-class Inventory(InventorySerializer):
+class Inventory(object):
     """
     Item manager.
 

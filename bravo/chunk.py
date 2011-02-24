@@ -5,7 +5,6 @@ from bravo.blocks import blocks, glowing_blocks
 from bravo.compat import product
 from bravo.entity import tile_entities
 from bravo.packets import make_packet
-from bravo.serialize import ChunkSerializer
 from bravo.utilities import pack_nibbles
 
 # Set up glow tables.
@@ -62,7 +61,7 @@ def composite_glow(target, strength, x, y, z):
     # Composite!
     target[sx:ex, sz:ez, sy:ey] += ambient[si:ei, sk:ek, sj:ej]
 
-class Chunk(ChunkSerializer):
+class Chunk(object):
     """
     A chunk of blocks.
 

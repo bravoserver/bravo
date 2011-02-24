@@ -9,15 +9,12 @@ from twisted.internet import reactor
 from twisted.internet.defer import Deferred, succeed
 from twisted.internet.task import coiterate, deferLater, LoopingCall
 from twisted.python import log
-from twisted.python.filepath import FilePath
 
 from bravo.chunk import Chunk
 from bravo.compat import product
 from bravo.config import configuration
 from bravo.ibravo import ISerializerFactory
 from bravo.plugin import retrieve_named_plugins
-from bravo.serialize import LevelSerializer
-from bravo.serialize import read_from_file, write_to_file, extension
 from bravo.utilities import split_coords
 
 try:

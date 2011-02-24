@@ -10,6 +10,7 @@ from zope.interface import implements, classProvides
 
 from bravo.entity import Chest, Sign
 from bravo.ibravo import ISerializer, ISerializerFactory
+from bravo.inventory import Inventory
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
@@ -100,7 +101,7 @@ class Alpha(object):
         chest.y = tag["y"].value
         chest.z = tag["z"].value
 
-        chest.inventory = self._load_inventory_from_tag(tag["Items"])
+        self._load_inventory_from_tag(chest.inventory, tag["Items"])
 
         return chest
 
@@ -118,17 +119,69 @@ class Alpha(object):
 
         return tag
 
-    def _load_inventory_from_tag(self, tag):
-        pass
+    def _load_inventory_from_tag(self, inventory, tag):
+        """
+        Load an inventory from a tag.
+
+        Due to quirks of inventory, we cannot instantiate the inventory here;
+        instead, act on an inventory passed in from above.
+        """
+        items = [None] * len(inventory)
+
+        for item in tag.tags:
+            slot = item["Slot"].value
+            items[slot] = (item["id"].value,
+                item["Damage"].value, item["Count"].value)
+
+        inventory.load_from_list(items)
 
     def _save_inventory_to_tag(self, inventory):
-        pass
+        tag = TAG_List(type=TAG_Compound)
+
+        for i, item in enumerate(chain(inventory.crafted,
+            inventory.crafting, inventory.armor, inventory.storage,
+            inventory.holdables)):
+            if item is not None:
+                d = TAG_Compound()
+                id, damage, count = item
+                d["id"] = TAG_Short(id)
+                d["Damage"] = TAG_Short(damage)
+                d["Count"] = TAG_Byte(count)
+                d["Slot"] = TAG_Byte(i)
+                tag.tags.append(d)
+
+        return tag
 
     def _load_sign_from_tag(self, tag):
-        pass
+        sign = Sign()
 
-    def _save_sign_to_tag(self, tag):
-        pass
+        sign.x = tag["x"].value
+        sign.y = tag["y"].value
+        sign.z = tag["z"].value
+
+        sign.text1 = tag["Text1"].value
+        sign.text2 = tag["Text2"].value
+        sign.text3 = tag["Text3"].value
+        sign.text4 = tag["Text4"].value
+
+        return sign
+
+    def _save_sign_to_tag(self, sign):
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["id"] = TAG_String("Sign")
+
+        tag["x"] = TAG_Int(sign.x)
+        tag["y"] = TAG_Int(sign.y)
+        tag["z"] = TAG_Int(sign.z)
+
+        tag["Text1"] = TAG_String(sign.text1)
+        tag["Text2"] = TAG_String(sign.text2)
+        tag["Text3"] = TAG_String(sign.text3)
+        tag["Text4"] = TAG_String(sign.text4)
+
+        return tag
 
     def load_chunk(self, chunk):
         first, second, filename = names_for_chunk(chunk.x, chunk.z)
@@ -245,7 +298,7 @@ class Alpha(object):
         player.location.yaw = tag["Rotation"].tags[0].value
 
         if "Inventory" in tag:
-            player.inventory.load_from_tag(tag["Inventory"])
+            self._load_inventory_from_tag(player.inventory, tag["Inventory"])
 
     def save_player(self, player):
         tag = NBTFile()
@@ -259,7 +312,7 @@ class Alpha(object):
         tag["Rotation"].tags = [TAG_Double(i)
             for i in (player.location.yaw, 0)]
 
-        tag["Inventory"] = player.inventory.save_to_tag()
+        tag["Inventory"] = self._save_inventory_to_tag(player.inventory)
 
         fp = self.folder.child("players").child("%s.dat" % player.username)
         self._write_tag(fp, tag)
