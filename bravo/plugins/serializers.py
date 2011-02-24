@@ -6,6 +6,7 @@ from twisted.plugin import IPlugin
 from twisted.python.filepath import FilePath
 from zope.interface import implements, classProvides
 
+from bravo.entity import Chest, Sign
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
@@ -19,6 +20,36 @@ from bravo.utilities import unpack_nibbles, pack_nibbles
 # class at the end of the file.
 # Twisted discovers ISerializerFactories for us, and Bravo produces
 # ISerializer instances as needed, internally.
+
+def base36(i):
+    """
+    Return the string representation of i in base 36, using lowercase letters.
+
+    This isn't optimal, but it covers all of the Notchy corner cases.
+
+    XXX unit test me plz
+    """
+
+    letters = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+    if i < 0:
+        i = -i
+        signed = True
+    elif i == 0:
+        return "0"
+    else:
+        signed = False
+
+    s = ""
+
+    while i:
+        i, digit = divmod(i, 36)
+        s = letters[digit] + s
+
+    if signed:
+        s = "-" + s
+
+    return s
 
 def names_for_chunk(x, z):
     """
@@ -52,20 +83,18 @@ class Alpha(object):
     def _write_tag(self, fp, tag):
         tag.write_file(fileobj=fp.open("w"))
 
-    def load_chest(self, chest):
-        # XXX
-        pass
+    def _load_chest_from_tag(self, tag):
+        chest = Chest()
 
         chest.x = tag["x"].value
         chest.y = tag["y"].value
         chest.z = tag["z"].value
 
-        chest.inventory.load_from_tag(tag["Items"])
+        chest.inventory = self._load_inventory_from_tag(tag["Items"])
 
-    def save_chest(self, chest):
-        # XXX
-        pass
+        return chest
 
+    def _save_chest_to_tag(self, chest):
         tag = NBTFile()
         tag.name = ""
 
@@ -75,9 +104,21 @@ class Alpha(object):
         tag["y"] = TAG_Int(chest.y)
         tag["z"] = TAG_Int(chest.z)
 
-        tag["Items"] = chest.inventory.save_to_tag()
+        tag["Items"] = self._save_inventory_to_tag(chest.inventory)
 
         return tag
+
+    def _load_inventory_from_tag(self, tag):
+        pass
+
+    def _save_inventory_to_tag(self, inventory):
+        pass
+
+    def _load_sign_from_tag(self, tag):
+        pass
+
+    def _save_sign_to_tag(self, tag):
+        pass
 
     def load_chunk(self, chunk):
         first, second, filename = names_for_chunk(chunk.x, chunk.z)
@@ -109,12 +150,15 @@ class Alpha(object):
 
         if "TileEntities" in level:
             for tag in level["TileEntities"].tags:
-                try:
-                    tile = chunk.known_tile_entities[tag["id"].value]()
-                    tile.load_from_tag(tag)
-                    chunk.tiles[tile.x, tile.y, tile.z] = tile
-                except:
+                if tag["id"].value == "Chest":
+                    tile = self._load_chest_from_tag(tag)
+                elif tag["id"].value == "Sign":
+                    tile = self._load_sign_from_tag(tag)
+                else:
                     print "Unknown tile entity %s" % tag["id"].value
+                    continue
+
+                chunk.tiles[tile.x, tile.y, tile.z] = tile
 
         chunk.dirty = not chunk.populated
 
@@ -142,7 +186,15 @@ class Alpha(object):
 
         level["TileEntities"] = TAG_List(type=TAG_Compound)
         for tile in chunk.tiles.itervalues():
-            level["TileEntities"].tags.append(tile.save_to_tag())
+            if tile.name == "Chest":
+                tiletag = self._save_chest_to_tag(tile)
+            elif tile.name == "Sign":
+                tiletag = self._save_sign_to_tag(tile)
+            else:
+                print "Unknown tile entity %s" % tile.name
+                continue
+
+            level["TileEntities"].tags.append(tiletag)
 
         first, second, filename = names_for_chunk(chunk.x, chunk.z)
         fp = self.folder.child(first).child(second)
