@@ -1,42 +1,30 @@
 import numpy
-import os.path
 import shutil
 import tempfile
 import unittest
 
 import bravo.compat
+import bravo.config
 import bravo.world
-
-class TestWorldFiles(unittest.TestCase):
-
-    def setUp(self):
-        self.d = tempfile.mkdtemp()
-        self.w = bravo.world.World(self.d)
-
-        self.extension = bravo.world.extension()
-
-    def tearDown(self):
-        del self.w
-        shutil.rmtree(self.d)
-
-    def test_trivial(self):
-        pass
-
-    def test_level(self):
-        self.assertTrue(
-            os.path.exists(os.path.join(self.d, "level%s" % self.extension))
-        )
 
 class TestWorldChunks(unittest.TestCase):
 
     def setUp(self):
+        self.name = "unittest"
         self.d = tempfile.mkdtemp()
-        self.w = bravo.world.World(self.d)
+
+        bravo.config.configuration.add_section("world unittest")
+        bravo.config.configuration.set("world unittest", "url", "file://%s" % self.d)
+        bravo.config.configuration.set("world unittest", "serializer",
+            "alpha")
+
+        self.w = bravo.world.World(self.name)
         self.w.pipeline = []
 
     def tearDown(self):
         del self.w
         shutil.rmtree(self.d)
+        bravo.config.configuration.remove_section("world unittest")
 
     def test_trivial(self):
         pass
@@ -114,17 +102,3 @@ class TestWorldChunks(unittest.TestCase):
             # need to be adjusted.
             self.assertEqual(chunk.get_metadata((x, y, z)),
                 self.w.get_metadata((x, y, z)))
-
-class TestWorldUtilities(unittest.TestCase):
-
-    def setUp(self):
-        self.extension = bravo.world.extension()
-
-    def test_trivial(self):
-        pass
-
-    def test_names_for_chunk(self):
-        self.assertEqual(bravo.world.names_for_chunk(-13, 44),
-            ("1f", "18", "c.-d.18%s" % self.extension))
-        self.assertEqual(bravo.world.names_for_chunk(-259, 266),
-            ("1p", "a", "c.-77.7e%s" % self.extension))

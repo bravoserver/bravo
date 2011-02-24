@@ -10,7 +10,6 @@ from zope.interface import implements, classProvides
 
 from bravo.entity import Chest, Sign
 from bravo.ibravo import ISerializer, ISerializerFactory
-from bravo.inventory import Inventory
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
@@ -269,6 +268,8 @@ class Alpha(object):
 
     def load_level(self, level):
         tag = self._read_tag(self.folder.child("level.dat"))
+        if not tag:
+            return
 
         level.spawn = (tag["Data"]["SpawnX"].value,
             tag["Data"]["SpawnY"].value,
@@ -291,6 +292,8 @@ class Alpha(object):
     def load_player(self, player):
         fp = self.folder.child("players").child("%s.dat" % player.username)
         tag = self._read_tag(fp)
+        if not tag:
+            return
 
         player.location.x, player.location.y, player.location.z = [
             i.value for i in tag["Pos"].tags]
