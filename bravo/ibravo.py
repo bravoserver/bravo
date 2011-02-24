@@ -208,3 +208,79 @@ class IDigHook(ISortedPlugin):
         :param int z: Z coordinate
         :param `Block` block: dug block
         """
+
+class ISerializer(IBravoPlugin):
+    """
+    Class that understands how to serialize several different kinds of objects
+    to and from disk-friendly formats.
+
+    Implementors of this interface are expected to provide a uniform
+    implementation of their serialization technique.
+    """
+
+    def save_chest(chest):
+        """
+        Save a chest.
+        """
+
+    def load_chest(chest):
+        """
+        Load a chest.
+        """
+
+    def save_chunk(chunk):
+        """
+        Save a chunk.
+        """
+
+    def load_chunk(chunk):
+        """
+        Load a chunk.
+        """
+
+    def save_inventory(inventory):
+        """
+        Save an inventory.
+        """
+
+    def load_inventory(inventory):
+        """
+        Load an inventory.
+        """
+
+    def save_level(level):
+        """
+        Save a level.
+        """
+
+    def load_level(level):
+        """
+        Load a level.
+        """
+
+    def save_player(player):
+        """
+        Save a player.
+        """
+
+    def load_player(player):
+        """
+        Load a player.
+        """
+
+    def save_sign(sign):
+        """
+        Save a sign.
+        """
+
+    def load_sign(sign):
+        """
+        Load a sign.
+        """
+
+class ISerializerFactory(IBravoPlugin):
+    """
+    Factory for ``ISerializer`` instances.
+
+    I am so sorry for this.
+    """
