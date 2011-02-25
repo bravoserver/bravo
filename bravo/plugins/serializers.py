@@ -368,21 +368,55 @@ class Beta(Alpha):
     def __init__(self, url):
         Alpha.__init__(self, url)
 
+        self.regions = dict()
+
+    def cache_region_pages(self, region):
+        """
+        Cache the pages of a region.
+        """
+
+        fp = self.folder.child("region").child(region)
+        handle = fp.open("r")
+        page = handle.read(4096)
+        # The + 1 is not gratuitous. Remember that range/xrange won't include
+        # the upper index, but we want it, so we need to increase our upper
+        # bound.
+        free_pages = set(xrange((fp.getsize() // 4096) + 1))
+        positions = dict()
+
+        for x in xrange(32):
+            for z in xrange(32):
+                offset = 4 * (x + z * 32)
+                position = unpack(">L", page[offset:offset+4])[0]
+                pages = position & 0xff
+                position >>= 8
+                if position and pages:
+                    positions[x, z] = position, pages
+                    for i in xrange(pages):
+                        free_pages.discard(position + i)
+
+        self.regions[region] = positions, free_pages
+
     def load_chunk(self, chunk):
         region = name_for_region(chunk.x, chunk.z)
         fp = self.folder.child("region").child(region)
         if not fp.exists():
             return
 
-        handle = fp.open("r")
-        page = handle.read(4096)
-        offset = 4 * (divmod(chunk.x, 32)[1] + (divmod(chunk.z, 32)[1] * 32))
-        position = unpack(">L", page[offset:offset+4])[0]
-        pages = position & 0xff
-        position >>= 8
+        if region not in self.regions:
+            self.cache_region_pages(region)
+
+        positions = self.regions[region][0]
+
+        if (chunk.x, chunk.z) not in positions:
+            return
+
+        position, pages = positions[chunk.x, chunk.z]
+
         if not position or not pages:
             return
 
+        handle = fp.open("r")
         handle.seek(position * 4096)
         data = handle.read(pages * 4096)
         length = unpack(">L", data[:4])[0]
@@ -416,25 +450,62 @@ class Beta(Alpha):
             handle.write("\x00" * 4096)
             handle.close()
 
-        handle = fp.open("r+")
-        page = handle.read(4096)
-        offset = 4 * (divmod(chunk.x, 32)[1] + (divmod(chunk.z, 32)[1] * 32))
-        position = unpack(">L", page[offset:offset+4])[0]
-        pages = position & 0xff
-        position >>= 8
+        if region not in self.regions:
+            self.cache_region_pages(region)
+
+        positions = self.regions[region][0]
+
+        if (chunk.x, chunk.z) in positions:
+            position, pages = positions[chunk.x, chunk.z]
+        else:
+            position, pages = 0, 0
 
         # Pack up the data, all ready to go.
         data = "%s\x02%s" % (pack(">L", len(data)), data)
         needed_pages = (len(data) + 4095) // 4096
-        if not position or not pages or pages < needed_pages:
+
+        handle = fp.open("r+")
+
+        # I should comment this, since it's not obvious in the original MCR
+        # code either. The reason that we might want to reallocate pages if we
+        # have shrunk, and not just grown, is that it allows the region to
+        # self-vacuum somewhat by reusing single unused pages near the
+        # beginning of the file. While this isn't an absolute guarantee, the
+        # potential savings, and the guarantee that sometime during this
+        # method we *will* be blocking, makes it worthwhile computationally.
+        # This is a lot cheaper than an explicit vacuum, by the way!
+        if not position or not pages or pages != needed_pages:
+            free_pages = self.regions[region][1]
+
+            # Deallocate our current home.
+            for i in xrange(pages):
+                free_pages.add(position + i)
+
             # Find a new home for us.
-            # XXX for now, being lazy and appending
-            position = (fp.getsize() // 4096) + 1
+            found = False
+            for candidate in sorted(free_pages):
+                if all(candidate + i in free_pages
+                    for i in range(needed_pages)):
+                        # Excellent.
+                        position = candidate
+                        found = True
+                        break
+
+            # If we couldn't find a reusable run of pages, we should just go
+            # to the end of the file.
+            if not found:
+                position = (fp.getsize() + 4095) // 4096
+
+            # And allocate our new home.
+            for i in xrange(pages):
+                free_pages.discard(position + i)
+
+        positions[chunk.x, chunk.z] = position, pages
 
         handle.seek(position * 4096)
         handle.write(data)
 
         position = position << 8 | pages
-        handle.seek(offset)
+        handle.seek(4 * ((chunk.x % 32) + (chunk.z % 32) * 32))
         handle.write(pack(">L", position))
         handle.close()
