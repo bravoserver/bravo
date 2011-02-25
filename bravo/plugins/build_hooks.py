@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
-from bravo.entity import tile_entities
+from bravo.entity import Sign
 from bravo.ibravo import IBuildHook
 from bravo.utilities import split_coords
 
@@ -80,7 +80,7 @@ class Tile(object):
             chunk = factory.world.load_chunk(bigx, bigz)
 
             # Let's build a sign!
-            s = tile_entities["Sign"]()
+            s = Sign()
             s.x = x
             s.y = y
             s.z = z

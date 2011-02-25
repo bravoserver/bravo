@@ -3,7 +3,6 @@ from numpy import cast, empty, where, zeros
 
 from bravo.blocks import blocks, glowing_blocks
 from bravo.compat import product
-from bravo.entity import tile_entities
 from bravo.packets import make_packet
 from bravo.utilities import pack_nibbles
 
@@ -82,15 +81,6 @@ class Chunk(object):
     tag = None
     """
     The file backing this chunk.
-    """
-
-    known_tile_entities = tile_entities
-    """
-    Dirty hack to work around mutual recursion during serialization.
-
-    Odds are good that you don't actually want to know why this is necessary.
-    Ask me in person if you like, and then you can have some of my brain
-    bleach later.
     """
 
     def __init__(self, x, z):

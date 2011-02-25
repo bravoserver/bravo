@@ -9,7 +9,7 @@ class Entity(object):
     Class representing an entity.
 
     Entities are simply dynamic in-game objects. Plain entities are not very
-    interesting; this class's subclasses are actually useful.
+    interesting.
     """
 
     name = "Entity"
@@ -125,8 +125,3 @@ class Sign(object):
             line1=self.text1, line2=self.text2, line3=self.text3,
             line4=self.text4)
         return packet
-
-tile_entities = {
-    "Chest": Chest,
-    "Sign": Sign,
-}
