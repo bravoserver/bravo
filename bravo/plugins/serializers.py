@@ -13,7 +13,7 @@ from twisted.python import log
 from twisted.python.filepath import FilePath
 from zope.interface import implements, classProvides
 
-from bravo.entity import Chest, Sign
+from bravo.entity import Chest, MobSpawner, Sign
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
@@ -113,11 +113,7 @@ class Alpha(object):
     # and deserialize automatically; they never need to be called directly.
 
     def _load_chest_from_tag(self, tag):
-        chest = Chest()
-
-        chest.x = tag["x"].value
-        chest.y = tag["y"].value
-        chest.z = tag["z"].value
+        chest = Chest(tag["x"].value, tag["y"].value, tag["z"].value)
 
         self._load_inventory_from_tag(chest.inventory, tag["Items"])
 
@@ -137,12 +133,31 @@ class Alpha(object):
 
         return tag
 
-    def _load_sign_from_tag(self, tag):
-        sign = Sign()
+    def _load_mobspawner_from_tag(self, tag):
+        ms = MobSpawner(tag["x"].value, tag["y"].value, tag["z"].value)
 
-        sign.x = tag["x"].value
-        sign.y = tag["y"].value
-        sign.z = tag["z"].value
+        ms.mob = tag["EntityId"].value
+        ms.delay = tag["Delay"].value
+
+        return ms
+
+    def _save_mobspawner_to_tag(self, ms):
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["id"] = TAG_String("MobSpawner")
+
+        tag["x"] = TAG_Int(ms.x)
+        tag["y"] = TAG_Int(ms.y)
+        tag["z"] = TAG_Int(ms.z)
+
+        tag["EntityId"] = TAG_String(ms.mob)
+        tag["Delay"] = TAG_Short(ms.delay)
+
+        return tag
+
+    def _load_sign_from_tag(self, tag):
+        sign = Sign(tag["x"].value, tag["y"].value, tag["z"].value)
 
         sign.text1 = tag["Text1"].value
         sign.text2 = tag["Text2"].value
@@ -199,6 +214,8 @@ class Alpha(object):
             for tag in level["TileEntities"].tags:
                 if tag["id"].value == "Chest":
                     tile = self._load_chest_from_tag(tag)
+                elif tag["id"].value == "MobSpawner":
+                    tile = self._load_mobspawner_from_tag(tag)
                 elif tag["id"].value == "Sign":
                     tile = self._load_sign_from_tag(tag)
                 else:
@@ -234,6 +251,8 @@ class Alpha(object):
         for tile in chunk.tiles.itervalues():
             if tile.name == "Chest":
                 tiletag = self._save_chest_to_tag(tile)
+            elif tile.name == "MobSpawner":
+                tiletag = self._save_mobspawner_to_tag(tile)
             elif tile.name == "Sign":
                 tiletag = self._save_sign_to_tag(tile)
             else:
