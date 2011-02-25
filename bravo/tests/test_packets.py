@@ -30,6 +30,15 @@ class TestPacketParsing(unittest.TestCase):
         parsed = bravo.packets.packets[0].parse(packet)
         self.assertTrue(parsed)
 
+    def test_login(self):
+        packet = """AAAACQAGQ29yYmluAADpJkIX+PwOVAA=""".decode("base64")
+        parsed = bravo.packets.packets[1].parse(packet)
+        self.assertEqual(parsed.protocol, 9)
+        self.assertEqual(parsed.username, "Corbin")
+        self.assertEqual(parsed.unused, "")
+        self.assertEqual(parsed.seed, -1646555943028388268)
+        self.assertEqual(parsed.dimension, 0)
+
     def test_handshake(self):
         packet = "\x00\x01a"
         parsed = bravo.packets.packets[2].parse(packet)
