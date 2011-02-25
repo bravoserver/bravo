@@ -1,6 +1,7 @@
 from __future__ import division
 
 import math
+from itertools import izip
 from random import Random
 
 from bravo.compat import chain, permutations
@@ -30,12 +31,18 @@ edges3 = list(
 )
 edges3.sort()
 
-def dot(u, v):
-    """
-    Dot product of two vectors.
-    """
 
-    return sum(i * j for i, j in zip(u, v))
+def dot2(u, v):
+    """
+    Dot product of two 2-dimensional vectors.
+    """
+    return u[0] * v[0] + u[1] * v[1]
+
+def dot3(u, v):
+    """
+    Dot product of two 3-dimensional vectors.
+    """
+    return u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
 
 def reseed(seed):
     """
@@ -110,10 +117,10 @@ def simplex2(x, y):
 
     # Do our summation.
     n = 0
-    for coord, gradient in zip(coords, gradients):
+    for coord, gradient in izip(coords, gradients):
         t = 0.5 - coord[0] * coord[0] - coord[1] * coord[1]
         if t > 0:
-            n += t**4 * dot(edges2[gradient % 12], coord)
+            n += t**4 * dot2(edges2[gradient % 12], coord)
 
     # Where's this scaling factor come from?
     return n * 70
@@ -206,11 +213,11 @@ def simplex3(x, y, z):
     gradients[3] = p[i + 1 + p[j + 1 + p[k + 1]]]
 
     n = 0
-    for coord, gradient in zip(coords, gradients):
+    for coord, gradient in izip(coords, gradients):
         t = (0.6 - coord[0] * coord[0] - coord[1] * coord[1] - coord[2] *
             coord[2])
         if t > 0:
-            n += t**4 * dot(edges2[gradient % 12], coord)
+            n += t**4 * dot3(edges2[gradient % 12], coord)
 
     # Where's this scaling factor come from?
     return n * 32
