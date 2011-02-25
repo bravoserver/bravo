@@ -8,6 +8,8 @@ format of Windows 32-bit configuration settings, nor the format of PHP's
 configuration files. Specifically, bravo.ini is parsed and written using
 Python's ``ConfigParser`` class.
 
+An example configuration file is provided as bravo.ini.example.
+
 General settings
 ================
 
@@ -27,8 +29,6 @@ ampoule
     Whether asynchronous chunk generators will be used. This can result in
     massive improvements to Bravo's latency and responsiveness, and defaults
     to enabled. This setting will be overridden if Ampoule cannot be found.
-serializer
-    Which serializer to use for saving worlds.
 
 World settings
 ==============
@@ -41,7 +41,12 @@ port
     Which port to run on. Must be a number between 0 and 65535. Note that
     ports below 1024 are typically privileged and cannot be bound by non-root
     users.
-world
-    The folder to use for loading and saving world data.
+url
+    The path to the folder to use for loading and saving world data. Must be a
+    valid URL.
 authenticator
     Which authentication plugin to use.
+serializer
+    Which serializer to use for saving worlds. Currently, the "alpha" and
+    "beta" serializers are provided for MC Alpha and MC Beta compatibility,
+    respectively.
