@@ -42,11 +42,6 @@ ampoule = no
 # Try to use the fancy console.
 fancy_console = true
 
-# Which serializer to use for saving worlds to disk.
-# ~ alpha: The Alpha NBT format
-# ~ json: JSON format, for debugging
-serializer = alpha
-
 [world example]
 # This is just an example world. World names come from the name of the
 # section; this section describes a world called "example".
@@ -58,7 +53,14 @@ port = 25565
 # The folder to use for storing the world. Make sure you have write
 # permissions to this folder. If it does not exist, it will be created.
 # Relative paths are allowed but discouraged.
-path = example-world
+#url = file://relative/path/to/world
+url = file:///absolute/path/to/world
+
+# Which serializer to use for saving worlds to disk.
+# ~ alpha: The Alpha NBT format
+# ~ beta: The Beta NBT/MCR format
+# Note: There is currently no automatic conversion from alpha to beta
+serializer = beta
 
 # Authenticator. There are only two options:
 # ~ offline: anybody can log in, no authentication is done
