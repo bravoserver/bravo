@@ -33,8 +33,6 @@ def base36(i):
     Return the string representation of i in base 36, using lowercase letters.
 
     This isn't optimal, but it covers all of the Notchy corner cases.
-
-    XXX unit test me plz
     """
 
     letters = "0123456789abcdefghijklmnopqrstuvwxyz"
