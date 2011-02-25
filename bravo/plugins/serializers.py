@@ -423,6 +423,8 @@ class Beta(Alpha):
         pages = position & 0xff
         position >>= 8
 
+        # Pack up the data, all ready to go.
+        data = "%s\x02%s" % (pack(">L", len(data)), data)
         # XXX lazy maths
         needed_pages = (len(data) // 4096) + 1
         if not position or not pages or pages < needed_pages:
@@ -431,8 +433,6 @@ class Beta(Alpha):
             position = (fp.getsize() // 4096) + 1
 
         handle.seek(position * 4096)
-        handle.write(pack(">L", len(data)))
-        handle.write("\x02")
         handle.write(data)
 
         position = position << 8 | pages
