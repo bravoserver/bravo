@@ -403,15 +403,17 @@ class Beta(Alpha):
         if not fp.exists():
             return
 
+        x, z = chunk.x % 32, chunk.z % 32
+
         if region not in self.regions:
             self.cache_region_pages(region)
 
         positions = self.regions[region][0]
 
-        if (chunk.x, chunk.z) not in positions:
+        if (x, z) not in positions:
             return
 
-        position, pages = positions[chunk.x, chunk.z]
+        position, pages = positions[x, z]
 
         if not position or not pages:
             return
@@ -455,8 +457,10 @@ class Beta(Alpha):
 
         positions = self.regions[region][0]
 
-        if (chunk.x, chunk.z) in positions:
-            position, pages = positions[chunk.x, chunk.z]
+        x, z = chunk.x % 32, chunk.z % 32
+
+        if (x, z) in positions:
+            position, pages = positions[x, z]
         else:
             position, pages = 0, 0
 
@@ -502,12 +506,15 @@ class Beta(Alpha):
 
         pages = needed_pages
 
-        positions[chunk.x, chunk.z] = position, pages
+        positions[x, z] = position, pages
 
+        # Write our payload.
         handle.seek(position * 4096)
         handle.write(data)
 
+        # Write our position and page count.
+        offset = 4 * (x + z * 32)
         position = position << 8 | pages
-        handle.seek(4 * ((chunk.x % 32) + (chunk.z % 32) * 32))
+        handle.seek(offset)
         handle.write(pack(">L", position))
         handle.close()
