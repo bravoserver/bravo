@@ -380,8 +380,8 @@ class Beta(Alpha):
         page = handle.read(4096)
         # The + 1 is not gratuitous. Remember that range/xrange won't include
         # the upper index, but we want it, so we need to increase our upper
-        # bound.
-        free_pages = set(xrange((fp.getsize() // 4096) + 1))
+        # bound. Additionally, the first page is off-limits.
+        free_pages = set(xrange(1, (fp.getsize() // 4096) + 1))
         positions = dict()
 
         for x in xrange(32):
@@ -497,8 +497,10 @@ class Beta(Alpha):
                 position = (fp.getsize() + 4095) // 4096
 
             # And allocate our new home.
-            for i in xrange(pages):
+            for i in xrange(needed_pages):
                 free_pages.discard(position + i)
+
+        pages = needed_pages
 
         positions[chunk.x, chunk.z] = position, pages
 
