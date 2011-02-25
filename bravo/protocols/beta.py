@@ -110,10 +110,10 @@ class BetaServerProtocol(Protocol):
         callback.
         """
 
-        if container.protocol < 8:
+        if container.protocol < 9:
             # Kick old clients.
             self.error("This server doesn't support your ancient client.")
-        elif container.protocol > 8:
+        elif container.protocol > 9:
             # Kick new clients.
             self.error("This server doesn't support your newfangled client.")
         else:
@@ -475,11 +475,11 @@ class BravoProtocol(BetaServerProtocol):
         them depending on the results of the authentication.
         """
 
-        if container.protocol < 8:
+        if container.protocol < 9:
             # Kick old clients.
             self.error("This server doesn't support your ancient client.")
             return
-        elif container.protocol > 8:
+        elif container.protocol > 9:
             # Kick new clients.
             self.error("This server doesn't support your newfangled client.")
             return
