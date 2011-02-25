@@ -400,4 +400,42 @@ class Beta(Alpha):
         return self._load_chunk_from_tag(chunk, tag)
 
     def save_chunk(self, chunk):
-        pass
+        tag = self._save_chunk_to_tag(chunk)
+        b = StringIO()
+        tag.write_file(buffer=b)
+        data = b.getvalue().encode("zlib")
+
+        region = name_for_region(chunk.x, chunk.z)
+        fp = self.folder.child("region")
+        if not fp.exists():
+            fp.makedirs()
+        fp = fp.child(region)
+        if not fp.exists():
+            # Create the file and zero out the header.
+            handle = fp.open("w")
+            handle.write("\x00" * 4096)
+            handle.close()
+
+        handle = fp.open("r+")
+        page = handle.read(4096)
+        offset = 4 * (divmod(chunk.x, 32)[1] + (divmod(chunk.z, 32)[1] * 32))
+        position = unpack(">L", page[offset:offset+4])[0]
+        pages = position & 0xff
+        position >>= 8
+
+        # XXX lazy maths
+        needed_pages = (len(data) // 4096) + 1
+        if not position or not pages or pages < needed_pages:
+            # Find a new home for us.
+            # XXX for now, being lazy and appending
+            position = (fp.getsize() // 4096) + 1
+
+        handle.seek(position * 4096)
+        handle.write(pack(">L", len(data)))
+        handle.write("\x02")
+        handle.write(data)
+
+        position = position << 8 | pages
+        handle.seek(offset)
+        handle.write(pack(">L", position))
+        handle.close()
