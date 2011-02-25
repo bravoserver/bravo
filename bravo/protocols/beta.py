@@ -529,11 +529,15 @@ class BravoProtocol(BetaServerProtocol):
             self.factory.chat(message)
 
     def digging(self, container):
+        # XXX several improvements should happen here
+        # ~ We should time started and stopped pairs to force clients to
+        # slow-break their blocks
+        # ~ we should handle "dropped" state packets for item drops
         if container.x == -1 and container.z == -1 and container.y == 255:
             # Lala-land dig packet. Discard it for now.
             return
 
-        if container.state != "broken":
+        if container.state != "stopped":
             # We only care about digs which break blocks.
             return
 
