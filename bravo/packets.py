@@ -6,7 +6,7 @@ from construct import StringAdapter, RepeatUntil, Field
 from construct import OptionalGreedyRange
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
-from construct import SBInt8, SBInt16, SBInt32
+from construct import SBInt8, SBInt16, SBInt32, SBInt64
 from construct import BFloat32, BFloat64
 
 DUMP_ALL_PACKETS = False
@@ -62,7 +62,7 @@ packets = {
         UBInt32("protocol"),
         AlphaString("username"),
         AlphaString("unused"),
-        UBInt64("seed"),
+        SBInt64("seed"),
         UBInt8("dimension"),
     ),
     2: Struct("handshake",
