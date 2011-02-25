@@ -425,8 +425,7 @@ class Beta(Alpha):
 
         # Pack up the data, all ready to go.
         data = "%s\x02%s" % (pack(">L", len(data)), data)
-        # XXX lazy maths
-        needed_pages = (len(data) // 4096) + 1
+        needed_pages = (len(data) + 4095) // 4096
         if not position or not pages or pages < needed_pages:
             # Find a new home for us.
             # XXX for now, being lazy and appending
