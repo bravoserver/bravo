@@ -198,8 +198,6 @@ class Alpha(object):
         if "TileEntities" in level:
             for tag in level["TileEntities"].tags:
                 if tag["id"].value == "Chest":
-                    print "Chests are broken right now :c"
-                    continue
                     tile = self._load_chest_from_tag(tag)
                 elif tag["id"].value == "Sign":
                     tile = self._load_sign_from_tag(tag)
