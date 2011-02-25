@@ -9,11 +9,12 @@ from twisted.internet import reactor
 from twisted.internet.defer import Deferred, succeed
 from twisted.internet.task import coiterate, deferLater, LoopingCall
 from twisted.python import log
+from zope.interface.verify import verifyObject
 
 from bravo.chunk import Chunk
 from bravo.compat import product
 from bravo.config import configuration
-from bravo.ibravo import ISerializerFactory
+from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import retrieve_named_plugins
 from bravo.utilities import split_coords
 
@@ -80,6 +81,7 @@ class World(object):
 
         sf = retrieve_named_plugins(ISerializerFactory, [world_sf_name])[0]
         self.serializer = sf(world_url)
+        verifyObject(ISerializer, self.serializer)
 
         self.chunk_cache = weakref.WeakValueDictionary()
         self.dirty_chunk_cache = dict()
