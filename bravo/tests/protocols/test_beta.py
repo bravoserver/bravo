@@ -1,4 +1,6 @@
-import unittest
+from twisted.trial import unittest
+
+from construct import Container
 
 import bravo.protocols.beta
 
@@ -31,6 +33,22 @@ class TestBetaServerProtocol(unittest.TestCase):
         self.assertEqual(self.p.location.yaw, 5)
         self.assertEqual(self.p.location.pitch, 6)
         self.assertTrue(self.p.location.midair)
+
+    def test_reject_ancient_clients(self):
+        """
+        Directly test the login() method for client protocol checking.
+        """
+
+        error_called = [False]
+        def error(reason):
+            error_called[0] = True
+        self.patch(self.p, "error", error)
+
+        container = Container()
+        container.protocol = 1
+        self.p.login(container)
+
+        self.assertTrue(error_called[0])
 
 class TestBravoProtocol(unittest.TestCase):
 

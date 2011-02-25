@@ -116,8 +116,8 @@ class BetaServerProtocol(Protocol):
         elif container.protocol > 8:
             # Kick new clients.
             self.error("This server doesn't support your newfangled client.")
-
-        reactor.callLater(0, self.authenticated)
+        else:
+            reactor.callLater(0, self.authenticated)
 
     def handshake(self, container):
         """
@@ -478,9 +478,11 @@ class BravoProtocol(BetaServerProtocol):
         if container.protocol < 8:
             # Kick old clients.
             self.error("This server doesn't support your ancient client.")
+            return
         elif container.protocol > 8:
             # Kick new clients.
             self.error("This server doesn't support your newfangled client.")
+            return
 
         log.msg("Authenticating client, protocol version %d" %
             container.protocol)
