@@ -1,4 +1,9 @@
+from __future__ import division
+
+from gzip import GzipFile
 from itertools import chain
+from StringIO import StringIO
+from struct import pack, unpack
 from urlparse import urlparse
 
 from numpy import array, fromstring, uint8
@@ -64,9 +69,19 @@ def names_for_chunk(x, z):
 
     return first, second, third
 
+def name_for_region(x, z):
+    """
+    Figure out the name for a region file, given chunk coordinates.
+    """
+
+    return "r.%s.%s.mcr" % (x // 32, z // 32)
+
 class Alpha(object):
     """
     Minecraft Alpha world serializer.
+
+    This serializer supports the classic folder and file layout used in
+    Minecraft Alpha and early versions of Minecraft Beta.
     """
 
     implements(ISerializer)
@@ -103,6 +118,81 @@ class Alpha(object):
         self._load_inventory_from_tag(chest.inventory, tag["Items"])
 
         return chest
+
+    def _load_chunk_from_tag(self, chunk, tag):
+        """
+        Load a chunk from a tag.
+
+        We cannot instantiate chunks, ever, so pass it in from above.
+        """
+
+        level = tag["Level"]
+
+        # These are designed to raise if there are any issues, but still be
+        # speedy.
+        chunk.blocks = fromstring(level["Blocks"].value,
+            dtype=uint8).reshape(chunk.blocks.shape)
+        chunk.heightmap = fromstring(level["HeightMap"].value,
+            dtype=uint8).reshape(chunk.heightmap.shape)
+        chunk.blocklight = array(unpack_nibbles(
+            level["BlockLight"].value)).reshape(chunk.blocklight.shape)
+        chunk.metadata = array(unpack_nibbles(
+            level["Data"].value)).reshape(chunk.metadata.shape)
+        chunk.skylight = array(unpack_nibbles(
+            level["SkyLight"].value)).reshape(chunk.skylight.shape)
+
+        chunk.populated = bool(level["TerrainPopulated"])
+
+        if "TileEntities" in level:
+            for tag in level["TileEntities"].tags:
+                if tag["id"].value == "Chest":
+                    print "Chests are broken right now :c"
+                    continue
+                    tile = self._load_chest_from_tag(tag)
+                elif tag["id"].value == "Sign":
+                    tile = self._load_sign_from_tag(tag)
+                else:
+                    print "Unknown tile entity %s" % tag["id"].value
+                    continue
+
+                chunk.tiles[tile.x, tile.y, tile.z] = tile
+
+        chunk.dirty = not chunk.populated
+
+    def _save_chunk_to_tag(self, chunk):
+        tag = NBTFile()
+        tag.name = ""
+
+        level = TAG_Compound()
+        tag["Level"] = level
+
+        level["Blocks"] = TAG_Byte_Array()
+        level["HeightMap"] = TAG_Byte_Array()
+        level["BlockLight"] = TAG_Byte_Array()
+        level["Data"] = TAG_Byte_Array()
+        level["SkyLight"] = TAG_Byte_Array()
+
+        level["Blocks"].value = chunk.blocks.tostring()
+        level["HeightMap"].value = chunk.heightmap.tostring()
+        level["BlockLight"].value = pack_nibbles(chunk.blocklight)
+        level["Data"].value = pack_nibbles(chunk.metadata)
+        level["SkyLight"].value = pack_nibbles(chunk.skylight)
+
+        level["TerrainPopulated"] = TAG_Byte(chunk.populated)
+
+        level["TileEntities"] = TAG_List(type=TAG_Compound)
+        for tile in chunk.tiles.itervalues():
+            if tile.name == "Chest":
+                tiletag = self._save_chest_to_tag(tile)
+            elif tile.name == "Sign":
+                tiletag = self._save_sign_to_tag(tile)
+            else:
+                print "Unknown tile entity %s" % tile.name
+                continue
+
+            level["TileEntities"].tags.append(tiletag)
+
+        return tag
 
     def _save_chest_to_tag(self, chest):
         tag = NBTFile()
@@ -193,70 +283,10 @@ class Alpha(object):
         if not tag:
             return
 
-        level = tag["Level"]
-
-        # These are designed to raise if there are any issues, but still be
-        # speedy.
-        chunk.blocks = fromstring(level["Blocks"].value,
-            dtype=uint8).reshape(chunk.blocks.shape)
-        chunk.heightmap = fromstring(level["HeightMap"].value,
-            dtype=uint8).reshape(chunk.heightmap.shape)
-        chunk.blocklight = array(unpack_nibbles(
-            level["BlockLight"].value)).reshape(chunk.blocklight.shape)
-        chunk.metadata = array(unpack_nibbles(
-            level["Data"].value)).reshape(chunk.metadata.shape)
-        chunk.skylight = array(unpack_nibbles(
-            level["SkyLight"].value)).reshape(chunk.skylight.shape)
-
-        chunk.populated = bool(level["TerrainPopulated"])
-
-        if "TileEntities" in level:
-            for tag in level["TileEntities"].tags:
-                if tag["id"].value == "Chest":
-                    tile = self._load_chest_from_tag(tag)
-                elif tag["id"].value == "Sign":
-                    tile = self._load_sign_from_tag(tag)
-                else:
-                    print "Unknown tile entity %s" % tag["id"].value
-                    continue
-
-                chunk.tiles[tile.x, tile.y, tile.z] = tile
-
-        chunk.dirty = not chunk.populated
+        self._load_chunk_from_tag(chunk, tag)
 
     def save_chunk(self, chunk):
-
-        tag = NBTFile()
-        tag.name = ""
-
-        level = TAG_Compound()
-        tag["Level"] = level
-
-        level["Blocks"] = TAG_Byte_Array()
-        level["HeightMap"] = TAG_Byte_Array()
-        level["BlockLight"] = TAG_Byte_Array()
-        level["Data"] = TAG_Byte_Array()
-        level["SkyLight"] = TAG_Byte_Array()
-
-        level["Blocks"].value = chunk.blocks.tostring()
-        level["HeightMap"].value = chunk.heightmap.tostring()
-        level["BlockLight"].value = pack_nibbles(chunk.blocklight)
-        level["Data"].value = pack_nibbles(chunk.metadata)
-        level["SkyLight"].value = pack_nibbles(chunk.skylight)
-
-        level["TerrainPopulated"] = TAG_Byte(chunk.populated)
-
-        level["TileEntities"] = TAG_List(type=TAG_Compound)
-        for tile in chunk.tiles.itervalues():
-            if tile.name == "Chest":
-                tiletag = self._save_chest_to_tag(tile)
-            elif tile.name == "Sign":
-                tiletag = self._save_sign_to_tag(tile)
-            else:
-                print "Unknown tile entity %s" % tile.name
-                continue
-
-            level["TileEntities"].tags.append(tiletag)
+        tag = self._save_chunk_to_tag(chunk)
 
         first, second, filename = names_for_chunk(chunk.x, chunk.z)
         fp = self.folder.child(first).child(second)
@@ -319,3 +349,52 @@ class Alpha(object):
 
         fp = self.folder.child("players").child("%s.dat" % player.username)
         self._write_tag(fp, tag)
+
+class Beta(Alpha):
+    """
+    Minecraft Beta serializer.
+
+    This serializer supports the MCRegion paged chunk files used by Minecraft
+    Beta and the MCRegion mod.
+    """
+
+    classProvides(IPlugin, ISerializerFactory)
+
+    name = "beta"
+
+    def __init__(self, url):
+        Alpha.__init__(self, url)
+
+    def load_chunk(self, chunk):
+        region = name_for_region(chunk.x, chunk.z)
+        fp = self.folder.child("region").child(region)
+        if not fp.exists():
+            return
+
+        handle = fp.open("r")
+        page = handle.read(4096)
+        offset = 4 * (divmod(chunk.x, 32)[1] + (divmod(chunk.z, 32)[1] * 32))
+        position = unpack(">L", page[offset:offset+4])[0]
+        pages = position & 0xff
+        position >>= 8
+        if not position or not pages:
+            return
+
+        handle.seek(position * 4096)
+        data = handle.read(pages * 4096)
+        length = unpack(">L", data[:4])[0]
+        version = ord(data[4])
+
+        data = data[5:length+5]
+        if version == 1:
+            data = data.decode("gzip")
+            fileobj = GzipFile(fileobj=StringIO(data))
+        elif version == 2:
+            fileobj = StringIO(data.decode("zlib"))
+
+        tag = NBTFile(buffer=fileobj)
+
+        return self._load_chunk_from_tag(chunk, tag)
+
+    def save_chunk(self, chunk):
+        pass
