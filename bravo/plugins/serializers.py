@@ -347,7 +347,10 @@ class Alpha(object):
 
         tag["Inventory"] = self._save_inventory_to_tag(player.inventory)
 
-        fp = self.folder.child("players").child("%s.dat" % player.username)
+        fp = self.folder.child("players")
+        if not fp.exists():
+            fp.makedirs()
+        fp = fp.child("%s.dat" % player.username)
         self._write_tag(fp, tag)
 
 class Beta(Alpha):
