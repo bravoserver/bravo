@@ -59,6 +59,13 @@ class World(object):
     Whether objects belonging to this world may be written out to disk.
     """
 
+    dimension = 0
+    """
+    The world dimension.
+
+    XXX Currently pegged to 0; change this when Nether work gets underway.
+    """
+
     def __init__(self, name):
         """
         Load a world from disk.

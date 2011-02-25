@@ -37,7 +37,8 @@ class OfflineAuthenticator(object):
         protocol.username = container.username
 
         packet = make_packet("login", protocol=protocol.eid, username="",
-            unused="", seed=0, dimension=0)
+            unused="", seed=protocol.factory.world.seed,
+            dimension=protocol.factory.world.dimension)
         protocol.transport.write(packet)
 
         return succeed(None)
@@ -91,7 +92,8 @@ class OnlineAuthenticator(object):
             return
 
         packet = make_packet("login", protocol=protocol.eid, username="",
-            unused="", seed=0, dimension=0)
+            unused="", seed=protocol.factory.world.seed,
+            dimension=protocol.factory.world.dimension)
         protocol.transport.write(packet)
 
     def error(self, description, protocol):
@@ -129,7 +131,8 @@ class PasswordAuthenticator(object):
         protocol.username = container.username
 
         packet = make_packet("login", protocol=protocol.eid, username="",
-            unused="", seed=0, dimension=0)
+            unused="", seed=protocol.factory.world.seed,
+            dimension=protocol.factory.world.dimension)
         protocol.transport.write(packet)
 
         return succeed(None)
