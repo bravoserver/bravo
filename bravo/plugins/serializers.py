@@ -97,6 +97,8 @@ class Alpha(object):
             self.folder.makedirs()
             log.msg("Creating new world in %s" % self.folder)
 
+    # Disk I/O helpers. Highly useful for keeping these few lines in one
+    # place.
 
     def _read_tag(self, fp):
         if fp.exists() and fp.getsize():
@@ -105,6 +107,10 @@ class Alpha(object):
 
     def _write_tag(self, fp, tag):
         tag.write_file(fileobj=fp.open("w"))
+
+    # Tile serializers. Tiles are blocks and entities at the same time, in the
+    # worst way. Each of these helpers will be called during chunk serialize
+    # and deserialize automatically; they never need to be called directly.
 
     def _load_chest_from_tag(self, tag):
         chest = Chest()
@@ -116,6 +122,54 @@ class Alpha(object):
         self._load_inventory_from_tag(chest.inventory, tag["Items"])
 
         return chest
+
+    def _save_chest_to_tag(self, chest):
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["id"] = TAG_String("Chest")
+
+        tag["x"] = TAG_Int(chest.x)
+        tag["y"] = TAG_Int(chest.y)
+        tag["z"] = TAG_Int(chest.z)
+
+        tag["Items"] = self._save_inventory_to_tag(chest.inventory)
+
+        return tag
+
+    def _load_sign_from_tag(self, tag):
+        sign = Sign()
+
+        sign.x = tag["x"].value
+        sign.y = tag["y"].value
+        sign.z = tag["z"].value
+
+        sign.text1 = tag["Text1"].value
+        sign.text2 = tag["Text2"].value
+        sign.text3 = tag["Text3"].value
+        sign.text4 = tag["Text4"].value
+
+        return sign
+
+    def _save_sign_to_tag(self, sign):
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["id"] = TAG_String("Sign")
+
+        tag["x"] = TAG_Int(sign.x)
+        tag["y"] = TAG_Int(sign.y)
+        tag["z"] = TAG_Int(sign.z)
+
+        tag["Text1"] = TAG_String(sign.text1)
+        tag["Text2"] = TAG_String(sign.text2)
+        tag["Text3"] = TAG_String(sign.text3)
+        tag["Text4"] = TAG_String(sign.text4)
+
+        return tag
+
+    # Chunk serializers. These are split out in order to faciliate reuse in
+    # the Beta serializer.
 
     def _load_chunk_from_tag(self, chunk, tag):
         """
@@ -192,20 +246,6 @@ class Alpha(object):
 
         return tag
 
-    def _save_chest_to_tag(self, chest):
-        tag = NBTFile()
-        tag.name = ""
-
-        tag["id"] = TAG_String("Chest")
-
-        tag["x"] = TAG_Int(chest.x)
-        tag["y"] = TAG_Int(chest.y)
-        tag["z"] = TAG_Int(chest.z)
-
-        tag["Items"] = self._save_inventory_to_tag(chest.inventory)
-
-        return tag
-
     def _load_inventory_from_tag(self, inventory, tag):
         """
         Load an inventory from a tag.
@@ -251,36 +291,7 @@ class Alpha(object):
 
         return tag
 
-    def _load_sign_from_tag(self, tag):
-        sign = Sign()
-
-        sign.x = tag["x"].value
-        sign.y = tag["y"].value
-        sign.z = tag["z"].value
-
-        sign.text1 = tag["Text1"].value
-        sign.text2 = tag["Text2"].value
-        sign.text3 = tag["Text3"].value
-        sign.text4 = tag["Text4"].value
-
-        return sign
-
-    def _save_sign_to_tag(self, sign):
-        tag = NBTFile()
-        tag.name = ""
-
-        tag["id"] = TAG_String("Sign")
-
-        tag["x"] = TAG_Int(sign.x)
-        tag["y"] = TAG_Int(sign.y)
-        tag["z"] = TAG_Int(sign.z)
-
-        tag["Text1"] = TAG_String(sign.text1)
-        tag["Text2"] = TAG_String(sign.text2)
-        tag["Text3"] = TAG_String(sign.text3)
-        tag["Text4"] = TAG_String(sign.text4)
-
-        return tag
+    # ISerializer API.
 
     def load_chunk(self, chunk):
         first, second, filename = names_for_chunk(chunk.x, chunk.z)
