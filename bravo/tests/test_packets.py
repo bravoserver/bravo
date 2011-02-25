@@ -30,7 +30,7 @@ class TestPacketParsing(unittest.TestCase):
         parsed = bravo.packets.packets[0].parse(packet)
         self.assertTrue(parsed)
 
-    def test_login(self):
+    def test_login_signed_seed(self):
         packet = """AAAACQAGQ29yYmluAADpJkIX+PwOVAA=""".decode("base64")
         parsed = bravo.packets.packets[1].parse(packet)
         self.assertEqual(parsed.protocol, 9)
