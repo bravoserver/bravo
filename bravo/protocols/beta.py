@@ -475,6 +475,16 @@ class BravoProtocol(BetaServerProtocol):
         them depending on the results of the authentication.
         """
 
+        if container.protocol < 8:
+            # Kick old clients.
+            self.error("This server doesn't support your ancient client.")
+        elif container.protocol > 8:
+            # Kick new clients.
+            self.error("This server doesn't support your newfangled client.")
+
+        log.msg("Authenticating client, protocol version %d" %
+            container.protocol)
+
         d = self.factory.login_hook(self, container)
         d.addErrback(lambda *args, **kwargs: self.transport.loseConnection())
         d.addCallback(lambda *args, **kwargs: self.authenticated())
