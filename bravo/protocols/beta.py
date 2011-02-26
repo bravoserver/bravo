@@ -743,8 +743,9 @@ class BravoProtocol(BetaServerProtocol):
         self.transport.write(packet)
 
         for entity in chunk.tiles.itervalues():
-            packet = entity.save_to_packet()
-            self.transport.write(packet)
+            if entity.name == "Sign":
+                packet = entity.save_to_packet()
+                self.transport.write(packet)
 
         self.chunks[chunk.x, chunk.z] = chunk
 
