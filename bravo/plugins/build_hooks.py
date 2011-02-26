@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
-from bravo.entity import Sign
+from bravo.entity import Chest, Sign
 from bravo.ibravo import IBuildHook
 from bravo.utilities import split_coords
 
@@ -80,12 +80,16 @@ class Tile(object):
             chunk = factory.world.load_chunk(bigx, bigz)
 
             # Let's build a sign!
-            s = Sign()
-            s.x = x
-            s.y = y
-            s.z = z
+            s = Sign(smallx, y, smallz)
+            chunk.tiles[smallx, y, smallz] = s
 
-            chunk.tiles[x, y, z] = s
+        elif item.slot == blocks["chest"].slot:
+            bigx, smallx, bigz, smallz = split_coords(x, z)
+            chunk = factory.world.load_chunk(bigx, bigz)
+
+            # Not much to do, just tell the chunk about this chest.
+            c = Chest(smallx, y, smallz)
+            chunk.tiles[smallx, y, smallz] = c
 
         return True, builddata
 
