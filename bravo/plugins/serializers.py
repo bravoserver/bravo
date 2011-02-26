@@ -13,7 +13,7 @@ from twisted.python import log
 from twisted.python.filepath import FilePath
 from zope.interface import implements, classProvides
 
-from bravo.entity import Chest, MobSpawner, Sign
+from bravo.entity import Chest, Furnace, MobSpawner, Sign
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
@@ -133,6 +133,33 @@ class Alpha(object):
 
         return tag
 
+    def _load_furnace_from_tag(self, tag):
+        furnace = Furnace(tag["x"].value, tag["y"].value, tag["z"].value)
+
+        furnace.burntime = tag["BurnTime"].value
+        furnace.cooktime = tag["CookTime"].value
+
+        self._load_inventory_from_tag(furnace.inventory, tag["Items"])
+
+        return furnace
+
+    def _save_furnace_to_tag(self, furnace):
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["id"] = TAG_String("Furnace")
+
+        tag["x"] = TAG_Int(furnace.x)
+        tag["y"] = TAG_Int(furnace.y)
+        tag["z"] = TAG_Int(furnace.z)
+
+        tag["BurnTime"] = TAG_Short(furnace.burntime)
+        tag["CookTime"] = TAG_Short(furnace.cooktime)
+
+        tag["Items"] = self._save_inventory_to_tag(furnace.inventory)
+
+        return tag
+
     def _load_mobspawner_from_tag(self, tag):
         ms = MobSpawner(tag["x"].value, tag["y"].value, tag["z"].value)
 
@@ -214,6 +241,8 @@ class Alpha(object):
             for tag in level["TileEntities"].tags:
                 if tag["id"].value == "Chest":
                     tile = self._load_chest_from_tag(tag)
+                elif tag["id"].value == "Furnace":
+                    tile = self._load_furnace_from_tag(tag)
                 elif tag["id"].value == "MobSpawner":
                     tile = self._load_mobspawner_from_tag(tag)
                 elif tag["id"].value == "Sign":
@@ -251,6 +280,8 @@ class Alpha(object):
         for tile in chunk.tiles.itervalues():
             if tile.name == "Chest":
                 tiletag = self._save_chest_to_tag(tile)
+            elif tile.name == "Furnace":
+                tiletag = self._save_furnace_to_tag(tile)
             elif tile.name == "MobSpawner":
                 tiletag = self._save_mobspawner_to_tag(tile)
             elif tile.name == "Sign":

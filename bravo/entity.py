@@ -115,6 +115,18 @@ class Chest(Tile):
 
         self.inventory = ChestStorage()
 
+class Furnace(Tile):
+    """
+    A tile that converts items to other items, using specific items as fuel.
+    """
+
+    name = "Furnace"
+
+    def __init__(self, *args, **kwargs):
+        super(Furnace, self).__init__(*args, **kwargs)
+
+        self.inventory = ChestStorage()
+
 class MobSpawner(Tile):
     """
     A tile that spawns mobs.
