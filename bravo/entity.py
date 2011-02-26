@@ -1,5 +1,7 @@
 from math import pi
 
+from twisted.python import log
+
 from bravo.inventory import Equipment, ChestStorage
 from bravo.location import Location
 from bravo.packets import make_packet
@@ -9,7 +11,7 @@ class Entity(object):
     Class representing an entity.
 
     Entities are simply dynamic in-game objects. Plain entities are not very
-    interesting; this class's subclasses are actually useful.
+    interesting.
     """
 
     name = "Entity"
@@ -77,31 +79,58 @@ class Pickup(Entity):
 
     name = "Pickup"
 
-class Chest(object):
+class Tile(object):
+    """
+    An entity that is also a block.
+
+    Or, perhaps more correctly, a block that is also an entity.
+    """
+
+    name = "GenericTile"
+
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def load_from_packet(self, container):
+
+        log.msg("%s doesn't know how to load from a packet!" % self.name)
+
+    def save_to_packet(self):
+
+        log.msg("%s doesn't know how to save to a packet!" % self.name)
+
+        return ""
+
+class Chest(Tile):
     """
     A tile that holds items.
     """
 
-    def __init__(self):
+    name = "Chest"
+
+    def __init__(self, *args, **kwargs):
+        super(Chest, self).__init__(*args, **kwargs)
 
         self.inventory = ChestStorage()
 
-    def load_from_packet(self, container):
+class MobSpawner(Tile):
+    """
+    A tile that spawns mobs.
+    """
 
-        print "Can't deserialize chests yet!"
+    name = "MobSpawner"
 
-    def save_to_packet(self):
-
-        print "Can't serialize chests yet!"
-
-        return ""
-
-class Sign(object):
+class Sign(Tile):
     """
     A tile that stores text.
     """
 
-    def __init__(self):
+    name = "Sign"
+
+    def __init__(self, *args, **kwargs):
+        super(Sign, self).__init__(*args, **kwargs)
 
         self.text1 = ""
         self.text2 = ""
@@ -109,7 +138,6 @@ class Sign(object):
         self.text4 = ""
 
     def load_from_packet(self, container):
-
         self.x = container.x
         self.y = container.y
         self.z = container.z
@@ -120,13 +148,7 @@ class Sign(object):
         self.text4 = container.line4
 
     def save_to_packet(self):
-
         packet = make_packet("sign", x=self.x, y=self.y, z=self.z,
             line1=self.text1, line2=self.text2, line3=self.text3,
             line4=self.text4)
         return packet
-
-tile_entities = {
-    "Chest": Chest,
-    "Sign": Sign,
-}

@@ -10,6 +10,16 @@ class TestAlphaUtilities(unittest.TestCase):
         self.assertEqual(bravo.plugins.serializers.names_for_chunk(-259, 266),
             ("1p", "a", "c.-77.7e.dat"))
 
+    def test_base36(self):
+        self.assertEqual(bravo.plugins.serializers.base36(0),
+            "0")
+        self.assertEqual(bravo.plugins.serializers.base36(-47),
+            "-1b")
+        self.assertEqual(bravo.plugins.serializers.base36(137),
+            "3t")
+        self.assertEqual(bravo.plugins.serializers.base36(24567),
+            "iyf")
+
 class TestBetaUtilities(unittest.TestCase):
 
     def test_name_for_region(self):

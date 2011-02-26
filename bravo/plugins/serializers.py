@@ -13,7 +13,7 @@ from twisted.python import log
 from twisted.python.filepath import FilePath
 from zope.interface import implements, classProvides
 
-from bravo.entity import Chest, Sign
+from bravo.entity import Chest, MobSpawner, Sign
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
@@ -33,8 +33,6 @@ def base36(i):
     Return the string representation of i in base 36, using lowercase letters.
 
     This isn't optimal, but it covers all of the Notchy corner cases.
-
-    XXX unit test me plz
     """
 
     letters = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -99,6 +97,8 @@ class Alpha(object):
             self.folder.makedirs()
             log.msg("Creating new world in %s" % self.folder)
 
+    # Disk I/O helpers. Highly useful for keeping these few lines in one
+    # place.
 
     def _read_tag(self, fp):
         if fp.exists() and fp.getsize():
@@ -108,16 +108,83 @@ class Alpha(object):
     def _write_tag(self, fp, tag):
         tag.write_file(fileobj=fp.open("w"))
 
-    def _load_chest_from_tag(self, tag):
-        chest = Chest()
+    # Tile serializers. Tiles are blocks and entities at the same time, in the
+    # worst way. Each of these helpers will be called during chunk serialize
+    # and deserialize automatically; they never need to be called directly.
 
-        chest.x = tag["x"].value
-        chest.y = tag["y"].value
-        chest.z = tag["z"].value
+    def _load_chest_from_tag(self, tag):
+        chest = Chest(tag["x"].value, tag["y"].value, tag["z"].value)
 
         self._load_inventory_from_tag(chest.inventory, tag["Items"])
 
         return chest
+
+    def _save_chest_to_tag(self, chest):
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["id"] = TAG_String("Chest")
+
+        tag["x"] = TAG_Int(chest.x)
+        tag["y"] = TAG_Int(chest.y)
+        tag["z"] = TAG_Int(chest.z)
+
+        tag["Items"] = self._save_inventory_to_tag(chest.inventory)
+
+        return tag
+
+    def _load_mobspawner_from_tag(self, tag):
+        ms = MobSpawner(tag["x"].value, tag["y"].value, tag["z"].value)
+
+        ms.mob = tag["EntityId"].value
+        ms.delay = tag["Delay"].value
+
+        return ms
+
+    def _save_mobspawner_to_tag(self, ms):
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["id"] = TAG_String("MobSpawner")
+
+        tag["x"] = TAG_Int(ms.x)
+        tag["y"] = TAG_Int(ms.y)
+        tag["z"] = TAG_Int(ms.z)
+
+        tag["EntityId"] = TAG_String(ms.mob)
+        tag["Delay"] = TAG_Short(ms.delay)
+
+        return tag
+
+    def _load_sign_from_tag(self, tag):
+        sign = Sign(tag["x"].value, tag["y"].value, tag["z"].value)
+
+        sign.text1 = tag["Text1"].value
+        sign.text2 = tag["Text2"].value
+        sign.text3 = tag["Text3"].value
+        sign.text4 = tag["Text4"].value
+
+        return sign
+
+    def _save_sign_to_tag(self, sign):
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["id"] = TAG_String("Sign")
+
+        tag["x"] = TAG_Int(sign.x)
+        tag["y"] = TAG_Int(sign.y)
+        tag["z"] = TAG_Int(sign.z)
+
+        tag["Text1"] = TAG_String(sign.text1)
+        tag["Text2"] = TAG_String(sign.text2)
+        tag["Text3"] = TAG_String(sign.text3)
+        tag["Text4"] = TAG_String(sign.text4)
+
+        return tag
+
+    # Chunk serializers. These are split out in order to faciliate reuse in
+    # the Beta serializer.
 
     def _load_chunk_from_tag(self, chunk, tag):
         """
@@ -146,9 +213,9 @@ class Alpha(object):
         if "TileEntities" in level:
             for tag in level["TileEntities"].tags:
                 if tag["id"].value == "Chest":
-                    print "Chests are broken right now :c"
-                    continue
                     tile = self._load_chest_from_tag(tag)
+                elif tag["id"].value == "MobSpawner":
+                    tile = self._load_mobspawner_from_tag(tag)
                 elif tag["id"].value == "Sign":
                     tile = self._load_sign_from_tag(tag)
                 else:
@@ -184,6 +251,8 @@ class Alpha(object):
         for tile in chunk.tiles.itervalues():
             if tile.name == "Chest":
                 tiletag = self._save_chest_to_tag(tile)
+            elif tile.name == "MobSpawner":
+                tiletag = self._save_mobspawner_to_tag(tile)
             elif tile.name == "Sign":
                 tiletag = self._save_sign_to_tag(tile)
             else:
@@ -191,20 +260,6 @@ class Alpha(object):
                 continue
 
             level["TileEntities"].tags.append(tiletag)
-
-        return tag
-
-    def _save_chest_to_tag(self, chest):
-        tag = NBTFile()
-        tag.name = ""
-
-        tag["id"] = TAG_String("Chest")
-
-        tag["x"] = TAG_Int(chest.x)
-        tag["y"] = TAG_Int(chest.y)
-        tag["z"] = TAG_Int(chest.z)
-
-        tag["Items"] = self._save_inventory_to_tag(chest.inventory)
 
         return tag
 
@@ -253,36 +308,7 @@ class Alpha(object):
 
         return tag
 
-    def _load_sign_from_tag(self, tag):
-        sign = Sign()
-
-        sign.x = tag["x"].value
-        sign.y = tag["y"].value
-        sign.z = tag["z"].value
-
-        sign.text1 = tag["Text1"].value
-        sign.text2 = tag["Text2"].value
-        sign.text3 = tag["Text3"].value
-        sign.text4 = tag["Text4"].value
-
-        return sign
-
-    def _save_sign_to_tag(self, sign):
-        tag = NBTFile()
-        tag.name = ""
-
-        tag["id"] = TAG_String("Sign")
-
-        tag["x"] = TAG_Int(sign.x)
-        tag["y"] = TAG_Int(sign.y)
-        tag["z"] = TAG_Int(sign.z)
-
-        tag["Text1"] = TAG_String(sign.text1)
-        tag["Text2"] = TAG_String(sign.text2)
-        tag["Text3"] = TAG_String(sign.text3)
-        tag["Text4"] = TAG_String(sign.text4)
-
-        return tag
+    # ISerializer API.
 
     def load_chunk(self, chunk):
         first, second, filename = names_for_chunk(chunk.x, chunk.z)

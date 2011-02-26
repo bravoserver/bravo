@@ -338,6 +338,7 @@ packets = {
             inventory=0,
             workbench=1,
             furnace=2,
+            dispenser=3,
         ),
         AlphaString("title"),
         UBInt8("slots"),

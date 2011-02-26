@@ -425,8 +425,9 @@ class Furnace(Inventory):
 
 class ChestStorage(Inventory):
 
-    # XXX maybe not right
-    identifier = 3
+    storage = 27
+
+    identifier = 0
 
 def sync_inventories(src, dst):
     """
