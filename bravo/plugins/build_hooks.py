@@ -84,6 +84,19 @@ class Tile(object):
             chunk.tiles[smallx, y, smallz] = s
 
         elif item.slot == blocks["chest"].slot:
+            if face == "-x":
+                x -= 1
+            elif face == "+x":
+                x += 1
+            elif face == "-y":
+                y -= 1
+            elif face == "+y":
+                y += 1
+            elif face == "-z":
+                z -= 1
+            elif face == "+z":
+                z += 1
+
             bigx, smallx, bigz, smallz = split_coords(x, z)
             chunk = factory.world.load_chunk(bigx, bigz)
 
@@ -116,7 +129,10 @@ class Build(object):
 
         # Make sure we can remove it from the inventory first.
         if not player.inventory.consume((block.slot, 0), player.equipped):
-            return True, builddata
+            # Okay, first one was a bust; maybe we can consume the related
+            # block for dropping instead?
+            if not player.inventory.consume((block.drop, 0), player.equipped):
+                return True, builddata
 
         # Offset coords according to face.
         if face == "-x":
