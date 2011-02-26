@@ -695,18 +695,14 @@ class BravoProtocol(BetaServerProtocol):
         if (smallx, container.y, smallz) in chunk.tiles:
             s = chunk.tiles[smallx, container.y, smallz]
         else:
-            s = Sign()
-
-        s.x = smallx
-        s.y = container.y
-        s.z = smallz
+            s = Sign(smallx, container.y, smallz)
+            chunk.tiles[smallx, container.y, smallz] = s
 
         s.text1 = container.line1
         s.text2 = container.line2
         s.text3 = container.line3
         s.text4 = container.line4
 
-        chunk.tiles[smallx, container.y, smallz] = s
         chunk.dirty = True
 
         # The best part of a sign isn't making one, it's showing everybody
