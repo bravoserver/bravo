@@ -47,14 +47,32 @@ class TestTile(unittest.TestCase):
         self.assertEqual(builddata, newdata)
 
     def test_sign_floor(self):
+        player = bravo.entity.Player()
+
         builddata = bravo.protocols.beta.BuildData(
             bravo.blocks.items["sign"],
             0, 0, 0, 0, "+y"
         )
-        success, newdata = self.hook.build_hook(TileMockFactory(), None,
+        success, newdata = self.hook.build_hook(TileMockFactory(), player,
             builddata)
         self.assertTrue(success)
-        builddata = builddata._replace(block=bravo.blocks.blocks["signpost"])
+        builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
+            metadata=0x8)
+        self.assertEqual(builddata, newdata)
+
+    def test_sign_floor_oriented(self):
+        player = bravo.entity.Player()
+        player.location.yaw = 42
+
+        builddata = bravo.protocols.beta.BuildData(
+            bravo.blocks.items["sign"],
+            0, 0, 0, 0, "+y"
+        )
+        success, newdata = self.hook.build_hook(TileMockFactory(), player,
+            builddata)
+        self.assertTrue(success)
+        builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
+            metadata=0x9)
         self.assertEqual(builddata, newdata)
 
     def test_passthrough(self):

@@ -66,8 +66,14 @@ class Tile(object):
                 # Ceiling Sign is watching you read.
                 return False, builddata
             elif face == "+y":
-                # Put +Y signs on signposts. We're fancy that way.
-                builddata = builddata._replace(block=blocks["signpost"])
+                # Put +Y signs on signposts. We're fancy that way. Also,
+                # calculate the proper orientation based on player
+                # orientation.
+                # 180 degrees around to orient the signs correctly, and then
+                # 23 degrees to get the sign to midpoint correctly.
+                metadata = ((player.location.yaw + 180) * 16 // 360) % 0xf
+                builddata = builddata._replace(block=blocks["signpost"],
+                    metadata=metadata)
                 y += 1
             elif face == "-z":
                 builddata = builddata._replace(metadata=0x2)
