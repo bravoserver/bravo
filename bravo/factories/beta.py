@@ -8,7 +8,7 @@ from twisted.python import log
 from zope.interface import implements
 
 from bravo.config import configuration
-from bravo.entity import Pickup, Player
+from bravo.entity import entities
 from bravo.ibravo import IAuthenticator, ISeason, ITerrainGenerator
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
@@ -20,11 +20,6 @@ from bravo.plugin import retrieve_plugins
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
-
-entities_by_name = {
-    "Player": Player,
-    "Pickup": Pickup,
-}
 
 class BravoFactory(Factory):
     """
@@ -94,7 +89,7 @@ class BravoFactory(Factory):
 
     def create_entity(self, x, y, z, name, **kwargs):
         self.eid += 1
-        entity = entities_by_name[name](eid=self.eid, **kwargs)
+        entity = entities[name](eid=self.eid, **kwargs)
         entity.location.x = x
         entity.location.y = y
         entity.location.z = z

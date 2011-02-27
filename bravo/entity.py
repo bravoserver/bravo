@@ -90,6 +90,13 @@ class Pickup(Entity):
 
     name = "Item"
 
+entities = dict((entity.name, entity)
+    for entity in (
+        Player,
+        Pickup,
+    )
+)
+
 class Tile(object):
     """
     An entity that is also a block.
@@ -175,3 +182,12 @@ class Sign(Tile):
             line1=self.text1, line2=self.text2, line3=self.text3,
             line4=self.text4)
         return packet
+
+tiles = dict((tile.name, tile)
+    for tile in (
+        Chest,
+        Furnace,
+        MobSpawner,
+        Sign,
+    )
+)
