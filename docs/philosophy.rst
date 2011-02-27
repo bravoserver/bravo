@@ -85,7 +85,24 @@ No Threads
 ----------
 
 Threads are evil. They are not an effective concurrency model in most cases.
-The only place in Bravo where threads might be useful is during disk I/O, but
-that would require locks on entire `World` instances, and we are not ready to
-incur that known performance cost for unknown and unpredictable performance
-improvements.
+Tests done with offloading various parts of Bravo's CPU-bound tasks to threads
+have shown that threads are a liability in most cases, enforcing locking
+overhead while providing little to no actual benefit in terms of speed and
+latency.
+
+However, as a concession to the CPU-centric nature of geometry generation,
+Bravo will offload all geometry generation to separate processes when Ampoule
+is available and enabled in its configuration file, which does yield massive
+improvements to server interactivity.
+
+Extreme Extensibility
+---------------------
+
+Bravo is remarkably extensible. Pieces of functionality that are considered
+essential or "core" are treated as plugins and dynamically loaded on server
+startup. Actual services are dynamically started and stopped as needed.
+Bravo's core does not even provide Minecraft services by default.
+
+The reason for this extreme plugin approach is that Bravo was designed to be
+easily totally convertible; in theory, a proper set of configuration files and
+external plugins can completely change Bravo's behavior.
