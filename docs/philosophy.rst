@@ -71,6 +71,16 @@ I am expressly vetoing noise. In addition to the above complaints, its API
 doesn't even provide an equivalent to the pure-Python code in Bravo's core
 which it would supposedly supplant.
 
+Twisted
+^^^^^^^
+
+Apparently, in this day and age, people are still of the opinion that Twisted
+is too big and not necessary for speedy, relatively bug-free networking.
+Nothing written here will convince these people; so, instead, I offer this
+promise: If anybody contributes a patch which makes Bravo not depend on
+Twisted, does not degrade its performance measureably, and does not break any
+part of Bravo, then I will acknowledge and apply it.
+
 No Threads
 ----------
 
