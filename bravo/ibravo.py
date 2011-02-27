@@ -252,6 +252,16 @@ class ISerializer(IBravoPlugin):
         Load a player.
         """
 
+    def load_plugin_data(name):
+        """
+        Load data of a plugin.
+        """
+
+    def save_plugin_data(name, value):
+        """
+        Save data of a plugin.
+        """
+
 class ISerializerFactory(IBravoPlugin):
     """
     Factory for ``ISerializer`` instances.

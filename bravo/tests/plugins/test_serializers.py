@@ -1,4 +1,8 @@
 import unittest
+import shutil
+import tempfile
+
+from twisted.python.filepath import FilePath
 
 import bravo.plugins.serializers
 
@@ -19,6 +23,27 @@ class TestAlphaUtilities(unittest.TestCase):
             "3t")
         self.assertEqual(bravo.plugins.serializers.base36(24567),
             "iyf")
+
+class TestAlphaPluginData(unittest.TestCase):
+
+    def setUp(self):
+        self.folder = FilePath(tempfile.gettempdir()).child('plugin_test')
+        self.serializer = bravo.plugins.serializers.Alpha('file://' + self.folder.path)
+
+    def tearDown(self):
+        shutil.rmtree(self.folder.path)
+
+    def test_save_data(self):
+        data = 'Foo\nbar'
+        self.serializer.save_plugin_data('plugin1', data)
+        self.assertTrue(self.folder.child('plugin1.dat').exists())
+        with self.folder.child('plugin1.dat').open() as f:
+            self.assertEqual(f.read(), data)
+
+    def test_no_data_corruption(self):
+        data = 'Foo\nbar'
+        self.serializer.save_plugin_data('plugin1', data)
+        self.assertEqual(self.serializer.load_plugin_data('plugin1'), data)
 
 class TestBetaUtilities(unittest.TestCase):
 
