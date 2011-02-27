@@ -75,9 +75,12 @@ class Player(Entity):
 class Pickup(Entity):
     """
     Class representing a dropped block or item.
+
+    For historical and sanity reasons, this class is called Pickup, even
+    though its entity name is "Item."
     """
 
-    name = "Pickup"
+    name = "Item"
 
 class Tile(object):
     """
