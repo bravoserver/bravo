@@ -65,11 +65,15 @@ class Tracks(object):
 
     def build_hook(self, factory, player, builddata):
         """
-        Uses the players location yaw relative to the building position to place
-        the tracks. This allows building straight tracks as well as curves by
-        building in a certain angle. Building ascending/descending tracks is
-        done automatically by checking adjacent blocks.
+        Uses the players location yaw relative to the building position to
+        place the tracks. This allows building straight tracks as well as
+        curves by building in a certain angle. Building ascending/descending
+        tracks is done automatically by checking adjacent blocks.
+
+        This plugin runs after build, so the coordinates have already been
+        adjusted for placement and the face has no meaning.
         """
+
         block, metadata, x, y, z, face = builddata
         world = factory.world
         # Handle tracks only
