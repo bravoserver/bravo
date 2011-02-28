@@ -370,8 +370,7 @@ class GetPos(object):
         protocol = factory.protocols[username]
         l = protocol.player.location
         locMsg = "Your location is <%d, %d, %d>" % (l.x, l.y, l.z)
-        packet = make_packet("chat", message=locMsg)
-        player.transport.write(packet)
+        yield locMsg
 
     name = "getpos"
     aliases = tuple()
