@@ -10,6 +10,8 @@ from time import time
 import numpy
 from numpy import uint8, cast
 
+from twisted.internet.defer import Deferred
+
 # Coord handling.
 
 def split_coords(x, z):
@@ -194,3 +196,17 @@ def split_time(timestamp):
     minutes = minutes * 6 // 100
 
     return hours, minutes
+
+# Deferreds.
+
+def fork_deferred(d):
+    """
+    Fork a Deferred.
+
+    Returns a Deferred which will fire when the reference Deferred fires, with
+    the same arguments, without disrupting or changing the reference Deferred.
+    """
+
+    forked = Deferred()
+    d.chainDeferred(forked)
+    return forked
