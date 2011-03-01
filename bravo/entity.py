@@ -32,6 +32,11 @@ class Entity(object):
         else:
             self.location = location
 
+    def __repr__(self):
+        return "%s(eid=%d, location=%s)" % (self.name, self.eid, self.location)
+
+    __str__ = __repr__
+
 class Player(Entity):
     """
     A player entity.
