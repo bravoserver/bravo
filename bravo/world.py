@@ -6,7 +6,7 @@ import weakref
 from numpy import fromstring, uint8
 
 from twisted.internet import reactor
-from twisted.internet.defer import Deferred, succeed
+from twisted.internet.defer import succeed
 from twisted.internet.task import coiterate, deferLater, LoopingCall
 from twisted.python import log
 from zope.interface.verify import verifyObject
@@ -16,7 +16,7 @@ from bravo.compat import product
 from bravo.config import configuration
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import retrieve_named_plugins
-from bravo.utilities import split_coords
+from bravo.utilities import fork_deferred, split_coords
 
 try:
     from ampoule import deferToAMPProcess
@@ -213,9 +213,7 @@ class World(object):
             return succeed(self.dirty_chunk_cache[x, z])
         elif (x, z) in self._pending_chunks:
             # Rig up another Deferred and wrap it up in a to-go box.
-            d = Deferred()
-            self._pending_chunks[x, z].chainDeferred(d)
-            return d
+            return fork_deferred(self._pending_chunks[x, z])
 
         chunk = Chunk(x, z)
         self.serializer.load_chunk(chunk)
@@ -263,9 +261,7 @@ class World(object):
         # Multiple people might be subscribed to this pending callback. We're
         # going to keep it for ourselves and fork off another Deferred for our
         # caller.
-        forked = Deferred()
-        d.chainDeferred(forked)
-        return forked
+        return fork_deferred(d)
 
     def load_chunk(self, x, z):
         """
