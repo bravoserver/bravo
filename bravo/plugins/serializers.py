@@ -453,7 +453,7 @@ class Beta(Alpha):
         # The + 1 is not gratuitous. Remember that range/xrange won't include
         # the upper index, but we want it, so we need to increase our upper
         # bound. Additionally, the first page is off-limits.
-        free_pages = set(xrange(1, (fp.getsize() // 4096) + 1))
+        free_pages = set(xrange(2, (fp.getsize() // 4096) + 1))
         positions = dict()
 
         for x in xrange(32):
@@ -519,9 +519,10 @@ class Beta(Alpha):
             fp.makedirs()
         fp = fp.child(region)
         if not fp.exists():
-            # Create the file and zero out the header.
+            # Create the file and zero out the header, plus a spare page for
+            # Notchian software.
             handle = fp.open("w")
-            handle.write("\x00" * 4096)
+            handle.write("\x00" * 8192)
             handle.close()
 
         if region not in self.regions:
