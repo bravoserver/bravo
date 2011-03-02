@@ -38,13 +38,11 @@ class TestBravoFactory(unittest.TestCase):
 
     def test_create_entity_pickup(self):
         entity = self.f.create_entity(0, 0, 0, "Item")
-        self.assertTrue(entity in self.f.entities)
         self.assertEqual(entity.eid, 2)
         self.assertEqual(self.f.eid, 2)
 
     def test_create_entity_player(self):
         entity = self.f.create_entity(0, 0, 0, "Player", username="unittest")
-        self.assertTrue(entity in self.f.entities)
         self.assertEqual(entity.eid, 2)
         self.assertEqual(entity.username, "unittest")
         self.assertEqual(self.f.eid, 2)

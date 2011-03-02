@@ -10,6 +10,7 @@ from zope.interface import implements
 from bravo.config import configuration
 from bravo.entity import entities
 from bravo.ibravo import IAuthenticator, ISeason, ITerrainGenerator
+from bravo.location import Location
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
 from bravo.protocols.beta import BravoProtocol
@@ -88,16 +89,55 @@ class BravoFactory(Factory):
         log.msg("Factory successfully initialized for world '%s'!" % name)
 
     def create_entity(self, x, y, z, name, **kwargs):
-        self.eid += 1
-        entity = entities[name](eid=self.eid, **kwargs)
-        entity.location.x = x
-        entity.location.y = y
-        entity.location.z = z
-        self.entities.add(entity)
+        """
+        Spawn an entirely new entity.
+
+        Handles entity registration as well as instantiation.
+        """
+
+        location = Location()
+        location.x = x
+        location.y = y
+        location.z = z
+        entity = entities[name](eid=0, location=location, **kwargs)
+
+        self.register_entity(entity)
+
+        bigx = entity.location.x // 16
+        bigz = entity.location.z // 16
+
+        chunk = self.world.load_chunk(bigx, bigz)
+        chunk.entities.add(entity)
+
+        log.msg("Created entity %s at %s" % (entity.name, entity.location))
+
         return entity
 
+    def register_entity(self, entity):
+        """
+        Registers an entity with this factory.
+
+        Registration is perhaps too fancy of a name; this method merely makes
+        sure that the entity has a unique and usable entity ID.
+        """
+
+        if not entity.eid:
+            self.eid += 1
+            entity.eid = self.eid
+
     def destroy_entity(self, entity):
-        self.entities.discard(entity)
+        """
+        Destroy an entity.
+
+        The factory doesn't have to know about entities, but it is a good
+        place to put this logic.
+        """
+
+        bigx = entity.location.x // 16
+        bigz = entity.location.z // 16
+
+        chunk = self.world.load_chunk(bigx, bigz)
+        chunk.entities.discard(entity)
 
     def update_time(self):
         """
