@@ -13,8 +13,9 @@ from twisted.python import log
 from twisted.python.filepath import FilePath
 from zope.interface import implements, classProvides
 
-from bravo.entity import Chest, Furnace, MobSpawner, Sign
+from bravo.entity import entities, tiles
 from bravo.ibravo import ISerializer, ISerializerFactory
+from bravo.location import Location
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
@@ -97,6 +98,28 @@ class Alpha(object):
             self.folder.makedirs()
             log.msg("Creating new world in %s" % self.folder)
 
+        self._entity_loaders = {
+            "Item": self._load_item_from_tag,
+        }
+
+        self._entity_savers = {
+            "Item": self._save_item_to_tag,
+        }
+
+        self._tile_loaders = {
+            "Chest": self._load_chest_from_tag,
+            "Furnace": self._load_furnace_from_tag,
+            "MobSpawner": self._load_mobspawner_from_tag,
+            "Sign": self._load_sign_from_tag,
+        }
+
+        self._tile_savers = {
+            "Chest": self._save_chest_to_tag,
+            "Furnace": self._save_furnace_to_tag,
+            "MobSpawner": self._save_mobspawner_to_tag,
+            "Sign": self._save_sign_to_tag,
+        }
+
     # Disk I/O helpers. Highly useful for keeping these few lines in one
     # place.
 
@@ -108,107 +131,122 @@ class Alpha(object):
     def _write_tag(self, fp, tag):
         tag.write_file(fileobj=fp.open("w"))
 
+    # Entity serializers.
+
+    def _load_entity_from_tag(self, tag):
+        location = Location()
+
+        position = tag["Pos"].tags
+        rotation = tag["Rotation"].tags
+        location.x = position[0].value
+        location.y = position[1].value
+        location.z = position[2].value
+        location.yaw = rotation[0].value
+        location.pitch = rotation[1].value
+        location.midair = not bool(tag["OnGround"])
+
+        entity = entities[tag["id"].value](location)
+
+        self._entity_loaders[entity.name](entity, tag)
+
+        return entity
+
+    def _save_entity_to_tag(self, entity):
+        tag = NBTFile()
+        tag.name = ""
+
+        tag["id"] = TAG_String(entity.name)
+
+        position = [entity.location.x, entity.location.y, entity.location.z]
+        tag["Pos"] = TAG_List(position, type=TAG_Double)
+
+        rotation = [entity.location.yaw, entity.location.pitch]
+        tag["Rotation"] = TAG_List(rotation, type=TAG_Double)
+
+        tag["OnGround"] = TAG_Byte(int(not entity.location.midair))
+
+        self._entity_savers[entity.name](entity, tag)
+
+        return tag
+
+    def _load_item_from_tag(self, item, tag):
+        item.item = (tag["Item"]["id"].value, tag["Item"]["Damage"].value)
+        item.quantity = tag["Item"]["Count"].value
+
+    def _save_item_to_tag(self, item, tag):
+        tag["Item"] = TAG_Compound()
+        tag["Item"]["id"] = TAG_Short(item.item[0])
+        tag["Item"]["Damage"] = TAG_Short(item.item[1])
+        tag["Item"]["Count"] = TAG_Short(item.quantity)
+
     # Tile serializers. Tiles are blocks and entities at the same time, in the
     # worst way. Each of these helpers will be called during chunk serialize
     # and deserialize automatically; they never need to be called directly.
 
-    def _load_chest_from_tag(self, tag):
-        chest = Chest(tag["x"].value, tag["y"].value, tag["z"].value)
+    def _load_tile_from_tag(self, tag):
+        """
+        Load a tile from a tag.
 
-        self._load_inventory_from_tag(chest.inventory, tag["Items"])
+        This method will gladly raise exceptions which must be handled by the
+        caller.
+        """
 
-        return chest
+        tile = tiles[tag["id"].value](tag["x"].value, tag["y"].value,
+            tag["z"].value)
 
-    def _save_chest_to_tag(self, chest):
+        self._tile_loaders[tile.name](tile, tag)
+
+        return tile
+
+    def _save_tile_to_tag(self, tile):
         tag = NBTFile()
         tag.name = ""
 
-        tag["id"] = TAG_String("Chest")
+        tag["id"] = TAG_String(tile.name)
 
-        tag["x"] = TAG_Int(chest.x)
-        tag["y"] = TAG_Int(chest.y)
-        tag["z"] = TAG_Int(chest.z)
+        tag["x"] = TAG_Int(tile.x)
+        tag["y"] = TAG_Int(tile.y)
+        tag["z"] = TAG_Int(tile.z)
 
+        self._tile_savers[tile.name](tile, tag)
+
+    def _load_chest_from_tag(self, chest, tag):
+        self._load_inventory_from_tag(chest.inventory, tag["Items"])
+
+    def _save_chest_to_tag(self, chest, tag):
         tag["Items"] = self._save_inventory_to_tag(chest.inventory)
 
-        return tag
-
-    def _load_furnace_from_tag(self, tag):
-        furnace = Furnace(tag["x"].value, tag["y"].value, tag["z"].value)
-
+    def _load_furnace_from_tag(self, furnace, tag):
         furnace.burntime = tag["BurnTime"].value
         furnace.cooktime = tag["CookTime"].value
 
         self._load_inventory_from_tag(furnace.inventory, tag["Items"])
 
-        return furnace
-
-    def _save_furnace_to_tag(self, furnace):
-        tag = NBTFile()
-        tag.name = ""
-
-        tag["id"] = TAG_String("Furnace")
-
-        tag["x"] = TAG_Int(furnace.x)
-        tag["y"] = TAG_Int(furnace.y)
-        tag["z"] = TAG_Int(furnace.z)
-
+    def _save_furnace_to_tag(self, furnace, tag):
         tag["BurnTime"] = TAG_Short(furnace.burntime)
         tag["CookTime"] = TAG_Short(furnace.cooktime)
 
         tag["Items"] = self._save_inventory_to_tag(furnace.inventory)
 
-        return tag
-
-    def _load_mobspawner_from_tag(self, tag):
-        ms = MobSpawner(tag["x"].value, tag["y"].value, tag["z"].value)
-
+    def _load_mobspawner_from_tag(self, ms, tag):
         ms.mob = tag["EntityId"].value
         ms.delay = tag["Delay"].value
 
-        return ms
-
-    def _save_mobspawner_to_tag(self, ms):
-        tag = NBTFile()
-        tag.name = ""
-
-        tag["id"] = TAG_String("MobSpawner")
-
-        tag["x"] = TAG_Int(ms.x)
-        tag["y"] = TAG_Int(ms.y)
-        tag["z"] = TAG_Int(ms.z)
-
+    def _save_mobspawner_to_tag(self, ms, tag):
         tag["EntityId"] = TAG_String(ms.mob)
         tag["Delay"] = TAG_Short(ms.delay)
 
-        return tag
-
-    def _load_sign_from_tag(self, tag):
-        sign = Sign(tag["x"].value, tag["y"].value, tag["z"].value)
-
+    def _load_sign_from_tag(self, sign, tag):
         sign.text1 = tag["Text1"].value
         sign.text2 = tag["Text2"].value
         sign.text3 = tag["Text3"].value
         sign.text4 = tag["Text4"].value
 
-        return sign
-
-    def _save_sign_to_tag(self, sign):
-        tag = NBTFile()
-        tag.name = ""
-
-        tag["id"] = TAG_String("Sign")
-
-        tag["x"] = TAG_Int(sign.x)
-        tag["y"] = TAG_Int(sign.y)
-        tag["z"] = TAG_Int(sign.z)
-
+    def _save_sign_to_tag(self, sign, tag):
         tag["Text1"] = TAG_String(sign.text1)
         tag["Text2"] = TAG_String(sign.text2)
         tag["Text3"] = TAG_String(sign.text3)
         tag["Text4"] = TAG_String(sign.text4)
-
-        return tag
 
     # Chunk serializers. These are split out in order to faciliate reuse in
     # the Beta serializer.
@@ -237,21 +275,23 @@ class Alpha(object):
 
         chunk.populated = bool(level["TerrainPopulated"])
 
+        if "Entities" in level:
+            for tag in level["Entities"].tags:
+                try:
+                    entity = self._load_entity_from_tag(tag)
+                    chunk.entities.add(entity)
+                except:
+                    print "Unknown entity %s" % tag["id"].value
+                    print "Tag for entity:"
+                    print tag.pretty_tree()
+
         if "TileEntities" in level:
             for tag in level["TileEntities"].tags:
-                if tag["id"].value == "Chest":
-                    tile = self._load_chest_from_tag(tag)
-                elif tag["id"].value == "Furnace":
-                    tile = self._load_furnace_from_tag(tag)
-                elif tag["id"].value == "MobSpawner":
-                    tile = self._load_mobspawner_from_tag(tag)
-                elif tag["id"].value == "Sign":
-                    tile = self._load_sign_from_tag(tag)
-                else:
+                try:
+                    tile = self._load_tile_from_tag(tag)
+                    chunk.tiles[tile.x, tile.y, tile.z] = tile
+                except KeyError:
                     print "Unknown tile entity %s" % tag["id"].value
-                    continue
-
-                chunk.tiles[tile.x, tile.y, tile.z] = tile
 
         chunk.dirty = not chunk.populated
 
@@ -276,21 +316,21 @@ class Alpha(object):
 
         level["TerrainPopulated"] = TAG_Byte(chunk.populated)
 
+        level["Entities"] = TAG_List(type=TAG_Compound)
+        for entity in chunk.entities:
+            try:
+                entitytag = self._save_entity_to_tag(entity)
+                level["Entities"].tags.append(entitytag)
+            except:
+                print "Unknown entity %s" % entity.name
+
         level["TileEntities"] = TAG_List(type=TAG_Compound)
         for tile in chunk.tiles.itervalues():
-            if tile.name == "Chest":
-                tiletag = self._save_chest_to_tag(tile)
-            elif tile.name == "Furnace":
-                tiletag = self._save_furnace_to_tag(tile)
-            elif tile.name == "MobSpawner":
-                tiletag = self._save_mobspawner_to_tag(tile)
-            elif tile.name == "Sign":
-                tiletag = self._save_sign_to_tag(tile)
-            else:
+            try:
+                tiletag = self._save_tile_to_tag(tile)
+                level["TileEntities"].tags.append(tiletag)
+            except KeyError:
                 print "Unknown tile entity %s" % tile.name
-                continue
-
-            level["TileEntities"].tags.append(tiletag)
 
         return tag
 
