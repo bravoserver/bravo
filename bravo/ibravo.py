@@ -95,6 +95,8 @@ class IChatCommand(ICommand):
         :param `BravoFactory` factory: factory for this world
         :param str username: username of player
         :param list parameters: additional parameters passed to the command
+
+        :returns: a generator object or other iterable yielding lines
         """
 
 class IConsoleCommand(ICommand):
@@ -113,6 +115,8 @@ class IConsoleCommand(ICommand):
 
         :param `BravoFactory` factory: factory for this world
         :param list parameters: additional parameters passed to the command
+
+        :returns: a generator object or other iterable yielding lines
         """
 
 class IRecipe(IBravoPlugin):
