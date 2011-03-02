@@ -125,6 +125,8 @@ class BravoFactory(Factory):
             self.eid += 1
             entity.eid = self.eid
 
+        log.msg("Registered entity %s at %s" % (entity.name, entity.location))
+
     def destroy_entity(self, entity):
         """
         Destroy an entity.
@@ -138,6 +140,8 @@ class BravoFactory(Factory):
 
         chunk = self.world.load_chunk(bigx, bigz)
         chunk.entities.discard(entity)
+
+        log.msg("Destroyed entity %s at %s" % (entity.name, entity.location))
 
     def update_time(self):
         """
