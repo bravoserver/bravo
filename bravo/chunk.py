@@ -78,11 +78,6 @@ class Chunk(object):
     Whether this chunk has had its initial block data filled out.
     """
 
-    tag = None
-    """
-    The file backing this chunk.
-    """
-
     def __init__(self, x, z):
         """
         Set up the internal data structures for tracking and representing a
