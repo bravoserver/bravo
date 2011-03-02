@@ -109,7 +109,7 @@ class BravoFactory(Factory):
         chunk = self.world.load_chunk(bigx, bigz)
         chunk.entities.add(entity)
 
-        log.msg("Created entity %s at %s" % (entity.name, entity.location))
+        log.msg("Created entity %s" % entity)
 
         return entity
 
@@ -125,7 +125,7 @@ class BravoFactory(Factory):
             self.eid += 1
             entity.eid = self.eid
 
-        log.msg("Registered entity %s at %s" % (entity.name, entity.location))
+        log.msg("Registered entity %s" % entity)
 
     def destroy_entity(self, entity):
         """
@@ -141,7 +141,7 @@ class BravoFactory(Factory):
         chunk = self.world.load_chunk(bigx, bigz)
         chunk.entities.discard(entity)
 
-        log.msg("Destroyed entity %s at %s" % (entity.name, entity.location))
+        log.msg("Destroyed entity %s" % entity)
 
     def update_time(self):
         """
