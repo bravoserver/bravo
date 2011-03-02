@@ -94,7 +94,7 @@ class BravoFactory(Factory):
 
     def create_entity(self, x, y, z, name, **kwargs):
         self.eid += 1
-        entity = entities_by_name[name](self.eid, **kwargs)
+        entity = entities_by_name[name](eid=self.eid, **kwargs)
         entity.location.x = x
         entity.location.y = y
         entity.location.z = z

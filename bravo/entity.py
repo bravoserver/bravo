@@ -16,7 +16,7 @@ class Entity(object):
 
     name = "Entity"
 
-    def __init__(self, eid=0, *args, **kwargs):
+    def __init__(self, eid=0, **kwargs):
         """
         Create an entity.
 
@@ -36,14 +36,14 @@ class Player(Entity):
 
     name = "Player"
 
-    def __init__(self, username="", *args, **kwargs):
+    def __init__(self, username="", **kwargs):
         """
         Create a player.
 
         This method calls super().
         """
 
-        super(Player, self).__init__(*args, **kwargs)
+        super(Player, self).__init__(**kwargs)
 
         self.username = username
         self.inventory = Equipment()
