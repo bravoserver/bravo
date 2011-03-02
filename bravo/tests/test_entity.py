@@ -5,7 +5,7 @@ import bravo.entity
 class TestPlayerEntity(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.entity.Player(0)
+        self.p = bravo.entity.Player("unittest")
 
     def test_trivial(self):
         pass

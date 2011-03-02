@@ -36,14 +36,14 @@ class Player(Entity):
 
     name = "Player"
 
-    def __init__(self, eid=0, username="", *args, **kwargs):
+    def __init__(self, username="", *args, **kwargs):
         """
         Create a player.
 
         This method calls super().
         """
 
-        super(Player, self).__init__(eid=eid, *args, **kwargs)
+        super(Player, self).__init__(*args, **kwargs)
 
         self.username = username
         self.inventory = Equipment()
