@@ -433,7 +433,7 @@ class BravoProtocol(BetaServerProtocol):
 
         for entity in self.factory.entities_near(pos[0] * 32,
             pos[1] * 32, pos[2] * 32, 2 * 32):
-            if entity.name != "Pickup":
+            if entity.name != "Item":
                 continue
 
             if self.player.inventory.add(entity.block, entity.quantity):

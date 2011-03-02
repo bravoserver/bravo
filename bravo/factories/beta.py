@@ -212,7 +212,7 @@ class BravoFactory(Factory):
 
         x, y, z = coords
 
-        entity = self.create_entity(x, y, z, "Pickup")
+        entity = self.create_entity(x, y, z, "Item")
         entity.block = block
         entity.quantity = quantity
 
