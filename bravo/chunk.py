@@ -100,6 +100,7 @@ class Chunk(object):
         self.skylight = empty((16, 16, 128), dtype=uint8)
         self.skylight.fill(0xf)
 
+        self.entities = set()
         self.tiles = {}
 
         self.damaged = zeros((16, 16, 128), dtype=bool)
