@@ -711,7 +711,12 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
     def disable_chunk(self, x, z):
-        del self.chunks[x, z]
+        # Remove the chunk from cache.
+        chunk = self.chunks.pop(x, z)
+
+        for entity in chunk.entities:
+            packet = make_packet("destroy", eid=entity.eid)
+            self.transport.write(packet)
 
         packet = make_packet("prechunk", x=x, z=z, enabled=0)
         self.transport.write(packet)
