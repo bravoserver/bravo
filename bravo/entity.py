@@ -16,7 +16,7 @@ class Entity(object):
 
     name = "Entity"
 
-    def __init__(self, eid=0, **kwargs):
+    def __init__(self, location=None, eid=0, **kwargs):
         """
         Create an entity.
 
@@ -27,7 +27,10 @@ class Entity(object):
 
         self.eid = eid
 
-        self.location = Location()
+        if location is None:
+            self.location = Location()
+        else:
+            self.location = location
 
 class Player(Entity):
     """
