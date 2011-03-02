@@ -199,6 +199,24 @@ class World(object):
 
         chunk.regenerate()
 
+    def postprocess_chunk(self, chunk):
+        """
+        Do a series of final steps to bring a chunk into the world.
+        """
+
+        # Apply the current season to the chunk.
+        if self.season:
+            self.season.transform(chunk)
+
+        # Since this chunk hasn't been given to any player yet, there's no
+        # conceivable way that any meaningful damage has been accumulated;
+        # anybody loading any part of this chunk will want the entire thing.
+        # Thus, it should start out undamaged.
+        chunk.clear_damage()
+
+        # Return the chunk, in case we are in a Deferred chain.
+        return chunk
+
     def request_chunk(self, x, z):
         """
         Request a ``Chunk`` to be delivered later.
@@ -244,15 +262,7 @@ class World(object):
             chunk.populated = True
             chunk.dirty = True
 
-            # Apply the current season to the chunk.
-            if self.season:
-                self.season.transform(chunk)
-
-            # Since this chunk hasn't been given to any player yet, there's no
-            # conceivable way that any meaningful damage has been accumulated;
-            # anybody loading any part of this chunk will want the entire thing.
-            # Thus, it should start out undamaged.
-            chunk.clear_damage()
+            self.postprocess_chunk(chunk)
 
             self.dirty_chunk_cache[x, z] = chunk
             del self._pending_chunks[x, z]
@@ -291,15 +301,7 @@ class World(object):
 
             self.dirty_chunk_cache[x, z] = chunk
 
-        # Apply the current season to the chunk.
-        if self.season:
-            self.season.transform(chunk)
-
-        # Since this chunk hasn't been given to any player yet, there's no
-        # conceivable way that any meaningful damage has been accumulated;
-        # anybody loading any part of this chunk will want the entire thing.
-        # Thus, it should start out undamaged.
-        chunk.clear_damage()
+        self.postprocess_chunk(chunk)
 
         return chunk
 
