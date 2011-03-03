@@ -90,6 +90,32 @@ class Pickup(Entity):
 
     name = "Item"
 
+    def __init__(self, item=(0, 0), quantity=1, **kwargs):
+        """
+        Create a pickup.
+
+        This method calls super().
+        """
+
+        super(Pickup, self).__init__(**kwargs)
+
+        self.item = item
+        self.quantity = quantity
+
+    def save_to_packet(self):
+        return make_packet("pickup",
+            eid=self.eid,
+            primary=self.item[0],
+            secondary=self.item[1],
+            count=self.quantity,
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=0,
+            pitch=0,
+            roll=0
+        )
+
 entities = dict((entity.name, entity)
     for entity in (
         Player,
