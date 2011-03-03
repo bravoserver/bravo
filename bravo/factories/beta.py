@@ -271,9 +271,8 @@ class BravoFactory(Factory):
 
         x, y, z = coords
 
-        entity = self.create_entity(x, y, z, "Item")
-        entity.block = block
-        entity.quantity = quantity
+        entity = self.create_entity(x // 32, y // 32, z // 32, "Item",
+            item=block, quantity=quantity)
 
         packet = make_packet("pickup", eid=entity.eid, primary=block[0],
             secondary=block[1], count=quantity, x=x, y=y, z=z, yaw=0, pitch=0,
