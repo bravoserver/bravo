@@ -66,7 +66,6 @@ class BravoFactory(Factory):
         self.protocols = dict()
 
         self.eid = 1
-        self.entities = set()
 
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
@@ -250,6 +249,8 @@ class BravoFactory(Factory):
 
         All arguments should be in pixels, not blocks.
         """
+
+        return []
 
         return [entity for entity in self.entities
             if sqrt(

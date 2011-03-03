@@ -62,7 +62,6 @@ class BetaServerProtocol(Protocol):
         log.msg("Client connecting...")
 
         self.chunks = dict()
-        self.entities = set()
         self.windows = dict()
         self.wid = 1
 
@@ -393,7 +392,6 @@ class BravoProtocol(BetaServerProtocol):
         self.player = self.factory.world.load_player(self.username)
         self.player.eid = self.eid
         self.location = self.player.location
-        self.factory.entities.add(self.player)
 
         packet = make_packet("chat",
             message="%s is joining the game..." % self.username)
@@ -440,11 +438,8 @@ class BravoProtocol(BetaServerProtocol):
             pos[1] * 32, pos[2] * 32, 160 * 32):
 
             if (entity is self.player or
-                entity.name != "Player" or
-                entity.eid in self.entities):
+                entity.name != "Player"):
                 continue
-
-            self.entities.add(entity.eid)
 
             packet = entity.save_to_packet()
             self.transport.write(packet)
