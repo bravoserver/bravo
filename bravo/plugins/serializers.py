@@ -158,10 +158,12 @@ class Alpha(object):
         tag["id"] = TAG_String(entity.name)
 
         position = [entity.location.x, entity.location.y, entity.location.z]
-        tag["Pos"] = TAG_List(position, type=TAG_Double)
+        tag["Pos"] = TAG_List(type=TAG_Double)
+        tag["Pos"].tags = [TAG_Double(i) for i in position]
 
         rotation = [entity.location.yaw, entity.location.pitch]
-        tag["Rotation"] = TAG_List(rotation, type=TAG_Double)
+        tag["Rotation"] = TAG_List(type=TAG_Double)
+        tag["Rotation"].tags = [TAG_Double(i) for i in rotation]
 
         tag["OnGround"] = TAG_Byte(int(not entity.location.midair))
 
@@ -280,7 +282,7 @@ class Alpha(object):
                 try:
                     entity = self._load_entity_from_tag(tag)
                     chunk.entities.add(entity)
-                except:
+                except KeyError:
                     print "Unknown entity %s" % tag["id"].value
                     print "Tag for entity:"
                     print tag.pretty_tree()
@@ -321,7 +323,7 @@ class Alpha(object):
             try:
                 entitytag = self._save_entity_to_tag(entity)
                 level["Entities"].tags.append(entitytag)
-            except:
+            except KeyError:
                 print "Unknown entity %s" % entity.name
 
         level["TileEntities"] = TAG_List(type=TAG_Compound)
