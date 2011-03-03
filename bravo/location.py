@@ -1,4 +1,4 @@
-from math import degrees, radians, pi
+from math import degrees, radians, pi, sqrt
 
 from construct import Container
 
@@ -79,3 +79,15 @@ class Location(object):
             orientation=orientation, flying=flying)
 
         return packet
+
+    def distance(self, other):
+        """
+        Return the distance between this location and another location.
+
+        Distance is measured in blocks.
+        """
+
+        dx = (self.x - other.x)**2
+        dy = (self.y - other.y)**2
+        dz = (self.z - other.z)**2
+        return sqrt(dx + dy + dz)

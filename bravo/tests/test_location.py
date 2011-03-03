@@ -17,6 +17,13 @@ class TestLocation(unittest.TestCase):
     def test_save_to_packet(self):
         self.assertTrue(self.l.save_to_packet())
 
+    def test_distance(self):
+        other = bravo.location.Location()
+        other.x = 2
+        other.y = 3
+        other.z = 6
+        self.assertEqual(self.l.distance(other), 7)
+
 class TestLocationProperties(unittest.TestCase):
 
     def setUp(self):
