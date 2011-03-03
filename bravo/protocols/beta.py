@@ -416,12 +416,11 @@ class BravoProtocol(BetaServerProtocol):
 
         self.update_chunks()
 
-        for entity in self.factory.entities_near(pos[0] * 32,
-            pos[1] * 32, pos[2] * 32, 2 * 32):
+        for entity in self.entities_near(2 * 32):
             if entity.name != "Item":
                 continue
 
-            if self.player.inventory.add(entity.block, entity.quantity):
+            if self.player.inventory.add(entity.item, entity.quantity):
                 packet = self.player.inventory.save_to_packet()
                 self.transport.write(packet)
 
@@ -434,9 +433,9 @@ class BravoProtocol(BetaServerProtocol):
 
                 self.factory.destroy_entity(entity)
 
-        for entity in self.factory.entities_near(pos[0] * 32,
-            pos[1] * 32, pos[2] * 32, 160 * 32):
-
+        # XXX walled off because player entities are MAGICAL
+        return
+        for entity in self.entities_near(160 * 32):
             if (entity is self.player or
                 entity.name != "Player"):
                 continue
@@ -446,6 +445,24 @@ class BravoProtocol(BetaServerProtocol):
 
             packet = make_packet("create", eid=entity.eid)
             self.transport.write(packet)
+
+    def entities_near(self, radius):
+        """
+        Obtain the entities within a radius of this player.
+
+        Radius is measured in blocks.
+        """
+
+        chunk_radius = int(radius // 16 + 1)
+        chunkx = self.location.x // 16
+        chunkz = self.location.z // 16
+
+        for x, z in product(xrange(-chunk_radius, chunk_radius + 1), repeat=2):
+            chunk = self.chunks[chunkx, chunkz]
+            yieldables = [entity for entity in chunk.entities
+                if self.location.distance(entity.location) <= radius]
+            for i in yieldables:
+                yield i
 
     def login(self, container):
         """
