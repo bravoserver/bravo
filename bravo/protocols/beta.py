@@ -416,7 +416,7 @@ class BravoProtocol(BetaServerProtocol):
 
         self.update_chunks()
 
-        for entity in self.entities_near(2 * 32):
+        for entity in self.entities_near(2):
             if entity.name != "Item":
                 continue
 
@@ -457,8 +457,13 @@ class BravoProtocol(BetaServerProtocol):
         chunkx = self.location.x // 16
         chunkz = self.location.z // 16
 
-        for x, z in product(xrange(-chunk_radius, chunk_radius + 1), repeat=2):
-            chunk = self.chunks[chunkx, chunkz]
+        minx = chunkx - chunk_radius
+        maxx = chunkx + chunk_radius + 1
+        minz = chunkz - chunk_radius
+        maxz = chunkz + chunk_radius + 1
+
+        for x, z in product(xrange(minx, maxx), xrange(minz, maxz)):
+            chunk = self.chunks[x, z]
             yieldables = [entity for entity in chunk.entities
                 if self.location.distance(entity.location) <= radius]
             for i in yieldables:
