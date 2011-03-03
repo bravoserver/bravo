@@ -14,6 +14,7 @@ from zope.interface.verify import verifyObject
 from bravo.chunk import Chunk
 from bravo.compat import product
 from bravo.config import configuration
+from bravo.entity import Player
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import retrieve_named_plugins
 from bravo.utilities import fork_deferred, split_coords
@@ -319,11 +320,11 @@ class World(object):
         Retrieve player data.
         """
 
-        player = self.factory.create_entity(self.spawn[0], self.spawn[1],
-            self.spawn[2], "Player", username=username)
-
+        player = Player(username=username)
+        player.location.x = self.spawn[0]
+        player.location.y = self.spawn[1]
         player.location.stance = self.spawn[1]
-        player.username = username
+        player.location.z = self.spawn[2]
 
         self.serializer.load_player(player)
 

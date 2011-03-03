@@ -88,6 +88,21 @@ class BravoFactory(Factory):
 
         log.msg("Factory successfully initialized for world '%s'!" % name)
 
+    def buildProtocol(self, addr):
+        """
+        Create a protocol.
+
+        This overriden method provides early player entity registration, as a
+        solution to the username/entity race that occurs on login.
+        """
+
+        p = self.protocol()
+        p.factory = self
+
+        self.register_entity(p)
+
+        return p
+
     def create_entity(self, x, y, z, name, **kwargs):
         """
         Spawn an entirely new entity.

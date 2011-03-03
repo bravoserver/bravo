@@ -371,6 +371,8 @@ class BravoProtocol(BetaServerProtocol):
 
     time_loop = None
 
+    eid = 0
+
     def __init__(self):
         BetaServerProtocol.__init__(self)
 
@@ -382,19 +384,6 @@ class BravoProtocol(BetaServerProtocol):
 
         self.last_dig_build_timer = time()
 
-    def challenged(self):
-        BetaServerProtocol.challenged(self)
-
-        # Maybe the ugliest hack written thus far.
-        # We need an entity ID which will persist for the entire lifetime of
-        # this client. However, that entity ID is normally tied to an entity,
-        # which won't be allocated until after we get our username from the
-        # client. This is far too late to be able to look things up in a nice,
-        # orderly way, so for now (and maybe forever) we will allocate and
-        # increment the entity ID manually.
-        self.eid = self.factory.eid + 1
-        self.factory.eid += 1
-
     def authenticated(self):
         BetaServerProtocol.authenticated(self)
 
@@ -403,9 +392,7 @@ class BravoProtocol(BetaServerProtocol):
         # Init player, and copy data into it.
         self.player = self.factory.world.load_player(self.username)
         self.player.eid = self.eid
-        # Since location is a complex object, we'll just be loaning it to our
-        # player.
-        self.player.location = self.location
+        self.location = self.player.location
         self.factory.entities.add(self.player)
 
         packet = make_packet("chat",
