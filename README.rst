@@ -230,8 +230,7 @@ I have an error involving construct!
  Install Construct.
 
 I have an error involving JSON!
- Install python-json, or python-simplejson, or turn off the JSON serializer in
- bravo.ini.
+ If you update to a newer Bravo, you won't need JSON support.
 
 I have an error involving IRC/AMP/ListOf/endpoints!
  Your Twisted is too old. You really do need Twisted 10.1 or newer.
