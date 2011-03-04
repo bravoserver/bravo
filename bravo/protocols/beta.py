@@ -468,15 +468,15 @@ class BravoProtocol(BetaServerProtocol):
                 continue
 
             if self.player.inventory.add(entity.item, entity.quantity):
-                packet = self.player.inventory.save_to_packet()
-                self.transport.write(packet)
-
                 packet = make_packet("collect", eid=entity.eid,
                     destination=self.player.eid)
-                self.transport.write(packet)
+                self.factory.broadcast(packet)
 
                 packet = make_packet("destroy", eid=entity.eid)
                 self.factory.broadcast(packet)
+
+                packet = self.player.inventory.save_to_packet()
+                self.transport.write(packet)
 
                 self.factory.destroy_entity(entity)
 
