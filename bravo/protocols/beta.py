@@ -399,8 +399,6 @@ class BravoProtocol(BetaServerProtocol):
     def authenticated(self):
         BetaServerProtocol.authenticated(self)
 
-        self.factory.protocols[self.username] = self
-
         # Init player, and copy data into it.
         self.player = self.factory.world.load_player(self.username)
         self.player.eid = self.eid
@@ -417,12 +415,16 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_others(packet, self)
 
         # And of course spawn all of those players' avatars in our client as
-        # well.
+        # well. Note that, at this point, we are not listed in the factory's
+        # list of protocols, so we won't accidentally send one of these to
+        # ourselves.
         for protocol in self.factory.protocols.itervalues():
             packet = protocol.player.save_to_packet()
             self.transport.write(packet)
             packet = make_packet("create", eid=protocol.player.eid)
             self.transport.write(packet)
+
+        self.factory.protocols[self.username] = self
 
         spawn = self.factory.world.spawn
         packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
