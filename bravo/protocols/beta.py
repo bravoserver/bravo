@@ -1,7 +1,6 @@
 from time import time
 from urlparse import urlunparse
-import math
-from math import pi
+from math import pi, sin, cos
 
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
@@ -662,9 +661,9 @@ class BravoProtocol(BetaServerProtocol):
                 # Do some trig to put the pickup one block ahead of the player
                 # in the direction they are facing.
                 l = self.location
-                x = l.x - math.sin(l.theta)
+                x = l.x - sin(l.theta)
                 y = l.y + 1
-                z = l.z + math.cos(l.theta)
+                z = l.z + cos(l.theta)
                 coords = (int(x * 32) + 16, int(y * 32) + 16, int(z * 32) + 16)
                 # loop over items left in workbench
                 for item in i.crafting:
