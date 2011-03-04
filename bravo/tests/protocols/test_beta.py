@@ -32,7 +32,7 @@ class TestBetaServerProtocol(unittest.TestCase):
         self.assertEqual(self.p.location.z, 4)
         self.assertEqual(self.p.location.yaw, 5)
         self.assertEqual(self.p.location.pitch, 6)
-        self.assertTrue(self.p.location.midair)
+        self.assertTrue(self.p.location.grounded)
 
     def test_reject_ancient_and_newfangled_clients(self):
         """

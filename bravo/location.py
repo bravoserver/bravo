@@ -10,7 +10,7 @@ class Location(object):
     """
 
     __slots__ = (
-        "midair",
+        "grounded",
         "_phi",
         "stance",
         "_theta",
@@ -32,11 +32,11 @@ class Location(object):
         self._phi = 0
 
         # Whether we are in the air.
-        self.midair = False
+        self.grounded = False
 
     def __repr__(self):
         return "<Location(%s, (%d, %d (+%.6f), %d), (%.2f, %.2f))>" % (
-            "flying" if self.midair else "not flying", self.x, self.y,
+            "grounded" if self.grounded else "not grounded", self.x, self.y,
             self.stance - self.y, self.z, self.theta, self.phi)
 
     __str__ = __repr__
@@ -68,15 +68,15 @@ class Location(object):
 
     def save_to_packet(self):
         """
-        Returns a position/look/flying packet.
+        Returns a position/look/grounded packet.
         """
 
         position = Container(x=self.x, y=self.stance, z=self.z, stance=self.y)
         orientation = Container(rotation=self.yaw, pitch=self.pitch)
-        flying = Container(flying=self.midair)
+        grounded = Container(grounded=self.grounded)
 
         packet = make_packet("location", position=position,
-            orientation=orientation, flying=flying)
+            orientation=orientation, grounded=grounded)
 
         return packet
 

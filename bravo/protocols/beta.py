@@ -69,7 +69,7 @@ class BetaServerProtocol(Protocol):
             1: self.login,
             2: self.handshake,
             3: self.chat,
-            10: self.flying,
+            10: self.grounded,
             11: self.position,
             12: self.orientation,
             13: self.location_packet,
@@ -125,12 +125,12 @@ class BetaServerProtocol(Protocol):
         Hook for chat packets.
         """
 
-    def flying(self, container):
+    def grounded(self, container):
         """
-        Hook for flying packets.
+        Hook for grounded packets.
         """
 
-        self.location.midair = bool(container.flying)
+        self.location.grounded = bool(container.grounded)
 
     def position(self, container):
         """
@@ -144,12 +144,12 @@ class BetaServerProtocol(Protocol):
         self.location.z = int(container.position.z)
         # Stance is the current jumping position, plus a small offset of
         # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
-        # or the anti-flying code kicks the client.
+        # or the anti-grounded code kicks the client.
         self.location.stance = container.position.stance
 
         position = self.location.x, self.location.y, self.location.z
 
-        self.flying(container.flying)
+        self.grounded(container.grounded)
 
         if old_position != position:
             self.position_changed()
@@ -162,7 +162,7 @@ class BetaServerProtocol(Protocol):
         self.location.yaw = container.orientation.rotation
         self.location.pitch = container.orientation.pitch
 
-        self.flying(container.flying)
+        self.grounded(container.grounded)
 
     def location_packet(self, container):
         """

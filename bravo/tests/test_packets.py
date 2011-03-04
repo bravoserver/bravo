@@ -76,7 +76,7 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.position.z, 4)
         self.assertEqual(parsed.orientation.rotation, 5)
         self.assertEqual(parsed.orientation.pitch, 6)
-        self.assertEqual(parsed.flying.flying, 1)
+        self.assertEqual(parsed.grounded.grounded, 1)
 
     def test_digging(self):
         packet = "\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01"
@@ -176,7 +176,7 @@ class TestPacketIntegration(unittest.TestCase):
         self.assertEqual(payload.position.z, 7.5)
         self.assertEqual(payload.orientation.rotation, 0.0)
         self.assertEqual(payload.orientation.pitch, 0.0)
-        self.assertEqual(payload.flying.flying, 0)
+        self.assertEqual(payload.grounded.grounded, 0)
         reconstructed = bravo.packets.make_packet("location", payload)
         self.assertEqual(packet, reconstructed)
 
