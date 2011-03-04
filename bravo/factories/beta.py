@@ -216,8 +216,24 @@ class BravoFactory(Factory):
         self.broadcast(packet)
 
     def broadcast(self, packet):
+        """
+        Broadcast a packet to all connected players.
+        """
+
         for player in self.protocols.itervalues():
             player.transport.write(packet)
+
+    def broadcast_for_others(self, packet, protocol):
+        """
+        Broadcast a packet to all players except the originating player.
+
+        Useful for certain packets like player entity spawns which should
+        never be reflexive.
+        """
+
+        for player in self.protocols.itervalues():
+            if player is not protocol:
+                player.transport.write(packet)
 
     def broadcast_for_chunk(self, packet, x, z):
         """
