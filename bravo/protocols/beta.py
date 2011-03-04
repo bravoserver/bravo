@@ -1,6 +1,7 @@
 from time import time
 from urlparse import urlunparse
 import math
+from math import pi
 
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
@@ -425,6 +426,17 @@ class BravoProtocol(BetaServerProtocol):
 
     def position_changed(self):
         x, chaff, z, chaff = split_coords(self.location.x, self.location.z)
+
+        # Inform everybody of our new location.
+        packet = make_packet("teleport",
+            eid=self.player.eid,
+            x=self.location.x * 32,
+            y=self.location.y * 32,
+            z=self.location.z * 32,
+            yaw=int(self.location.theta * 255 / (2 * pi)) % 256,
+            pitch=int(self.location.theta * 255 / (2 * pi)) % 256,
+        )
+        self.factory.broadcast_for_others(packet, self)
 
         self.update_chunks()
 
