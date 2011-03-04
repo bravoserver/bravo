@@ -242,23 +242,6 @@ class BravoFactory(Factory):
                     player.transport.write(packet)
             chunk.clear_damage()
 
-    def entities_near(self, x, y, z, radius):
-        """
-        Given a coordinate and a radius, return all entities within that
-        radius of those coordinates.
-
-        All arguments should be in pixels, not blocks.
-        """
-
-        return []
-
-        return [entity for entity in self.entities
-            if sqrt(
-                (entity.location.x - x)**2 +
-                (entity.location.y - y)**2 +
-                (entity.location.z - z)**2
-            ) < radius]
-
     def give(self, coords, block, quantity):
         """
         Spawn a pickup at the specified coordinates.
