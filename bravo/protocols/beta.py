@@ -26,14 +26,11 @@ from bravo.utilities import split_coords
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
 circle = [(i, j)
-    for i, j in sorted(
-        product(xrange(-10, 10), xrange(-10, 10)),
-        key=lambda t: t[0]**2 + t[1]**2)
+    for i, j in product(xrange(-10, 10), xrange(-10, 10))
     if i**2 + j**2 <= 100
 ]
 """
-A list of points in a filled circle of radius 10, sorted according to distance
-from the center.
+A list of points in a filled circle of radius 10.
 """
 
 BuildData = namedtuple("BuildData", "block, metadata, x, y, z, face")
