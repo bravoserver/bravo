@@ -52,14 +52,6 @@ class TestLocationProperties(unittest.TestCase):
         self.l.phi = 1
         self.assertEqual(self.l.pitch, 57)
 
-    def test_pitch_wrap(self):
-        self.l.pitch = 370
-        self.assertEqual(self.l.pitch, 10)
-
-    def test_pitch_wrap_negative(self):
-        self.l.pitch = -10
-        self.assertEqual(self.l.pitch, 350)
-
     def test_yaw_property(self):
         self.l.yaw = 90
         self.assertAlmostEqual(self.l.theta, math.pi / 2)

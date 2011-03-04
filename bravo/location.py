@@ -11,7 +11,7 @@ class Location(object):
 
     __slots__ = (
         "grounded",
-        "_phi",
+        "phi",
         "stance",
         "_theta",
         "x",
@@ -27,9 +27,10 @@ class Location(object):
         self.z = 0
 
         # Orientation, in radians.
-        # Theta and phi are like the theta and phi of spherical coordinates.
+        # Theta and phi are like the theta and phi of spherical coordinates,
+        # except that phi starts perpendicular to the xz-plane.
         self._theta = 0
-        self._phi = 0
+        self.phi = 0
 
         # Whether we are in the air.
         self.grounded = False
@@ -60,11 +61,6 @@ class Location(object):
         self.phi = radians(value)
     pitch = property(lambda self: int(round(degrees(self.phi))),
         _pitch_setter)
-
-    def _phi_setter(self, value):
-        # Radial clamp.
-        self._phi = value % (pi * 2)
-    phi = property(lambda self: self._phi, _phi_setter)
 
     def save_to_packet(self):
         """
