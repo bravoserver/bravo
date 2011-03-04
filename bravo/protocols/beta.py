@@ -474,7 +474,7 @@ class BravoProtocol(BetaServerProtocol):
                 self.transport.write(packet)
 
                 packet = make_packet("destroy", eid=entity.eid)
-                self.transport.write(packet)
+                self.factory.broadcast(packet)
 
                 self.factory.destroy_entity(entity)
 
