@@ -143,7 +143,7 @@ class Alpha(object):
         location.z = position[2].value
         location.yaw = rotation[0].value
         location.pitch = rotation[1].value
-        location.grounded = not bool(tag["OnGround"])
+        location.grounded = bool(tag["OnGround"])
 
         entity = entities[tag["id"].value](location)
 
@@ -165,7 +165,7 @@ class Alpha(object):
         tag["Rotation"] = TAG_List(type=TAG_Double)
         tag["Rotation"].tags = [TAG_Double(i) for i in rotation]
 
-        tag["OnGround"] = TAG_Byte(int(not entity.location.grounded))
+        tag["OnGround"] = TAG_Byte(int(entity.location.grounded))
 
         self._entity_savers[entity.name](entity, tag)
 

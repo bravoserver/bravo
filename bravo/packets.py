@@ -462,7 +462,7 @@ packets_by_name = {
     "use"                : 7,
     "health"             : 8,
     "respawn"            : 9,
-    "grounded"             : 10,
+    "grounded"           : 10,
     "position"           : 11,
     "orientation"        : 12,
     "location"           : 13,

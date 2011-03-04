@@ -36,7 +36,7 @@ class Location(object):
 
     def __repr__(self):
         return "<Location(%s, (%d, %d (+%.6f), %d), (%.2f, %.2f))>" % (
-            "grounded" if self.grounded else "not grounded", self.x, self.y,
+            "grounded" if self.grounded else "midair", self.x, self.y,
             self.stance - self.y, self.z, self.theta, self.phi)
 
     __str__ = __repr__
