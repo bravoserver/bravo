@@ -8,9 +8,9 @@ from bravo.ibravo import IChatCommand, IConsoleCommand
 
 csv.register_dialect("hey0", delimiter=":")
 
-def get_locations(handle):
+def get_locations(data):
     d = {}
-    for line in csv.reader(handle, "hey0"):
+    for line in csv.reader(StringIO(data), dialect="hey0"):
         name, x, y, z, yaw, pitch = line[:6]
         x = float(x)
         y = float(y)
@@ -20,16 +20,20 @@ def get_locations(handle):
         d[name] = (x, y, z, yaw, pitch)
     return d
 
+def put_locations(d):
+    data = StringIO()
+    writer = csv.writer(data, dialect="hey0")
+    for name, stuff in d.iteritems():
+        writer.writerow([name] + list(stuff))
+    return data.getvalue()
+
 class Home(object):
 
     implements(IPlugin, IChatCommand, IConsoleCommand)
 
     def chat_command(self, factory, username, parameters):
-        handle = factory.world.folder.child("homes.txt")
-        if not handle.exists():
-            handle.touch()
-
-        homes = get_locations(handle.open("rb"))
+        data = factory.world.serializer.load_plugin_data("homes")
+        homes = get_locations(data)
 
         protocol = factory.protocols[username]
         l = protocol.player.location
@@ -59,10 +63,6 @@ class SetHome(object):
     def chat_command(self, factory, username, parameters):
         yield "Saving %s's home..." % username
 
-        handle = factory.world.folder.child("homes.txt")
-        if not handle.exists():
-            handle.touch()
-
         protocol = factory.protocols[username]
         x = protocol.player.location.x
         y = protocol.player.location.y
@@ -70,7 +70,11 @@ class SetHome(object):
         yaw = protocol.player.location.yaw
         pitch = protocol.player.location.pitch
 
-        csv.writer(handle.open("ab"), "hey0").writerow([username, x, y, z, yaw, pitch])
+        data = factory.world.serializer.load_plugin_data("homes")
+        d = get_locations(data)
+        d[username] = x, y, z, yaw, pitch
+        data = put_locations(d)
+        factory.world.serializer.save_plugin_data("homes", data)
 
         yield "Saved %s!" % username
 
@@ -84,11 +88,8 @@ class Warp(object):
     implements(IPlugin, IChatCommand, IConsoleCommand)
 
     def chat_command(self, factory, username, parameters):
-        handle = factory.world.folder.child("warps.txt")
-        if not handle.exists():
-            handle.touch()
-
-        warps = get_locations(handle.open("rb"))
+        data = factory.world.serializer.load_plugin_data("warps")
+        warps = get_locations(data)
 
         location = parameters[0]
         if location in warps:
@@ -123,11 +124,8 @@ class ListWarps(object):
     implements(IPlugin, IChatCommand, IConsoleCommand)
 
     def dispatch(self, factory):
-        handle = factory.world.folder.child("warps.txt")
-        if not handle.exists():
-            handle.touch()
-
-        warps = get_locations(handle.open("rb"))
+        data = factory.world.serializer.load_plugin_data("warps")
+        warps = get_locations(data)
 
         yield "Warp locations:"
         for key in sorted(warps.iterkeys()):
@@ -155,10 +153,6 @@ class SetWarp(object):
 
         yield "Saving warp %s..." % name
 
-        handle = factory.world.folder.child("warps.txt")
-        if not handle.exists():
-            handle.touch()
-
         protocol = factory.protocols[username]
         x = protocol.player.location.x
         y = protocol.player.location.y
@@ -166,7 +160,11 @@ class SetWarp(object):
         yaw = protocol.player.location.yaw
         pitch = protocol.player.location.pitch
 
-        csv.writer(handle.open("ab"), "hey0").writerow([name, x, y, z, yaw, pitch])
+        data = factory.world.serializer.load_plugin_data("warps")
+        d = get_locations(data)
+        d[name] = x, y, z, yaw, pitch
+        data = put_locations(d)
+        factory.world.serializer.save_plugin_data("warps", data)
 
         yield "Saved %s!" % name
 
@@ -184,24 +182,16 @@ class RemoveWarp(object):
 
         yield "Removing warp %s..." % name
 
-        handle = factory.world.folder.child("warps.txt")
-        if not handle.exists():
-            handle.touch()
-
-        rows = get_locations(handle.open("rb"))
-        if name in rows:
-            del rows[name]
-
-        sio = StringIO()
-        writer = csv.writer(sio, "hey0")
-        writer.writerows([name] + list(data)
-            for name, data in rows.itervalues())
-
-        yield "Saving warps..."
-
-        handle.setContent(sio.getvalue())
-
-        yield "Removed %s!" % name
+        data = factory.world.serializer.load_plugin_data("warps")
+        d = get_locations(data)
+        if name in d:
+            del d[name]
+            yield "Saving warps..."
+            data = put_locations(d)
+            factory.world.serializer.save_plugin_data("warps", data)
+            yield "Removed %s!" % name
+        else:
+            yield "No such warp %s!" % name
 
     name = "removewarp"
     aliases = tuple()
