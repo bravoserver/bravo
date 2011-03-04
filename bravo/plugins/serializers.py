@@ -172,7 +172,7 @@ class Alpha(object):
         return tag
 
     def _load_item_from_tag(self, item, tag):
-        item.item = (tag["Item"]["id"].value, tag["Item"]["Damage"].value)
+        item.item = tag["Item"]["id"].value, tag["Item"]["Damage"].value
         item.quantity = tag["Item"]["Count"].value
 
     def _save_item_to_tag(self, item, tag):
