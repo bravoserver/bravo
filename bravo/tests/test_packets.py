@@ -114,6 +114,18 @@ class TestPacketParsing(unittest.TestCase):
         self.assertRaises(MappingError, bravo.packets.packets[18].parse,
             packet)
 
+    def test_mob(self):
+        packet = "AAAPb1z///4wAAAH5v//9ZP3AAAEfw==".decode("base64")
+        parsed = bravo.packets.packets[24].parse(packet)
+        self.assertEqual(parsed.eid, 3951)
+        self.assertEqual(parsed.type, "cow")
+        self.assertEqual(parsed.x, -464)
+        self.assertEqual(parsed.y, 2022)
+        self.assertEqual(parsed.z, -2669)
+        self.assertEqual(parsed.yaw, -9)
+        self.assertEqual(parsed.pitch, 0)
+        self.assertEqual(parsed.metadata, "\x00\x04\x7f")
+
 class TestPacketAssembly(unittest.TestCase):
 
     def test_ping(self):
