@@ -393,9 +393,23 @@ class BravoProtocol(BetaServerProtocol):
         self.player.eid = self.eid
         self.location = self.player.location
 
+        # Announce our presence.
         packet = make_packet("chat",
             message="%s is joining the game..." % self.username)
         self.factory.broadcast(packet)
+
+        # Craft our avatar and send it to already-connected other players.
+        packet = self.player.save_to_packet()
+        packet += make_packet("create", eid=self.player.eid)
+        self.factory.broadcast_for_others(packet, self)
+
+        # And of course spawn all of those players' avatars in our client as
+        # well.
+        for protocol in self.factory.protocols.itervalues():
+            packet = protocol.player.save_to_packet()
+            self.transport.write(packet)
+            packet = make_packet("create", eid=protocol.player.eid)
+            self.transport.write(packet)
 
         spawn = self.factory.world.spawn
         packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
@@ -410,9 +424,7 @@ class BravoProtocol(BetaServerProtocol):
         self.time_loop.start(10)
 
     def position_changed(self):
-        pos = self.location.x, self.location.y, self.location.z
-
-        x, chaff, z, chaff = split_coords(pos[0], pos[2])
+        x, chaff, z, chaff = split_coords(self.location.x, self.location.z)
 
         self.update_chunks()
 
@@ -432,19 +444,6 @@ class BravoProtocol(BetaServerProtocol):
                 self.transport.write(packet)
 
                 self.factory.destroy_entity(entity)
-
-        # XXX walled off because player entities are MAGICAL
-        return
-        for entity in self.entities_near(160 * 32):
-            if (entity is self.player or
-                entity.name != "Player"):
-                continue
-
-            packet = entity.save_to_packet()
-            self.transport.write(packet)
-
-            packet = make_packet("create", eid=entity.eid)
-            self.transport.write(packet)
 
     def entities_near(self, radius):
         """
