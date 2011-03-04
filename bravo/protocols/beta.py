@@ -476,7 +476,7 @@ class BravoProtocol(BetaServerProtocol):
                 self.transport.write(packet)
 
                 packet = make_packet("destroy", eid=entity.eid)
-                self.transport.write(packet)
+                self.factory.broadcast(packet)
 
                 self.factory.destroy_entity(entity)
 
@@ -879,6 +879,8 @@ class BravoProtocol(BetaServerProtocol):
         if self.player:
             self.factory.world.save_player(self.username, self.player)
             self.factory.destroy_entity(self.player)
+            packet = make_packet("destroy", eid=self.player.eid)
+            self.factory.broadcast(packet)
 
         if self.username in self.factory.protocols:
             del self.factory.protocols[self.username]
