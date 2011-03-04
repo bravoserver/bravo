@@ -436,6 +436,15 @@ class BravoProtocol(BetaServerProtocol):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(10)
 
+    def orientation_changed(self):
+        # Bang your head!
+        packet = make_packet("entity-orientation",
+            eid=self.player.eid,
+            yaw=int(self.location.theta * 255 / (2 * pi)) % 256,
+            pitch=int(self.location.phi * 255 / (2 * pi)) % 256,
+        )
+        self.factory.broadcast_for_others(packet, self)
+
     def position_changed(self):
         x, chaff, z, chaff = split_coords(self.location.x, self.location.z)
 
@@ -446,7 +455,7 @@ class BravoProtocol(BetaServerProtocol):
             y=self.location.y * 32,
             z=self.location.z * 32,
             yaw=int(self.location.theta * 255 / (2 * pi)) % 256,
-            pitch=int(self.location.theta * 255 / (2 * pi)) % 256,
+            pitch=int(self.location.phi * 255 / (2 * pi)) % 256,
         )
         self.factory.broadcast_for_others(packet, self)
 
