@@ -212,6 +212,8 @@ class Alpha(object):
 
         self._tile_savers[tile.name](tile, tag)
 
+        return tag
+
     def _load_chest_from_tag(self, chest, tag):
         self._load_inventory_from_tag(chest.inventory, tag["Items"])
 
