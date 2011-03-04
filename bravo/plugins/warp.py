@@ -127,9 +127,12 @@ class ListWarps(object):
         data = factory.world.serializer.load_plugin_data("warps")
         warps = get_locations(data)
 
-        yield "Warp locations:"
-        for key in sorted(warps.iterkeys()):
-            yield "~ %s" % key
+        if warps:
+            yield "Warp locations:"
+            for key in sorted(warps.iterkeys()):
+                yield "~ %s" % key
+        else:
+            yield "No warps are set!"
 
     def chat_command(self, factory, username, parameters):
         for i in self.dispatch(factory):
