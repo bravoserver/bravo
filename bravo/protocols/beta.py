@@ -159,10 +159,17 @@ class BetaServerProtocol(Protocol):
         Hook for orientation packets.
         """
 
+        old_orientation = self.location.yaw, self.location.pitch
+
         self.location.yaw = container.orientation.rotation
         self.location.pitch = container.orientation.pitch
 
+        orientation = self.location.yaw, self.location.pitch
+
         self.grounded(container.grounded)
+
+        if old_orientation != orientation:
+            self.orientation_changed()
 
     def location_packet(self, container):
         """
@@ -272,6 +279,15 @@ class BetaServerProtocol(Protocol):
 
     # Event callbacks
     # These are meant to be overriden.
+
+    def orientation_changed(self):
+        """
+        Called when the client moves.
+
+        This callback is only for orientation, not position.
+        """
+
+        pass
 
     def position_changed(self):
         """
