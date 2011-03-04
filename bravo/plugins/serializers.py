@@ -120,8 +120,6 @@ class Alpha(object):
             "Sign": self._save_sign_to_tag,
         }
 
-        self.plugin_data = {}
-
     # Disk I/O helpers. Highly useful for keeping these few lines in one
     # place.
 
@@ -463,21 +461,16 @@ class Alpha(object):
         return self.folder.child(name + '.dat')
 
     def load_plugin_data(self, name):
-        if name in self.plugin_data:
-            return self.plugin_data[name]
-
         path = self.get_plugin_data_path(name)
         if not path.exists():
-            self.plugin_data[name] = ''
-            return ''
+            return ""
         else:
-            f = path.open()
+            f = path.open("r")
             return f.read()
 
     def save_plugin_data(self, name, value):
         path = self.get_plugin_data_path(name)
         path.setContent(value)
-        self.plugin_data[name] = value
 
 class Beta(Alpha):
     """
