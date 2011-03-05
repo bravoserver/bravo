@@ -376,6 +376,7 @@ glowing_blocks = {
 }
 
 blocks["air"].dim = 0
-blocks["water"].dim = 3
-blocks["spring"].dim = 3
 blocks["ice"].dim = 3
+blocks["leaves"].dim = 1
+blocks["spring"].dim = 3
+blocks["water"].dim = 3
