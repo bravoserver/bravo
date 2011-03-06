@@ -488,8 +488,8 @@ class BravoProtocol(BetaServerProtocol):
         """
 
         chunk_radius = int(radius // 16 + 1)
-        chunkx = self.location.x // 16
-        chunkz = self.location.z // 16
+        chunkx, chaff, chunkz, chaff = split_coords(self.location.x,
+            self.location.z)
 
         minx = chunkx - chunk_radius
         maxx = chunkx + chunk_radius + 1
@@ -817,6 +817,7 @@ class BravoProtocol(BetaServerProtocol):
         # Don't dare send more chunks beyond the initial one until we've
         # spawned.
         d.addCallback(lambda none: self.update_location())
+        d.addCallback(lambda none: self.position_changed())
         d.addCallback(lambda none: self.update_chunks())
 
     def update_location(self):
