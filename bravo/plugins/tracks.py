@@ -76,13 +76,15 @@ class Tracks(object):
 
         block, metadata, x, y, z, face = builddata
         world = factory.world
+
         # Handle tracks only
         if block.slot != blocks["tracks"].slot:
             return True, builddata
+
         # Check for correct underground
-        if world.get_block((x, y, z)) not in tracks_allowed_on:
+        if world.get_block((x, y - 1, z)) not in tracks_allowed_on:
             return False, builddata
-        y += 1
+
         # Use facing direction of player to set correct track tile
         yaw = player.location.yaw
         if 30 < yaw < 60:
