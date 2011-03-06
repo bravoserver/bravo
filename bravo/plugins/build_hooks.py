@@ -155,12 +155,11 @@ class Build(object):
         elif face == "+z":
             z += 1
 
-        bigx, smallx, bigz, smallz = split_coords(x, z)
-        chunk = factory.world.load_chunk(bigx, bigz)
+        builddata = builddata._replace(x=x, y=y, z=z, face="noop")
 
-        chunk.set_block((smallx, y, smallz), block.slot)
+        factory.world.set_block((x, y, z), block.slot)
         if metadata:
-            chunk.set_metadata((smallx, y, smallz), metadata)
+            factory.world.set_metadata((x, y, z), metadata)
 
         return True, builddata
 

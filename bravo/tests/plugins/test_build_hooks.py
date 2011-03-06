@@ -6,6 +6,56 @@ import bravo.ibravo
 import bravo.plugin
 import bravo.protocols.beta
 
+class BuildMockFactory(object):
+
+    def __init__(self):
+        class BuildMockWorld(object):
+
+            def set_block(self, coords, value):
+                pass
+
+            def set_metadata(self, coords, value):
+                pass
+
+        self.world = BuildMockWorld()
+
+class BuildMockPlayer(object):
+
+    def __init__(self):
+
+        self.equipped = 0
+        self.inventory = bravo.inventory.Equipment()
+        self.inventory.add(bravo.blocks.blocks["dirt"].key, 1)
+
+class TestBuild(unittest.TestCase):
+
+    def setUp(self):
+        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IBuildHook)
+
+        if "build" not in self.p:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.hook = self.p["build"]
+
+    def test_trivial(self):
+        pass
+
+    def test_coord_face_offsets(self):
+        """
+        The coordinates and face should be transformed after build to point to
+        the newly created block with no offsets.
+        """
+
+        builddata = bravo.protocols.beta.BuildData(
+            bravo.blocks.blocks["dirt"],
+            0, 0, 0, 0, "+x"
+        )
+        success, newdata = self.hook.build_hook(BuildMockFactory(),
+            BuildMockPlayer(), builddata)
+        self.assertTrue(success)
+        builddata = builddata._replace(x=1, face="noop")
+        self.assertEqual(builddata, newdata)
+
 class TileMockFactory(object):
 
     def __init__(self):
