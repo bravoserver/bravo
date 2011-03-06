@@ -7,8 +7,11 @@ class BravoConfigParser(SafeConfigParser):
     """
 
     def getlist(self, section, option, separator=","):
-        s = self.get(section, option)
-        return [i.strip() for i in s.split(separator)]
+        s = self.get(section, option).strip()
+        if s:
+            return [i.strip() for i in s.split(separator)]
+        else:
+            return []
 
 defaults = {
     "authenticator": "offline",

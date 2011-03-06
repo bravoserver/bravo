@@ -20,3 +20,11 @@ class TestBravoConfigParser(unittest.TestCase):
         self.bcp.set("unittest", "l", "a:b:c:d")
         self.assertEqual(self.bcp.getlist("unittest", "l", ":"),
             ["a", "b", "c", "d"])
+
+    def test_getlist_empty(self):
+        self.bcp.set("unittest", "l", "")
+        self.assertEqual(self.bcp.getlist("unittest", "l"), [])
+
+    def test_getlist_whitespace(self):
+        self.bcp.set("unittest", "l", " ")
+        self.assertEqual(self.bcp.getlist("unittest", "l"), [])
