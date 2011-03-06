@@ -56,6 +56,11 @@ port = 25565
 #url = file://relative/path/to/world
 url = file:///absolute/path/to/world
 
+# Which seasons to enable for this world.
+# ~ winter: Spread snow over the world, and freeze bodies of water
+# ~ spring: Thaw everything
+seasons = winter, spring
+
 # Which serializer to use for saving worlds to disk.
 # ~ alpha: The Alpha NBT format
 # ~ beta: The Beta NBT/MCR format

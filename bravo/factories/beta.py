@@ -1,4 +1,3 @@
-from math import sqrt
 from time import time
 
 from twisted.internet.interfaces import IPushProducer
@@ -192,7 +191,8 @@ class BravoFactory(Factory):
         Update the world's season.
         """
 
-        for plugin in retrieve_plugins(ISeason).itervalues():
+        plugins = configuration.getlist("world %s" % self.name, "seasons")
+        for plugin in retrieve_named_plugins(ISeason, plugins):
             if plugin.day == self.day:
                 self.world.season = plugin
 
