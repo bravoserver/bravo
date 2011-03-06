@@ -278,7 +278,7 @@ class ISignHook(ISortedPlugin):
     This hook fires both on sign creation and sign editing.
     """
 
-    def sign_hook(factory, chunk, x, y, z, text):
+    def sign_hook(factory, chunk, x, y, z, text, new):
         """
         Do things.
 
@@ -288,4 +288,5 @@ class ISignHook(ISortedPlugin):
         :param int y: Y coordinate
         :param int z: Z coordinate
         :param list text: list of lines of text
+        :param bool new: whether this sign is newly placed
         """

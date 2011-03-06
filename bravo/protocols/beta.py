@@ -733,8 +733,10 @@ class BravoProtocol(BetaServerProtocol):
             return
 
         if (smallx, container.y, smallz) in chunk.tiles:
+            new = False
             s = chunk.tiles[smallx, container.y, smallz]
         else:
+            new = True
             s = Sign(smallx, container.y, smallz)
             chunk.tiles[smallx, container.y, smallz] = s
 
@@ -753,7 +755,7 @@ class BravoProtocol(BetaServerProtocol):
         # Run sign hooks.
         for hook in self.sign_hooks:
             hook.sign_hook(self.factory, chunk, container.x, container.y,
-                container.z, [s.text1, s.text2, s.text3, s.text4])
+                container.z, [s.text1, s.text2, s.text3, s.text4], new)
 
     def disable_chunk(self, x, z):
         # Remove the chunk from cache.
