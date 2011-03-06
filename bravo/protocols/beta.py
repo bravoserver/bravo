@@ -16,7 +16,7 @@ from bravo.compat import namedtuple, product
 from bravo.config import configuration
 from bravo.entity import Sign
 from bravo.factories.infini import InfiniClientFactory
-from bravo.ibravo import IChatCommand, IBuildHook, IDigHook
+from bravo.ibravo import IChatCommand, IBuildHook, IDigHook, ISignHook
 from bravo.inventory import Workbench, sync_inventories
 from bravo.location import Location
 from bravo.packets import parse_packets, make_packet, make_error_packet
@@ -393,6 +393,8 @@ class BravoProtocol(BetaServerProtocol):
         self.build_hooks = retrieve_sorted_plugins(IBuildHook, names)
         names = configuration.getlist("bravo", "dig_hooks")
         self.dig_hooks = retrieve_sorted_plugins(IDigHook, names)
+        names = configuration.getlist("bravo", "sign_hooks")
+        self.sign_hooks = retrieve_sorted_plugins(ISignHook, names)
 
         self.last_dig_build_timer = time()
 
@@ -731,8 +733,10 @@ class BravoProtocol(BetaServerProtocol):
             return
 
         if (smallx, container.y, smallz) in chunk.tiles:
+            new = False
             s = chunk.tiles[smallx, container.y, smallz]
         else:
+            new = True
             s = Sign(smallx, container.y, smallz)
             chunk.tiles[smallx, container.y, smallz] = s
 
@@ -747,6 +751,11 @@ class BravoProtocol(BetaServerProtocol):
         # else on the server that you did.
         packet = make_packet("sign", container)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
+
+        # Run sign hooks.
+        for hook in self.sign_hooks:
+            hook.sign_hook(self.factory, chunk, container.x, container.y,
+                container.z, [s.text1, s.text2, s.text3, s.text4], new)
 
     def disable_chunk(self, x, z):
         # Remove the chunk from cache.

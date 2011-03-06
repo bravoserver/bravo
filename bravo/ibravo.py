@@ -159,60 +159,6 @@ class ISeason(IBravoPlugin):
         Day of the year on which to switch to this season.
         """)
 
-class IBuildHook(ISortedPlugin):
-    """
-    Hook for actions to be taken after a block is placed.
-    """
-
-    def build_hook(factory, player, builddata):
-        """
-        Do things.
-
-        The ``player`` is a ``Player`` entity and can be modified as needed.
-
-        The ``builddata`` tuple has all of the useful things. It stores a
-        ``Block`` that will be placed, as well as the block coordinates and
-        face of the place where the block will be built.
-
-        ``builddata`` needs to be passed to the next hook in sequence, but it
-        can be modified in passing in order to modify the way blocks are
-        placed.
-
-        Any access to chunks must be done through the factory.
-
-        The second variable in the return value indicates whether processing
-        of building should continue after this hook runs. Use it to halt build
-        hook processing, if needed.
-
-        A trivial do-nothing build hook looks like the following:
-
-        >>> def build_hook(self, factory, player, builddata):
-        ...     return True, builddata
-
-        :param ``Factory`` factory: factory
-        :param ``Player`` player: player entity doing the building
-        :param namedtuple builddata: permanent building location and data
-
-        :returns: tuple of build data and whether subsequent hooks will run
-        """
-
-class IDigHook(ISortedPlugin):
-    """
-    Hook for actions to be taken after a block is dug up.
-    """
-
-    def dig_hook(factory, chunk, x, y, z, block):
-        """
-        Do things.
-
-        :param `Factory` factory: factory
-        :param `Chunk` chunk: digging location
-        :param int x: X coordinate
-        :param int y: Y coordinate
-        :param int z: Z coordinate
-        :param `Block` block: dug block
-        """
-
 class ISerializer(IBravoPlugin):
     """
     Class that understands how to serialize several different kinds of objects
@@ -268,3 +214,79 @@ class ISerializerFactory(IBravoPlugin):
 
     I am so sorry for this.
     """
+
+# Hooks
+
+class IBuildHook(ISortedPlugin):
+    """
+    Hook for actions to be taken after a block is placed.
+    """
+
+    def build_hook(factory, player, builddata):
+        """
+        Do things.
+
+        The ``player`` is a ``Player`` entity and can be modified as needed.
+
+        The ``builddata`` tuple has all of the useful things. It stores a
+        ``Block`` that will be placed, as well as the block coordinates and
+        face of the place where the block will be built.
+
+        ``builddata`` needs to be passed to the next hook in sequence, but it
+        can be modified in passing in order to modify the way blocks are
+        placed.
+
+        Any access to chunks must be done through the factory.
+
+        The second variable in the return value indicates whether processing
+        of building should continue after this hook runs. Use it to halt build
+        hook processing, if needed.
+
+        A trivial do-nothing build hook looks like the following:
+
+        >>> def build_hook(self, factory, player, builddata):
+        ...     return True, builddata
+
+        :param ``Factory`` factory: factory
+        :param ``Player`` player: player entity doing the building
+        :param namedtuple builddata: permanent building location and data
+
+        :returns: tuple of build data and whether subsequent hooks will run
+        """
+
+class IDigHook(ISortedPlugin):
+    """
+    Hook for actions to be taken after a block is dug up.
+    """
+
+    def dig_hook(factory, chunk, x, y, z, block):
+        """
+        Do things.
+
+        :param `Factory` factory: factory
+        :param `Chunk` chunk: digging location
+        :param int x: X coordinate
+        :param int y: Y coordinate
+        :param int z: Z coordinate
+        :param `Block` block: dug block
+        """
+
+class ISignHook(ISortedPlugin):
+    """
+    Hook for actions to be taken after a sign is updated.
+
+    This hook fires both on sign creation and sign editing.
+    """
+
+    def sign_hook(factory, chunk, x, y, z, text, new):
+        """
+        Do things.
+
+        :param `Factory` factory: factory
+        :param `Chunk` chunk: digging location
+        :param int x: X coordinate
+        :param int y: Y coordinate
+        :param int z: Z coordinate
+        :param list text: list of lines of text
+        :param bool new: whether this sign is newly placed
+        """
