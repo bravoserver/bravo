@@ -71,11 +71,11 @@ defaults = {
 configuration = BravoConfigParser(defaults)
 configuration.add_section("bravo")
 
-# XXX improve on this
-default_files = [
-    "/etc/bravo/bravo.ini",
-    expanduser("~/.bravo/bravo.ini"),
-    "bravo.ini",
-]
+def read_configuration():
+    default_files = [
+        "/etc/bravo/bravo.ini",
+        expanduser("~/.bravo/bravo.ini"),
+        "bravo.ini",
+    ]
 
-configuration.read(default_files)
+    configuration.read(default_files)

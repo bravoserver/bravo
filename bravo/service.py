@@ -3,7 +3,7 @@ from twisted.application.service import Application, MultiService
 from twisted.internet.protocol import Factory
 
 from bravo.amp import ConsoleRPCFactory
-from bravo.config import configuration
+from bravo.config import configuration, read_configuration
 from bravo.factories.beta import BravoFactory
 from bravo.factories.infini import InfiniNodeFactory
 from bravo.protocols.beta import BetaProxyProtocol
@@ -34,6 +34,8 @@ class BravoService(MultiService):
         MultiService.removeService(self, service)
 
     def configure_services(self, configuration):
+        read_configuration()
+
         for section in configuration.sections():
             if section.startswith("world "):
                 factory = BravoFactory(section[6:])
