@@ -63,7 +63,6 @@ defaults = {
     "build_hooks": "build_snow,torch,tile,build,alpha_sand_gravel",
     "dig_hooks": "give,replace,alpha_snow",
     "fancy_console": "true",
-    "ampoule": "true",
     "serializer": "nbt",
     "perm_cache": "0",
 }

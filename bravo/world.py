@@ -19,12 +19,14 @@ from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import retrieve_named_plugins
 from bravo.utilities import fork_deferred, split_coords
 
-try:
-    from ampoule import deferToAMPProcess
-    from bravo.remote import MakeChunk
-    async = configuration.getboolean("bravo", "ampoule")
-except ImportError:
-    async = False
+async = configuration.getbooleandefault("bravo", "ampoule", False)
+
+if async:
+    try:
+        from ampoule import deferToAMPProcess
+        from bravo.remote import MakeChunk
+    except ImportError:
+        async = False
 
 def coords_to_chunk(f):
     """
