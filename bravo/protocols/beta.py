@@ -389,11 +389,11 @@ class BravoProtocol(BetaServerProtocol):
         BetaServerProtocol.__init__(self)
 
         log.msg("Registering client hooks...")
-        names = configuration.getlist("bravo", "build_hooks")
+        names = configuration.getlistdefault("bravo", "build_hooks", [])
         self.build_hooks = retrieve_sorted_plugins(IBuildHook, names)
-        names = configuration.getlist("bravo", "dig_hooks")
+        names = configuration.getlistdefault("bravo", "dig_hooks", [])
         self.dig_hooks = retrieve_sorted_plugins(IDigHook, names)
-        names = configuration.getlist("bravo", "sign_hooks")
+        names = configuration.getlistdefault("bravo", "sign_hooks", [])
         self.sign_hooks = retrieve_sorted_plugins(ISignHook, names)
 
         self.last_dig_build_timer = time()
