@@ -28,3 +28,19 @@ class TestBravoConfigParser(unittest.TestCase):
     def test_getlist_whitespace(self):
         self.bcp.set("unittest", "l", " ")
         self.assertEqual(self.bcp.getlist("unittest", "l"), [])
+
+    def test_getdefault(self):
+        self.assertEqual(self.bcp.getdefault("unittest", "fake", ""), "")
+
+    def test_getdefault_no_section(self):
+        self.assertEqual(self.bcp.getdefault("fake", "fake", ""), "")
+
+    def test_getbooleandefault(self):
+        self.assertEqual(self.bcp.getbooleandefault("unittest", "fake", True),
+            True)
+
+    def test_getintdefault(self):
+        self.assertEqual(self.bcp.getintdefault("unittest", "fake", 42), 42)
+
+    def test_getlistdefault(self):
+        self.assertEqual(self.bcp.getlistdefault("unittest", "fake", []), [])
