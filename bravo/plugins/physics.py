@@ -7,6 +7,11 @@ from zope.interface import implements
 from bravo.blocks import blocks, items
 from bravo.ibravo import IBuildHook, IDigHook
 
+FALLING = 0x8
+"""
+Flag indicating whether fluid is in freefall.
+"""
+
 class Fluid(object):
     """
     Fluid simulator.
@@ -35,25 +40,27 @@ class Fluid(object):
                         w.set_metadata(coords, 0x0)
                         new.add((factory,) + coords)
 
+                # Is this water falling down to the next y-level?
                 if w.get_block((x, y - 1, z)) in self.whitespace:
                     w.set_block((x, y - 1, z), self.fluid)
-                    w.set_metadata((x, y - 1, z), 0x8)
+                    w.set_metadata((x, y - 1, z), FALLING)
                     new.add((factory, x, y - 1, z))
 
-            elif block == blocks["water"].slot:
+            elif block == self.fluid:
                 # Extend water. Remember, either the water flows downward to
                 # the next y-level, or it flows out across the xz-level, but
                 # *not* both.
                 metadata = w.get_metadata((x, y, z))
 
+                # Fall down to the next y-level, if possible.
                 if w.get_block((x, y - 1, z)) in self.whitespace:
-                    metadata |= 0x8
+                    metadata |= FALLING
                     w.set_block((x, y - 1, z), self.fluid)
                     w.set_metadata((x, y - 1, z), metadata)
                     new.add((factory, x, y - 1, z))
                 else:
-                    if metadata & 0x8:
-                        metadata &= ~0x8
+                    if metadata & FALLING:
+                        metadata &= ~FALLING
                     if metadata < self.levels:
                         metadata += 1
                         for coords in ((x - 1, y, z), (x + 1, y, z),
@@ -101,6 +108,9 @@ class Fluid(object):
         back into water.
         """
 
+        x += chunk.x * 16
+        z += chunk.z * 16
+
         for (dx, dy, dz) in (
             ( 0, 0,  0),
             ( 0, 0,  1),
@@ -110,8 +120,7 @@ class Fluid(object):
             (-1, 0,  0)):
             coords = x + dx, y + dy, z + dz
             if factory.world.get_block(coords) in (self.spring, self.fluid):
-                packed = (factory,) + coords
-                self.tracked.add(packed)
+                self.tracked.add((factory,) + coords)
 
         if self.tracked and not self.loop.running:
             self.loop.start(self.step)
