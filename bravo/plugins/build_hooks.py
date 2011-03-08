@@ -205,8 +205,12 @@ class Sponge(object):
         """
         Remove water around a placed sponge.
 
-        Remember that we are post-build here.
+        Remember that we are post-build here, so coordinates have already been
+        adjusted.
         """
+
+        if builddata.block.slot != blocks["sponge"].slot:
+            return True, builddata
 
         fluids = set([blocks["spring"].slot, blocks["water"].slot,
             blocks["ice"].slot])
