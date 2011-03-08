@@ -119,14 +119,18 @@ class Fluid(object):
             ( 1, 0,  0),
             (-1, 0,  0)):
             coords = x + dx, y + dy, z + dz
+            print "Checking %d, %d, %d for waterness" % coords
+            print "Block is %d, want %d or %d" % (
+                factory.world.get_block(coords), self.spring, self.fluid)
             if factory.world.get_block(coords) in (self.spring, self.fluid):
                 self.tracked.add((factory,) + coords)
+                print "Marking %d, %d, %d from dig" % coords
 
         if self.tracked and not self.loop.running:
             self.loop.start(self.step)
 
-    before = tuple()
-    after = ("build",)
+    before = ("build",)
+    after = tuple()
 
 class Water(Fluid):
 
