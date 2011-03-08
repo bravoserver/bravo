@@ -44,13 +44,31 @@ class TestWinter(unittest.TestCase):
 
     def test_no_floating_snow(self):
         """
-        Test whether snow is spawned in the correct y-level over populated chunks.
+        Test whether snow is spawned in the correct y-level over populated
+        chunks.
         """
 
         self.c.set_block((0, 0, 0), bravo.blocks.blocks["grass"].slot)
         self.c.populated = True
         self.c.dirty = False
         self.c.clear_damage()
+        self.hook.transform(self.c)
+        self.assertEqual(self.c.get_block((0, 1, 0)),
+            bravo.blocks.blocks["snow"].slot)
+        self.assertNotEqual(self.c.get_block((0, 2, 0)),
+            bravo.blocks.blocks["snow"].slot)
+
+    def test_bad_heightmap_floating_snow(self):
+        """
+        Test whether snow is spawned in the correct y-level over populated
+        chunks, if the heightmap is incorrect.
+        """
+
+        self.c.set_block((0, 0, 0), bravo.blocks.blocks["grass"].slot)
+        self.c.populated = True
+        self.c.dirty = False
+        self.c.clear_damage()
+        self.c.heightmap[0, 0] = 2
         self.hook.transform(self.c)
         self.assertEqual(self.c.get_block((0, 1, 0)),
             bravo.blocks.blocks["snow"].slot)

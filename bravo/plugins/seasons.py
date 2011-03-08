@@ -5,6 +5,7 @@ from bravo.compat import product
 from bravo.ibravo import ISeason
 
 snow_resistant = set([
+    blocks["air"].slot,
     blocks["flower"].slot,
     blocks["glass"].slot,
     blocks["ice"].slot,
@@ -16,6 +17,9 @@ snow_resistant = set([
     blocks["torch"].slot,
     blocks["water"].slot,
 ])
+"""
+Blocks which cannot have snow spawned on top of them.
+"""
 
 class Winter(object):
 
@@ -23,6 +27,10 @@ class Winter(object):
 
     def transform(self, chunk):
         chunk.sed(blocks["spring"].slot, blocks["ice"].slot)
+
+        # Make sure that the heightmap is valid so that we don't spawn
+        # floating snow.
+        chunk.regenerate_heightmap()
 
         # Lay snow over anything not already snowed and not snow-resistant.
         for x, z in product(xrange(16), xrange(16)):
