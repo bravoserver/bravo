@@ -4,7 +4,6 @@ import sys
 from twisted.internet import reactor
 from twisted.internet.defer import succeed, fail
 from twisted.internet.task import deferLater
-from twisted.plugin import IPlugin
 from twisted.web.client import getPage
 from zope.interface import implements
 
@@ -14,7 +13,7 @@ from bravo.packets import make_packet
 
 class OfflineAuthenticator(object):
 
-    implements(IPlugin, IAuthenticator)
+    implements(IAuthenticator)
 
     def handshake(self, protocol, container):
         """
@@ -49,7 +48,7 @@ server = "http://www.minecraft.net/game/checkserver.jsp?user=%s&serverId=%s"
 
 class OnlineAuthenticator(object):
 
-    implements(IPlugin, IAuthenticator)
+    implements(IAuthenticator)
 
     def __init__(self):
 
@@ -104,7 +103,7 @@ class OnlineAuthenticator(object):
 
 class PasswordAuthenticator(object):
 
-    implements(IPlugin, IAuthenticator)
+    implements(IAuthenticator)
 
     def handshake(self, protocol, container):
         """

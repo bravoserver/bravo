@@ -1,6 +1,5 @@
 import math
 
-from twisted.plugin import IPlugin
 from zope.interface import implements
 from twisted.internet import reactor
 
@@ -44,7 +43,7 @@ def parse_int(i):
 
 class Help(object):
 
-    implements(IPlugin, IChatCommand, IConsoleCommand)
+    implements(IChatCommand, IConsoleCommand)
 
     def dispatch(self, plugins):
         l = []
@@ -84,7 +83,7 @@ class Help(object):
 
 class List(object):
 
-    implements(IPlugin, IChatCommand, IConsoleCommand)
+    implements(IChatCommand, IConsoleCommand)
 
     def dispatch(self, factory):
         yield "Connected players: %s" % (", ".join(
@@ -105,7 +104,7 @@ class List(object):
 
 class Time(object):
 
-    implements(IPlugin, IChatCommand, IConsoleCommand)
+    implements(IChatCommand, IConsoleCommand)
 
     def dispatch(self, factory):
         hours, minutes = split_time(factory.time)
@@ -143,7 +142,7 @@ class Time(object):
 
 class Say(object):
 
-    implements(IPlugin, IConsoleCommand)
+    implements(IConsoleCommand)
 
     def console_command(self, factory, parameters):
         message = "[Server] %s" % " ".join(parameters)
@@ -158,7 +157,7 @@ class Say(object):
 
 class Give(object):
 
-    implements(IPlugin, IChatCommand, IConsoleCommand)
+    implements(IChatCommand, IConsoleCommand)
 
     def chat_command(self, factory, username, parameters):
         if len(parameters) == 1:
@@ -205,7 +204,7 @@ class Give(object):
     info = "Gives a number of blocks or items to a certain player"
 
 class Quit(object):
-    implements(IPlugin, IConsoleCommand)
+    implements(IConsoleCommand)
 
     def console_command(self, factory, parameters):
         # Let's shutdown!
@@ -230,7 +229,7 @@ class Quit(object):
 
 class SaveAll(object):
 
-    implements(IPlugin, IConsoleCommand)
+    implements(IConsoleCommand)
 
     def console_command(self, factory, parameters):
         yield "Flushing all chunks..."
@@ -247,7 +246,7 @@ class SaveAll(object):
 
 class SaveOff(object):
 
-    implements(IPlugin, IConsoleCommand)
+    implements(IConsoleCommand)
 
     def console_command(self, factory, parameters):
         yield "Disabling saving..."
@@ -263,7 +262,7 @@ class SaveOff(object):
 
 class SaveOn(object):
 
-    implements(IPlugin, IConsoleCommand)
+    implements(IConsoleCommand)
 
     def console_command(self, factory, parameters):
         yield "Enabling saving (this could take a bit)..."
@@ -279,7 +278,7 @@ class SaveOn(object):
 
 class WriteConfig(object):
 
-    implements(IPlugin, IConsoleCommand)
+    implements(IConsoleCommand)
 
     def console_command(self, factory, parameters):
         f = open("".join(parameters), "w")
@@ -294,7 +293,7 @@ class WriteConfig(object):
 
 class Season(object):
 
-    implements(IPlugin, IConsoleCommand)
+    implements(IConsoleCommand)
 
     def console_command(self, factory, parameters):
         wanted = " ".join(parameters)
@@ -316,7 +315,7 @@ class Season(object):
     info = "Advance date to the beginning of the given season"
 
 class Me(object):
-    implements(IPlugin, IChatCommand)
+    implements(IChatCommand)
 
     def dispatch(self, username, says):
         say = " ".join(says)
@@ -339,7 +338,7 @@ class Kick(object):
     With great power comes greate responsibility, use this wisely.
     """
 
-    implements(IPlugin, IConsoleCommand)
+    implements(IConsoleCommand)
 
     def dispatch(self, factory, parameters):
         player = parse_player(factory, parameters[0])
@@ -363,7 +362,7 @@ class Kick(object):
 
 class GetPos(object):
 
-    implements(IPlugin, IChatCommand)
+    implements(IChatCommand)
 
     def chat_command(self, factory, username, parameters):
         player = parse_player(factory, username)

@@ -1,4 +1,3 @@
-from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
@@ -14,7 +13,7 @@ class Ladder(object):
     You almost certainly want to enable this plugin.
     """
 
-    implements(IPlugin, IBuildHook)
+    implements(IBuildHook)
 
     def build_hook(self, factory, player, builddata):
         block, metadata, x, y, z, face = builddata
@@ -47,7 +46,7 @@ class Tile(object):
     You almost certainly want to enable this plugin.
     """
 
-    implements(IPlugin, IBuildHook)
+    implements(IBuildHook)
 
     def build_hook(self, factory, player, builddata):
         item, metadata, x, y, z, face = builddata
@@ -125,7 +124,7 @@ class Build(object):
     You almost certainly want to enable this plugin.
     """
 
-    implements(IPlugin, IBuildHook)
+    implements(IBuildHook)
 
     def build_hook(self, factory, player, builddata):
         block, metadata, x, y, z, face = builddata
@@ -175,7 +174,7 @@ class BuildSnow(object):
     You almost certainly want to enable this plugin.
     """
 
-    implements(IPlugin, IBuildHook)
+    implements(IBuildHook)
 
     def build_hook(self, factory, player, builddata):
         bigx, smallx, bigz, smallz = split_coords(builddata.x, builddata.z)
@@ -200,7 +199,7 @@ class Sponge(object):
     This plugin provides Classic functionality.
     """
 
-    implements(IPlugin, IBuildHook)
+    implements(IBuildHook)
 
     def build_hook(self, factory, player, builddata):
         """

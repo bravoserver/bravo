@@ -1,11 +1,10 @@
-from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.ibravo import IConsoleCommand
 
 class Meliae(object):
 
-    implements(IPlugin, IConsoleCommand)
+    implements(IConsoleCommand)
 
     def console_command(self, factory, parameters):
         out = "".join(parameters)
@@ -26,7 +25,7 @@ class Meliae(object):
 
 class Status(object):
 
-    implements(IPlugin, IConsoleCommand)
+    implements(IConsoleCommand)
 
     def console_command(self, factory, parameters):
         protocol_count = len(factory.protocols)

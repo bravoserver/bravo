@@ -1,4 +1,3 @@
-from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks
@@ -10,7 +9,7 @@ class Fallables(object):
     Sometimes things should fall.
     """
 
-    implements(IPlugin, IBuildHook, IDigHook)
+    implements(IBuildHook, IDigHook)
 
     fallables = tuple()
     whitespace = (blocks["air"].slot,)
@@ -80,7 +79,7 @@ class Torch(object):
     You almost certainly want to enable this plugin.
     """
 
-    implements(IPlugin, IBuildHook, IDigHook)
+    implements(IBuildHook, IDigHook)
 
     def build_hook(self, factory, player, builddata):
         block, metadata, x, y, z, face = builddata

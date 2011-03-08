@@ -2,7 +2,6 @@ from __future__ import division
 from random import randint
 from numpy import array, where
 
-from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks
@@ -17,7 +16,7 @@ class BoringGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """
@@ -41,7 +40,7 @@ class SimplexGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """
@@ -86,7 +85,7 @@ class ComplexGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """
@@ -123,7 +122,7 @@ class WaterTableGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """
@@ -147,7 +146,7 @@ class ErosionGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """
@@ -176,7 +175,7 @@ class GrassGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """
@@ -210,7 +209,7 @@ class BeachGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     above = set([blocks["air"].slot, blocks["water"].slot,
         blocks["spring"].slot, blocks["ice"].slot])
@@ -249,7 +248,7 @@ class OreGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         reseed(seed)
@@ -303,7 +302,7 @@ class SafetyGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """
@@ -330,7 +329,7 @@ class CliffGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """
@@ -367,7 +366,7 @@ class FloatGenerator(object):
     This generator relies on implementation details of ``Chunk``.
     """
 
-    implements(IPlugin, ITerrainGenerator)
+    implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """

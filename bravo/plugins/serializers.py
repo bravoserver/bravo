@@ -8,7 +8,6 @@ from urlparse import urlparse
 
 from numpy import array, fromstring, uint8
 
-from twisted.plugin import IPlugin
 from twisted.python import log
 from twisted.python.filepath import FilePath
 from zope.interface import implements, classProvides
@@ -84,7 +83,7 @@ class Alpha(object):
     """
 
     implements(ISerializer)
-    classProvides(IPlugin, ISerializerFactory)
+    classProvides(ISerializerFactory)
 
     name = "alpha"
 
@@ -482,7 +481,7 @@ class Beta(Alpha):
     Beta and the MCRegion mod.
     """
 
-    classProvides(IPlugin, ISerializerFactory)
+    classProvides(ISerializerFactory)
 
     name = "beta"
 

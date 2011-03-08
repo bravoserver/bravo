@@ -2,7 +2,6 @@ from collections import defaultdict
 from itertools import chain
 
 from twisted.internet.task import LoopingCall
-from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
@@ -13,7 +12,7 @@ class Fluid(object):
     Fluid simulator.
     """
 
-    implements(IPlugin, IBuildHook, IDigHook)
+    implements(IBuildHook, IDigHook)
 
     def __init__(self):
         self.tracked = set()
@@ -134,7 +133,7 @@ class Lava(Fluid):
 
 class Redstone(object):
 
-    implements(IPlugin, IBuildHook, IDigHook)
+    implements(IBuildHook, IDigHook)
 
     step = 0.2
 

@@ -1,7 +1,6 @@
 import csv
 from StringIO import StringIO
 
-from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.ibravo import IChatCommand, IConsoleCommand
@@ -29,7 +28,7 @@ def put_locations(d):
 
 class Home(object):
 
-    implements(IPlugin, IChatCommand, IConsoleCommand)
+    implements(IChatCommand, IConsoleCommand)
 
     def chat_command(self, factory, username, parameters):
         data = factory.world.serializer.load_plugin_data("homes")
@@ -58,7 +57,7 @@ class Home(object):
 
 class SetHome(object):
 
-    implements(IPlugin, IChatCommand)
+    implements(IChatCommand)
 
     def chat_command(self, factory, username, parameters):
         yield "Saving %s's home..." % username
@@ -85,7 +84,7 @@ class SetHome(object):
 
 class Warp(object):
 
-    implements(IPlugin, IChatCommand, IConsoleCommand)
+    implements(IChatCommand, IConsoleCommand)
 
     def chat_command(self, factory, username, parameters):
         data = factory.world.serializer.load_plugin_data("warps")
@@ -121,7 +120,7 @@ class Warp(object):
 
 class ListWarps(object):
 
-    implements(IPlugin, IChatCommand, IConsoleCommand)
+    implements(IChatCommand, IConsoleCommand)
 
     def dispatch(self, factory):
         data = factory.world.serializer.load_plugin_data("warps")
@@ -149,7 +148,7 @@ class ListWarps(object):
 
 class SetWarp(object):
 
-    implements(IPlugin, IChatCommand)
+    implements(IChatCommand)
 
     def chat_command(self, factory, username, parameters):
         name = "".join(parameters)
@@ -178,7 +177,7 @@ class SetWarp(object):
 
 class RemoveWarp(object):
 
-    implements(IPlugin, IChatCommand)
+    implements(IChatCommand)
 
     def chat_command(self, factory, username, parameters):
         name = "".join(parameters)

@@ -1,6 +1,5 @@
 import random
 
-from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks
@@ -13,7 +12,7 @@ class AlphaSnow(object):
     Whenever a block is dug out, destroy the snow above it.
     """
 
-    implements(IPlugin, IDigHook)
+    implements(IDigHook)
 
     def dig_hook(self, factory, chunk, x, y, z, block):
         if y == 127:
@@ -36,7 +35,7 @@ class Replace(object):
     You almost certainly want to enable this plugin.
     """
 
-    implements(IPlugin, IDigHook)
+    implements(IDigHook)
 
     def dig_hook(self, factory, chunk, x, y, z, block):
         chunk.destroy((x, y, z))
@@ -53,7 +52,7 @@ class Give(object):
     You almost certainly want to enable this plugin.
     """
 
-    implements(IPlugin, IDigHook)
+    implements(IDigHook)
 
     def dig_hook(self, factory, chunk, x, y, z, block):
         if block.drop == blocks["air"].slot:

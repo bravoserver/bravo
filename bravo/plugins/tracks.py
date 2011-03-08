@@ -1,4 +1,3 @@
-from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks
@@ -59,7 +58,7 @@ class Tracks(object):
     Build and dig hooks for mine cart tracks.
     """
 
-    implements(IPlugin, IBuildHook, IDigHook)
+    implements(IBuildHook, IDigHook)
 
     name = "tracks"
 

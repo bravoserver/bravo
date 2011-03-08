@@ -1,6 +1,7 @@
-from zope.interface import Interface, Attribute
+from twisted.plugin import IPlugin
+from zope.interface import Attribute
 
-class IBravoPlugin(Interface):
+class IBravoPlugin(IPlugin):
     """
     Interface for plugins.
 

@@ -1,4 +1,3 @@
-from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks
@@ -20,7 +19,7 @@ snow_resistant = set([
 
 class Winter(object):
 
-    implements(IPlugin, ISeason)
+    implements(ISeason)
 
     def transform(self, chunk):
         chunk.sed(blocks["spring"].slot, blocks["ice"].slot)
@@ -40,7 +39,7 @@ class Winter(object):
 
 class Spring(object):
 
-    implements(IPlugin, ISeason)
+    implements(ISeason)
 
     def transform(self, chunk):
         chunk.sed(blocks["ice"].slot, blocks["spring"].slot)

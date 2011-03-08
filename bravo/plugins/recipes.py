@@ -1,4 +1,3 @@
-from twisted.plugin import IPlugin
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
@@ -9,7 +8,7 @@ class Recipe(object):
     Base class for recipes. Just holds the implements() incantation.
     """
 
-    implements(IPlugin, IRecipe)
+    implements(IRecipe)
 
 #Basics
 class OneBlock(Recipe):
