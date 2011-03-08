@@ -118,6 +118,14 @@ def retrieve_named_plugins(interface, names):
     """
 
     d = retrieve_plugins(interface)
+    # Wildcard.
+    if "*" in names:
+        # Get the exceptions.
+        exceptions = set(name[1:] for name in names if name.startswith("-"))
+
+        # And now the names. Everything that isn't excepted.
+        names = [name for name in d.iterkeys() if name not in exceptions]
+
     try:
         return [d[name] for name in names]
     except KeyError, e:
