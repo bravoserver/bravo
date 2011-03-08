@@ -41,7 +41,7 @@ class Fluid(object):
                         new.add((factory,) + coords)
 
                 # Is this water falling down to the next y-level?
-                if w.get_block((x, y - 1, z)) in self.whitespace:
+                if y > 0 and w.get_block((x, y - 1, z)) in self.whitespace:
                     w.set_block((x, y - 1, z), self.fluid)
                     w.set_metadata((x, y - 1, z), FALLING)
                     new.add((factory, x, y - 1, z))
@@ -53,7 +53,7 @@ class Fluid(object):
                 metadata = w.get_metadata((x, y, z))
 
                 # Fall down to the next y-level, if possible.
-                if w.get_block((x, y - 1, z)) in self.whitespace:
+                if y > 0 and w.get_block((x, y - 1, z)) in self.whitespace:
                     metadata |= FALLING
                     w.set_block((x, y - 1, z), self.fluid)
                     w.set_metadata((x, y - 1, z), metadata)
@@ -80,7 +80,7 @@ class Fluid(object):
 
         self.tracked = new
 
-        if not self.tracked:
+        if not self.tracked and self.loop.running:
             self.loop.stop()
 
     def build_hook(self, factory, player, builddata):
