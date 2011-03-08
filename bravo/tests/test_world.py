@@ -81,6 +81,26 @@ class TestWorldChunks(unittest.TestCase):
             self.assertEqual(chunk.get_block((x, y, z)),
                 self.w.get_block((x, y, z)))
 
+    def test_get_block_readback_negative(self):
+        chunk = self.w.load_chunk(-1, -1)
+
+        # Fill the chunk with random stuff.
+        chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
+            dtype=numpy.uint8)
+        chunk.blocks.shape = (16, 16, 128)
+
+        # Evict the chunk and grab it again.
+        self.w.save_chunk(chunk)
+        del chunk
+        self.w.chunk_cache.clear()
+        self.w.dirty_chunk_cache.clear()
+        chunk = self.w.load_chunk(-1, -1)
+
+        for x, y, z in bravo.compat.product(xrange(16), xrange(128),
+            xrange(16)):
+            self.assertEqual(chunk.get_block((x, y, z)),
+                self.w.get_block((x - 16, y, z - 16)))
+
     def test_get_metadata_readback(self):
         chunk = self.w.load_chunk(0, 0)
 
