@@ -73,25 +73,19 @@ class Fluid(object):
 
         self.tracked = new
 
+        if not self.tracked:
+            self.loop.stop()
+
     def build_hook(self, factory, player, builddata):
+        """
+        Check for placed springs.
+
+        This method comes after build, so coordinates are pre-adjusted.
+        """
+
         block, metadata, x, y, z, face = builddata
 
-        # Offset coords according to face.
-        if face == "-x":
-            x -= 1
-        elif face == "+x":
-            x += 1
-        elif face == "-y":
-            y -= 1
-        elif face == "+y":
-            y += 1
-        elif face == "-z":
-            z -= 1
-        elif face == "+z":
-            z += 1
-
-        if (block.slot in (self.spring, self.fluid) or
-            factory.world.get_block((x, y, z)) in (self.spring, self.fluid)):
+        if block.slot in (self.spring, self.fluid):
             self.tracked.add((factory, x, y, z))
 
         if self.tracked and not self.loop.running:
@@ -100,10 +94,30 @@ class Fluid(object):
         return True, builddata
 
     def dig_hook(self, factory, chunk, x, y, z, block):
-        pass
+        """
+        Check for neighboring water that might want to spread.
+
+        Also check to see whether we are, for example, dug ice that has turned
+        back into water.
+        """
+
+        for (dx, dy, dz) in (
+            ( 0, 0,  0),
+            ( 0, 0,  1),
+            ( 0, 0, -1),
+            ( 0, 1,  0),
+            ( 1, 0,  0),
+            (-1, 0,  0)):
+            coords = x + dx, y + dy, z + dz
+            if factory.world.get_block(coords) in (self.spring, self.fluid):
+                packed = (factory,) + coords
+                self.tracked.add(packed)
+
+        if self.tracked and not self.loop.running:
+            self.loop.start(self.step)
 
     before = tuple()
-    after = tuple()
+    after = ("build",)
 
 class Water(Fluid):
 
