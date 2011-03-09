@@ -14,6 +14,7 @@ Contents:
    features
    plugins
    differences
+   administration
    config
    philosophy
    noise
