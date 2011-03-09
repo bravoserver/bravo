@@ -64,6 +64,7 @@ Extended Features
      * Water, lava
 
  * Chat commands
+ * IP ban list
 
 Planned Features
 ================
@@ -75,10 +76,7 @@ Planned Features
  * hey0/llama features
 
    * MOTD and /motd
-   * Ban lists
    * /lighter
-   * Item spawn mods
-   * /getpos
    * /compass
 
  * And whatever else we can think of!
