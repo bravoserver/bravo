@@ -48,12 +48,23 @@ class AMPGateway(object):
 
         self.host = host
         self.port = port
+
+        self.world = None
+
+    def connect(self):
+        """
+        Connect this gateway to a remote Bravo server.
+
+        Returns a Deferred that will fire when connected, or fail if the
+        connection cannot be established.
+        """
+
         self.cc = ClientCreator(reactor, AMP)
 
         d = self.cc.connectTCP(self.host, self.port)
         d.addCallback(self.connected)
 
-        self.world = None
+        return d
 
     def connected(self, p):
         self.remote = p
@@ -273,6 +284,7 @@ oldSettings = None
 
 def start_console():
     ag = AMPGateway("localhost", 25600)
+    ag.connect()
 
     if fancy_console:
         global oldSettings
