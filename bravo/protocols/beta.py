@@ -56,8 +56,6 @@ class BetaServerProtocol(Protocol):
     username = None
 
     def __init__(self):
-        log.msg("Client connecting...")
-
         self.chunks = dict()
         self.windows = dict()
         self.wid = 1
@@ -318,6 +316,18 @@ class BetaServerProtocol(Protocol):
 
         self.transport.write(make_error_packet(message))
         self.transport.loseConnection()
+
+
+class BannedProtocol(BetaServerProtocol):
+    """
+    A very simple Beta protocol that helps enforce IP bans.
+
+    This protocol disconnects people as soon as they connect, with a helpful
+    message.
+    """
+
+    def connectionMade(self):
+        self.error("Sorry, but your IP address is banned.")
 
 
 class BetaProxyProtocol(BetaServerProtocol):

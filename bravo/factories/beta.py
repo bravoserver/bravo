@@ -12,11 +12,9 @@ from bravo.ibravo import IAuthenticator, ISeason, ITerrainGenerator
 from bravo.location import Location
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
-from bravo.protocols.beta import BravoProtocol
+from bravo.protocols.beta import BannedProtocol, BravoProtocol
 from bravo.utilities import chat_name, sanitize_chat
 from bravo.world import World
-
-from bravo.plugin import retrieve_plugins
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
@@ -94,6 +92,17 @@ class BravoFactory(Factory):
         solution to the username/entity race that occurs on login.
         """
 
+        banned = self.world.serializer.load_plugin_data("banned_ips")
+
+        for ip in banned.split():
+            if addr.host == ip:
+                # Use BannedProtocol with extreme prejudice.
+                log.msg("Kicking banned IP %s" % addr)
+                p = BannedProtocol()
+                p.factory = self
+                return p
+
+        log.msg("Starting connection for %s" % addr)
         p = self.protocol()
         p.factory = self
 
