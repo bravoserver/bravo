@@ -80,3 +80,20 @@ class TestWater(unittest.TestCase):
             self.assertEqual(self.w.get_block(coords),
                 bravo.blocks.blocks["water"].slot)
             self.assertEqual(self.w.get_metadata(coords), 0x0)
+
+    def test_sponge(self):
+        """
+        Test that sponges prevent water from spreading near them.
+        """
+
+        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((3, 0, 0), bravo.blocks.blocks["sponge"].slot)
+        self.hook.tracked.add((self.f, 0, 0, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.tracked:
+            self.hook.process()
+
+        # Make sure that water did not spread near the sponge.
+        self.assertNotEqual(self.w.get_block((1, 0, 0)),
+            bravo.blocks.blocks["water"].slot)
