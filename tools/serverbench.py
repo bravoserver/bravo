@@ -4,6 +4,11 @@ import random
 import string
 import sys
 
+# Use poll(). To use another reactor, just change these lines.
+# OSX users probably want to pick another reactor. (Or maybe another OS!)
+from twisted.internet import pollreactor
+pollreactor.install()
+
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory, Protocol
 from twisted.internet.endpoints import TCP4ClientEndpoint
@@ -66,7 +71,7 @@ class TrickleFactory(Factory):
         self.pending = set()
         self.endpoint = TCP4ClientEndpoint(reactor, "localhost", 25565)
 
-        LoopingCall(self.log_status).start(2)
+        LoopingCall(self.log_status).start(1)
 
     def spawn_connection(self):
         log.msg("Spawning new connection")
@@ -85,9 +90,9 @@ class TrickleFactory(Factory):
 
         if len(self.connections) + len(self.pending) < self.max_connections:
             count = self.max_connections - len(self.connections) + len(self.pending)
-            count = min(20, max(0, count))
+            count = min(100, max(0, count))
             for i in range(count):
                 self.spawn_connection()
 
-factory = TrickleFactory(500)
+factory = TrickleFactory(2000)
 reactor.run()
