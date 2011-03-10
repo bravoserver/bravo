@@ -1,8 +1,25 @@
 #!/usr/bin/env python
 
+from optparse import OptionParser
 import random
 import string
 import sys
+
+usage = """usage: %prog [options] host
+
+I am quite noisy by default; consider redirecting or filtering my output."""
+
+parser = OptionParser(usage)
+parser.add_option("-c", "--count",
+    dest="count",
+    type="int",
+    default=2000,
+    metavar="COUNT",
+    help="Number of connections to spawn",
+)
+options, arguments = parser.parse_args()
+if len(arguments) != 1:
+    parser.error("Need exactly one argument")
 
 # Use poll(). To use another reactor, just change these lines.
 # OSX users probably want to pick another reactor. (Or maybe another OS!)
@@ -69,13 +86,11 @@ class TrickleFactory(Factory):
 
         self.connections = set()
         self.pending = set()
-        self.endpoint = TCP4ClientEndpoint(reactor, "localhost", 25565)
+        self.endpoint = TCP4ClientEndpoint(reactor, arguments[0], 25565)
 
         LoopingCall(self.log_status).start(1)
 
     def spawn_connection(self):
-        log.msg("Spawning new connection")
-
         d = self.endpoint.connect(self)
         self.pending.add(d)
 
@@ -94,5 +109,7 @@ class TrickleFactory(Factory):
             for i in range(count):
                 self.spawn_connection()
 
-factory = TrickleFactory(2000)
+log.msg("Trickling against %s" % arguments[0])
+log.msg("Running with up to %d connections" % options.count)
+factory = TrickleFactory(options.count)
 reactor.run()
