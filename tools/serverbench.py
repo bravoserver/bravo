@@ -31,8 +31,6 @@ class TrickleProtocol(Protocol):
         Send our payload at an excrutiatingly slow pace.
         """
 
-        log.msg("Starting trickle")
-
         self.loop = LoopingCall(self.sendchar)
         self.loop.start(1)
 
@@ -65,21 +63,31 @@ class TrickleFactory(Factory):
         self.max_connections = count
 
         self.connections = set()
+        self.pending = set()
         self.endpoint = TCP4ClientEndpoint(reactor, "localhost", 25565)
-        for i in range(count):
-            self.spawn_connection()
 
-        LoopingCall(self.log_status).start(5)
+        LoopingCall(self.log_status).start(2)
 
     def spawn_connection(self):
         log.msg("Spawning new connection")
 
+        d = self.endpoint.connect(self)
+        self.pending.add(d)
+
         def cb(protocol):
+            self.pending.discard(d)
             self.connections.add(protocol)
-        self.endpoint.connect(self).addCallback(cb)
+        d.addCallback(cb)
 
     def log_status(self):
-        log.msg("%d active connections" % len(self.connections))
+        log.msg("%d active connections, %d pending connections" %
+            (len(self.connections), len(self.pending)))
 
-factory = TrickleFactory(20)
+        if len(self.connections) + len(self.pending) < self.max_connections:
+            count = self.max_connections - len(self.connections) + len(self.pending)
+            count = min(20, max(0, count))
+            for i in range(count):
+                self.spawn_connection()
+
+factory = TrickleFactory(500)
 reactor.run()
