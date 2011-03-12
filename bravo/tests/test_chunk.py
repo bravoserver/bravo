@@ -1,7 +1,7 @@
 import unittest
 import warnings
 
-from numpy import empty
+from numpy import empty, zeros
 from numpy.testing import assert_array_equal
 
 import bravo.chunk
@@ -83,12 +83,16 @@ class TestNumpyQuirks(unittest.TestCase):
 
 class TestLightmaps(unittest.TestCase):
 
-    def test_boring_skylight_values(self):
-        chunk = bravo.chunk.Chunk(0, 0)
+    def setUp(self):
+        self.c = bravo.chunk.Chunk(0, 0)
 
+    def test_trivial(self):
+        pass
+
+    def test_boring_skylight_values(self):
         # Fill it as if we were the boring generator.
-        chunk.blocks[:, :, 0].fill(1)
-        chunk.regenerate()
+        self.c.blocks[:, :, 0].fill(1)
+        self.c.regenerate()
 
         # Make sure that all of the blocks at the bottom of the ambient
         # lightmap are set to 15 (fully illuminated).
@@ -97,4 +101,23 @@ class TestLightmaps(unittest.TestCase):
         reference = empty((16, 16))
         reference.fill(15)
 
-        assert_array_equal(chunk.skylight[:, :, 1], reference)
+        assert_array_equal(self.c.skylight[:, :, 1], reference)
+
+    def test_divot(self):
+        """
+        Single divots in the ground should be unlit.
+        """
+
+        self.c = bravo.chunk.Chunk(0, 0)
+
+        self.c.blocks[:, :, 0].fill(1)
+        self.c.blocks[:, :, 1].fill(2)
+        # Make a divot.
+        self.c.blocks[1, 1, 1] = 0
+        self.c.regenerate()
+
+        # Reference lightmap. Note that the divot is not lit in the reference
+        # lightmap.
+        reference = zeros((16, 16))
+
+        assert_array_equal(self.c.skylight[:, :, 1], reference)
