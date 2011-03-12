@@ -1,6 +1,9 @@
 import unittest
 import warnings
 
+from numpy import empty
+from numpy.testing import assert_array_equal
+
 import bravo.chunk
 import bravo.compat
 
@@ -91,6 +94,7 @@ class TestLightmaps(unittest.TestCase):
         # lightmap are set to 15 (fully illuminated).
         # Note that skylight of a solid block is 0, the important value
         # is the skylight of the transluscent (usually air) block above it.
-        for x, z in bravo.compat.product(xrange(16), repeat=2):
-            self.assertEqual(chunk.skylight[x, z, 1], 15,
-                "Coordinate (%d, 0, %d) is bad!" % (x, z))
+        reference = empty((16, 16))
+        reference.fill(15)
+
+        assert_array_equal(chunk.skylight[:, :, 1], reference)

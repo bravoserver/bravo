@@ -97,8 +97,7 @@ class Chunk(object):
         self.heightmap = zeros((16, 16), dtype=uint8)
         self.blocklight = zeros((16, 16, 128), dtype=uint8)
         self.metadata = zeros((16, 16, 128), dtype=uint8)
-        self.skylight = empty((16, 16, 128), dtype=uint8)
-        self.skylight.fill(0xf)
+        self.skylight = zeros((16, 16, 128), dtype=uint8)
 
         self.entities = set()
         self.tiles = {}
@@ -163,13 +162,20 @@ class Chunk(object):
         lightmap = zeros((16, 16, 128), dtype=uint8)
 
         for x, z in product(xrange(16), repeat=2):
-            height = self.heightmap[x, z]
+            # The maximum lighting value, unsurprisingly, is 0xf, which is the
+            # biggest possible value for a nibble.
+            light = 0xf
 
-            # fill all air blocks with light
-            lightmap[x, z, height + 1:] = 15
+            # Apparently, skylights start at the block *above* the block on
+            # which the light is incident?
+            height = self.heightmap[x, z] + 1
 
-            # dim the light going through the remaining blocks
-            light = 15
+            # The topmost block, regardless of type, is set to maximum
+            # lighting, as are all the blocks above it.
+            lightmap[x, z, height:] = light
+
+            # Dim the light going throught the remaining blocks, until there
+            # is no more light left.
             for y in range(height, -1, -1):
                 dim = blocks[self.blocks[x, z, y]].dim
                 light -= dim
