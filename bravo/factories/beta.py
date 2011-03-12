@@ -200,7 +200,8 @@ class BravoFactory(Factory):
         Update the world's season.
         """
 
-        plugins = configuration.getlist("world %s" % self.name, "seasons")
+        plugins = configuration.getlistdefault("world %s" % self.name,
+            "seasons", [])
         for plugin in retrieve_named_plugins(ISeason, plugins):
             if plugin.day == self.day:
                 self.world.season = plugin
