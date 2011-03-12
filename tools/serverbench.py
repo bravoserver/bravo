@@ -76,8 +76,9 @@ class TrickleProtocol(Protocol):
         self.factory.pending -= 1
         self.factory.connections += 1
 
+        self.sendchar()
         self.loop = LoopingCall(self.sendchar)
-        self.loop.start(1, now=False)
+        self.loop.start(1)
 
     def sendchar(self):
         """
