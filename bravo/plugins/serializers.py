@@ -434,6 +434,7 @@ class Alpha(object):
             i.value for i in tag["Pos"].tags]
 
         player.location.yaw = tag["Rotation"].tags[0].value
+        player.location.pitch = tag["Rotation"].tags[1].value
 
         if "Inventory" in tag:
             self._load_inventory_from_tag(player.inventory, tag["Inventory"])
@@ -448,7 +449,7 @@ class Alpha(object):
 
         tag["Rotation"] = TAG_List(type=TAG_Double)
         tag["Rotation"].tags = [TAG_Double(i)
-            for i in (player.location.yaw, 0)]
+            for i in (player.location.yaw, player.location.pitch)]
 
         tag["Inventory"] = self._save_inventory_to_tag(player.inventory)
 
