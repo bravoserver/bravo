@@ -51,8 +51,8 @@ class BravoFactory(Factory):
 
         self.name = name
         self.port = configuration.getint("world %s" % name, "port")
-        if configuration.has_option("world %s" % name, "host"):
-            self.interface = configuration.get("world %s" % name, "host")
+        self.interface = configuration.getdefault("world %s" % name, "host",
+            "")
 
         self.world = World(name)
         self.world.factory = self
