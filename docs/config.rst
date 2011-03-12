@@ -41,6 +41,9 @@ port
     Which port to run on. Must be a number between 0 and 65535. Note that
     ports below 1024 are typically privileged and cannot be bound by non-root
     users.
+host
+    The hostname to bind to. Defaults to no hostname, which is usually correct
+    for most people. If you don't know what this is, you don't need it.
 url
     The path to the folder to use for loading and saving world data. Must be a
     valid URL.
