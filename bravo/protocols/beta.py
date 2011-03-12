@@ -75,6 +75,7 @@ class BetaServerProtocol(Protocol):
             15: self.build,
             16: self.equip,
             18: self.animate,
+            19: self.action,
             21: self.pickup,
             101: self.wclose,
             102: self.waction,
@@ -200,6 +201,11 @@ class BetaServerProtocol(Protocol):
     def animate(self, container):
         """
         Hook for animate packets.
+        """
+
+    def action(self, container):
+        """
+        Hook for action packets.
         """
 
     def wclose(self, container):
