@@ -34,8 +34,16 @@ class TestBravoFactory(unittest.TestCase):
     def test_trivial(self):
         pass
 
-    def test_initial(self):
+    def test_initial_attributes(self):
+        """
+        Make sure that the basic attributes of the factory are correct.
+
+        You'd be surprised how often this test breaks.
+        """
+
         self.assertEqual(self.f.name, "unittest")
+        self.assertEqual(self.f.config_name, "world unittest")
+
         self.assertEqual(self.f.eid, 1)
 
     def test_create_entity_pickup(self):

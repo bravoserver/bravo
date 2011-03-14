@@ -50,14 +50,16 @@ class BravoFactory(Factory):
         log.msg("Initializing factory for world '%s'..." % name)
 
         self.name = name
-        self.port = configuration.getint("world %s" % name, "port")
-        self.interface = configuration.getdefault("world %s" % name, "host",
+        self.config_name = "world %s" % name
+
+        self.port = configuration.getint(self.config_name, "port")
+        self.interface = configuration.getdefault(self.config_name, "host",
             "")
 
         self.world = World(name)
         self.world.factory = self
-        if configuration.has_option("world %s" % name, "perm_cache"):
-            cache_level = configuration.getint("world %s" % name, "perm_cache")
+        if configuration.has_option(self.config_name, "perm_cache"):
+            cache_level = configuration.getint(self.config_name, "perm_cache")
             self.world.enable_cache(cache_level)
 
         self.protocols = dict()
@@ -67,7 +69,7 @@ class BravoFactory(Factory):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
 
-        authenticator = configuration.get("world %s" % name, "authenticator")
+        authenticator = configuration.get(self.config_name, "authenticator")
         selected = retrieve_named_plugins(IAuthenticator, [authenticator])[0]
 
         log.msg("Using authenticator %s" % selected.name)
@@ -200,7 +202,7 @@ class BravoFactory(Factory):
         Update the world's season.
         """
 
-        plugins = configuration.getlistdefault("world %s" % self.name,
+        plugins = configuration.getlistdefault(self.config_name,
             "seasons", [])
         for plugin in retrieve_named_plugins(ISeason, plugins):
             if plugin.day == self.day:
