@@ -97,3 +97,26 @@ class TestWater(unittest.TestCase):
         # Make sure that water did not spread near the sponge.
         self.assertNotEqual(self.w.get_block((1, 0, 0)),
             bravo.blocks.blocks["water"].slot)
+
+    def test_spring_remove(self):
+        """
+        Test that water dries up if no spring is providing it.
+        """
+
+        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.hook.tracked.add((self.f, 0, 0, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.tracked:
+            self.hook.process()
+
+        # Remove the spring.
+        self.w.destroy((0, 0, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.tracked:
+            self.hook.process()
+
+        for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
+            self.assertEqual(self.w.get_block(coords),
+                bravo.blocks.blocks["air"].slot)
