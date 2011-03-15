@@ -3,7 +3,7 @@ from random import randint
 from numpy import array, where
 
 from zope.interface import implements
-
+from random import randint
 from bravo.blocks import blocks
 from bravo.compat import product
 from bravo.ibravo import ITerrainGenerator
@@ -321,42 +321,31 @@ class SafetyGenerator(object):
 
 class CliffGenerator(object):
     """
-    Generates waves of stone.
-
-    This class uses a simplex noise generator to procedurally generate
-    organic-looking, continuously smooth terrain.
-
-    This generator relies on implementation details of ``Chunk``.
+    This class/generator creates cliffs by selectively
+    applying a offset of the noise map to blocks based on height.
+    Feel free to make this more realistic.
     """
 
     implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """
-        Make smooth waves of stone.
+        Make smooth waves of stone, then compare to current landscape
         """
-
-        reseed(seed + 5000)
-        chunk.regenerate_heightmap()
-
         factor = 1 / 256
-        thre1 = randint(-10, 0)
-        thre2 = randint(0, 10)
         for x, z in product(xrange(16), repeat=2):
-            magx = (chunk.x * 16 + x) * factor
-            magz = (chunk.z * 16 + z) * factor
-
-            height = octaves2(magx, magz, 9)
+            magx = ((chunk.x + 32) * 16 + x) * factor
+            magz = ((chunk.z + 32) * 16 + z) * factor
+            height = octaves2(magx, magz, 6)
             height *= 15
             height = int(height + 70)
-            if thre1 < (chunk.heightmap[x,z] - height) < thre2:
+            if -6 < chunk.heightmap[x,z] - height < 3 and chunk.heightmap[x,z] > 63 and height > 63:
                 column = chunk.get_column(x, z)
                 column[:].fill(blocks["air"].slot)
-                column[:height + 1].fill(blocks["stone"].slot)
-
+                column[:height-3].fill(blocks["stone"].slot)
     name = "cliffs"
 
-    before = ("simplex",)
+    before = tuple()
     after = tuple()
 
 class FloatGenerator(object):
@@ -373,43 +362,23 @@ class FloatGenerator(object):
         Eat moar stone
         """
 
-        reseed(seed + 250)
-        chunk.regenerate_heightmap()
-
-        # The world is full of things worth more than gold. But we dig the
-        # stuff up and then bury it in a different hole. Where's the sense in
-        # that? What are we, magpies? Is it all about the gleam? Good heavens,
-        # potatoes are worth more than gold!
-
         factor = 1 / 256
-        thre1 = randint(-10, 0)
-        thre2 = randint(0, 2)
         for x, z in product(xrange(16), repeat=2):
-            magx = (chunk.x * 16 + x) * factor
-            magz = (chunk.z * 16 + z) * factor
-
-            height = octaves2(magx, magz, 9)
-            height *= 15
-            height = int(height + 70)
-            if chunk.x > 2 or chunk.z > 2 or chunk.x + chunk.z < -2:
-                if abs(chunk.heightmap[x,z] - height) < 10:
-                    column = chunk.get_column(x, z)
-                    column[:].fill(blocks["air"].slot)
-
-        for x, z in product(xrange(16), repeat=2):
-            magx = (chunk.x * 16 + x) * factor
-            magz = (chunk.z * 16 + z) * factor
+            magx = ((chunk.x+16) * 16 + x) * factor
+            magz = ((chunk.z+16) * 16 + z) * factor
 
             height = octaves2(magx, magz, 6)
             height *= 15
-            height = int(height + 42)
-
+            height = int(height + 70)
             column = chunk.get_column(x, z)
-            column[:height + 1].fill(blocks["air"].slot)
+            if abs(chunk.heightmap[x,z] - height) < 10:
+                column[:].fill(blocks["air"].slot)
+            else:
+                column[:height-30+randint(-15,10)].fill(blocks["air"].slot)
 
     name = "float"
 
-    before = ("simplex",)
+    before = tuple()
     after = tuple()
 
 float = FloatGenerator()
