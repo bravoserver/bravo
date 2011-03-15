@@ -694,6 +694,15 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.give((container.x, container.y, container.z),
             (container.primary, container.secondary), container.count)
 
+    def animate(self, container):
+        # Broadcast the animation of the entity to everyone else. Only swing
+        # arm is send by notchian clients.
+        packet = make_packet("animate",
+            eid=container.eid,
+            animation=container.animation
+        )
+        self.factory.broadcast_for_others(packet, self)
+
     def wclose(self, container):
         if container.wid in self.windows:
             i = self.windows[container.wid]
