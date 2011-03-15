@@ -37,20 +37,25 @@ class Fluid(object):
         for factory, x, y, z in self.tracked:
             w = factory.world
 
+            # Neighbors on the xz-level.
+            neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
+                    (x, y, z + 1))
+            # Our downstairs pal.
+            below = (x, y - 1, z)
+
             block = w.get_block((x, y, z))
             if block == self.spring:
                 # Spawn water from springs.
-                for coords in ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
-                    (x, y, z + 1)):
+                for coords in neighbors:
                     if w.get_block(coords) in self.whitespace:
                         w.set_block(coords, self.fluid)
                         w.set_metadata(coords, 0x0)
                         new.add((factory,) + coords)
 
                 # Is this water falling down to the next y-level?
-                if y > 0 and w.get_block((x, y - 1, z)) in self.whitespace:
-                    w.set_block((x, y - 1, z), self.fluid)
-                    w.set_metadata((x, y - 1, z), FALLING)
+                if y > 0 and w.get_block(below) in self.whitespace:
+                    w.set_block(below, self.fluid)
+                    w.set_metadata(below, FALLING)
                     new.add((factory, x, y - 1, z))
 
             elif block == self.fluid:
@@ -60,18 +65,17 @@ class Fluid(object):
                 metadata = w.get_metadata((x, y, z))
 
                 # Fall down to the next y-level, if possible.
-                if y > 0 and w.get_block((x, y - 1, z)) in self.whitespace:
+                if y > 0 and w.get_block(below) in self.whitespace:
                     metadata |= FALLING
-                    w.set_block((x, y - 1, z), self.fluid)
-                    w.set_metadata((x, y - 1, z), metadata)
+                    w.set_block(below, self.fluid)
+                    w.set_metadata(below, metadata)
                     new.add((factory, x, y - 1, z))
                 else:
                     if metadata & FALLING:
                         metadata &= ~FALLING
                     if metadata < self.levels:
                         metadata += 1
-                        for coords in ((x - 1, y, z), (x + 1, y, z),
-                            (x, y, z - 1), (x, y, z + 1)):
+                        for coords in neighbors:
                             if w.get_block(coords) in self.whitespace:
                                 w.set_block(coords, self.fluid)
                                 w.set_metadata(coords, metadata)
