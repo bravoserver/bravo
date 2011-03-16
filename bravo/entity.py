@@ -104,6 +104,36 @@ class Player(Entity):
             )
         return packet
 
+class Painting(Entity):
+    """
+    A painting on a wall.
+    """
+
+    name = "Painting"
+
+    def __init__(self, direction=1, motive="", **kwargs):
+        """
+        Create a painting.
+
+        This method calls super().
+        """
+
+        super(Painting, self).__init__(**kwargs)
+
+        self.direction = direction
+        self.motive = motive
+
+    def save_to_packet(self):
+        return make_packet("painting",
+            eid=self.eid,
+            title=self.motive,
+            x=self.location.x,
+            y=self.location.y,
+            z=self.location.z,
+            direction=self.direction
+        )
+
+
 class Pickup(Entity):
     """
     Class representing a dropped block or item.
@@ -240,9 +270,10 @@ entities = dict((entity.name, entity)
     for entity in (
         Chuck,
         Cow,
+        Painting,
+        Pickup,
         Pig,
         Player,
-        Pickup,
         Sheep,
         Squid,
     )

@@ -280,7 +280,7 @@ packets = {
         SBInt32("x"),
         SBInt32("y"),
         SBInt32("z"),
-        UBInt32("type"),
+        UBInt32("direction"),
     ),
     27: Struct("mystery0x1b",
         BFloat32("one"),

@@ -109,6 +109,7 @@ class Alpha(object):
             "Chicken": lambda entity, tag: None,
             "Cow": lambda entity, tag: None,
             "Item": self._load_item_from_tag,
+            "Painting": self._load_painting_from_tag,
             "Pig": lambda entity, tag: None,
             "Sheep": self._load_sheep_from_tag,
             "Squid": lambda entity, tag: None,
@@ -118,6 +119,7 @@ class Alpha(object):
             "Chicken": lambda entity, tag: None,
             "Cow": lambda entity, tag: None,
             "Item": self._save_item_to_tag,
+            "Painting": self._save_painting_to_tag,
             "Pig": lambda entity, tag: None,
             "Sheep": self._save_sheep_to_tag,
             "Squid": lambda entity, tag: None,
@@ -197,6 +199,23 @@ class Alpha(object):
         tag["Item"]["id"] = TAG_Short(item.item[0])
         tag["Item"]["Damage"] = TAG_Short(item.item[1])
         tag["Item"]["Count"] = TAG_Short(item.quantity)
+
+    def _load_painting_from_tag(self, painting, tag):
+        painting.direction = tag["Dir"].value
+        painting.motive = tag["Motive"].value
+        # Overwrite position with absolute block coordinates of image's
+        # center. Original position seems to be unused.
+        painting.location.x = tag["TileX"].value
+        painting.location.y = tag["TileY"].value
+        painting.location.z = tag["TileZ"].value
+
+    def _save_painting_to_tag(self, painting, tag):
+        tag["Dir"] = TAG_Byte(painting.direction)
+        tag["Motive"] = TAG_String(painting.motive)
+        # Both tile and position will be the center of the image.
+        tag["TileX"] = TAG_Int(painting.location.x)
+        tag["TileY"] = TAG_Int(painting.location.y)
+        tag["TileZ"] = TAG_Int(painting.location.z)
 
     def _load_sheep_from_tag(self, sheep, tag):
         sheep.sheared = bool(tag["Sheared"].value)
