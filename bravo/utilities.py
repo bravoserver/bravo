@@ -29,6 +29,13 @@ def split_coords(x, z):
 
     return first, second, third, fourth
 
+def taxicab2(x1, y1, x2, y2):
+    """
+    Return the taxicab distance between two blocks.
+    """
+
+    return abs(x1 - x2) + abs(y1 - y2)
+
 # Bit twiddling.
 
 def unpack_nibbles(l):

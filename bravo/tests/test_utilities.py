@@ -17,8 +17,17 @@ class TestCoordHandling(unittest.TestCase):
             (-1, -1): (-1, 15, -1, 15),
             (-16, -16): (-1, 0, -1, 0),
         }
-        for x, z in cases:
-            self.assertEqual(bravo.utilities.split_coords(x, z), cases[x, z])
+        for case in cases:
+            self.assertEqual(bravo.utilities.split_coords(*case), cases[case])
+
+    def test_taxicab2(self):
+        cases = {
+            (1, 2, 3, 4): 4,
+            (1, 2, 1, 2): 0,
+            (2, 1, 4, 3): 4,
+        }
+        for case in cases:
+            self.assertEqual(bravo.utilities.taxicab2(*case), cases[case])
 
 class TestBitTwiddling(unittest.TestCase):
 
