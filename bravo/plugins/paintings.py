@@ -4,7 +4,8 @@ from zope.interface import implements
 
 from bravo.blocks import items
 from bravo.compat import chain
-from bravo.ibravo import IBuildHook
+from bravo.ibravo import IBuildHook, IUseHook
+from bravo.packets import make_packet
 
 available_paintings = {
     (1, 1): ("Kebab", "Aztec", "Alban", "Aztec2", "Bomb", "Plant",
@@ -26,6 +27,9 @@ face_to_direction = {
     "+x": 3
 }
 
+direction_to_face = dict([(v, k) for (k, v) in face_to_direction.items()])
+
+
 class Paintings(object):
     """
     Place paintings on walls.
@@ -34,7 +38,7 @@ class Paintings(object):
     pay attention to the available space.
     """
 
-    implements(IBuildHook)
+    implements(IBuildHook, IUseHook)
 
     name = "painting"
 
@@ -61,6 +65,38 @@ class Paintings(object):
         factory.world.mark_dirty((x, y, z))
 
         return False, builddata
+
+    def use_hook(self, factory, player, target, button):
+        if target.name != "Painting":
+            return
+
+        # Block coordinates.
+        x, y, z = target.location.x, target.location.y, target.location.z
+
+        # Offset coords according to direction. A painting does not
+        # occupy a block, therefore we drop the pickup right in front of the
+        # block it is attached to.
+        face = direction_to_face[target.direction]
+        if face == "-x":
+            x -= 1
+        elif face == "+x":
+            x += 1
+        elif face == "-z":
+            z -= 1
+        elif face == "+z":
+            z += 1
+
+        # Pixel coordinates.
+        coords = (x * 32 + 16, y * 32, z * 32 + 16)
+
+        factory.destroy_entity(target)
+        factory.give(coords, (items["paintings"].slot, 0), 1)
+
+        packet = make_packet("destroy", eid=target.eid)
+        factory.broadcast(packet)
+
+        # Force the chunk (with its entities) to be saved to disk.
+        factory.world.mark_dirty((x, y, z))
 
     before = tuple()
     after = ("build", )
