@@ -3,7 +3,7 @@ from random import randint
 from numpy import array, where
 
 from zope.interface import implements
-from random import randint
+
 from bravo.blocks import blocks
 from bravo.compat import product
 from bravo.ibravo import ITerrainGenerator
