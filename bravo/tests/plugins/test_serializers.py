@@ -5,6 +5,8 @@ import tempfile
 from twisted.python.filepath import FilePath
 
 import bravo.plugins.serializers
+from bravo.nbt import TAG_Compound, TAG_List, TAG_String
+from bravo.nbt import TAG_Double, TAG_Byte, TAG_Short
 
 class TestAlphaUtilities(unittest.TestCase):
 
@@ -56,3 +58,29 @@ class TestBetaUtilities(unittest.TestCase):
             "r.0.-1.mcr")
         self.assertEqual(bravo.plugins.serializers.name_for_region(70, -30),
             "r.2.-1.mcr")
+
+class TestAlphaSerializer(unittest.TestCase):
+
+    def setUp(self):
+        self.folder = FilePath(tempfile.gettempdir()).child('plugin_test')
+        self.serializer = bravo.plugins.serializers.Alpha('file://' + self.folder.path)
+
+    def test_load_entity_from_tag(self):
+        tag = TAG_Compound()
+        tag["Pos"] = TAG_List(type=TAG_Double)
+        tag["Pos"].tags = [TAG_Double(10), TAG_Double(5), TAG_Double(-15)]
+        tag["Rotation"] = TAG_List(type=TAG_Double)
+        tag["Rotation"].tags = [TAG_Double(90), TAG_Double(0)]
+        tag["OnGround"] = TAG_Byte(1)
+        tag["id"] = TAG_String("Item")
+
+        tag["Item"] = TAG_Compound()
+        tag["Item"]["id"] = TAG_Short(3)
+        tag["Item"]["Damage"] = TAG_Short(0)
+        tag["Item"]["Count"] = TAG_Short(5)
+
+        entity = self.serializer._load_entity_from_tag(tag)
+        self.assertEqual(entity.location.x, 10)
+        self.assertEqual(entity.location.yaw, 90)
+        self.assertEqual(entity.location.grounded, True)
+        self.assertEqual(entity.item[0], 3)

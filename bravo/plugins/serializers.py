@@ -144,7 +144,7 @@ class Alpha(object):
         location.pitch = rotation[1].value
         location.grounded = bool(tag["OnGround"])
 
-        entity = entities[tag["id"].value](location)
+        entity = entities[tag["id"].value](location=location)
 
         self._entity_loaders[entity.name](entity, tag)
 
