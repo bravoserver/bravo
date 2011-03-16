@@ -714,7 +714,7 @@ class BravoProtocol(BetaServerProtocol):
         # Broadcast the animation of the entity to everyone else. Only swing
         # arm is send by notchian clients.
         packet = make_packet("animate",
-            eid=container.eid,
+            eid=self.player.eid,
             animation=container.animation
         )
         self.factory.broadcast_for_others(packet, self)
