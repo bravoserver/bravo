@@ -1,6 +1,9 @@
 from collections import defaultdict
 from UserDict import DictMixin
 
+from bravo.compat import product
+from bravo.utilities import taxicab2
+
 class SpatialDict(object, DictMixin):
     """
     A spatial dictionary, for accelerating spatial lookups.
@@ -58,3 +61,46 @@ class SpatialDict(object, DictMixin):
                 l.append(key)
 
         return l
+
+    def iternear(self, key, radius):
+        """
+        Return all of the values within a certain radius of this key.
+        """
+
+        minx, innerx = divmod(key[0], 16)
+        minz, innerz = divmod(key[1], 16)
+        minx = int(minx)
+        minz = int(minz)
+
+        # Adjust for range() purposes.
+        maxx = minx + 1
+        maxz = minz + 1
+
+        # Adjust for leakiness.
+        if innerx < radius:
+            minx -= 1
+        if innerz < radius:
+            minz -= 1
+        if innerx + radius > 16:
+            maxx += 1
+        if innerz + radius > 16:
+            maxz += 1
+
+        # Expand as needed.
+        expand = int(radius // 16)
+        minx -= expand
+        minz -= expand
+        maxx += expand
+        maxz += expand
+
+        for coords in product(xrange(minx, maxx), xrange(minz, maxz)):
+            for target, value in self.buckets[coords].iteritems():
+                if taxicab2(target[0], target[1], key[0], key[1]) <= radius:
+                    yield value
+
+    def near(self, key, radius):
+        """
+        Non-lazy version of ``iternear()``.
+        """
+
+        return list(self.iternear(key, radius))
