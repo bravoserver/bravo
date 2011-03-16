@@ -61,19 +61,19 @@ class TestWater(unittest.TestCase):
         """
 
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.hook.tracked.add((self.f, 0, 0, 0))
+        self.hook.pending[self.f].add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium; if any exceptions happen,
         # they will bubble up.
-        while self.hook.tracked:
+        while self.hook.pending:
             self.hook.process()
 
     def test_spring_spread(self):
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.hook.tracked.add((self.f, 0, 0, 0))
+        self.hook.pending[self.f].add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.tracked:
+        while self.hook.pending:
             self.hook.process()
 
         for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
@@ -88,10 +88,10 @@ class TestWater(unittest.TestCase):
 
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
         self.w.set_block((3, 0, 0), bravo.blocks.blocks["sponge"].slot)
-        self.hook.tracked.add((self.f, 0, 0, 0))
+        self.hook.pending[self.f].add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.tracked:
+        while self.hook.pending:
             self.hook.process()
 
         # Make sure that water did not spread near the sponge.
@@ -104,17 +104,17 @@ class TestWater(unittest.TestCase):
         """
 
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.hook.tracked.add((self.f, 0, 0, 0))
+        self.hook.pending[self.f].add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.tracked:
+        while self.hook.pending:
             self.hook.process()
 
         # Remove the spring.
         self.w.destroy((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.tracked:
+        while self.hook.pending:
             self.hook.process()
 
         for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):

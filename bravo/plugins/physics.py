@@ -12,7 +12,14 @@ FALLING = 0x8
 Flag indicating whether fluid is in freefall.
 """
 
-def taxicab(x1, y1, z1, x2, y2, z2):
+def taxicab2(x1, y1, x2, y2):
+    """
+    Return the taxicab distance between two blocks.
+    """
+
+    return abs(x1 - x2) + abs(y1 - y2)
+
+def taxicab3(x1, y1, z1, x2, y2, z2):
     """
     Return the taxicab distance between two blocks.
     """
@@ -27,71 +34,82 @@ class Fluid(object):
     implements(IBuildHook, IDigHook)
 
     def __init__(self):
-        self.tracked = set()
+        self.sponges = defaultdict(set)
+        self.springs = defaultdict(set)
+
+        self.pending = defaultdict(set)
 
         self.loop = LoopingCall(self.process)
 
     def process(self):
-        new = set()
-
-        for factory, x, y, z in self.tracked:
+        for factory in self.pending:
             w = factory.world
+            new = set()
 
-            # Neighbors on the xz-level.
-            neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
-                    (x, y, z + 1))
-            # Our downstairs pal.
-            below = (x, y - 1, z)
+            for x, y, z in self.pending[factory]:
 
-            block = w.get_block((x, y, z))
-            if block == self.spring:
-                # Spawn water from springs.
-                for coords in neighbors:
-                    if w.get_block(coords) in self.whitespace:
-                        w.set_block(coords, self.fluid)
-                        w.set_metadata(coords, 0x0)
-                        new.add((factory,) + coords)
+                # Neighbors on the xz-level.
+                neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
+                        (x, y, z + 1))
+                # Our downstairs pal.
+                below = (x, y - 1, z)
 
-                # Is this water falling down to the next y-level?
-                if y > 0 and w.get_block(below) in self.whitespace:
-                    w.set_block(below, self.fluid)
-                    w.set_metadata(below, FALLING)
-                    new.add((factory, x, y - 1, z))
+                block = w.get_block((x, y, z))
+                if block == self.spring:
+                    # Track this spring.
+                    self.springs[factory].add((x, y, z))
 
-            elif block == self.fluid:
-                # Extend water. Remember, either the water flows downward to
-                # the next y-level, or it flows out across the xz-level, but
-                # *not* both.
-                metadata = w.get_metadata((x, y, z))
+                    # Spawn water from springs.
+                    for coords in neighbors:
+                        if w.get_block(coords) in self.whitespace:
+                            w.set_block(coords, self.fluid)
+                            w.set_metadata(coords, 0x0)
+                            new.add(coords)
 
-                # Fall down to the next y-level, if possible.
-                if y > 0 and w.get_block(below) in self.whitespace:
-                    metadata |= FALLING
-                    w.set_block(below, self.fluid)
-                    w.set_metadata(below, metadata)
-                    new.add((factory, x, y - 1, z))
-                else:
-                    if metadata & FALLING:
-                        metadata &= ~FALLING
-                    if metadata < self.levels:
-                        metadata += 1
-                        for coords in neighbors:
-                            if w.get_block(coords) in self.whitespace:
-                                w.set_block(coords, self.fluid)
-                                w.set_metadata(coords, metadata)
-                                new.add((factory,) + coords)
+                    # Is this water falling down to the next y-level?
+                    if y > 0 and w.get_block(below) in self.whitespace:
+                        w.set_block(below, self.fluid)
+                        w.set_metadata(below, FALLING)
+                        new.add(below)
 
-        # Flush affected chunks.
-        to_flush = defaultdict(set)
-        for factory, x, y, z in chain(self.tracked, new):
-            to_flush[factory].add(factory.world.load_chunk(x // 16, z // 16))
-        for factory, chunks in to_flush.iteritems():
-            for chunk in chunks:
-                factory.flush_chunk(chunk)
+                elif block == self.fluid:
+                    # Extend water. Remember, either the water flows downward to
+                    # the next y-level, or it flows out across the xz-level, but
+                    # *not* both.
+                    metadata = w.get_metadata((x, y, z))
 
-        self.tracked = new
+                    # Fall down to the next y-level, if possible.
+                    if y > 0 and w.get_block(below) in self.whitespace:
+                        metadata |= FALLING
+                        w.set_block(below, self.fluid)
+                        w.set_metadata(below, metadata)
+                        new.add(below)
+                    else:
+                        if metadata & FALLING:
+                            metadata &= ~FALLING
+                        if metadata < self.levels:
+                            metadata += 1
+                            for coords in neighbors:
+                                if w.get_block(coords) in self.whitespace:
+                                    w.set_block(coords, self.fluid)
+                                    w.set_metadata(coords, metadata)
+                                    new.add(coords)
 
-        if not self.tracked and self.loop.running:
+            # Flush affected chunks.
+            to_flush = defaultdict(set)
+            for x, y, z in chain(self.pending[factory], new):
+                to_flush[factory].add(factory.world.load_chunk(x // 16, z // 16))
+            for factory, chunks in to_flush.iteritems():
+                for chunk in chunks:
+                    factory.flush_chunk(chunk)
+
+            self.pending[factory] = new
+
+        # Prune and turn off the loop if appropriate.
+        for factory in self.pending.keys():
+            if not self.pending[factory]:
+                del self.pending[factory]
+        if not self.pending and self.loop.running:
             self.loop.stop()
 
     def build_hook(self, factory, player, builddata):
@@ -103,10 +121,14 @@ class Fluid(object):
 
         block, metadata, x, y, z, face = builddata
 
-        if block.slot in (self.spring, self.fluid):
-            self.tracked.add((factory, x, y, z))
+        # No, you may not place this. Only I may place it.
+        if block.slot == self.fluid:
+            factory.world.destroy((x, y, z))
+            return False, builddata
+        elif block.slot == self.spring:
+            self.pending[factory].add((x, y, z))
 
-        if self.tracked and not self.loop.running:
+        if any(self.pending.itervalues()) and not self.loop.running:
             self.loop.start(self.step)
 
         return True, builddata
@@ -130,14 +152,10 @@ class Fluid(object):
             ( 1, 0,  0),
             (-1, 0,  0)):
             coords = x + dx, y + dy, z + dz
-            print "Checking %d, %d, %d for waterness" % coords
-            print "Block is %d, want %d or %d" % (
-                factory.world.get_block(coords), self.spring, self.fluid)
             if factory.world.get_block(coords) in (self.spring, self.fluid):
-                self.tracked.add((factory,) + coords)
-                print "Marking %d, %d, %d from dig" % coords
+                self.pending[factory].add(coords)
 
-        if self.tracked and not self.loop.running:
+        if any(self.pending.itervalues()) and not self.loop.running:
             self.loop.start(self.step)
 
     before = ("build",)
