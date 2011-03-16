@@ -43,7 +43,7 @@ class AMPGateway(object):
     Wrapper around the logical implementation of a console.
     """
 
-    def __init__(self, host, port):
+    def __init__(self, host, port=25600):
         self.ready = False
 
         self.host = host

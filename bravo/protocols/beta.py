@@ -690,9 +690,34 @@ class BravoProtocol(BetaServerProtocol):
     def equip(self, container):
         self.player.equipped = container.item
 
+        # Inform everyone about the item the player is holding now.
+        item = self.player.inventory.holdables[self.player.equipped]
+        if item is None:
+            # Empty slot.
+            primary, secondary = -1, 0
+        else:
+            primary, secondary, count = item
+
+        packet = make_packet("entity-equipment",
+            eid=self.player.eid,
+            slot=0,
+            primary=primary,
+            secondary=secondary
+        )
+        self.factory.broadcast_for_others(packet, self)
+
     def pickup(self, container):
         self.factory.give((container.x, container.y, container.z),
             (container.primary, container.secondary), container.count)
+
+    def animate(self, container):
+        # Broadcast the animation of the entity to everyone else. Only swing
+        # arm is send by notchian clients.
+        packet = make_packet("animate",
+            eid=self.player.eid,
+            animation=container.animation
+        )
+        self.factory.broadcast_for_others(packet, self)
 
     def wclose(self, container):
         if container.wid in self.windows:
