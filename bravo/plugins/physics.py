@@ -55,27 +55,23 @@ class Fluid(object):
 
                 block = w.get_block((x, y, z))
                 if block == self.spring:
-                    print "Handling spring (%d, %d, %d)" % (x, y, z)
                     # Track this spring.
                     self.springs[factory][x, z] = True
 
                     # Spawn water from springs.
                     for coords in neighbors:
                         if w.get_block(coords) in self.whitespace:
-                            print "Spawning fluid at (%d, %d, %d)" % coords
                             w.set_block(coords, self.fluid)
                             w.set_metadata(coords, 0x0)
                             new.add(coords)
 
                     # Is this water falling down to the next y-level?
                     if y > 0 and w.get_block(below) in self.whitespace:
-                        print "Spawning fluid at (%d, %d, %d)" % below
                         w.set_block(below, self.fluid)
                         w.set_metadata(below, FALLING)
                         new.add(below)
 
                 elif block == self.fluid:
-                    print "Handling fluid (%d, %d, %d)" % (x, y, z)
                     # Remove neighbors that are also springs.
                     neighbors = [coords for coords in neighbors
                         if w.get_block(coords) != self.spring]
@@ -85,7 +81,6 @@ class Fluid(object):
                     springs = list(self.springs[factory].iterkeysnear((x, z),
                         self.levels + 1))
                     if springs:
-                        print "Fluid has springs (%d, %d, %d)" % (x, y, z)
                         # Let's find the closest spring, and use that to set
                         # our size. If we have to change because of it, then
                         # we should mark our neighbors so they can change too.
@@ -94,8 +89,6 @@ class Fluid(object):
                         distance = min(taxicab2(x, z, otherx, otherz)
                             for otherx, otherz in springs) - 1
                         if metadata & ~FALLING != distance:
-                            print "Fluid metadata mismatch (%d, %d, %d)" % (x, y, z)
-                            print "Should be %d but is %d" % (distance, metadata)
                             # Looks like we should change our water level and
                             # mark our neighbors.
                             metadata = distance
@@ -107,7 +100,6 @@ class Fluid(object):
 
                         # Fall down to the next y-level, if possible.
                         if y > 0 and w.get_block(below) in self.whitespace:
-                            print "Fluid falls to (%d, %d, %d)" % below
                             w.set_block(below, self.fluid)
                             w.set_metadata(below, metadata | FALLING)
                             new.add(below)
@@ -115,20 +107,17 @@ class Fluid(object):
                         # Otherwise, just fill our neighbors with water, where
                         # applicable, and mark them.
                         else:
-                            print "Fluid doesn't fall (%d, %d, %d)" % (x, y, z)
                             if metadata & FALLING:
                                 metadata &= ~FALLING
                             if metadata < self.levels:
                                 metadata += 1
                                 for coords in neighbors:
                                     if w.get_block(coords) in self.whitespace:
-                                        print "Fluid spreads (%d, %d, %d)" % coords
                                         w.set_block(coords, self.fluid)
                                         w.set_metadata(coords, metadata)
                                         new.add(coords)
 
                     else:
-                        print "Fluid has no springs (%d, %d, %d)" % (x, y, z)
                         # Oh noes, we're drying up! We should mark our
                         # neighbors and dry ourselves up.
                         new.update(neighbors)
@@ -137,12 +126,10 @@ class Fluid(object):
                         w.destroy((x, y, z))
 
                 else:
-                    print "Unexpected pending block (%d, %d, %d)" % (x, y, z)
                     # Hm, why would a pending block not be any of the things
                     # we care about? Maybe it used to be a spring or
                     # something?
                     if (x, z) in self.springs[factory]:
-                        print "Destroyed spring (%d, %d, %d)" % (x, y, z)
                         # Destroyed spring. Add neighbors and below to blocks
                         # to update.
                         del self.springs[factory][x, z]
@@ -158,8 +145,6 @@ class Fluid(object):
                 for chunk in chunks:
                     factory.flush_chunk(chunk)
 
-            print "Finished with this iteration. Marked for next iteration:"
-            print new
             self.pending[factory] = new
 
         # Prune and turn off the loop if appropriate.
