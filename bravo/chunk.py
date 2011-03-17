@@ -257,7 +257,7 @@ class Chunk(object):
             return make_packet("block",
                     x=x + self.x * 16,
                     y=y,
-                    z=z + self.x * 16,
+                    z=z + self.z * 16,
                     type=int(self.blocks[x, z, y]),
                     meta=int(self.metadata[x, z, y]))
         else:

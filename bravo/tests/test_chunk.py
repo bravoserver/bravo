@@ -43,6 +43,13 @@ class TestChunkBlocks(unittest.TestCase):
         self.assertEqual(self.c.blocks[0, 0, 0], 0)
         self.assertEqual(self.c.metadata[0, 0, 0], 0)
 
+    def test_single_block_damage_packet(self):
+        chunk = bravo.chunk.Chunk(0, 1)
+        chunk.populated = True
+        chunk.set_block((2, 4, 8), 1)
+        packet = chunk.get_damage_packet()
+        self.assertEqual(packet, '\x35\x00\x00\x00\x02\x04\x00\x00\x00\x18\x01\x00')
+
 class TestNumpyQuirks(unittest.TestCase):
     """
     Tests for the bad interaction between several components of Bravo.
