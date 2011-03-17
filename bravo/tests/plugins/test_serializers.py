@@ -26,27 +26,6 @@ class TestAlphaUtilities(unittest.TestCase):
         self.assertEqual(bravo.plugins.serializers.base36(24567),
             "iyf")
 
-class TestAlphaPluginData(unittest.TestCase):
-
-    def setUp(self):
-        self.folder = FilePath(tempfile.gettempdir()).child('plugin_test')
-        self.serializer = bravo.plugins.serializers.Alpha('file://' + self.folder.path)
-
-    def tearDown(self):
-        shutil.rmtree(self.folder.path)
-
-    def test_save_data(self):
-        data = 'Foo\nbar'
-        self.serializer.save_plugin_data('plugin1', data)
-        self.assertTrue(self.folder.child('plugin1.dat').exists())
-        with self.folder.child('plugin1.dat').open() as f:
-            self.assertEqual(f.read(), data)
-
-    def test_no_data_corruption(self):
-        data = 'Foo\nbar'
-        self.serializer.save_plugin_data('plugin1', data)
-        self.assertEqual(self.serializer.load_plugin_data('plugin1'), data)
-
 class TestBetaUtilities(unittest.TestCase):
 
     def test_name_for_region(self):
@@ -62,8 +41,15 @@ class TestBetaUtilities(unittest.TestCase):
 class TestAlphaSerializer(unittest.TestCase):
 
     def setUp(self):
-        self.folder = FilePath(tempfile.gettempdir()).child('plugin_test')
+        self.d = tempfile.mkdtemp()
+        self.folder = FilePath(self.d)
         self.serializer = bravo.plugins.serializers.Alpha('file://' + self.folder.path)
+
+    def tearDown(self):
+        shutil.rmtree(self.d)
+
+    def test_trivial(self):
+        pass
 
     def test_load_entity_from_tag(self):
         tag = TAG_Compound()
@@ -84,3 +70,15 @@ class TestAlphaSerializer(unittest.TestCase):
         self.assertEqual(entity.location.yaw, 90)
         self.assertEqual(entity.location.grounded, True)
         self.assertEqual(entity.item[0], 3)
+
+    def test_save_data(self):
+        data = 'Foo\nbar'
+        self.serializer.save_plugin_data('plugin1', data)
+        self.assertTrue(self.folder.child('plugin1.dat').exists())
+        with self.folder.child('plugin1.dat').open() as f:
+            self.assertEqual(f.read(), data)
+
+    def test_no_data_corruption(self):
+        data = 'Foo\nbar'
+        self.serializer.save_plugin_data('plugin1', data)
+        self.assertEqual(self.serializer.load_plugin_data('plugin1'), data)
