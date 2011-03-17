@@ -50,17 +50,21 @@ class SpatialDict(object, DictMixin):
         if not self.buckets[clippedx, clippedz]:
             del self.buckets[clippedx, clippedz]
 
+    def iterkeys(self):
+        """
+        Yield all the keys.
+        """
+
+        for clipped, bucket in self.buckets.iteritems():
+            for key in bucket.iterkeys():
+                yield key
+
     def keys(self):
         """
         Get a list of all keys in the dictionary.
         """
 
-        l = []
-        for bucket in self.buckets.itervalues():
-            for key in bucket.iterkeys():
-                l.append(key)
-
-        return l
+        return list(self.iterkeys())
 
     def iteritemsnear(self, key, radius):
         """

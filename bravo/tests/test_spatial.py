@@ -11,15 +11,35 @@ class TestSpatialDict(unittest.TestCase):
         pass
 
     def test_setitem(self):
-        self.sd[0, 0] = "testing"
-        self.assertTrue((0, 0) in self.sd)
-        self.assertTrue("testing" in self.sd.values())
+        self.sd[1, 2] = "testing"
+        self.assertTrue((1, 2) in self.sd.buckets[0, 0])
+        self.assertTrue("testing" in self.sd.buckets[0, 0].values())
 
-    def test_float_keys(self):
-        self.sd[0.1, 0.1] = "testing"
-        self.assertTrue((0.1, 0.1) in self.sd)
-        self.assertTrue("testing" in self.sd.values())
-        self.assertEqual(self.sd[0.1, 0.1], "testing")
+    def test_setitem_offset(self):
+        self.sd[17, 33] = "testing"
+        self.assertTrue((17, 33) in self.sd.buckets[1, 2])
+        self.assertTrue("testing" in self.sd.buckets[1, 2].values())
+
+    def test_setitem_float_keys(self):
+        self.sd[1.1, 2.2] = "testing"
+        self.assertTrue((1.1, 2.2) in self.sd.buckets[0, 0])
+        self.assertTrue("testing" in self.sd.buckets[0, 0].values())
+
+    def test_keys_contains_offset(self):
+        """
+        Make sure ``keys()`` works properly with offset keys.
+        """
+
+        self.sd[17, 33] = "testing"
+        self.assertTrue((17, 33) in self.sd.keys())
+
+    def test_contains_offset(self):
+        """
+        Make sure ``__contains__()`` works properly with offset keys.
+        """
+
+        self.sd[17, 33] = "testing"
+        self.assertTrue((17, 33) in self.sd)
 
     def test_near(self):
         self.sd[1, 1] = "first"
