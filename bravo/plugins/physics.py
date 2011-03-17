@@ -36,6 +36,11 @@ class Fluid(object):
 
         self.loop = LoopingCall(self.process)
 
+    def scan(self, chunk):
+        """
+        Load all of the important blocks in the chunk into memory.
+        """
+
     def process(self):
         for factory in self.pending:
             w = factory.world
@@ -78,7 +83,7 @@ class Fluid(object):
                     # First, figure out whether or not we should be spreading.
                     # Let's see if there are any springs nearby.
                     springs = list(self.springs[factory].iterkeysnear((x, z),
-                        8))
+                        self.levels + 1))
                     if springs:
                         print "Fluid has springs (%d, %d, %d)" % (x, y, z)
                         # Let's find the closest spring, and use that to set
@@ -103,9 +108,8 @@ class Fluid(object):
                         # Fall down to the next y-level, if possible.
                         if y > 0 and w.get_block(below) in self.whitespace:
                             print "Fluid falls to (%d, %d, %d)" % below
-                            metadata |= FALLING
                             w.set_block(below, self.fluid)
-                            w.set_metadata(below, metadata)
+                            w.set_metadata(below, metadata | FALLING)
                             new.add(below)
 
                         # Otherwise, just fill our neighbors with water, where
