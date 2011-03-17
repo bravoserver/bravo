@@ -6,6 +6,8 @@ from zope.interface import implements
 
 from bravo.blocks import blocks, items
 from bravo.ibravo import IBuildHook, IDigHook
+from bravo.spatial import SpatialDict
+from bravo.utilities import taxicab2
 
 FALLING = 0x8
 """
@@ -27,8 +29,8 @@ class Fluid(object):
     implements(IBuildHook, IDigHook)
 
     def __init__(self):
-        self.sponges = defaultdict(set)
-        self.springs = defaultdict(set)
+        self.sponges = defaultdict(SpatialDict)
+        self.springs = defaultdict(SpatialDict)
 
         self.pending = defaultdict(set)
 
@@ -40,7 +42,6 @@ class Fluid(object):
             new = set()
 
             for x, y, z in self.pending[factory]:
-
                 # Neighbors on the xz-level.
                 neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
                         (x, y, z + 1))
@@ -49,44 +50,83 @@ class Fluid(object):
 
                 block = w.get_block((x, y, z))
                 if block == self.spring:
+                    print "Handling spring (%d, %d, %d)" % (x, y, z)
                     # Track this spring.
-                    self.springs[factory].add((x, y, z))
+                    self.springs[factory][x, z] = True
 
                     # Spawn water from springs.
                     for coords in neighbors:
                         if w.get_block(coords) in self.whitespace:
+                            print "Spawning fluid at (%d, %d, %d)" % coords
                             w.set_block(coords, self.fluid)
                             w.set_metadata(coords, 0x0)
                             new.add(coords)
 
                     # Is this water falling down to the next y-level?
                     if y > 0 and w.get_block(below) in self.whitespace:
+                        print "Spawning fluid at (%d, %d, %d)" % below
                         w.set_block(below, self.fluid)
                         w.set_metadata(below, FALLING)
                         new.add(below)
 
                 elif block == self.fluid:
-                    # Extend water. Remember, either the water flows downward to
-                    # the next y-level, or it flows out across the xz-level, but
-                    # *not* both.
-                    metadata = w.get_metadata((x, y, z))
+                    print "Handling fluid (%d, %d, %d)" % (x, y, z)
+                    # First, figure out whether or not we should be spreading.
+                    # Let's see if there are any springs nearby.
+                    springs = list(self.springs[factory].iterkeysnear((x, z),
+                        8))
+                    if springs:
+                        print "Fluid has springs (%d, %d, %d)" % (x, y, z)
+                        # Let's find the closest spring, and use that to set
+                        # our size. If we have to change because of it, then
+                        # we should mark our neighbors so they can change too.
+                        metadata = w.get_metadata((x, y, z))
 
-                    # Fall down to the next y-level, if possible.
-                    if y > 0 and w.get_block(below) in self.whitespace:
-                        metadata |= FALLING
-                        w.set_block(below, self.fluid)
-                        w.set_metadata(below, metadata)
-                        new.add(below)
+                        distance = min(taxicab2(x, z, otherx, otherz)
+                            for otherx, otherz in springs) - 1
+                        if metadata & ~FALLING != distance:
+                            print "Fluid metadata mismatch (%d, %d, %d)" % (x, y, z)
+                            print "Should be %d but is %d" % (distance, metadata)
+                            # Looks like we should change our water level and
+                            # mark our neighbors.
+                            metadata = distance
+                            new.update(neighbors)
+
+                        # Now, it's time to extend water. Remember, either the
+                        # water flows downward to the next y-level, or it
+                        # flows out across the xz-level, but *not* both.
+
+                        # Fall down to the next y-level, if possible.
+                        if y > 0 and w.get_block(below) in self.whitespace:
+                            print "Fluid falls to (%d, %d, %d)" % below
+                            metadata |= FALLING
+                            w.set_block(below, self.fluid)
+                            w.set_metadata(below, metadata)
+                            new.add(below)
+
+                        # Otherwise, just fill our neighbors with water, where
+                        # applicable, and mark them.
+                        else:
+                            print "Fluid doesn't fall (%d, %d, %d)" % (x, y, z)
+                            if metadata & FALLING:
+                                metadata &= ~FALLING
+                            if metadata < self.levels:
+                                metadata += 1
+                                for coords in neighbors:
+                                    if w.get_block(coords) in self.whitespace:
+                                        print "Fluid spreads (%d, %d, %d)" % coords
+                                        w.set_block(coords, self.fluid)
+                                        w.set_metadata(coords, metadata)
+                                        new.add(coords)
+
                     else:
-                        if metadata & FALLING:
-                            metadata &= ~FALLING
-                        if metadata < self.levels:
-                            metadata += 1
-                            for coords in neighbors:
-                                if w.get_block(coords) in self.whitespace:
-                                    w.set_block(coords, self.fluid)
-                                    w.set_metadata(coords, metadata)
-                                    new.add(coords)
+                        print "Fluid has no springs (%d, %d, %d)" % (x, y, z)
+                        # Oh noes, we're drying up! We should mark our
+                        # neighbors and dry ourselves up.
+                        new.update(neighbors)
+                        new.add(below)
+
+                        w.destroy((x, y, z))
 
             # Flush affected chunks.
             to_flush = defaultdict(set)
@@ -96,6 +136,8 @@ class Fluid(object):
                 for chunk in chunks:
                     factory.flush_chunk(chunk)
 
+            print "Finished with this iteration. Marked for next iteration:"
+            print new
             self.pending[factory] = new
 
         # Prune and turn off the loop if appropriate.
