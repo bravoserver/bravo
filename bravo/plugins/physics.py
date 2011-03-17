@@ -5,8 +5,9 @@ from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
+from bravo.compat import product
 from bravo.ibravo import IBuildHook, IDigHook
-from bravo.spatial import Block2DSpatialDict
+from bravo.spatial import Block2DSpatialDict, Block3DSpatialDict
 
 FALLING = 0x8
 """
@@ -27,8 +28,15 @@ class Fluid(object):
 
     implements(IBuildHook, IDigHook)
 
+    sponge = None
+    """
+    Block that will soak up fluids and springs that are near it.
+
+    Defaults to None, which effectively disables this feature.
+    """
+
     def __init__(self):
-        self.sponges = defaultdict(Block2DSpatialDict)
+        self.sponges = defaultdict(Block3DSpatialDict)
         self.springs = defaultdict(Block2DSpatialDict)
 
         self.pending = defaultdict(set)
@@ -53,24 +61,49 @@ class Fluid(object):
                 below = (x, y - 1, z)
 
                 block = w.get_block((x, y, z))
+                if block == self.sponge:
+                    # Track this sponge.
+                    self.springs[factory][x, y, z] = True
+
+                    # Destroy the water! Destroy!
+                    for coords in product(
+                        xrange(x - 2, x + 3),
+                        xrange(max(y - 2, 0), min(y + 3, 128)),
+                        xrange(z - 2, z + 3),
+                        ):
+                        if w.get_block(coords) in (self.spring, self.fluid):
+                            w.destroy(coords)
                 if block == self.spring:
+                    # Double-check that we weren't placed inside a sponge.
+                    # That's just wrong.
+                    if any(self.sponges[factory].iteritemsnear((x, y, z), 2)):
+                        w.destroy((x, y, z))
+                        continue
+
                     # Track this spring.
                     self.springs[factory][x, z] = y
 
                     # Spawn water from springs.
                     for coords in neighbors:
-                        if w.get_block(coords) in self.whitespace:
+                        if (w.get_block(coords) in self.whitespace and
+                            not any(self.sponges[factory].iteritemsnear(coords, 2))):
                             w.set_block(coords, self.fluid)
                             w.set_metadata(coords, 0x0)
                             new.add(coords)
 
                     # Is this water falling down to the next y-level?
-                    if y > 0 and w.get_block(below) in self.whitespace:
+                    if (y > 0 and w.get_block(below) in self.whitespace and
+                        not any(self.sponges[factory].iteritemsnear(below, 2))):
                         w.set_block(below, self.fluid)
                         w.set_metadata(below, FALLING)
                         new.add(below)
 
                 elif block == self.fluid:
+                    # Double-check that we weren't placed inside a sponge.
+                    if any(self.sponges[factory].iteritemsnear((x, y, z), 2)):
+                        w.destroy((x, y, z))
+                        continue
+
                     # First, figure out whether or not we should be spreading.
                     # Let's see if there are any springs nearby which are
                     # above us and thus able to fuel us.
@@ -119,7 +152,8 @@ class Fluid(object):
                     # flows out across the xz-level, but *not* both.
 
                     # Fall down to the next y-level, if possible.
-                    if y > 0 and w.get_block(below) in self.whitespace:
+                    if (y > 0 and w.get_block(below) in self.whitespace and
+                        not any(self.sponges[factory].iteritemsnear(below, 2))):
                         w.set_block(below, self.fluid)
                         w.set_metadata(below, newmd | FALLING)
                         new.add(below)
@@ -134,7 +168,8 @@ class Fluid(object):
                     if newmd < self.levels:
                         newmd += 1
                         for coords in neighbors:
-                            if w.get_block(coords) in self.whitespace:
+                            if (w.get_block(coords) in self.whitespace and
+                                not any(self.sponges[factory].iteritemsnear(coords, 2))):
                                 w.set_block(coords, self.fluid)
                                 w.set_metadata(coords, newmd)
                                 new.add(coords)
@@ -224,6 +259,8 @@ class Water(Fluid):
     spring = blocks["spring"].slot
     fluid = blocks["water"].slot
     levels = 7
+
+    sponge = blocks["sponge"].slot
 
     whitespace = (blocks["air"].slot, blocks["snow"].slot)
     meltables = (blocks["ice"].slot,)
