@@ -71,6 +71,10 @@ class Fluid(object):
 
                 elif block == self.fluid:
                     print "Handling fluid (%d, %d, %d)" % (x, y, z)
+                    # Remove neighbors that are also springs.
+                    neighbors = [coords for coords in neighbors
+                        if w.get_block(coords) != self.spring]
+
                     # First, figure out whether or not we should be spreading.
                     # Let's see if there are any springs nearby.
                     springs = list(self.springs[factory].iterkeysnear((x, z),
