@@ -81,6 +81,24 @@ class TestWater(unittest.TestCase):
                 bravo.blocks.blocks["water"].slot)
             self.assertEqual(self.w.get_metadata(coords), 0x0)
 
+    def test_obstacle(self):
+        """
+        Test that obstacles are flowed around correctly.
+        """
+
+        raise unittest.SkipTest("Currently goes into an infinite loop.")
+
+        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((1, 0, 0), bravo.blocks.blocks["stone"].slot)
+        self.hook.pending[self.f].add((0, 0, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.pending:
+            self.hook.process()
+
+        # Make sure that the water level behind the stone is 0x3, not 0x0.
+        self.assertEqual(self.w.get_metadata((2, 0, 0)), 0x3)
+
     def test_sponge(self):
         """
         Test that sponges prevent water from spreading near them.
