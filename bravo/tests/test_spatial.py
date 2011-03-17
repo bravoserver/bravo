@@ -52,3 +52,8 @@ class TestSpatialDict(unittest.TestCase):
         self.sd[17, 17] = "testing"
         results = list(self.sd.itervaluesnear((15, 15), 4))
         self.assertTrue("testing" in results)
+
+    def test_near_negative(self):
+        self.sd[0, 0] = "first"
+        results = list(self.sd.itervaluesnear((-8, 0), 8))
+        self.assertTrue("first" in results)

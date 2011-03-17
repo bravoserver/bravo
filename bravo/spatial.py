@@ -84,13 +84,13 @@ class SpatialDict(object, DictMixin):
         maxz = minz + 1
 
         # Adjust for leakiness.
-        if innerx < radius:
+        if innerx <= radius:
             minx -= 1
-        if innerz < radius:
+        if innerz <= radius:
             minz -= 1
-        if innerx + radius > 16:
+        if innerx + radius >= 16:
             maxx += 1
-        if innerz + radius > 16:
+        if innerz + radius >= 16:
             maxz += 1
 
         # Expand as needed.
