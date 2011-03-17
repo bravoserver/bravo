@@ -2,10 +2,10 @@ import unittest
 
 import bravo.spatial
 
-class TestSpatialDict(unittest.TestCase):
+class TestBlock2DSpatialDict(unittest.TestCase):
 
     def setUp(self):
-        self.sd = bravo.spatial.SpatialDict()
+        self.sd = bravo.spatial.Block2DSpatialDict()
 
     def test_trivial(self):
         pass

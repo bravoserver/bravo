@@ -6,7 +6,7 @@ from zope.interface import implements
 
 from bravo.blocks import blocks, items
 from bravo.ibravo import IBuildHook, IDigHook
-from bravo.spatial import SpatialDict
+from bravo.spatial import Block2DSpatialDict
 
 FALLING = 0x8
 """
@@ -28,8 +28,8 @@ class Fluid(object):
     implements(IBuildHook, IDigHook)
 
     def __init__(self):
-        self.sponges = defaultdict(SpatialDict)
-        self.springs = defaultdict(SpatialDict)
+        self.sponges = defaultdict(Block2DSpatialDict)
+        self.springs = defaultdict(Block2DSpatialDict)
 
         self.pending = defaultdict(set)
 

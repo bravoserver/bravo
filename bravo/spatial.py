@@ -8,8 +8,8 @@ class SpatialDict(object, DictMixin):
     """
     A spatial dictionary, for accelerating spatial lookups.
 
-    This dictionary is designed to work with chunk-based data and stores
-    objects in chunk-sized buckets along the xz-plane.
+    This particular class is a template for specific spatial dictionaries; in
+    order to make it work, subclass it and add ``key_for_bucket()``.
     """
 
     def __init__(self):
@@ -23,39 +23,34 @@ class SpatialDict(object, DictMixin):
         :param object value: an object
         """
 
-        clippedx = int(key[0] // 16)
-        clippedz = int(key[1] // 16)
-        self.buckets[clippedx, clippedz][key] = value
+        bucket_key = self.key_for_bucket(key)
+        self.buckets[bucket_key][key] = value
 
     def __getitem__(self, key):
         """
         Retrieve a value, given a key.
         """
 
-        clippedx = int(key[0] // 16)
-        clippedz = int(key[1] // 16)
-
-        return self.buckets[clippedx, clippedz][key]
+        bucket_key = self.key_for_bucket(key)
+        return self.buckets[bucket_key][key]
 
     def __delitem__(self, key):
         """
         Remove a key and its corresponding value.
         """
 
-        clippedx = int(key[0] // 16)
-        clippedz = int(key[1] // 16)
+        bucket_key = self.key_for_bucket(key)
+        del self.buckets[bucket_key][key]
 
-        del self.buckets[clippedx, clippedz][key]
-
-        if not self.buckets[clippedx, clippedz]:
-            del self.buckets[clippedx, clippedz]
+        if not self.buckets[bucket_key]:
+            del self.buckets[bucket_key]
 
     def iterkeys(self):
         """
         Yield all the keys.
         """
 
-        for clipped, bucket in self.buckets.iteritems():
+        for bucket in self.buckets.itervalues():
             for key in bucket.iterkeys():
                 yield key
 
@@ -120,3 +115,18 @@ class SpatialDict(object, DictMixin):
 
         for k, v in self.iteritemsnear(key, radius):
             yield v
+
+class Block2DSpatialDict(SpatialDict):
+    """
+    Class for tracking blocks in the XZ-plane.
+    """
+
+    def key_for_bucket(self, key):
+        """
+        Partition keys into chunk-sized buckets.
+        """
+
+        try:
+            return int(key[0] // 16), int(key[1] // 16)
+        except ValueError:
+            return KeyError("Key %s isn't usable here!" % repr(key))
