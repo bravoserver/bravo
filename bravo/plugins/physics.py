@@ -136,6 +136,20 @@ class Fluid(object):
 
                         w.destroy((x, y, z))
 
+                else:
+                    print "Unexpected pending block (%d, %d, %d)" % (x, y, z)
+                    # Hm, why would a pending block not be any of the things
+                    # we care about? Maybe it used to be a spring or
+                    # something?
+                    if (x, z) in self.springs[factory]:
+                        print "Destroyed spring (%d, %d, %d)" % (x, y, z)
+                        # Destroyed spring. Add neighbors and below to blocks
+                        # to update.
+                        del self.springs[factory][x, z]
+
+                        new.update(neighbors)
+                        new.add(below)
+
             # Flush affected chunks.
             to_flush = defaultdict(set)
             for x, y, z in chain(self.pending[factory], new):
@@ -149,9 +163,10 @@ class Fluid(object):
             self.pending[factory] = new
 
         # Prune and turn off the loop if appropriate.
-        for factory in self.pending.keys():
-            if not self.pending[factory]:
-                del self.pending[factory]
+        for dd in (self.pending, self.springs, self.sponges):
+            for factory in dd.keys():
+                if not dd[factory]:
+                    del dd[factory]
         if not self.pending and self.loop.running:
             self.loop.stop()
 
