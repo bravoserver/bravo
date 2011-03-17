@@ -86,8 +86,6 @@ class TestWater(unittest.TestCase):
         Test that obstacles are flowed around correctly.
         """
 
-        raise unittest.SkipTest("Currently goes into an infinite loop.")
-
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
         self.w.set_block((1, 0, 0), bravo.blocks.blocks["stone"].slot)
         self.hook.pending[self.f].add((0, 0, 0))
