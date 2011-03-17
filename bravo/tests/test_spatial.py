@@ -57,3 +57,23 @@ class TestBlock2DSpatialDict(unittest.TestCase):
         self.sd[0, 0] = "first"
         results = list(self.sd.itervaluesnear((-8, 0), 8))
         self.assertTrue("first" in results)
+
+class TestBlock3DSpatialDict(unittest.TestCase):
+
+    def setUp(self):
+        self.sd = bravo.spatial.Block3DSpatialDict()
+
+    def test_trivial(self):
+        pass
+
+    def test_near(self):
+        self.sd[1, 1, 1] = "first"
+        self.sd[2, 2, 2] = "second"
+        results = list(self.sd.itervaluesnear((3, 3, 3), 3))
+        self.assertTrue("first" not in results)
+        self.assertTrue("second" in results)
+
+    def test_near_negative(self):
+        self.sd[0, 64, 0] = "first"
+        results = list(self.sd.itervaluesnear((-3, 61, -3), 9))
+        self.assertTrue("first" in results)
