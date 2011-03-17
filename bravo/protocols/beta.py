@@ -693,8 +693,8 @@ class BravoProtocol(BetaServerProtocol):
         # Inform everyone about the item the player is holding now.
         item = self.player.inventory.holdables[self.player.equipped]
         if item is None:
-            # Empty slot.
-            primary, secondary = -1, 0
+            # Empty slot. Use signed short -1 == unsigned 65535.
+            primary, secondary = 65535, 0
         else:
             primary, secondary, count = item
 
