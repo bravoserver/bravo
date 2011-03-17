@@ -199,7 +199,7 @@ class Fluid(object):
         if block.slot == self.fluid:
             factory.world.destroy((x, y, z))
             return False, builddata
-        elif block.slot == self.spring:
+        else:
             self.pending[factory].add((x, y, z))
 
         if any(self.pending.itervalues()) and not self.loop.running:
