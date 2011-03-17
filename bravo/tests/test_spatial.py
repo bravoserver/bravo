@@ -24,11 +24,11 @@ class TestSpatialDict(unittest.TestCase):
     def test_near(self):
         self.sd[1, 1] = "first"
         self.sd[2, 2] = "second"
-        results = self.sd.near((3, 3), 2)
+        results = list(self.sd.itervaluesnear((3, 3), 2))
         self.assertTrue("first" not in results)
         self.assertTrue("second" in results)
 
     def test_near_boundary(self):
         self.sd[17, 17] = "testing"
-        results = self.sd.near((15, 15), 4)
+        results = list(self.sd.itervaluesnear((15, 15), 4))
         self.assertTrue("testing" in results)

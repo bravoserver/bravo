@@ -62,9 +62,12 @@ class SpatialDict(object, DictMixin):
 
         return l
 
-    def iternear(self, key, radius):
+    def iteritemsnear(self, key, radius):
         """
-        Return all of the values within a certain radius of this key.
+        A version of ``iteritems()`` that filters based on the distance from a
+        given key.
+
+        The key does not need to actually be in the dictionary.
         """
 
         minx, innerx = divmod(key[0], 16)
@@ -96,11 +99,20 @@ class SpatialDict(object, DictMixin):
         for coords in product(xrange(minx, maxx), xrange(minz, maxz)):
             for target, value in self.buckets[coords].iteritems():
                 if taxicab2(target[0], target[1], key[0], key[1]) <= radius:
-                    yield value
+                    yield target, value
 
-    def near(self, key, radius):
+    def iterkeysnear(self, key, radius):
         """
-        Non-lazy version of ``iternear()``.
+        Yield all of the keys within a certain radius of this key.
         """
 
-        return list(self.iternear(key, radius))
+        for k, v in self.iteritemsnear(key, radius):
+            yield k
+
+    def itervaluesnear(self, key, radius):
+        """
+        Yield all of the values within a certain radius of this key.
+        """
+
+        for k, v in self.iteritemsnear(key, radius):
+            yield v
