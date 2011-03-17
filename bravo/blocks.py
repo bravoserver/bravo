@@ -453,6 +453,7 @@ drops = {}
 drops[1]  = 4   # Stone           -> Cobblestone
 drops[2]  = 3   # Grass           -> Dirt
 drops[20] = 0   # Glass
+drops[26] = 0   # Bed block shall be handled manually
 drops[52] = 0   # Mob spawner
 drops[60] = 3   # Soil            -> Dirt
 drops[62] = 61  # Burning Furnace -> Furnace
@@ -460,7 +461,6 @@ drops[78] = 0   # Snow
 
 # Block -> item drops.
 drops[16] = 263 # Coal Ore Block    -> Coal
-drops[26] = 355 # Bed block         -> Bed
 drops[56] = 264 # Diamond Ore Block -> Diamond
 drops[63] = 323 # Sign Post         -> Sign Item
 drops[64] = 324 # Wooden Door       -> Wooden Door Item
