@@ -102,8 +102,6 @@ class TestWater(unittest.TestCase):
         Test that sponges prevent water from spreading near them.
         """
 
-        raise unittest.SkipTest("Currently goes into an infinite loop.")
-
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
         self.w.set_block((3, 0, 0), bravo.blocks.blocks["sponge"].slot)
         self.hook.pending[self.f].add((0, 0, 0))
@@ -137,5 +135,34 @@ class TestWater(unittest.TestCase):
             self.hook.process()
 
         for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
+            self.assertEqual(self.w.get_block(coords),
+                bravo.blocks.blocks["air"].slot)
+
+    def test_spring_underneath_keepalive(self):
+        """
+        Test that springs located at a lower altitude than stray water do not
+        keep that stray water alive.
+        """
+
+        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
+        self.hook.pending[self.f].add((0, 0, 0))
+        self.hook.pending[self.f].add((0, 1, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.pending:
+            self.hook.process()
+
+        # Remove the upper spring.
+        self.w.destroy((0, 1, 0))
+        self.hook.pending[self.f].add((0, 1, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.pending:
+            self.hook.process()
+
+        # Check that the upper water blocks dried out. Don't care about the
+        # lower ones in this test.
+        for coords in ((1, 1, 0), (-1, 1, 0), (0, 1, 1), (0, 1, -1)):
             self.assertEqual(self.w.get_block(coords),
                 bravo.blocks.blocks["air"].slot)

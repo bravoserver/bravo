@@ -57,7 +57,7 @@ class Fluid(object):
                 if block == self.spring:
                     print "Handling spring (%d, %d, %d)" % (x, y, z)
                     # Track this spring.
-                    self.springs[factory][x, z] = True
+                    self.springs[factory][x, z] = y
 
                     # Spawn water from springs.
                     for coords in neighbors:
@@ -77,9 +77,13 @@ class Fluid(object):
                 elif block == self.fluid:
                     print "Handling fluid (%d, %d, %d)" % (x, y, z)
                     # First, figure out whether or not we should be spreading.
-                    # Let's see if there are any springs nearby.
-                    if not any(self.springs[factory].iterkeysnear((x, z),
-                        self.levels + 1)):
+                    # Let's see if there are any springs nearby which are
+                    # above us and thus able to fuel us.
+                    if not any(springy >= y
+                        for springy in self.springs[factory].iterkeysnear(
+                            (x, z), self.levels + 1
+                        )
+                    ):
                         print "Early: No springs (%d, %d, %d)" % (x, y, z)
                         # Oh noes, we're drying up! We should mark our
                         # neighbors and dry ourselves up.
@@ -132,7 +136,8 @@ class Fluid(object):
                         new.add(below)
                         continue
 
-                    # Clamp our newmd and assign.
+                    # Clamp our newmd and assign. Also, set ourselves again;
+                    # we changed this time and we might change again.
                     print "Setting (%d, %d, %d) to %d" % (x, y, z, newmd)
                     w.set_metadata((x, y, z), newmd)
 
