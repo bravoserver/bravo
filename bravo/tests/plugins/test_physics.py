@@ -123,8 +123,6 @@ class TestWater(unittest.TestCase):
         Test that water dries up if no spring is providing it.
         """
 
-        raise unittest.SkipTest("Currently goes into an infinite loop.")
-
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
         self.hook.pending[self.f].add((0, 0, 0))
 
@@ -134,6 +132,7 @@ class TestWater(unittest.TestCase):
 
         # Remove the spring.
         self.w.destroy((0, 0, 0))
+        self.hook.pending[self.f].add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
         while self.hook.pending:
