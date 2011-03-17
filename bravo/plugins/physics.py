@@ -63,7 +63,7 @@ class Fluid(object):
                 block = w.get_block((x, y, z))
                 if block == self.sponge:
                     # Track this sponge.
-                    self.springs[factory][x, y, z] = True
+                    self.sponges[factory][x, y, z] = True
 
                     # Destroy the water! Destroy!
                     for coords in product(
@@ -71,8 +71,25 @@ class Fluid(object):
                         xrange(max(y - 2, 0), min(y + 3, 128)),
                         xrange(z - 2, z + 3),
                         ):
-                        if w.get_block(coords) in (self.spring, self.fluid):
+                        target = w.get_block(coords)
+                        if target == self.spring:
+                            if (coords[0], coords[2]) in self.springs[factory]:
+                                del self.springs[factory][coords[0],
+                                    coords[2]]
                             w.destroy(coords)
+                        elif target == self.fluid:
+                            w.destroy(coords)
+
+                    # And now mark our surroundings so that they can be
+                    # updated appropriately.
+                    for coords in product(
+                        xrange(x - 3, x + 4),
+                        xrange(max(y - 3, 0), min(y + 4, 128)),
+                        xrange(z - 3, z + 4),
+                        ):
+                        if coords != (x, y, z):
+                            new.add(coords)
+
                 if block == self.spring:
                     # Double-check that we weren't placed inside a sponge.
                     # That's just wrong.

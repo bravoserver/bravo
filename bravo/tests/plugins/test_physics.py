@@ -105,10 +105,38 @@ class TestWater(unittest.TestCase):
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
         self.w.set_block((3, 0, 0), bravo.blocks.blocks["sponge"].slot)
         self.hook.pending[self.f].add((0, 0, 0))
+        self.hook.pending[self.f].add((3, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
         while self.hook.pending:
             self.hook.process()
+
+        # Make sure that water did not spread near the sponge.
+        self.assertNotEqual(self.w.get_block((1, 0, 0)),
+            bravo.blocks.blocks["water"].slot)
+
+    def test_sponge_absorb_spring(self):
+        """
+        Test that sponges can absorb springs and will cause all of the
+        surrounding water to dry up.
+        """
+
+        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.hook.pending[self.f].add((0, 0, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.pending:
+            self.hook.process()
+
+        self.w.set_block((1, 0, 0), bravo.blocks.blocks["sponge"].slot)
+        self.hook.pending[self.f].add((1, 0, 0))
+
+        while self.hook.pending:
+            self.hook.process()
+
+        for coords in ((0, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
+            self.assertEqual(self.w.get_block(coords),
+                bravo.blocks.blocks["air"].slot)
 
         # Make sure that water did not spread near the sponge.
         self.assertNotEqual(self.w.get_block((1, 0, 0)),
