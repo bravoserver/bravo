@@ -1,6 +1,8 @@
 import shutil
 import tempfile
 
+from numpy.testing import assert_array_equal
+
 from twisted.trial import unittest
 
 import bravo.blocks
@@ -141,6 +143,40 @@ class TestWater(unittest.TestCase):
         # Make sure that water did not spread near the sponge.
         self.assertNotEqual(self.w.get_block((1, 0, 0)),
             bravo.blocks.blocks["water"].slot)
+
+    def test_sponge_salt(self):
+        """
+        Test that sponges don't "salt the earth" or have any kind of lasting
+        effects after destruction.
+        """
+
+        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.hook.pending[self.f].add((0, 0, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.pending:
+            self.hook.process()
+
+        # Take a snapshot.
+        chunk = self.w.load_chunk(0, 0)
+        before = chunk.blocks[:, :, 0], chunk.metadata[:, :, 0]
+
+        self.w.set_block((3, 0, 0), bravo.blocks.blocks["sponge"].slot)
+        self.hook.pending[self.f].add((3, 0, 0))
+
+        while self.hook.pending:
+            self.hook.process()
+
+        self.w.destroy((3, 0, 0))
+        self.hook.pending[self.f].add((3, 0, 0))
+
+        while self.hook.pending:
+            self.hook.process()
+
+        after = chunk.blocks[:, :, 0], chunk.metadata[:, :, 0]
+
+        # Make sure that the sponge didn't permanently change anything.
+        assert_array_equal(before, after)
 
     def test_spring_remove(self):
         """

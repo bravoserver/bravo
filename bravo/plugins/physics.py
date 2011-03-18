@@ -204,6 +204,16 @@ class Fluid(object):
                         new.update(neighbors)
                         new.add(below)
 
+                    elif (x, y, z) in self.sponges[factory]:
+                        # The evil sponge tyrant is gone. Flow, minions, flow!
+                        for coords in product(
+                            xrange(x - 3, x + 4),
+                            xrange(max(y - 3, 0), min(y + 4, 128)),
+                            xrange(z - 3, z + 4),
+                            ):
+                            if coords != (x, y, z):
+                                new.add(coords)
+
             # Flush affected chunks.
             to_flush = defaultdict(set)
             for x, y, z in chain(self.pending[factory], new):
@@ -254,16 +264,27 @@ class Fluid(object):
         x += chunk.x * 16
         z += chunk.z * 16
 
-        for (dx, dy, dz) in (
-            ( 0, 0,  0),
-            ( 0, 0,  1),
-            ( 0, 0, -1),
-            ( 0, 1,  0),
-            ( 1, 0,  0),
-            (-1, 0,  0)):
-            coords = x + dx, y + dy, z + dz
-            if factory.world.get_block(coords) in (self.spring, self.fluid):
+        # Check for sponges first, since they will mark the entirety of the
+        # area.
+        if block == self.sponge:
+            for coords in product(
+                xrange(x - 3, x + 4),
+                xrange(max(y - 3, 0), min(y + 4, 128)),
+                xrange(z - 3, z + 4),
+                ):
                 self.pending[factory].add(coords)
+
+        else:
+            for (dx, dy, dz) in (
+                ( 0, 0,  0),
+                ( 0, 0,  1),
+                ( 0, 0, -1),
+                ( 0, 1,  0),
+                ( 1, 0,  0),
+                (-1, 0,  0)):
+                coords = x + dx, y + dy, z + dz
+                if factory.world.get_block(coords) in (self.spring, self.fluid):
+                    self.pending[factory].add(coords)
 
         if any(self.pending.itervalues()) and not self.loop.running:
             self.loop.start(self.step)
