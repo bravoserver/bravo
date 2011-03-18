@@ -390,7 +390,13 @@ class Redstone(object):
                         self.update_wires(factory, coords[0], coords[1],
                             coords[2], True)
 
-                new.update(self.update_wires(factory, x, y, z, 0xf))
+            if block == blocks["redstone-torch-off"].slot:
+                # Turn off neighboring wires, as appropriate.
+                for coords in neighbors:
+                    if (world.get_block(coords) ==
+                        blocks["redstone-wire"].slot):
+                        self.update_wires(factory, coords[0], coords[1],
+                            coords[2], False)
 
             elif block == blocks["redstone-wire"].slot:
                 # Get wire status from neighbors.
@@ -398,8 +404,7 @@ class Redstone(object):
                     blocks["redstone-torch"].slot
                     for coords in neighbors):
                     # We should probably be lit.
-                    factory.world.set_metadata((x, y, z), 0xf)
-                    new.update(self.update_wires(factory, x, y, z, 0xe))
+                    self.update_wires(factory, x, y, z, True)
                 else:
                     # Find the strongest neighboring wire, and use that.
                     new_level = max(factory.world.get_metadata(coords)
@@ -408,7 +413,7 @@ class Redstone(object):
                             blocks["redstone-wire"].slot)
                     if new_level > 0x0:
                         new_level -= 1
-                    new.update(self.update_wires(factory, x, y, z, new_level))
+                    world.set_metadata((x, y, z), new_level)
 
     def build_hook(self, factory, player, builddata):
         block, metadata, x, y, z, face = builddata
