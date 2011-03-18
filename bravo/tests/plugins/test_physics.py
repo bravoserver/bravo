@@ -11,7 +11,7 @@ import bravo.ibravo
 import bravo.plugin
 import bravo.world
 
-class WaterMockFactory(object):
+class PhysicsMockFactory(object):
 
     def flush_chunk(self, chunk):
         pass
@@ -42,7 +42,7 @@ class TestWater(unittest.TestCase):
         self.w.pipeline = []
 
         # And finally the mock factory.
-        self.f = WaterMockFactory()
+        self.f = PhysicsMockFactory()
         self.f.world = self.w
 
     def tearDown(self):
@@ -230,3 +230,67 @@ class TestWater(unittest.TestCase):
         for coords in ((1, 1, 0), (-1, 1, 0), (0, 1, 1), (0, 1, -1)):
             self.assertEqual(self.w.get_block(coords),
                 bravo.blocks.blocks["air"].slot)
+
+class TestRedstone(unittest.TestCase):
+
+    def setUp(self):
+        # Using build hook to grab the plugin, but dig hook should work as
+        # well.
+        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IBuildHook)
+
+        if "redstone" not in self.p:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.hook = self.p["redstone"]
+
+        # Set up world.
+        self.name = "unittest"
+        self.d = tempfile.mkdtemp()
+
+        bravo.config.configuration.add_section("world unittest")
+        bravo.config.configuration.set("world unittest", "url",
+            "file://%s" % self.d)
+        bravo.config.configuration.set("world unittest", "serializer",
+            "alpha")
+
+        self.w = bravo.world.World(self.name)
+        self.w.pipeline = []
+
+        # And finally the mock factory.
+        self.f = PhysicsMockFactory()
+        self.f.world = self.w
+
+    def tearDown(self):
+        if self.w.chunk_management_loop.running:
+            self.w.chunk_management_loop.stop()
+        del self.w
+
+        shutil.rmtree(self.d)
+        bravo.config.configuration.remove_section("world unittest")
+
+    def test_trivial(self):
+        pass
+
+    def test_update_wires_enable(self):
+        for i in range(16):
+            self.w.set_block((i, 0, 0),
+                bravo.blocks.blocks["redstone-wire"].slot)
+            self.w.set_metadata((i, 0, 0), 0x0)
+
+        # Enable wires.
+        self.hook.update_wires(self.f, 0, 0, 0, True)
+
+        for i in range(16):
+            self.assertEqual(self.w.get_metadata((i, 0, 0)), 0xf - i)
+
+    def test_update_wires_disable(self):
+        for i in range(16):
+            self.w.set_block((i, 0, 0),
+                bravo.blocks.blocks["redstone-wire"].slot)
+            self.w.set_metadata((i, 0, 0), i)
+
+        # Disable wires.
+        self.hook.update_wires(self.f, 0, 0, 0, False)
+
+        for i in range(16):
+            self.assertEqual(self.w.get_metadata((i, 0, 0)), 0x0)

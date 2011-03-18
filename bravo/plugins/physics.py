@@ -326,44 +326,100 @@ class Redstone(object):
 
     step = 0.2
 
+    trackables = set([
+        blocks["redstone-wire"].slot,
+    ])
+
     def __init__(self):
         self.tracked = set()
 
         self.loop = LoopingCall(self.process)
 
+    def update_wires(self, factory, x, y, z, enabled):
+        """
+        Trace the wires starting at a certain point, and either enable or
+        disable them.
+        """
+
+        level = 0xf if enabled else 0x0
+        traveled = set()
+        traveling = set([(x, y, z)])
+
+        while traveling:
+            # Visit nodes.
+            for coords in traveling:
+                metadata = factory.world.get_metadata(coords)
+                if metadata != level:
+                    factory.world.set_metadata(coords, level)
+                    traveled.add(coords)
+
+            # Rotate the nodes from last time into the old list, generate the
+            # new list again, and then do a difference update to avoid
+            # visiting previously touched nodes.
+            nodes = [(
+                (i - 1, j, k    ),
+                (i + 1, j, k    ),
+                (i,     j, k - 1),
+                (i,     j, k + 1))
+                for (i, j, k) in traveling]
+            traveling.clear()
+            for l in nodes:
+                traveling.update(coords for coords in l
+                if factory.world.get_block(coords) ==
+                    blocks["redstone-wire"].slot)
+            traveling.difference_update(traveled)
+
+            if level:
+                level -= 1
+
     def process(self):
-        pass
+        new = set()
+
+        for factory, x, y, z in self.tracked:
+            world = factory.world
+            block = factory.world.get_block((x, y, z))
+            metadata = factory.world.get_metadata((x, y, z))
+            neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
+                (x, y, z + 1))
+
+            if block == blocks["redstone-torch"].slot:
+                # Turn on neighboring wires, as appropriate.
+                for coords in neighbors:
+                    if (world.get_block(coords) ==
+                        blocks["redstone-wire"].slot):
+                        self.update_wires(factory, coords[0], coords[1],
+                            coords[2], True)
+
+                new.update(self.update_wires(factory, x, y, z, 0xf))
+
+            elif block == blocks["redstone-wire"].slot:
+                # Get wire status from neighbors.
+                if any(world.get_block(coords) ==
+                    blocks["redstone-torch"].slot
+                    for coords in neighbors):
+                    # We should probably be lit.
+                    factory.world.set_metadata((x, y, z), 0xf)
+                    new.update(self.update_wires(factory, x, y, z, 0xe))
+                else:
+                    # Find the strongest neighboring wire, and use that.
+                    new_level = max(factory.world.get_metadata(coords)
+                        for coords in neighbors
+                        if factory.world.get_block(coords) ==
+                            blocks["redstone-wire"].slot)
+                    if new_level > 0x0:
+                        new_level -= 1
+                    new.update(self.update_wires(factory, x, y, z, new_level))
 
     def build_hook(self, factory, player, builddata):
         block, metadata, x, y, z, face = builddata
 
-        # Offset coords according to face.
-        if face == "-x":
-            x -= 1
-        elif face == "+x":
-            x += 1
-        elif face == "-y":
-            # Can't build on ceilings, sorry.
-            return True, builddata
-        elif face == "+y":
-            y += 1
-        elif face == "-z":
-            z -= 1
-        elif face == "+z":
-            z += 1
+        if factory.world.get_block((x, y, z)) in self.trackables:
+            self.tracked.add(factory, x, y, z)
 
-        if block.slot == items["redstone"].slot:
-            # Override the normal block placement, because it's so heavily
-            # customized.
-            print "Placing wire..."
-            if not player.inventory.consume((items["redstone"].slot, 0),
-                                            player.equipped):
-                return True, builddata
-
-            self.tracked.add((factory, x, y, z))
-
-            factory.world.set_block((x, y, z), blocks["redstone-wire"].slot)
-            factory.world.set_metadata((x, y, z), 0x0)
+        # Wire wants state updates from its neighbors.
+        if factory.world.get_block((x, y, z)) == blocks["redstone-wire"].slot:
+            self.tracked.update(((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
+                (x, y, z + 1)))
 
         if self.tracked and not self.loop.running:
             self.loop.start(self.step)
@@ -375,7 +431,7 @@ class Redstone(object):
 
     name = "redstone"
 
-    before = tuple()
+    before = ("build",)
     after = tuple()
 
 water = Water()
