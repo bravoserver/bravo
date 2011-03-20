@@ -305,6 +305,9 @@ class Alpha(object):
         level = TAG_Compound()
         tag["Level"] = level
 
+        level["xPos"] = TAG_Int(chunk.x)
+        level["zPos"] = TAG_Int(chunk.z)
+
         level["Blocks"] = TAG_Byte_Array()
         level["HeightMap"] = TAG_Byte_Array()
         level["BlockLight"] = TAG_Byte_Array()

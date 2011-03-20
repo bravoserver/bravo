@@ -4,6 +4,7 @@ import tempfile
 
 from twisted.python.filepath import FilePath
 
+import bravo.chunk
 import bravo.plugins.serializers
 from bravo.nbt import TAG_Compound, TAG_List, TAG_String
 from bravo.nbt import TAG_Double, TAG_Byte, TAG_Short
@@ -70,6 +71,14 @@ class TestAlphaSerializer(unittest.TestCase):
         self.assertEqual(entity.location.yaw, 90)
         self.assertEqual(entity.location.grounded, True)
         self.assertEqual(entity.item[0], 3)
+
+    def test_save_chunk_to_tag(self):
+        chunk = bravo.chunk.Chunk(1, 2)
+        tag = self.serializer._save_chunk_to_tag(chunk)
+        self.assertTrue("xPos" in tag["Level"])
+        self.assertTrue("zPos" in tag["Level"])
+        self.assertEqual(tag["Level"]["xPos"].value, 1)
+        self.assertEqual(tag["Level"]["zPos"].value, 2)
 
     def test_save_data(self):
         data = 'Foo\nbar'

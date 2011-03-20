@@ -4,6 +4,7 @@ import tempfile
 import unittest
 
 from bravo.nbt import NBTFile, MalformedFileError
+from bravo.nbt import TAG_Compound
 
 bigtest = """
 H4sIAAAAAAAAAO1Uz08aQRR+wgLLloKxxBBjzKu1hKXbzUIRibGIFiyaDRrYqDGGuCvDgi67Znew
@@ -83,6 +84,18 @@ class EmptyStringTest(unittest.TestCase):
         buffer = StringIO()
         self.nbtfile.write_file(buffer=buffer)
         self.assertEqual(buffer.getvalue(), self.golden_value)
+
+class TestTAGCompound(unittest.TestCase):
+
+    def setUp(self):
+        self.tag = TAG_Compound()
+
+    def test_trivial(self):
+        pass
+
+    def test_contains(self):
+        self.tag["test"] = TAG_Compound()
+        self.assertTrue("test" in self.tag)
 
 if __name__ == '__main__':
     unittest.main()
