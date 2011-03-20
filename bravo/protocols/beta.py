@@ -932,6 +932,7 @@ class BravoProtocol(BetaServerProtocol):
             self.factory.destroy_entity(self.player)
             packet = make_packet("destroy", eid=self.player.eid)
             self.factory.broadcast(packet)
+            self.factory.chat("%s has left the game." % self.username)
 
         if self.username in self.factory.protocols:
             del self.factory.protocols[self.username]
