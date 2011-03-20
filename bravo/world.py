@@ -93,6 +93,7 @@ class World(object):
 
         self.spawn = (0, 0, 0)
         self.seed = random.randint(0, sys.maxint)
+        self.time = 0
 
         self.serializer.load_level(self)
         self.serializer.save_level(self)

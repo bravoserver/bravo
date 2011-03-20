@@ -66,6 +66,7 @@ class BravoFactory(Factory):
 
         self.eid = 1
 
+        self.time = self.world.time
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
 
@@ -291,6 +292,16 @@ class BravoFactory(Factory):
 
         packet = make_packet("create", eid=entity.eid)
         self.broadcast(packet)
+
+    def stopFactory(self):
+        """
+        Called before factory stops listening on ports. Used to perform
+        shutdown tasks.
+        """
+
+        # Write back current world time.
+        self.world.time = self.time
+        self.world.serializer.save_level(self.world)
 
     def pauseProducing(self):
         pass

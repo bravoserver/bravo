@@ -382,6 +382,7 @@ class Alpha(object):
         tag["Data"]["SpawnX"] = TAG_Int(level.spawn[0])
         tag["Data"]["SpawnY"] = TAG_Int(level.spawn[1])
         tag["Data"]["SpawnZ"] = TAG_Int(level.spawn[2])
+        tag["Data"]["Time"] = TAG_Long(level.time)
 
         return tag
 
@@ -421,6 +422,10 @@ class Alpha(object):
             tag["Data"]["SpawnZ"].value)
 
         level.seed = tag["Data"]["RandomSeed"].value
+        if "Time" in tag["Data"]:
+            level.time = tag["Data"]["Time"].value
+        else:
+            level.time = 0
 
     def save_level(self, level):
         tag = self._save_level_to_tag(level)
