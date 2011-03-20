@@ -291,8 +291,8 @@ class Chunk(object):
 
         array = self.blocks.tostring()
         array += pack_nibbles(self.metadata)
-        array += pack_nibbles(self.skylight)
         array += pack_nibbles(self.blocklight)
+        array += pack_nibbles(self.skylight)
         packet = make_packet("chunk", x=self.x * 16, y=0, z=self.z * 16,
             x_size=15, y_size=127, z_size=15, data=array)
         return packet
