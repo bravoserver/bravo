@@ -48,6 +48,12 @@ class TestEquipmentInternals(unittest.TestCase):
         self.assertEqual(self.i.holdables[0], (2, 0, 2))
         self.assertEqual(self.i.holdables[1], None)
 
+    def test_add_to_inventory_fill_slot(self):
+        self.i.holdables[0] = (2, 0, 50)
+        self.assertTrue(self.i.add((2, 0), 30))
+        self.assertEqual(self.i.holdables[0], (2, 0, 64))
+        self.assertEqual(self.i.holdables[1], (2, 0, 16))
+
     def test_consume_holdable(self):
         self.i.holdables[0] = (2, 0, 1)
         self.assertTrue(self.i.consume((2, 0), 0))
