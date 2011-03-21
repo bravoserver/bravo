@@ -80,6 +80,30 @@ class Player(Entity):
             item=item
         )
 
+    def save_equipment_to_packet(self):
+        """
+        Creates packets that include the equipment of the player. Equipment
+        is the item the player holds and all 4 armor parts.
+        """
+
+        packet = ""
+        slots = (self.inventory.holdables[0], self.inventory.armor[3],
+                 self.inventory.armor[2], self.inventory.armor[1],
+                 self.inventory.armor[0])
+
+        for slot, item in enumerate(slots):
+            if item is None:
+                continue
+
+            primary, secondary, count = item
+            packet += make_packet("entity-equipment",
+                eid=self.eid,
+                slot=slot,
+                primary=primary,
+                secondary=secondary
+            )
+        return packet
+
 class Pickup(Entity):
     """
     Class representing a dropped block or item.

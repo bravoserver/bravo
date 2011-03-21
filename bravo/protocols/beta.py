@@ -439,6 +439,8 @@ class BravoProtocol(BetaServerProtocol):
         for protocol in self.factory.protocols.itervalues():
             packet = protocol.player.save_to_packet()
             self.transport.write(packet)
+            packet = protocol.player.save_equipment_to_packet()
+            self.transport.write(packet)
             packet = make_packet("create", eid=protocol.player.eid)
             self.transport.write(packet)
 
