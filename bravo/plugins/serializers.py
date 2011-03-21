@@ -422,10 +422,7 @@ class Alpha(object):
             tag["Data"]["SpawnZ"].value)
 
         level.seed = tag["Data"]["RandomSeed"].value
-        if "Time" in tag["Data"]:
-            level.time = tag["Data"]["Time"].value
-        else:
-            level.time = 0
+        level.time = tag["Data"]["Time"].value
 
     def save_level(self, level):
         tag = self._save_level_to_tag(level)
