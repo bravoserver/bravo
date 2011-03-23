@@ -55,23 +55,14 @@ authenticator = offline
 perm_cache = 3
 
 # Plugins.
-# Bravo's plugin architecture is quite complex. It is absolutely essential to
-# remember that plugins are ordered, and that order matters.
+# Bravo's plugin architecture is quite complex; if you're not sure how to
+# manage this section, read the documentation first to get things like the
+# names of plugins.
 
-# Dig hooks. The ones you probably want:
-# ~ give: causes pickups to be dropped when appropriate.
-# ~ replace: causes replaced blocks to spawn when needed.
-# Additionally, you probably want either alpha_snow or bravo_snow for snow
-# support.
-#dig_hooks = give, replace, alpha_snow
+# Dig hooks.
 dig_hooks = give, replace, bravo_snow, alpha_sand_gravel, torch
 
-# Build hooks. The important ones:
-# ~ build: place blocks
-# ~ build_snow: ensure correct block placement on snow
-# ~ tile: make workbenches, furnaces, etc. work
-# Additionally, there are a few other good build hooks.
-# ~ torch: Orient torches
+# Build hooks.
 build_hooks = build_snow, torch, tile, build, bravo_snow, alpha_sand_gravel
 
 # Terrain generators.

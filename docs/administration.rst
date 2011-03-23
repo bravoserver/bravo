@@ -69,12 +69,6 @@ General settings
 
 These settings apply to all of Bravo. This section is named ``[bravo]``.
 
-build_hooks
-    Which build hooks to enable. Order matters!
-dig_hooks
-    Which dig hooks to enable. Order matters!
-generators
-    Which terrain generators to use. Order matters!
 fancy_console
     Whether to enable the fancy console in standalone mode. This setting will
     be overridden if the fancy console cannot be set up; e.g. on Win32
@@ -107,6 +101,50 @@ serializer
     Which serializer to use for saving worlds. Currently, the "alpha" and
     "beta" serializers are provided for MC Alpha and MC Beta compatibility,
     respectively.
+build_hooks
+    Which build hooks to enable. This is a list of plugins; see above.
+dig_hooks
+    Which dig hooks to enable. This is a list of plugins.
+generators
+    Which terrain generators to use. This is a list of plugins.
+seasons
+    Which seasons to enable. This, too, is a list of plugins.
+
+Build hooks
+^^^^^^^^^^^
+
+ * **alpha_sand_gravel**
+ * **bravo_snow**
+ * **build**
+ * **build_snow**
+ * **ladder**
+ * **lava**
+ * **redstone**
+ * **sponge**
+ * **tile**
+ * **torch**
+ * **tracks**
+ * **water**
+
+Dig hooks
+^^^^^^^^^
+
+ * **alpha_sand_gravel**
+ * **alpha_snow**
+ * **bravo_snow**
+ * **give**
+ * **lava**
+ * **redstone**
+ * **replace**
+ * **torch**
+ * **tracks**
+ * **water**
+
+Seasons
+^^^^^^^
+
+ * **winter**
+ * **spring**
 
 Plugin Data Files
 =================
