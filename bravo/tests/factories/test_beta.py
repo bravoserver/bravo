@@ -14,12 +14,14 @@ class TestBravoFactory(unittest.TestCase):
         self.name = "unittest"
 
         bravo.config.configuration.add_section("world unittest")
-        bravo.config.configuration.set("world unittest", "url",
-            "file://%s" % self.d)
-        bravo.config.configuration.set("world unittest", "serializer",
-            "alpha")
+        bravo.config.configuration.set("world unittest", "authenticator",
+            "offline")
         bravo.config.configuration.set("world unittest", "port", "0")
         bravo.config.configuration.set("world unittest", "seasons", "")
+        bravo.config.configuration.set("world unittest", "serializer",
+            "alpha")
+        bravo.config.configuration.set("world unittest", "url",
+            "file://%s" % self.d)
 
         self.f = bravo.factories.beta.BravoFactory(self.name)
 
