@@ -1,37 +1,6 @@
 # Bravo sample configuration.
 
 [bravo]
-# Plugins.
-# Bravo's plugin architecture is quite complex. It is absolutely essential to
-# remember that plugins are ordered, and that order matters.
-
-# Dig hooks. The ones you probably want:
-# ~ give: causes pickups to be dropped when appropriate.
-# ~ replace: causes replaced blocks to spawn when needed.
-# Additionally, you probably want either alpha_snow or bravo_snow for snow
-# support.
-#dig_hooks = give, replace, alpha_snow
-dig_hooks = give, replace, bravo_snow, alpha_sand_gravel, torch
-
-# Build hooks. The important ones:
-# ~ build: place blocks
-# ~ build_snow: ensure correct block placement on snow
-# ~ tile: make workbenches, furnaces, etc. work
-# Additionally, there are a few other good build hooks.
-# ~ torch: Orient torches
-build_hooks = build_snow, torch, tile, build, bravo_snow, alpha_sand_gravel
-
-# Terrain generators.
-# Some important generators:
-# ~ erosion: make dirt appear
-# ~ watertable: provide water
-# ~ grass: self-explanatory, I hope
-# ~ safety: bedrock and other safety essentials
-# You'll probably want simplex, complex, or some other terrain provider, as
-# well.
-#generators = boring, erosion, watertable, grass, safety
-generators = simplex, erosion, watertable, beaches, grass, safety
-
 # Try to enable Ampoule. This can massively improve server responsiveness, but
 # it can cause crashes, misrendering, and other weird bugs. You have been
 # warned.
@@ -64,7 +33,7 @@ seasons = winter, spring
 # Which serializer to use for saving worlds to disk.
 # ~ alpha: The Alpha NBT format
 # ~ beta: The Beta NBT/MCR format
-# Note: There is currently no automatic conversion from alpha to beta
+# Note: There is currently no automatic conversion from alpha to beta!
 serializer = beta
 
 # Authenticator. There are only two options:
@@ -80,6 +49,38 @@ authenticator = offline
 # at the cost of memory usage. This option will also cause the world to
 # generate geometry even when no clients are connected, to keep the cache
 # full. It is highly recommended to keep this cache enabled. The level of
-# caching done is dependent on the number used; 0 is next to no caching, 10 is
-# more than enough caching.
+# caching done is dependent on the number used. 3 is the minimum required to
+# let clients login immediately with no glitches; 10 is the level of caching
+# done by Notchian servers.
 perm_cache = 3
+
+# Plugins.
+# Bravo's plugin architecture is quite complex. It is absolutely essential to
+# remember that plugins are ordered, and that order matters.
+
+# Dig hooks. The ones you probably want:
+# ~ give: causes pickups to be dropped when appropriate.
+# ~ replace: causes replaced blocks to spawn when needed.
+# Additionally, you probably want either alpha_snow or bravo_snow for snow
+# support.
+#dig_hooks = give, replace, alpha_snow
+dig_hooks = give, replace, bravo_snow, alpha_sand_gravel, torch
+
+# Build hooks. The important ones:
+# ~ build: place blocks
+# ~ build_snow: ensure correct block placement on snow
+# ~ tile: make workbenches, furnaces, etc. work
+# Additionally, there are a few other good build hooks.
+# ~ torch: Orient torches
+build_hooks = build_snow, torch, tile, build, bravo_snow, alpha_sand_gravel
+
+# Terrain generators.
+# Some important generators:
+# ~ erosion: make dirt appear
+# ~ watertable: provide water
+# ~ grass: self-explanatory, I hope
+# ~ safety: bedrock and other safety essentials
+# You'll probably want simplex, complex, or some other terrain provider, as
+# well.
+#generators = boring, erosion, watertable, grass, safety
+generators = simplex, erosion, watertable, beaches, grass, safety
