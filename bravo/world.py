@@ -79,8 +79,9 @@ class World(object):
                 The configuration key to use to look up configuration data.
         """
 
-        world_url = configuration.get("world %s" % name, "url")
-        world_sf_name = configuration.get("world %s" % name, "serializer")
+        self.config_name = "world %s" % name
+        world_url = configuration.get(self.config_name, "url")
+        world_sf_name = configuration.get(self.config_name, "serializer")
 
         sf = retrieve_named_plugins(ISerializerFactory, [world_sf_name])[0]
         self.serializer = sf(world_url)
@@ -228,7 +229,7 @@ class World(object):
         """
 
         if not async:
-            return deferLater(reactor, 0.000001, self.factory.world.load_chunk,
+            return deferLater(reactor, 0.000001, self.load_chunk,
                 x, z)
 
         if (x, z) in self.chunk_cache:
@@ -246,8 +247,12 @@ class World(object):
             self.chunk_cache[x, z] = chunk
             return succeed(chunk)
 
-        d = deferToAMPProcess(MakeChunk, x=x, z=z, seed=self.seed,
-            generators=configuration.getlist("bravo", "generators"))
+        d = deferToAMPProcess(MakeChunk,
+            x=x,
+            z=z,
+            seed=self.seed,
+            generators=configuration.getlist(self.config_name, "generators")
+        )
         self._pending_chunks[x, z] = d
 
         def pp(kwargs):
