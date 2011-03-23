@@ -15,7 +15,6 @@ Contents:
    plugins
    differences
    administration
-   config
    philosophy
    noise
    core
