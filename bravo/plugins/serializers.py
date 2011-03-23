@@ -90,6 +90,8 @@ class Alpha(object):
 
     def __init__(self, url):
         parsed = urlparse(url)
+        if not parsed.scheme:
+            raise Exception("I need to be handed a URL, not a path")
         if parsed.scheme != "file":
             raise Exception("I am not okay with scheme %s" % parsed.scheme)
 

@@ -39,6 +39,16 @@ class TestBetaUtilities(unittest.TestCase):
         self.assertEqual(bravo.plugins.serializers.name_for_region(70, -30),
             "r.2.-1.mcr")
 
+class TestAlphaSerializerInit(unittest.TestCase):
+
+    def test_not_url(self):
+        self.assertRaises(Exception, bravo.plugins.serializers.Alpha,
+            "/i/am/not/a/url")
+
+    def test_wrong_scheme(self):
+        self.assertRaises(Exception, bravo.plugins.serializers.Alpha,
+            "http://www.example.com/")
+
 class TestAlphaSerializer(unittest.TestCase):
 
     def setUp(self):
