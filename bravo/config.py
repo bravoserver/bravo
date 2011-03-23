@@ -57,18 +57,7 @@ class BravoConfigParser(SafeConfigParser):
         except (NoSectionError, NoOptionError):
             return default
 
-defaults = {
-    "authenticator": "offline",
-    "generators": "simplex,erosion,watertable,grass,safety",
-    "build_hooks": "build_snow,torch,tile,build,alpha_sand_gravel",
-    "dig_hooks": "give,replace,alpha_snow",
-    "fancy_console": "true",
-    "serializer": "nbt",
-    "perm_cache": "0",
-}
-
-configuration = BravoConfigParser(defaults)
-configuration.add_section("bravo")
+configuration = BravoConfigParser()
 
 def read_configuration():
     default_files = [
