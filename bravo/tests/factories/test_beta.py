@@ -14,14 +14,16 @@ class TestBravoFactory(unittest.TestCase):
         self.name = "unittest"
 
         bravo.config.configuration.add_section("world unittest")
-        bravo.config.configuration.set("world unittest", "authenticator",
-            "offline")
-        bravo.config.configuration.set("world unittest", "port", "0")
-        bravo.config.configuration.set("world unittest", "seasons", "")
-        bravo.config.configuration.set("world unittest", "serializer",
-            "alpha")
-        bravo.config.configuration.set("world unittest", "url",
-            "file://%s" % self.d)
+        d = {
+            "authenticator" : "offline",
+            "generators"    : "",
+            "port"          : "0",
+            "seasons"       : "",
+            "serializer"    : "alpha",
+            "url"           : "file://%s" % self.d,
+        }
+        for k, v in d.items():
+            bravo.config.configuration.set("world unittest", k, v)
 
         self.f = bravo.factories.beta.BravoFactory(self.name)
 

@@ -61,7 +61,7 @@ class TestBetaServerProtocol(unittest.TestCase):
 class TestBravoProtocol(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.protocols.beta.BravoProtocol()
+        self.p = bravo.protocols.beta.BravoProtocol("unittest")
 
     def test_trivial(self):
         pass

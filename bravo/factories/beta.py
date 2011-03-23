@@ -105,7 +105,7 @@ class BravoFactory(Factory):
                 return p
 
         log.msg("Starting connection for %s" % addr)
-        p = self.protocol()
+        p = self.protocol(self.name)
         p.factory = self
 
         self.register_entity(p)

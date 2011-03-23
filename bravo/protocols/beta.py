@@ -401,18 +401,20 @@ class BravoProtocol(BetaServerProtocol):
 
     eid = 0
 
-    def __init__(self):
+    def __init__(self, name):
         BetaServerProtocol.__init__(self)
 
+        self.config_name = "world %s" % name
+
         log.msg("Registering client hooks...")
-        names = configuration.getlistdefault(self.factory.config_name,
-            "build_hooks", [])
+        names = configuration.getlistdefault(self.config_name, "build_hooks",
+            [])
         self.build_hooks = retrieve_sorted_plugins(IBuildHook, names)
-        names = configuration.getlistdefault(self.factory.config_name,
-            "dig_hooks", [])
+        names = configuration.getlistdefault(self.config_name, "dig_hooks",
+            [])
         self.dig_hooks = retrieve_sorted_plugins(IDigHook, names)
-        names = configuration.getlistdefault(self.factory.config_name,
-            "sign_hooks", [])
+        names = configuration.getlistdefault(self.config_name, "sign_hooks",
+            [])
         self.sign_hooks = retrieve_sorted_plugins(ISignHook, names)
 
         self.last_dig_build_timer = time()
