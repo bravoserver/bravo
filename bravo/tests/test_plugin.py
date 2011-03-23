@@ -78,3 +78,27 @@ class TestDependencyHelpers(unittest.TestCase):
 
         sorted = bravo.plugin.sort_plugins(l)
         self.assertEqual(set(l), set(sorted))
+
+class TestOptions(unittest.TestCase):
+
+    def test_identity(self):
+        names = ["first", "second"]
+        d = {"first": None, "second": None}
+        self.assertEqual(["first", "second"],
+            bravo.plugin.expand_names(d, names))
+
+    def test_wildcard(self):
+        names = ["*"]
+        d = {"first": None, "second": None}
+        self.assertEqual(set(["first", "second"]),
+            set(bravo.plugin.expand_names(d, names)))
+
+    def test_wildcard_removed(self):
+        names = ["*", "-first"]
+        d = {"first": None, "second": None}
+        self.assertEqual(["second"], bravo.plugin.expand_names(d, names))
+
+    def test_wildcard_after_removed(self):
+        names = ["-first", "*"]
+        d = {"first": None, "second": None}
+        self.assertEqual(["second"], bravo.plugin.expand_names(d, names))

@@ -62,6 +62,29 @@ def add_plugin_edges(d):
 
     return d
 
+def expand_names(plugins, names):
+    """
+    Given a list of names, expand wildcards and discard disabled names.
+
+    Used to implement * and - options in plugin lists.
+
+    :param dict plugins: plugins to use for expansion
+    :param list names: names to examine
+
+    :returns: a list of filtered plugin names
+    """
+
+    # Wildcard.
+    if "*" in names:
+        # Get the exceptions.
+        exceptions = set(name[1:] for name in names if name.startswith("-"))
+
+        # And now the names. Everything that isn't excepted.
+        names = [name for name in plugins.iterkeys()
+            if name not in exceptions]
+
+    return names
+
 def retrieve_plugins(interface, cached=True, cache={}):
     """
     Look up all plugins for a certain interface.
@@ -118,13 +141,9 @@ def retrieve_named_plugins(interface, names):
     """
 
     d = retrieve_plugins(interface)
-    # Wildcard.
-    if "*" in names:
-        # Get the exceptions.
-        exceptions = set(name[1:] for name in names if name.startswith("-"))
 
-        # And now the names. Everything that isn't excepted.
-        names = [name for name in d.iterkeys() if name not in exceptions]
+    # Handle wildcards and options.
+    names = expand_names(d, names)
 
     try:
         return [d[name] for name in names]
