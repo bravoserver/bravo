@@ -21,9 +21,9 @@ starting point for new configurations.
 
 bravo.ini should live in one of three locations:
 
- 1) /etc/bravo
- 1) ~/.bravo
- 1) The working directory
+1. /etc/bravo
+2. ~/.bravo
+3. The working directory
 
 All three locations will be checked, in that order, and more-recently-loaded
 configurations will override configurations in previous directories. For
@@ -113,38 +113,45 @@ seasons
 Build hooks
 ^^^^^^^^^^^
 
- * **alpha_sand_gravel**
- * **bravo_snow**
- * **build**
- * **build_snow**
- * **ladder**
- * **lava**
- * **redstone**
- * **sponge**
- * **tile**
- * **torch**
- * **tracks**
- * **water**
+Hooks marked with (Beta) provide Beta compatibility and should probably be
+enabled.
+
+ * **alpha_sand_gravel**: Make sand and gravel fall as if affected by gravity.
+   (Beta)
+ * **bravo_snow**: Make snow fall as if affected by gravity.
+ * **build**: Enable placement of blocks from inventory onto the terrain.
+   (Beta)
+ * **build_snow**: Adjust things built on top of snow to replace the snow.
+   (Beta)
+ * **ladder**: Make ladders stick to the wall onto which they are placed.
+   (Beta)
+ * **lava**: Enable physics for placed lava springs. (Beta)
+ * **redstone**: Enable physics for placed redstone. (Beta)
+ * **tile**: Register tiles. Required for signs, furnaces, chests, etc. (Beta)
+ * **torch**: Make torches stick to the wall or floor correctly. (Beta)
+ * **tracks**: Align minecart tracks. (Beta)
+ * **water**: Enable physics for placed water springs. (Beta)
 
 Dig hooks
 ^^^^^^^^^
 
- * **alpha_sand_gravel**
- * **alpha_snow**
- * **bravo_snow**
- * **give**
- * **lava**
- * **redstone**
- * **replace**
- * **torch**
- * **tracks**
- * **water**
+ * **alpha_sand_gravel**: Make sand and gravel fall as if affected by gravity.
+   (Beta)
+ * **alpha_snow**: Destroy snow when it is dug or otherwise disturbed. (Beta)
+ * **bravo_snow**: Make snow fall as if affected by gravity.
+ * **give**: Spawn pickups for blocks and items destroyed by digging. (Beta)
+ * **lava**: Enable physics for lava. (Beta)
+ * **redstone**: Enable physics for redstone. (Beta)
+ * **replace**: Enable blocks to be permanently dug out of the terrain. (Beta)
+ * **torch**: Destroy torches that are not attached to walls or floors. (Beta)
+ * **tracks**: Align minecart tracks. (Beta)
+ * **water**: Enable physics for water. (Beta)
 
 Seasons
 ^^^^^^^
 
- * **winter**
- * **spring**
+ * **winter**: Freeze ice and cover everything in snow.
+ * **spring**: Thaw water and melt snow.
 
 Plugin Data Files
 =================
