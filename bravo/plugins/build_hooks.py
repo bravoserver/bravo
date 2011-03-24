@@ -192,56 +192,7 @@ class BuildSnow(object):
     before = tuple()
     after = ("build",)
 
-class Sponge(object):
-    """
-    Makes sponges soak up water when placed.
-
-    This plugin provides Classic functionality.
-    """
-
-    implements(IBuildHook)
-
-    def build_hook(self, factory, player, builddata):
-        """
-        Remove water around a placed sponge.
-
-        Remember that we are post-build here, so coordinates have already been
-        adjusted.
-        """
-
-        if builddata.block.slot != blocks["sponge"].slot:
-            return True, builddata
-
-        fluids = set([blocks["spring"].slot, blocks["water"].slot,
-            blocks["ice"].slot])
-
-        # Minimum offsets.
-        minx = builddata.x - 2
-        miny = max(builddata.y - 2, 0)
-        minz = builddata.z - 2
-
-        # Maximum offsets. Remember to +1 for range().
-        maxx = builddata.x + 3
-        maxy = min(builddata.y + 3, 128)
-        maxz = builddata.z + 3
-
-        for coords in product(xrange(minx, maxx), xrange(miny, maxy),
-            xrange(minz, maxz)):
-            if coords == (builddata.x, builddata.y, builddata.z):
-                continue
-            if factory.world.get_block(coords) in fluids:
-                factory.world.set_block(coords, blocks["air"].slot)
-                factory.world.set_metadata(coords, 0x0)
-
-        return True, builddata
-
-    name = "sponge"
-
-    before = ("build",)
-    after = tuple()
-
 tile = Tile()
 build = Build()
 build_snow = BuildSnow()
 ladder = Ladder()
-sponge = Sponge()
