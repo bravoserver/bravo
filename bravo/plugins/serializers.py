@@ -2,6 +2,7 @@ from __future__ import division
 
 from gzip import GzipFile
 from itertools import chain
+import os
 from StringIO import StringIO
 from struct import pack, unpack
 from urlparse import urlparse
@@ -94,8 +95,11 @@ class Alpha(object):
 
         self.folder = FilePath(parsed.path)
         if not self.folder.exists():
-            self.folder.makedirs()
             log.msg("Creating new world in %s" % self.folder)
+            try:
+                self.folder.makedirs()
+            except os.error:
+                raise Exception("Could not create world in %s" % self.folder)
 
         self._entity_loaders = {
             "Item": self._load_item_from_tag,
