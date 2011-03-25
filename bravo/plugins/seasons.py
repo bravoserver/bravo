@@ -1,7 +1,8 @@
+from itertools import product
+
 from zope.interface import implements
 
 from bravo.blocks import blocks
-from bravo.compat import product
 from bravo.ibravo import ISeason
 
 snow_resistant = set([

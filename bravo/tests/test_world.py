@@ -3,7 +3,8 @@ import shutil
 import tempfile
 import unittest
 
-import bravo.compat
+from itertools import product
+
 import bravo.config
 import bravo.world
 
@@ -39,8 +40,7 @@ class TestWorldChunks(unittest.TestCase):
             dtype=numpy.uint8)
         chunk.blocks.shape = (16, 16, 128)
 
-        for x, y, z in bravo.compat.product(xrange(16), xrange(128),
-            xrange(16)):
+        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
             # This works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
             self.assertEqual(chunk.get_block((x, y, z)),
@@ -54,8 +54,7 @@ class TestWorldChunks(unittest.TestCase):
             dtype=numpy.uint8)
         chunk.metadata.shape = (16, 16, 128)
 
-        for x, y, z in bravo.compat.product(xrange(16), xrange(128),
-            xrange(16)):
+        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
             # this works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
             self.assertEqual(chunk.get_metadata((x, y, z)),
@@ -76,8 +75,7 @@ class TestWorldChunks(unittest.TestCase):
         self.w.dirty_chunk_cache.clear()
         chunk = self.w.load_chunk(0, 0)
 
-        for x, y, z in bravo.compat.product(xrange(16), xrange(128),
-            xrange(16)):
+        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
             # This works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
             self.assertEqual(chunk.get_block((x, y, z)),
@@ -98,8 +96,7 @@ class TestWorldChunks(unittest.TestCase):
         self.w.dirty_chunk_cache.clear()
         chunk = self.w.load_chunk(-1, -1)
 
-        for x, y, z in bravo.compat.product(xrange(16), xrange(128),
-            xrange(16)):
+        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
             self.assertEqual(chunk.get_block((x, y, z)),
                 self.w.get_block((x - 16, y, z - 16)))
 
@@ -118,8 +115,7 @@ class TestWorldChunks(unittest.TestCase):
         self.w.dirty_chunk_cache.clear()
         chunk = self.w.load_chunk(0, 0)
 
-        for x, y, z in bravo.compat.product(xrange(16), xrange(128),
-            xrange(16)):
+        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
             # this works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
             self.assertEqual(chunk.get_metadata((x, y, z)),

@@ -2,11 +2,11 @@
 
 from __future__ import division
 
+from itertools import product
 import os.path
 import sys
 import time
 
-from bravo.compat import product
 from bravo.ibravo import ITerrainGenerator
 from bravo.plugin import retrieve_plugins
 from bravo.world import World

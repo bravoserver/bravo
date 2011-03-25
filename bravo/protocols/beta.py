@@ -1,3 +1,5 @@
+from collections import namedtuple
+from itertools import product
 from time import time
 from urlparse import urlunparse
 from math import pi, sin, cos
@@ -12,7 +14,6 @@ from twisted.python import log
 from twisted.web.client import getPage
 
 from bravo.blocks import blocks, items
-from bravo.compat import namedtuple, product
 from bravo.config import configuration
 from bravo.entity import Sign
 from bravo.factories.infini import InfiniClientFactory

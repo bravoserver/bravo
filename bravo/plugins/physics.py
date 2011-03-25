@@ -1,11 +1,10 @@
 from collections import defaultdict
-from itertools import chain
+from itertools import chain, product
 
 from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
-from bravo.compat import product
 from bravo.ibravo import IBuildHook, IDigHook
 from bravo.spatial import Block2DSpatialDict, Block3DSpatialDict
 

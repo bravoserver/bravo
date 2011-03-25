@@ -5,7 +5,6 @@ from numpy import empty, zeros
 from numpy.testing import assert_array_equal
 
 import bravo.chunk
-import bravo.compat
 
 class TestChunkBlocks(unittest.TestCase):
 

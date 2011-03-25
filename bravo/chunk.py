@@ -1,8 +1,9 @@
+from itertools import product
+
 from numpy import int8, uint8, uint32
 from numpy import cast, empty, where, zeros
 
 from bravo.blocks import blocks, glowing_blocks
-from bravo.compat import product
 from bravo.packets import make_packet
 from bravo.utilities import pack_nibbles
 

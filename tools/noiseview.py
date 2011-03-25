@@ -2,11 +2,11 @@
 
 from __future__ import division
 
+from itertools import product
 import optparse
 
 import Image
 
-from bravo.compat import product
 from bravo.simplex import reseed, simplex2, octaves2
 from bravo.simplex import offset2
 

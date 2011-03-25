@@ -1,10 +1,8 @@
 from __future__ import division
 
 import math
-from itertools import izip
+from itertools import chain, izip, permutations
 from random import Random
-
-from bravo.compat import chain, permutations
 
 SIZE = 2**10
 

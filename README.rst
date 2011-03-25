@@ -84,7 +84,7 @@ Planned Features
 Installing
 ==========
 
-Bravo currently requires Python 2.5 or any newer Python 2.x. It is known to
+Bravo currently requires Python 2.6 or any newer Python 2.x. It is known to
 work on CPython and PyPy. (PyPy support is currently on hiatus and will return
 when numpy support returns to PyPy.)
 

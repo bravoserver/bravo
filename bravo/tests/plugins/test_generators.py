@@ -1,5 +1,7 @@
 import unittest
 
+from itertools import product
+
 import bravo.blocks
 import bravo.chunk
 import bravo.ibravo
@@ -22,8 +24,7 @@ class TestGenerators(unittest.TestCase):
         plugin = self.p["boring"]
 
         plugin.populate(self.chunk, 0)
-        for x, y, z in bravo.compat.product(xrange(16), xrange(128),
-            xrange(16)):
+        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
             if y < 64:
                 self.assertEqual(self.chunk.get_block((x, y, z)),
                     bravo.blocks.blocks["stone"].slot)

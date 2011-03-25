@@ -1,11 +1,13 @@
 from __future__ import division
+
+from itertools import product
 from random import randint
+
 from numpy import array, where
 
 from zope.interface import implements
 
 from bravo.blocks import blocks
-from bravo.compat import product
 from bravo.ibravo import ITerrainGenerator
 from bravo.simplex import octaves2, octaves3, reseed
 

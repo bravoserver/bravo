@@ -1,4 +1,5 @@
 from functools import wraps
+from itertools import product
 import random
 import sys
 import weakref
@@ -12,7 +13,6 @@ from twisted.python import log
 from zope.interface.verify import verifyObject
 
 from bravo.chunk import Chunk
-from bravo.compat import product
 from bravo.config import configuration
 from bravo.entity import Player
 from bravo.ibravo import ISerializer, ISerializerFactory
