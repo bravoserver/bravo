@@ -1,7 +1,7 @@
 from itertools import product
 
 from numpy import int8, uint8, uint32
-from numpy import cast, empty, where, zeros
+from numpy import cast, where, zeros
 
 from bravo.blocks import blocks, glowing_blocks
 from bravo.packets import make_packet
