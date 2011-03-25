@@ -4,7 +4,7 @@ from itertools import chain, product
 from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
-from bravo.blocks import blocks, items
+from bravo.blocks import blocks
 from bravo.ibravo import IBuildHook, IDigHook
 from bravo.spatial import Block2DSpatialDict, Block3DSpatialDict
 
@@ -135,7 +135,6 @@ class Fluid(object):
                         w.destroy((x, y, z))
                         continue
 
-                    metadata = w.get_metadata((x, y, z))
                     newmd = self.levels + 1
 
                     for coords in neighbors:
@@ -372,12 +371,9 @@ class Redstone(object):
                 level -= 1
 
     def process(self):
-        new = set()
-
         for factory, x, y, z in self.tracked:
             world = factory.world
             block = factory.world.get_block((x, y, z))
-            metadata = factory.world.get_metadata((x, y, z))
             neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
                 (x, y, z + 1))
 
