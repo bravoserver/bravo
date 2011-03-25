@@ -635,6 +635,6 @@ def make_infinipacket(packet, *args, **kwargs):
 
     if DUMP_ALL_PACKETS:
         print "Making packet %s (%d)" % (packet, header)
-        print container
-    payload = packets[header].build(container)
+        print payload
+    payload = packets[header].build(payload)
     return chr(header) + payload
