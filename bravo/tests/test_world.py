@@ -22,6 +22,8 @@ class TestWorldChunks(unittest.TestCase):
         self.w.pipeline = []
 
     def tearDown(self):
+        if self.w.chunk_management_loop.running:
+            self.w.chunk_management_loop.stop()
         del self.w
         shutil.rmtree(self.d)
         bravo.config.configuration.remove_section("world unittest")
