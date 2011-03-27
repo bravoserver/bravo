@@ -38,7 +38,8 @@ class Replace(object):
     implements(IDigHook)
 
     def dig_hook(self, factory, chunk, x, y, z, block):
-        chunk.destroy((x, y, z))
+        if block.breakable:
+            chunk.destroy((x, y, z))
 
     name = "replace"
 
