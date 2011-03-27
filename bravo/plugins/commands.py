@@ -160,7 +160,9 @@ class Give(object):
     implements(IChatCommand, IConsoleCommand)
 
     def chat_command(self, factory, username, parameters):
-        if len(parameters) == 1:
+        if len(parameters) == 0:
+            return ("Usage: /{0} {1}".format(self.name, self.usage),)
+        elif len(parameters) == 1:
             block = parameters[0]
             count = 1
         elif len(parameters) == 2:
