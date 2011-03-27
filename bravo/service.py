@@ -49,7 +49,7 @@ class BravoService(MultiService):
                 except ImportError:
                     log.msg("Couldn't import IRC stuff!")
                 else:
-                    factory = BravoIRC(worlds, section[4:])
+                    factory = BravoIRC(self.namedServices, section[4:])
                     client = TCPClient(factory.host, factory.port, factory)
                     client.setName(factory.name)
                     self.addService()
@@ -65,8 +65,6 @@ class BravoService(MultiService):
                 self.addService(server)
 
 service = BravoService()
-
-worlds = []
 
 application = Application("Bravo")
 service.setServiceParent(application)

@@ -19,7 +19,7 @@ class BravoIRCClient(IRCClient):
         :param str config: configuration key to use for finding settings
         """
 
-        self.factories = dict((factory.name, factory) for factory in worlds)
+        self.factories = worlds
         for factory in self.factories.itervalues():
             factory.chat_consumers.add(self)
 
