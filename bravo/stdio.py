@@ -21,8 +21,8 @@ try:
     import termios
     import tty
     fancy_console = os.isatty(sys.__stdin__.fileno())
-    fancy_console = fancy_console and configuration.getboolean("bravo",
-        "fancy_console")
+    fancy_console = fancy_console and configuration.getbooleandefault("bravo",
+        "fancy_console", True)
 except ImportError:
     fancy_console = False
 
