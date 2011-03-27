@@ -1,13 +1,13 @@
 from twisted.application.internet import TCPClient, TCPServer
 from twisted.application.service import Application, MultiService
 from twisted.internet.protocol import Factory
+from twisted.python import log
 
 from bravo.amp import ConsoleRPCFactory
 from bravo.config import configuration, read_configuration
 from bravo.factories.beta import BravoFactory
 from bravo.factories.infini import InfiniNodeFactory
 from bravo.protocols.beta import BetaProxyProtocol
-from bravo.irc import BravoIRC
 
 class BetaProxyFactory(Factory):
     protocol = BetaProxyProtocol
@@ -43,9 +43,13 @@ class BravoService(MultiService):
                     interface=factory.interface)
                 self.addService(server)
             elif section.startswith("irc "):
-                factory = BravoIRC(worlds, section[4:])
-                self.addService(TCPClient(factory.host, factory.port,
-                    factory))
+                try:
+                    from bravo.irc import BravoIRC
+                    factory = BravoIRC(worlds, section[4:])
+                    self.addService(TCPClient(factory.host, factory.port,
+                        factory))
+                except ImportError:
+                    log.msg("Couldn't import IRC stuff!")
             elif section.startswith("infiniproxy "):
                 factory = BetaProxyFactory(section[12:])
                 self.addService(TCPServer(factory.port, factory))
