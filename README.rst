@@ -186,6 +186,25 @@ Alternatively, a Twisted plugin is provided as well:
 
  $ twistd -n bravo
 
+Contributing
+============
+
+Contributing is easy! Just send me your code. Diffs are appreciated, in git
+format; Github pull requests are excellent.
+
+Things to consider:
+
+ * I will be rather merciless about your code during review, especially if it
+   adds lots of new features.
+ * Some things are better off outside of the main tree, especially if they are
+   moving very fast compared to Bravo itself.
+ * Unit tests are necessary for new code, especially feature-laden code. If
+   your code is absolutely not testable, it's not really going to be very fun
+   to maintain. See the above point.
+ * Bravo is MIT/X11. Your contributions will be under that same license. If
+   this isn't acceptable, then your code cannot be merged. This is really the
+   only hard condition.
+
 FAQ
 ===
 
