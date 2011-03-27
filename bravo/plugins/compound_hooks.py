@@ -106,9 +106,10 @@ class Torch(object):
 
     def dig_hook(self, factory, chunk, x, y, z, block):
         """
-        Whenever a block is dug out, destroy descending tracks next to the block
-        or tracks on top of the block.
+        Whenever a block is dug out, destroy any torches attached to the
+        block, and drop pickups for them.
         """
+
         world = factory.world
         # Block coordinates
         x = chunk.x * 16 + x
@@ -136,7 +137,7 @@ class Torch(object):
 
             # Drop torch on ground - needs pixel coordinates
             pixcoords = ((x + dx) * 32 + 16, (y + 1) * 32, (z + dz) * 32 + 16)
-            factory.give(pixcoords, (dblock, 0), 1)
+            factory.give(pixcoords, blocks[dblock].key, 1)
 
     name = "torch"
 
