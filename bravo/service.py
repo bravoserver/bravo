@@ -41,22 +41,28 @@ class BravoService(MultiService):
                 factory = BravoFactory(section[6:])
                 server = TCPServer(factory.port, factory,
                     interface=factory.interface)
+                server.setName(factory.name)
                 self.addService(server)
             elif section.startswith("irc "):
                 try:
                     from bravo.irc import BravoIRC
-                    factory = BravoIRC(worlds, section[4:])
-                    self.addService(TCPClient(factory.host, factory.port,
-                        factory))
                 except ImportError:
                     log.msg("Couldn't import IRC stuff!")
+                else:
+                    factory = BravoIRC(worlds, section[4:])
+                    client = TCPClient(factory.host, factory.port, factory)
+                    client.setName(factory.name)
+                    self.addService()
             elif section.startswith("infiniproxy "):
                 factory = BetaProxyFactory(section[12:])
-                self.addService(TCPServer(factory.port, factory))
+                server = TCPServer(factory.port, factory)
+                server.setName(factory.name)
+                self.addService(server)
             elif section.startswith("infininode "):
                 factory = InfiniNodeFactory(section[11:])
-                self.addService(TCPServer(factory.port, factory))
-
+                server = TCPServer(factory.port, factory)
+                server.setName(factory.name)
+                self.addService(server)
 
 service = BravoService()
 

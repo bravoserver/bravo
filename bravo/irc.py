@@ -24,6 +24,7 @@ class BravoIRCClient(IRCClient):
             factory.chat_consumers.add(self)
 
         self.config = "irc %s" % config
+        self.name = self.config
 
         self.host = configuration.get(self.config, "server")
         self.nickname = configuration.get(self.config, "nick")
