@@ -96,6 +96,9 @@ external libraries from PyPI:
  * numpy
  * Twisted, version 10.1 or later
 
+For IRC support, Twisted Words is required; it is usually called
+python-twisted-words or twisted-words in package managers.
+
 **Important: Bravo's installation process is currently broken. Until this
 notice is removed, please don't install, just run directly from the git
 checkout. It's easier and runs just as well.**
