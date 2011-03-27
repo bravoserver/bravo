@@ -10,6 +10,8 @@ class Block(object):
     """
 
     __slots__ = (
+        "breakable",
+        "dim",
         "drop",
         "key",
         "name",
@@ -17,11 +19,10 @@ class Block(object):
         "ratio",
         "replace",
         "slot",
-        "dim",
     )
 
     def __init__(self, slot, name, drop=None, replace=0, ratio=1,
-            quantity=1, dim=16):
+            quantity=1, dim=16, breakable=True):
         """
         A block in a chunk.
 
@@ -44,6 +45,10 @@ class Block(object):
             dim : int
                 How much light dims when passing through this kind of block.
                 Defaults to 16 = opaque block.
+            breakable : bool
+                Whether this block is diggable, breakable, bombable,
+                explodeable, etc. Only a few blocks actually genuinely cannot
+                be broken, so the default is True.
         """
 
         self.slot = slot
@@ -61,6 +66,7 @@ class Block(object):
         self.ratio = ratio
         self.quantity = quantity
         self.dim = dim
+        self.breakable = breakable
 
 class Item(object):
     """
@@ -329,6 +335,14 @@ quantities[73] = 5 # Redstone Ore -> Redstone Dust
 quantities[74] = 5 # Redstone Ore -> Redstone Dust
 quantities[82] = 4 # Clay         -> Clay Balls
 
+unbreakables = set()
+
+unbreakables.add(0)  # Bedrock
+unbreakables.add(7)  # Water
+unbreakables.add(8)  # Spring
+unbreakables.add(9)  # Lava
+unbreakables.add(10) # Lava spring
+
 blocks = {}
 """
 A dictionary of ``Block`` objects.
@@ -353,6 +367,8 @@ for i, name in enumerate(block_names):
         kwargs["ratio"] = ratios[i]
     if i in quantities:
         kwargs["quantity"] = quantities[i]
+    if i in unbreakables:
+        kwargs["breakable"] = False
     b = Block(i, name, **kwargs)
     blocks[i] = b
     blocks[name] = b

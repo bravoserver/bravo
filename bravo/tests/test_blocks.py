@@ -10,3 +10,6 @@ class TestBlockQuirks(unittest.TestCase):
 
     def test_sapling_drop_rate(self):
         self.assertAlmostEqual(bravo.blocks.blocks["leaves"].ratio, 1/9.0)
+
+    def test_unbreakable_bedrock(self):
+        self.assertFalse(bravo.blocks.blocks["bedrock"].breakable)
