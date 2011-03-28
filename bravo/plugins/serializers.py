@@ -430,12 +430,16 @@ class Alpha(object):
         if not tag:
             return
 
-        level.spawn = (tag["Data"]["SpawnX"].value,
-            tag["Data"]["SpawnY"].value,
-            tag["Data"]["SpawnZ"].value)
+        try:
+            level.spawn = (tag["Data"]["SpawnX"].value,
+                tag["Data"]["SpawnY"].value,
+                tag["Data"]["SpawnZ"].value)
 
-        level.seed = tag["Data"]["RandomSeed"].value
-        level.time = tag["Data"]["Time"].value
+            level.seed = tag["Data"]["RandomSeed"].value
+            level.time = tag["Data"]["Time"].value
+        except KeyError:
+            # Just raise. It's probably gonna be caught and ignored anyway.
+            raise SerializerReadException("Incomplete level data")
 
     def save_level(self, level):
         tag = self._save_level_to_tag(level)
