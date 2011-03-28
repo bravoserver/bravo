@@ -85,6 +85,33 @@ def expand_names(plugins, names):
 
     return names
 
+def verify_plugin(interface, plugin):
+    """
+    Lightweight wrapper around ``verifyObject()``.
+
+    The primary purpose of this wrapper is to do logging, but it also permits
+    code to be slightly cleaner, easier to test, and callable from other
+    modules.
+    """
+
+    try:
+        verifyObject(interface, plugin)
+        log.msg(" ( ^^) Plugin: %s" % plugin.name)
+    except BrokenImplementation, bi:
+        if hasattr(plugin, "name"):
+            log.msg(" ( ~~) Plugin %s is missing attribute %r!" %
+                (plugin.name, bi.name))
+        else:
+            log.msg(" ( >&) Plugin %s is unnamed and useless!" % plugin)
+    except BrokenMethodImplementation, bmi:
+        log.msg(" ( Oo) Plugin %s has a broken %s()!" % (plugin.name,
+            bmi.method))
+        log.err()
+    else:
+        return plugin
+
+    raise PluginException("Plugin failed verification")
+
 def retrieve_plugins(interface, cached=True, cache={}):
     """
     Look up all plugins for a certain interface.
@@ -106,19 +133,10 @@ def retrieve_plugins(interface, cached=True, cache={}):
     d = {}
     for p in getPlugins(interface, bravo.plugins):
         try:
-            verifyObject(interface, p)
-            log.msg(" ( ^^) Plugin: %s" % p.name)
+            verify_plugin(interface, p)
             d[p.name] = p
-        except BrokenImplementation, bi:
-            if hasattr(p, "name"):
-                log.msg(" ( ~~) Plugin %s is missing attribute %r!" %
-                    (p.name, bi.name))
-            else:
-                log.msg(" ( >&) Plugin %s is unnamed and useless!" % p)
-        except BrokenMethodImplementation, bmi:
-            log.msg(" ( Oo) Plugin %s has a broken %s()!" % (p.name,
-                bmi.method))
-            log.err()
+        except PluginException, pe:
+            pass
 
     if issubclass(interface, ISortedPlugin):
         # Sortable plugins need their edges mirrored.
