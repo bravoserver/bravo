@@ -555,7 +555,7 @@ class BravoProtocol(BetaServerProtocol):
 
     def handshake(self, container):
         if not self.factory.handshake_hook(self, container):
-            self.loseConnection()
+            self.transport.loseConnection()
 
     def chat(self, container):
         if container.message.startswith("/"):
