@@ -15,6 +15,7 @@ from zope.interface.verify import verifyObject
 from bravo.chunk import Chunk
 from bravo.config import configuration
 from bravo.entity import Player
+from bravo.errors import SerializerReadException
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import retrieve_named_plugins
 from bravo.utilities import fork_deferred, split_coords
@@ -96,7 +97,14 @@ class World(object):
         self.seed = random.randint(0, sys.maxint)
         self.time = 0
 
-        self.serializer.load_level(self)
+        # First, try loading the level, to see if there's any data out there
+        # which we can use. If not, don't worry about it.
+        try:
+            self.serializer.load_level(self)
+        except SerializerReadException, sre:
+            log.err(sre)
+
+        # And now save our level.
         self.serializer.save_level(self)
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)

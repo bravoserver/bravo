@@ -14,6 +14,7 @@ from twisted.python.filepath import FilePath
 from zope.interface import implements, classProvides
 
 from bravo.entity import entities, tiles
+from bravo.errors import SerializerReadException, SerializerWriteException
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.location import Location
 from bravo.nbt import NBTFile
@@ -405,10 +406,16 @@ class Alpha(object):
         if not tag:
             return
 
-        self._load_chunk_from_tag(chunk, tag)
+        try:
+            self._load_chunk_from_tag(chunk, tag)
+        except Exception, e:
+            raise SerializerReadException(e)
 
     def save_chunk(self, chunk):
-        tag = self._save_chunk_to_tag(chunk)
+        try:
+            tag = self._save_chunk_to_tag(chunk)
+        except Exception, e:
+            raise SerializerWriteException(e)
 
         first, second, filename = names_for_chunk(chunk.x, chunk.z)
         fp = self.folder.child(first).child(second)
