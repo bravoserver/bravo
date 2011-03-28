@@ -1,4 +1,4 @@
-import unittest
+from twisted.trial import unittest
 
 import zope.interface
 
@@ -145,6 +145,25 @@ class TestVerifyPlugin(unittest.TestCase):
                           bravo.plugin.verify_plugin,
                           ITestInterface,
                           NoMeth())
+
+    def test_broken_method(self):
+        class BrokenMeth(object):
+            zope.interface.implements(ITestInterface)
+
+            name = "test"
+            attr = "unit"
+
+            def meth(self, arg, extra):
+                pass
+
+        self.assertRaises(bravo.plugin.PluginException,
+                          bravo.plugin.verify_plugin,
+                          ITestInterface,
+                          BrokenMeth())
+
+        # BMI (and only BMI!) writes an error to the log, so let's flush it
+        # out and pass the test.
+        self.flushLoggedErrors()
 
     def test_success(self):
         class Valid(object):

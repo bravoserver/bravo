@@ -10,14 +10,14 @@ from twisted.internet import reactor
 from twisted.internet.defer import succeed
 from twisted.internet.task import coiterate, deferLater, LoopingCall
 from twisted.python import log
-from zope.interface.verify import verifyObject
 
 from bravo.chunk import Chunk
 from bravo.config import configuration
 from bravo.entity import Player
 from bravo.errors import SerializerReadException
 from bravo.ibravo import ISerializer, ISerializerFactory
-from bravo.plugin import retrieve_named_plugins
+from bravo.plugin import (retrieve_named_plugins, verify_plugin,
+    PluginException)
 from bravo.utilities import fork_deferred, split_coords
 
 async = configuration.getbooleandefault("bravo", "ampoule", False)
@@ -84,9 +84,12 @@ class World(object):
         world_url = configuration.get(self.config_name, "url")
         world_sf_name = configuration.get(self.config_name, "serializer")
 
-        sf = retrieve_named_plugins(ISerializerFactory, [world_sf_name])[0]
-        self.serializer = sf(world_url)
-        verifyObject(ISerializer, self.serializer)
+        try:
+            sf = retrieve_named_plugins(ISerializerFactory, [world_sf_name])[0]
+            self.serializer = verify_plugin(ISerializer, sf(world_url))
+        except PluginException, pe:
+            log.msg(pe)
+            raise RuntimeError("Fatal error: Couldn't set up serializer!")
 
         self.chunk_cache = weakref.WeakValueDictionary()
         self.dirty_chunk_cache = dict()
