@@ -47,10 +47,10 @@ class TestGive(unittest.TestCase):
     def setUp(self):
         self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand)
 
-        if "getpos" not in self.p:
+        if "give" not in self.p:
             raise unittest.SkipTest("Plugin not present")
 
-        self.hook = self.p["getpos"]
+        self.hook = self.p["give"]
 
     def test_trivial(self):
         pass
