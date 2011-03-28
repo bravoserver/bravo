@@ -231,6 +231,10 @@ class World(object):
         # Thus, it should start out undamaged.
         chunk.clear_damage()
 
+        # Register the chunk's entities with our parent factory.
+        for entity in chunk.entities:
+            self.factory.register_entity(entity)
+
         # Return the chunk, in case we are in a Deferred chain.
         return chunk
 
