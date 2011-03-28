@@ -192,7 +192,7 @@ class GrassGenerator(object):
             if (chunk.get_block((x, y, z)) == blocks["dirt"].slot and
                 (y == 127 or
                     chunk.get_block((x, y + 1, z)) == blocks["air"].slot)):
-                        chunk.blocks[x, z, y] = blocks["grass"].slot
+                chunk.blocks[x, z, y] = blocks["grass"].slot
 
     name = "grass"
 
@@ -341,9 +341,10 @@ class CliffGenerator(object):
             height = octaves2(magx, magz, 6)
             height *= 15
             height = int(height + 70)
-            if -6 < chunk.heightmap[x,z] - height < 3 and chunk.heightmap[x,z] > 63 and height > 63:
+            if (-6 < chunk.heightmap[x, z] - height < 3 and
+                chunk.heightmap[x, z] > 63 and height > 63):
                 column = chunk.get_column(x, z)
-                column[:].fill(blocks["air"].slot)
+                column.fill(blocks["air"].slot)
                 column[:height-3].fill(blocks["stone"].slot)
     name = "cliffs"
 
@@ -373,10 +374,11 @@ class FloatGenerator(object):
             height *= 15
             height = int(height + 70)
             column = chunk.get_column(x, z)
-            if abs(chunk.heightmap[x,z] - height) < 10:
-                column[:].fill(blocks["air"].slot)
+            if abs(chunk.heightmap[x, z] - height) < 10:
+                column.fill(blocks["air"].slot)
             else:
-                column[:height-30+randint(-15,10)].fill(blocks["air"].slot)
+                height = height - 30 + randint(-15, 10)
+                column[:height].fill(blocks["air"].slot)
 
     name = "float"
 
