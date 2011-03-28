@@ -135,7 +135,7 @@ def retrieve_plugins(interface, cached=True, cache={}):
         try:
             verify_plugin(interface, p)
             d[p.name] = p
-        except PluginException, pe:
+        except PluginException:
             pass
 
     if issubclass(interface, ISortedPlugin):
