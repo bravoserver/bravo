@@ -102,7 +102,8 @@ class World(object):
         try:
             self.serializer.load_level(self)
         except SerializerReadException, sre:
-            log.err(sre)
+            log.msg("Had issues loading level data...")
+            log.msg(sre)
 
         # And now save our level.
         self.serializer.save_level(self)
