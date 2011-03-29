@@ -9,7 +9,7 @@ from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import ITerrainGenerator
-from bravo.simplex import octaves2, octaves3, reseed
+from bravo.simplex import simplex2, octaves2, octaves3, reseed
 
 class BoringGenerator(object):
     """
@@ -318,7 +318,7 @@ class SafetyGenerator(object):
 
     name = "safety"
 
-    before = ("boring", "simplex", "complex", "cliffs", "float")
+    before = ("boring", "simplex", "complex", "cliffs", "float", "caves")
     after = tuple()
 
 class CliffGenerator(object):
@@ -385,6 +385,46 @@ class FloatGenerator(object):
     before = tuple()
     after = tuple()
 
+class CaveGenerator(object):
+    """
+    Carve caves and seams out of terrain.
+
+    This generator relies on implementation details of ``Chunk``.
+    """
+
+    implements(ITerrainGenerator)
+
+    def populate(self, chunk, seed):
+        """
+        Make smooth waves of stone.
+        """
+
+        reseed(seed)
+
+        # And into one end he plugged the whole of reality as extrapolated
+        # from a piece of fairy cake, and into the other end he plugged his
+        # wife: so that when he turned it on she saw in one instant the whole
+        # infinity of creation and herself in relation to it.
+
+        factor = 1 / 16
+
+        for x, z in product(xrange(16), repeat=2):
+            magx = (chunk.x * 16 + x) * factor
+            magz = (chunk.z * 16 + z) * factor
+
+            should_cave = octaves2(magx, magz, 2)
+            if should_cave > 0.2:
+                depth = (simplex2(magx, magz) + 1) * 40
+                height = depth // 10
+
+                column = chunk.get_column(x, z)
+                column[depth:depth + height].fill([blocks["air"].slot])
+
+    name = "caves"
+
+    before = ("grass", "erosion", "simplex", "complex", "boring")
+    after = tuple()
+
 float = FloatGenerator()
 cliffs = CliffGenerator()
 boring = BoringGenerator()
@@ -396,3 +436,4 @@ grass = GrassGenerator()
 beaches = BeachGenerator()
 ore = OreGenerator()
 safety = SafetyGenerator()
+caves = CaveGenerator()
