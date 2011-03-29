@@ -195,8 +195,15 @@ class Chunk(object):
         visited = set()
         glow = 14
 
+        max_height = 0
+        for x, z in product(xrange(16), xrange(16)):
+            max_height = max(max_height, self.heightmap[x, z])
+
         while glow:
             for coords in spread:
+                if coords[2] > max_height:
+                    continue
+
                 for dx, dz, dy in (
                     (1, 0, 0),
                     (-1, 0, 0),
