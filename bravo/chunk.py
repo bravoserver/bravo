@@ -1,7 +1,7 @@
 from itertools import product
 
 from numpy import int8, uint8, uint32
-from numpy import cast, logical_not, transpose, where, zeros
+from numpy import cast, logical_not, transpose, where, zeros, amax
 
 from bravo.blocks import blocks, glowing_blocks
 from bravo.packets import make_packet
@@ -194,10 +194,7 @@ class Chunk(object):
             for coords in transpose(lightmap.nonzero()))
         visited = set()
         glow = 14
-
-        max_height = 0
-        for x, z in product(xrange(16), xrange(16)):
-            max_height = max(max_height, self.heightmap[x, z])
+        max_height = amax(self.heightmap)
 
         while glow:
             for coords in spread:
