@@ -20,14 +20,6 @@ from bravo.plugin import (retrieve_named_plugins, verify_plugin,
     PluginException)
 from bravo.utilities import fork_deferred, split_coords
 
-
-ampoule_available = True
-try:
-    from ampoule import deferToAMPProcess
-    from bravo.remote import MakeChunk
-except ImportError:
-    ampoule_available = False
-
 def coords_to_chunk(f):
     """
     Automatically look up the chunk for the coordinates, and convert world
@@ -61,6 +53,11 @@ class World(object):
     saving = True
     """
     Whether objects belonging to this world may be written out to disk.
+    """
+
+    async = False
+    """
+    Whether this world is using multiprocessing methods to generate geometry.
     """
 
     dimension = 0
@@ -100,10 +97,14 @@ class World(object):
         self.time = 0
 
         # Check if we should offload chunk requests to ampoule.
-        if ampoule_available:
-            self.async = configuration.getbooleandefault("bravo", "ampoule", False)
-        else:
-            self.async = False
+        if configuration.getbooleandefault("bravo", "ampoule", False):
+            try:
+                import ampoule
+            except ImportError:
+                pass
+            else:
+                self.async = True
+
 
         # First, try loading the level, to see if there's any data out there
         # which we can use. If not, don't worry about it.
@@ -253,6 +254,9 @@ class World(object):
         if not self.async:
             return deferLater(reactor, 0.000001, self.load_chunk,
                 x, z)
+
+        from ampoule import deferToAMPProcess
+        from bravo.remote import MakeChunk
 
         if (x, z) in self.chunk_cache:
             return succeed(self.chunk_cache[x, z])
