@@ -366,15 +366,18 @@ class Chunk(object):
             if not self.populated:
                 return
 
-            # Regenerate heightmap at this coordinate. Honestly not sure
-            # whether or not this is cheaper than the set of conditional
-            # statements required to update it in relative terms instead of
-            # absolute terms. Revisit this later, maybe?
-            # XXX definitely re-examine this later!
-            for y in range(127, -1, -1):
-                if self.blocks[x, z, y]:
-                    break
-            self.heightmap[x, z] = y
+            # Regenerate heightmap at this coordinate.
+            if not block:
+                # If we replace the highest block with air, we need to go
+                # through all blocks below it to find the new top block.
+                height = self.heightmap[x, z]
+                if y == height:
+                    for y in range(height, -1, -1):
+                        if self.blocks[x, z, y]:
+                            break
+                    self.heightmap[x, z] = y
+            else:
+                self.heightmap[x, z] = max(self.heightmap[x, z], y)
 
             # Add to lightmap at this coordinate.
             if block in glowing_blocks:

@@ -49,6 +49,29 @@ class TestChunkBlocks(unittest.TestCase):
         packet = chunk.get_damage_packet()
         self.assertEqual(packet, '\x35\x00\x00\x00\x02\x04\x00\x00\x00\x18\x01\x00')
 
+    def test_set_block_correct_heightmap(self):
+        """
+        Test heightmap update for a single column.
+        """
+
+        self.c.populated = True
+
+        self.assertEqual(self.c.heightmap[0, 0], 0)
+        self.c.set_block((0, 20, 0), 1)
+        self.assertEqual(self.c.heightmap[0, 0], 20)
+
+        self.c.set_block((0, 10, 0), 1)
+        self.assertEqual(self.c.heightmap[0, 0], 20)
+
+        self.c.set_block((0, 30, 0), 1)
+        self.assertEqual(self.c.heightmap[0, 0], 30)
+
+        self.c.destroy((0, 10, 0))
+        self.assertEqual(self.c.heightmap[0, 0], 30)
+
+        self.c.destroy((0, 30, 0))
+        self.assertEqual(self.c.heightmap[0, 0], 20)
+
 class TestNumpyQuirks(unittest.TestCase):
     """
     Tests for the bad interaction between several components of Bravo.
