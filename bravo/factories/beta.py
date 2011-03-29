@@ -277,6 +277,8 @@ class BravoFactory(Factory):
 
         The coordinates need to be in pixels, not blocks.
 
+        If the size of the stack is too big, multiple stacks will be dropped.
+
         :param tuple coords: coordinates, in pixels
         :param tuple block: key of block or item to drop
         :param int quantity: number of blocks to drop in the stack
@@ -284,14 +286,15 @@ class BravoFactory(Factory):
 
         x, y, z = coords
 
-        entity = self.create_entity(x // 32, y // 32, z // 32, "Item",
-            item=block, quantity=quantity)
+        while quantity > 0:
+            entity = self.create_entity(x // 32, y // 32, z // 32, "Item",
+                item=block, quantity=min(quantity, 64))
 
-        packet = entity.save_to_packet()
-        self.broadcast(packet)
+            packet = entity.save_to_packet()
+            packet += make_packet("create", eid=entity.eid)
+            self.broadcast(packet)
 
-        packet = make_packet("create", eid=entity.eid)
-        self.broadcast(packet)
+            quantity -= 64
 
     def stopFactory(self):
         """

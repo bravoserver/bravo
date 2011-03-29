@@ -63,3 +63,20 @@ class TestBravoFactory(unittest.TestCase):
 
     def test_give(self):
         self.f.give((0, 0, 0), (2, 0), 1)
+
+    def test_give_oversized(self):
+        """
+        Check that oversized inputs to ``give()`` merely cause lots of pickups
+        to be spawned.
+        """
+
+        # Our check consists of counting the number of times broadcast is
+        # called.
+        count = [0]
+        def broadcast(packet):
+            count[0] += 1
+        self.patch(self.f, "broadcast", broadcast)
+
+        # 65 blocks should be split into two stacks.
+        self.f.give((0, 0, 0), (2, 0), 65)
+        self.assertEqual(count[0], 2)
