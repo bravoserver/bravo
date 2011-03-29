@@ -7,7 +7,7 @@ import optparse
 
 import Image
 
-from bravo.simplex import reseed, simplex2, octaves2
+from bravo.simplex import set_seed, simplex2, octaves2
 from bravo.simplex import offset2
 
 WIDTH, HEIGHT = 800, 800
@@ -26,7 +26,7 @@ xoffset, yoffset = 0, 0
 if options.offset:
     xoffset, yoffset = (float(i) for i in options.offset.split(","))
 
-reseed(options.seed)
+set_seed(options.seed)
 
 x, y, w, h = (float(i) for i in arguments)
 

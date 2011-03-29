@@ -9,7 +9,7 @@ from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import ITerrainGenerator
-from bravo.simplex import simplex2, octaves2, octaves3, reseed
+from bravo.simplex import simplex2, octaves2, octaves3, set_seed
 
 class BoringGenerator(object):
     """
@@ -49,7 +49,7 @@ class SimplexGenerator(object):
         Make smooth waves of stone.
         """
 
-        reseed(seed)
+        set_seed(seed)
 
         # And into one end he plugged the whole of reality as extrapolated
         # from a piece of fairy cake, and into the other end he plugged his
@@ -94,7 +94,7 @@ class ComplexGenerator(object):
         Make smooth islands of stone.
         """
 
-        reseed(seed)
+        set_seed(seed)
 
         factor = 1 / 256
 
@@ -253,7 +253,7 @@ class OreGenerator(object):
     implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
-        reseed(seed)
+        set_seed(seed)
 
         xzfactor = 1 / 16
         yfactor = 1 / 32
@@ -399,7 +399,7 @@ class CaveGenerator(object):
         Make smooth waves of stone.
         """
 
-        reseed(seed)
+        set_seed(seed)
 
         # And into one end he plugged the whole of reality as extrapolated
         # from a piece of fairy cake, and into the other end he plugged his

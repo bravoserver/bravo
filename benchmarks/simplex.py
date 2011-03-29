@@ -2,9 +2,9 @@
 
 from time import time
 
-from bravo.simplex import reseed, simplex2, simplex3
+from bravo.simplex import set_seed, simplex2, simplex3
 
-reseed(time())
+set_seed(time())
 
 def bench2():
     times = []

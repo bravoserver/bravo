@@ -29,7 +29,6 @@ edges3 = list(
 )
 edges3.sort()
 
-
 def dot2(u, v):
     """
     Dot product of two 2-dimensional vectors.
@@ -47,9 +46,7 @@ def reseed(seed):
     Reseed the simplex gradient field.
     """
 
-    global p, current_seed
-
-    if current_seed == seed:
+    if seed in fields:
         return
 
     p = range(SIZE)
@@ -57,8 +54,21 @@ def reseed(seed):
     r.seed(seed)
     r.shuffle(p)
     p *= 2
+    fields[seed] = p
 
-p = []
+def set_seed(seed):
+    """
+    Set the current seed.
+    """
+
+    global current_seed
+
+    reseed(seed)
+
+    current_seed = seed
+
+fields = dict()
+
 current_seed = None
 
 f2 = 0.5 * (math.sqrt(3) - 1)
@@ -82,8 +92,10 @@ def simplex2(x, y):
     :raises Exception: the gradient field is not seeded
     """
 
-    if not p:
+    if current_seed is None:
         raise Exception("The gradient field is unseeded!")
+
+    p = fields[current_seed]
 
     # Set up our scalers and arrays.
     coords = [None] * 3
@@ -142,8 +154,10 @@ def simplex3(x, y, z):
                        function somehow
     """
 
-    if not p:
+    if current_seed is None:
         raise Exception("The gradient field is unseeded!")
+
+    p = fields[current_seed]
 
     f = 1 / 3
     g = 1 / 6

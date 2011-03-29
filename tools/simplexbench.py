@@ -3,14 +3,14 @@
 from functools import wraps
 from time import time
 
-from bravo.simplex import reseed, simplex2, simplex3, octaves2, octaves3
+from bravo.simplex import set_seed, simplex2, simplex3, octaves2, octaves3
 
 print "Be patient; this benchmark takes a minute or so to run each test."
 
 chunk2d = 16 * 16
 chunk3d = chunk2d * 128
 
-reseed(time())
+set_seed(time())
 
 def timed(f):
     @wraps(f)
