@@ -42,6 +42,8 @@ class Slave(AMPChild):
         for stage in generators:
             stage.populate(chunk, seed)
 
+        chunk.regenerate()
+
         return {
             "blocks": chunk.blocks.tostring(),
             "metadata": chunk.metadata.tostring(),
