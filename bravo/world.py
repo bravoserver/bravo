@@ -20,14 +20,13 @@ from bravo.plugin import (retrieve_named_plugins, verify_plugin,
     PluginException)
 from bravo.utilities import fork_deferred, split_coords
 
-async = configuration.getbooleandefault("bravo", "ampoule", False)
 
-if async:
-    try:
-        from ampoule import deferToAMPProcess
-        from bravo.remote import MakeChunk
-    except ImportError:
-        async = False
+ampoule_available = True
+try:
+    from ampoule import deferToAMPProcess
+    from bravo.remote import MakeChunk
+except ImportError:
+    ampoule_available = False
 
 def coords_to_chunk(f):
     """
@@ -100,6 +99,12 @@ class World(object):
         self.seed = random.randint(0, sys.maxint)
         self.time = 0
 
+        # Check if we should offload chunk requests to ampoule.
+        if ampoule_available:
+            self.async = configuration.getbooleandefault("bravo", "ampoule", False)
+        else:
+            self.async = False
+
         # First, try loading the level, to see if there's any data out there
         # which we can use. If not, don't worry about it.
         try:
@@ -116,7 +121,7 @@ class World(object):
 
         log.msg("World started on %s, using serializer %s" %
             (world_url, self.serializer.name))
-        log.msg("Using Ampoule: %s" % async)
+        log.msg("Using Ampoule: %s" % self.async)
 
     def enable_cache(self, size):
         """
@@ -245,7 +250,7 @@ class World(object):
         :returns: Deferred that will be called with the Chunk
         """
 
-        if not async:
+        if not self.async:
             return deferLater(reactor, 0.000001, self.load_chunk,
                 x, z)
 
