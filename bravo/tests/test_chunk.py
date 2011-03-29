@@ -109,23 +109,23 @@ class TestLightmaps(unittest.TestCase):
 
         assert_array_equal(self.c.skylight[:, :, 1], reference)
 
-    def test_divot(self):
-        """
-        Single divots in the ground should be unlit.
-        """
-
-        raise unittest.SkipTest("currently broken")
-
-        self.c = bravo.chunk.Chunk(0, 0)
-
+    def test_skylight_spread(self):
+        # Fill it as if we were the boring generator.
         self.c.blocks[:, :, 0].fill(1)
-        self.c.blocks[:, :, 1].fill(2)
-        # Make a divot.
-        self.c.blocks[1, 1, 1] = 0
+        # Put a false floor up to block the light.
+        self.c.blocks[1:15, 1:15, 3].fill(1)
         self.c.regenerate()
 
-        # Reference lightmap. Note that the divot is not lit in the reference
-        # lightmap.
-        reference = zeros((16, 16))
+        # Put a gradient on the reference lightmap.
+        reference = empty((16, 16))
+        reference.fill(15)
+        top = 1
+        bottom = 15
+        glow = 14
+        while top < bottom:
+            reference[top:bottom, top:bottom] = glow
+            top += 1
+            bottom -= 1
+            glow -= 1
 
         assert_array_equal(self.c.skylight[:, :, 1], reference)

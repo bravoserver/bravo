@@ -1,7 +1,7 @@
 from itertools import product
 
 from numpy import int8, uint8, uint32
-from numpy import cast, where, zeros
+from numpy import cast, logical_not, transpose, where, zeros
 
 from bravo.blocks import blocks, glowing_blocks
 from bravo.packets import make_packet
@@ -184,6 +184,45 @@ class Chunk(object):
                     break
 
                 lightmap[x, z, y] = light
+
+        # Now it's time to spread the light around. This flavor uses extra
+        # memory to speed things up; the basic idea is to spread *all* light,
+        # one glow level at a time, rather than spread each block
+        # individually.
+        lightable = logical_not(self.blocks)
+        spread = set((tuple(coords))
+            for coords in transpose(lightmap.nonzero()))
+        visited = set()
+        glow = 14
+
+        while glow:
+            for coords in spread:
+                for dx, dz, dy in (
+                    (1, 0, 0),
+                    (-1, 0, 0),
+                    (0, 1, 0),
+                    (0, -1, 0),
+                    (0, 0, 1),
+                    (0, 0, -1)):
+                    x, z, y = coords
+                    x += dx
+                    z += dz
+                    y += dy
+
+                    if not (0 <= x < 16 and
+                        0 <= z < 16 and
+                        0 <= y < 128):
+                        continue
+
+                    if (x, z, y) in visited:
+                        continue
+
+                    if lightable[x, z, y] and lightmap[x, z, y] < glow:
+                        lightmap[x, z, y] = glow
+                        visited.add((x, z, y))
+            glow -= 1
+            spread = visited
+            visited = set()
 
         self.skylight = lightmap.clip(0, 15)
 
