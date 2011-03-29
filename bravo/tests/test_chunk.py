@@ -1,7 +1,7 @@
 from twisted.trial import unittest
 import warnings
 
-from numpy import empty, zeros
+from numpy import empty
 from numpy.testing import assert_array_equal
 
 import bravo.chunk
