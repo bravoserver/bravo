@@ -2,6 +2,7 @@ from __future__ import division
 
 from itertools import product
 from random import randint
+import sys
 
 from numpy import array, where
 
@@ -346,6 +347,7 @@ class CliffGenerator(object):
                 column = chunk.get_column(x, z)
                 column.fill(blocks["air"].slot)
                 column[:height-3].fill(blocks["stone"].slot)
+
     name = "cliffs"
 
     before = tuple()
@@ -399,21 +401,24 @@ class CaveGenerator(object):
         Make smooth waves of stone.
         """
 
-        set_seed(seed)
+        dees = seed ^ sys.maxint
 
         # And into one end he plugged the whole of reality as extrapolated
         # from a piece of fairy cake, and into the other end he plugged his
         # wife: so that when he turned it on she saw in one instant the whole
         # infinity of creation and herself in relation to it.
 
-        factor = 1 / 16
+        factor = 1 / 64
 
         for x, z in product(xrange(16), repeat=2):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
+            set_seed(seed)
             should_cave = octaves2(magx, magz, 2)
+
             if should_cave > 0.2:
+                set_seed(dees)
                 depth = (simplex2(magx, magz) + 1) * 40
                 height = depth // 10
 
