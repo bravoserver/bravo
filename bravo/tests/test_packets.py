@@ -126,7 +126,7 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.z, -2669)
         self.assertEqual(parsed.yaw, -9)
         self.assertEqual(parsed.pitch, 0)
-        self.assertEqual(parsed.metadata, "\x00\x04\x7f")
+        # Not testing metadata; those tests are completely separate.
 
 class TestPacketAssembly(unittest.TestCase):
 
@@ -170,6 +170,11 @@ class TestPacketHelpers(unittest.TestCase):
         s = "Just a test"
         parser = bravo.packets.AlphaString("test")
         self.assertEqual(parser.build(s), "\x00\x0bJust a test")
+
+    def test_metadata(self):
+        s = "\x00\x04\x7f"
+        parsed = bravo.packets.metadata.parse(s)
+        self.assertEqual(parsed.data[0].value, 4)
 
 class TestPacketIntegration(unittest.TestCase):
 
