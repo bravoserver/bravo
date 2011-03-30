@@ -1,7 +1,7 @@
 from itertools import product
 
-from numpy import int8, uint8, uint32
-from numpy import cast, logical_not, transpose, where, zeros, amax
+from numpy import int8, uint8, uint32, bool
+from numpy import cast, logical_not, logical_and, transpose, where, zeros, amax
 
 from bravo.blocks import blocks, glowing_blocks
 from bravo.packets import make_packet
@@ -189,18 +189,28 @@ class Chunk(object):
         # memory to speed things up; the basic idea is to spread *all* light,
         # one glow level at a time, rather than spread each block
         # individually.
+        max_height = amax(self.heightmap)
         lightable = logical_not(self.blocks)
-        spread = set((tuple(coords))
-            for coords in transpose(lightmap.nonzero()))
+        unlighted = logical_not(lightmap) & lightable
+
+        # Create a mask to find all blocks that have an unlighted block
+        # as a neighbour in the xz-plane.
+        mask = zeros((16, 16, max_height), dtype=bool)
+        mask[:-1,:,:max_height] |= unlighted[1:, :, :max_height]
+        mask[:,:-1,:max_height] |= unlighted[:, 1:, :max_height]
+        mask[1:,:,:max_height] |= unlighted[:-1, :, :max_height]
+        mask[:,1:,:max_height] |= unlighted[:, :-1, :max_height]
+
+        # Apply the mask to the lightmap to find all lighted blocks with one
+        # or more unlighted blocks as neighbours.
+        edges = logical_and(mask, lightmap[:, :, :max_height]).nonzero()
+
+        spread = [tuple(coords) for coords in transpose(edges)]
         visited = set()
         glow = 14
-        max_height = amax(self.heightmap)
 
         while glow:
             for coords in spread:
-                if coords[2] > max_height:
-                    continue
-
                 for dx, dz, dy in (
                     (1, 0, 0),
                     (-1, 0, 0),
