@@ -271,6 +271,7 @@ class World(object):
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
+            self.postprocess_chunk(chunk)
             return succeed(chunk)
 
         d = deferToAMPProcess(MakeChunk,
@@ -305,6 +306,7 @@ class World(object):
 
         # Set up callbacks.
         d.addCallback(pp)
+
         # Multiple people might be subscribed to this pending callback. We're
         # going to keep it for ourselves and fork off another Deferred for our
         # caller.
