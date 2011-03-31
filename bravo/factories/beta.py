@@ -302,6 +302,10 @@ class BravoFactory(Factory):
         shutdown tasks.
         """
 
+        # Flush all dirty chunks to disk.
+        for chunk in self.world.dirty_chunk_cache.itervalues():
+            self.world.save_chunk(chunk)
+
         # Write back current world time.
         self.world.time = self.time
         self.world.serializer.save_level(self.world)
