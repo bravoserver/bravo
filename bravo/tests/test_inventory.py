@@ -1,4 +1,4 @@
-import unittest
+from twisted.trial import unittest
 
 import bravo.blocks
 import bravo.inventory
