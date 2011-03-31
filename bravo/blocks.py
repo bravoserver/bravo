@@ -385,9 +385,10 @@ drops[89] = 348 # Lightstone        -> Lightstone Dust
 
 unbreakables = set()
 
-unbreakables.add(0)  # Bedrock
-unbreakables.add(9)  # Lava
-unbreakables.add(10) # Lava spring
+unbreakables.add(0)  # Air
+unbreakables.add(7)  # Bedrock
+unbreakables.add(10) # Lava
+unbreakables.add(11) # Lava spring
 
 blocks = {}
 """
@@ -404,8 +405,8 @@ def _add_block(block):
 # most of us don't have all blocks memorized yet.
 
 # Water (both kinds) is unbreakable, and dims by 3.
-_add_block(Block(7, "water", breakable=False, dim=3))
-_add_block(Block(8, "spring", breakable=False, dim=3))
+_add_block(Block(8, "water", breakable=False, dim=3))
+_add_block(Block(9, "spring", breakable=False, dim=3))
 # Gravel drops flint, with 1 in 10 odds.
 _add_block(Block(13, "gravel", drop=318, ratio=1 / 10))
 # Leaves drop saplings, with 1 in 9 odds, and dims by 1.
