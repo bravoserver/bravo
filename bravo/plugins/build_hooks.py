@@ -5,39 +5,6 @@ from bravo.entity import Chest, Sign
 from bravo.ibravo import IBuildHook
 from bravo.utilities import split_coords
 
-class Ladder(object):
-    """
-    Update metadata for ladders.
-
-    You almost certainly want to enable this plugin.
-    """
-
-    implements(IBuildHook)
-
-    def build_hook(self, factory, player, builddata):
-        block, metadata, x, y, z, face = builddata
-
-        if block.slot == blocks["ladder"].slot:
-            # Update metadata according to face.
-            if face == "-x":
-                builddata = builddata._replace(metadata=0x4)
-            elif face == "+x":
-                builddata = builddata._replace(metadata=0x5)
-            elif face == "-z":
-                builddata = builddata._replace(metadata=0x2)
-            elif face == "+z":
-                builddata = builddata._replace(metadata=0x3)
-            else:
-                # What would a ceiling ladder even look like?
-                return False, builddata
-
-        return True, builddata
-
-    name = "ladder"
-
-    before = tuple()
-    after = ("build",)
-
 class Tile(object):
     """
     Place tiles.
@@ -132,6 +99,13 @@ class Build(object):
         if block.slot not in blocks:
             return True, builddata
 
+        # Check for orientable blocks.
+        if not metadata and block.orientable():
+            metadata = block.orientation(face)
+            if metadata is None:
+                # Oh, I guess we can't even place the block on this face.
+                return True, builddata
+
         # Make sure we can remove it from the inventory first.
         if not player.inventory.consume((block.slot, 0), player.equipped):
             # Okay, first one was a bust; maybe we can consume the related
@@ -194,4 +168,3 @@ class BuildSnow(object):
 tile = Tile()
 build = Build()
 build_snow = BuildSnow()
-ladder = Ladder()
