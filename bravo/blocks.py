@@ -1,5 +1,14 @@
 from __future__ import division
 
+faces = {
+    "-y": 0,
+    "+y": 1,
+    "-z": 2,
+    "+z": 3,
+    "-x": 4,
+    "+x": 5,
+}
+
 class Block(object):
     """
     A model for a block.
@@ -7,9 +16,16 @@ class Block(object):
     There are lots of rule and properties specific to different types of
     blocks. This class encapsulates those properties in a singleton-style
     interface, allowing many blocks to be referenced in one location.
+
+    The basic idea of this class is to provide some centralized data and
+    information about blocks, in order to abstract away as many special cases
+    as possible. In general, if several blocks all have some special behavior,
+    then it may be worthwhile to store data describing that behavior on this
+    class rather than special-casing it in multiple places.
     """
 
     __slots__ = (
+        "_o_dict",
         "breakable",
         "dim",
         "drop",
@@ -22,16 +38,9 @@ class Block(object):
     )
 
     def __init__(self, slot, name, drop=None, replace=0, ratio=1,
-            quantity=1, dim=16, breakable=True):
+            quantity=1, dim=16, breakable=True, orientation=None):
         """
         A block in a chunk.
-
-        The basic idea of this class is to provide some centralized data and
-        information about blocks, in order to abstract away as many special
-        cases as possible. In general, if several blocks all have some special
-        behavior, then it may be worthwhile to store data describing that
-        behavior on this class rather than special-casing it in multiple
-        places.
 
         :Parameters:
             slot : int
@@ -57,6 +66,9 @@ class Block(object):
                 Whether this block is diggable, breakable, bombable,
                 explodeable, etc. Only a few blocks actually genuinely cannot
                 be broken, so the default is True.
+            orientation : tuple
+                The orientation data for a block. See ``orientable()`` for an
+                explanation. The data should be in standard face order.
         """
 
         self.slot = slot
@@ -75,6 +87,31 @@ class Block(object):
         self.quantity = quantity
         self.dim = dim
         self.breakable = breakable
+
+        if orientation:
+            self._o_dict = dict(zip(faces, orientation))
+
+    def orientable(self):
+        """
+        Whether this block can be oriented.
+
+        Orientable blocks are positioned according to the face on which they
+        are built. They may not be buildable on all faces. Blocks are only
+        orientable if their metadata can be used to directly and uniquely
+        determine the face against which they were built.
+
+        Ladders are orientable, signposts are not.
+        """
+
+        return any(self._o_dict)
+
+    def orientation(self, face):
+        """
+        Retrieve the metadata for a certain orientation, or None if this block
+        cannot be built against the given face.
+        """
+
+        return self._o_dict(face)
 
 class Item(object):
     """
