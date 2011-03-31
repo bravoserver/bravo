@@ -302,6 +302,9 @@ class BravoFactory(Factory):
         shutdown tasks.
         """
 
+        if not self.world.saving:
+            return
+
         log.msg("Shutting down; flushing world data...")
 
         # Flush all dirty chunks to disk.
