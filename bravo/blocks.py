@@ -391,11 +391,19 @@ A dictionary of ``Block`` objects.
 This dictionary can be indexed by slot number or block name.
 """
 
+def _add_block(block):
+    blocks[block.slot] = block
+    blocks[block.name] = block
+
 # Special blocks. Please remember to comment *what* makes the block special;
 # most of us don't have all blocks memorized yet.
 
+# Torches are orientable.
+_add_block(Block(50, "torch", orientation=(None, 5, 4, 3, 2, 1)))
 # Ladders are orientable.
-blocks[65] = Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5))
+_add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5)))
+# Redstone torches are orientable.
+_add_block(Block(76, "redstone-torch", orientation=(None, 5, 4, 3, 2, 1)))
 
 for block in blocks.values():
     blocks[block.name] = block
@@ -424,8 +432,7 @@ for i, name in enumerate(block_names):
     if i in unbreakables:
         kwargs["breakable"] = False
     b = Block(i, name, **kwargs)
-    blocks[i] = b
-    blocks[name] = b
+    _add_block(b)
 
 for i, name in enumerate(item_names):
     kwargs = {}

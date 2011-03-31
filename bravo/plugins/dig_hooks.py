@@ -77,6 +77,56 @@ class Give(object):
     before = tuple()
     after = tuple()
 
+class Torch(object):
+    """
+    Destroy torches attached to walls.
+
+    You almost certainly want to enable this plugin.
+    """
+
+    implements(IDigHook)
+
+    def dig_hook(self, factory, chunk, x, y, z, block):
+        """
+        Whenever a block is dug out, destroy any torches attached to the
+        block, and drop pickups for them.
+        """
+
+        world = factory.world
+        # Block coordinates
+        x = chunk.x * 16 + x
+        z = chunk.z * 16 + z
+        for dx, dy, dz, dmetadata in (
+            (1,  0,  0, 0x1),
+            (-1, 0,  0, 0x2),
+            (0,  0,  1, 0x3),
+            (0,  0, -1, 0x4),
+            (0,  1,  0, 0x5)):
+            # Check whether the attached block is a torch.
+            coords = (x + dx, y + dy, z + dz)
+            dblock = world.get_block(coords)
+            if dblock not in (blocks["torch"].slot,
+                blocks["redstone-torch"].slot):
+                continue
+
+            # Check whether this torch is attached to the block being dug out.
+            metadata = world.get_metadata(coords)
+            if dmetadata != metadata:
+                continue
+
+            # Destroy torches! Mwahahaha!
+            world.destroy(coords)
+
+            # Drop torch on ground - needs pixel coordinates
+            pixcoords = ((x + dx) * 32 + 16, (y + 1) * 32, (z + dz) * 32 + 16)
+            factory.give(pixcoords, blocks[dblock].key, 1)
+
+    name = "torch"
+
+    before = tuple()
+    after = ("replace",)
+
 alpha_snow = AlphaSnow()
 replace = Replace()
 give = Give()
+torch = Torch()
