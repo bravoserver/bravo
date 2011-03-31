@@ -26,15 +26,23 @@ class Block(object):
         """
         A block in a chunk.
 
+        The basic idea of this class is to provide some centralized data and
+        information about blocks, in order to abstract away as many special
+        cases as possible. In general, if several blocks all have some special
+        behavior, then it may be worthwhile to store data describing that
+        behavior on this class rather than special-casing it in multiple
+        places.
+
         :Parameters:
             slot : int
-                The index of this block. Globally unique.
+                The index of this block. Must be globally unique.
             name : str
                 A common name for this block.
             drop : int
                 The type of block that should be dropped when an instance of
                 this block is destroyed. Defaults to the slot value, to drop
-                instances of this same type of block.
+                instances of this same type of block. To indicate that this
+                block does not drop anything, set to air.
             replace : int
                 The type of block to place in the map when instances of this
                 block are destroyed. Defaults to air.
