@@ -211,6 +211,10 @@ class Chunk(object):
 
         while glow:
             for coords in spread:
+                if lightmap[coords] <= glow:
+                    visited.add(coords)
+                    continue
+
                 for dx, dz, dy in (
                     (1, 0, 0),
                     (-1, 0, 0),
