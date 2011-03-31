@@ -5,14 +5,16 @@ from bravo.ibravo import IRecipe
 
 class Recipe(object):
     """
-    Base class for recipes. Just holds the implements() incantation.
+    Base class for recipes.
+
+    Just holds the implements() incantation; this is a space savings by
+    itself.
     """
 
     implements(IRecipe)
 
 #Basics
 class OneBlock(Recipe):
-    #first used in basics, but also usable in Misc. Recipes
 
     dimensions = (1, 1)
 
@@ -70,7 +72,9 @@ class ChestFurnace(Recipe):
 
 
 class ThreeByThree(Recipe):
-    #Not all 3x3s fit here, this is only center changable 3x3s.
+    """
+    A 3x3 recipe with a changeable center.
+    """
 
     dimensions = (3, 3)
 
@@ -89,7 +93,6 @@ class ThreeByThree(Recipe):
         )
         self.provides = (provides.key, 1)
 
-#Block
 class TNT(Recipe):
 
     dimensions = (3, 3)
@@ -126,7 +129,7 @@ class Stairs(Recipe):
     dimensions = (3, 3)
 
     def __init__(self, material, provides, name=None):
-        self.name = "%s-name" % name
+        self.name = "%s-stairs" % name
         self.recipe = (
             (material.key, 1),
             None,
@@ -416,7 +419,9 @@ class Arrow(Recipe):
 
 #Transportation
 class CartBoat(Recipe):
-    #at the time of creation, this only the cart and boat had this shape
+    """
+    Cart or boat class.
+    """
 
     dimensions = (3, 2)
 
@@ -590,16 +595,21 @@ class Fence(Recipe):
 #Basics
 wood = OneBlock(blocks["log"], blocks["wood"], 4, "wood")
 sticks = OneByTwo(blocks["wood"], blocks["wood"], items["stick"], 4, "sticks")
-torches = OneByTwo(items["coal"], items["stick"], blocks["torch"], 4, "torches")
+torches = OneByTwo(items["coal"], items["stick"], blocks["torch"], 4,
+    "torches")
 workbench = TwoByTwo(blocks["wood"], blocks["workbench"], "workbench")
 furnace = ChestFurnace(blocks["cobblestone"], blocks["furnace"], "furnace")
 chest = ChestFurnace(blocks["wood"], blocks["chest"], "chest")
 
 #Block
-ironblock = ThreeByThree(items["iron-ingot"], items["iron-ingot"], blocks["iron"], "iron-block")
-goldblock = ThreeByThree(items["gold-ingot"], items["gold-ingot"], blocks["gold"], "gold-block")
-diamondblock = ThreeByThree(items["diamond"], items["diamond"], blocks["diamond"], "diamond-block")
-glowstone = ThreeByThree(items["glowstone-dust"], items["glowstone-dust"], blocks["lightstone"], "lightstone")
+ironblock = ThreeByThree(items["iron-ingot"], items["iron-ingot"],
+    blocks["iron"], "iron-block")
+goldblock = ThreeByThree(items["gold-ingot"], items["gold-ingot"],
+    blocks["gold"], "gold-block")
+diamondblock = ThreeByThree(items["diamond"], items["diamond"],
+    blocks["diamond"], "diamond-block")
+glowstone = ThreeByThree(items["glowstone-dust"], items["glowstone-dust"],
+    blocks["lightstone"], "lightstone")
 wool = ThreeByThree(items["string"], items["string"], blocks["wool"], "wool")
 tnt = TNT()
 stoneslab = ThreeByOne(blocks["cobblestone"], blocks["step"], 1, "step")
@@ -610,7 +620,8 @@ clayblock = TwoByTwo(items["clay-balls"], blocks["clay"], "clay-block")
 brick = TwoByTwo(items["clay-brick"], blocks["brick"], "brick")
 bookshelf = Bookshelf()
 sandstone = TwoByTwo(blocks["sand"], blocks["sandstone"], "sandstone")
-jackolantern = OneByTwo(blocks["pumpkin"], items["stick"], blocks["jack-o-lantern"], 1, "jack-o-lantern")
+jackolantern = OneByTwo(blocks["pumpkin"], items["stick"],
+    blocks["jack-o-lantern"], 1, "jack-o-lantern")
 
 #Tools
 woodaxe = Axe(blocks["wood"], items["wooden-axe"], "wood")
@@ -622,7 +633,8 @@ woodpickaxe = Pickaxe(blocks["wood"], items["wooden-pickaxe"], "wood")
 stonepickaxe = Pickaxe(blocks["cobblestone"], items["stone-pickaxe"], "stone")
 ironpickaxe = Pickaxe(items["iron-ingot"], items["iron-pickaxe"], "iron")
 goldpickaxe = Pickaxe(items["gold-ingot"], items["gold-pickaxe"], "gold")
-diamondpickaxe = Pickaxe(items["diamond"], items["diamond-pickaxe"], "diamond")
+diamondpickaxe = Pickaxe(items["diamond"], items["diamond-pickaxe"],
+    "diamond")
 woodshovel = Shovel(blocks["wood"], items["wooden-shovel"], "wood")
 stoneshovel = Shovel(blocks["cobblestone"], items["stone-shovel"], "stone")
 ironshovel = Shovel(items["iron-ingot"], items["iron-shovel"], "iron")
@@ -653,17 +665,26 @@ leatherhelmet = Helmet(items["leather"], items["leather-helmet"], "leather")
 goldhelmet = Helmet(items["gold-ingot"], items["gold-helmet"], "gold")
 ironhelmet = Helmet(items["iron-ingot"], items["iron-helmet"], "iron")
 diamondhelmet = Helmet(items["diamond"], items["diamond-helmet"], "diamond")
-chainmailhelmet = Helmet(blocks["fire"], items["chainmail-helmet"], "chainmail")
-leatherchestplate = Chestplate(items["leather"], items["leather-chestplate"], "leather")
-goldchestplate = Chestplate(items["gold-ingot"], items["gold-chestplate"], "gold")
-ironchestplate = Chestplate(items["iron-ingot"], items["iron-chestplate"], "iron")
-diamondchestplate = Chestplate(items["diamond"], items["diamond-chestplate"], "diamond")
-chainmailchestplate = Chestplate(blocks["fire"], items["chainmail-chestplate"], "chainmail")
-leatherLeggings = Leggings(items["leather"], items["leather-leggings"], "leather")
+chainmailhelmet = Helmet(blocks["fire"], items["chainmail-helmet"],
+    "chainmail")
+leatherchestplate = Chestplate(items["leather"], items["leather-chestplate"],
+    "leather")
+goldchestplate = Chestplate(items["gold-ingot"], items["gold-chestplate"],
+    "gold")
+ironchestplate = Chestplate(items["iron-ingot"], items["iron-chestplate"],
+    "iron")
+diamondchestplate = Chestplate(items["diamond"], items["diamond-chestplate"],
+    "diamond")
+chainmailchestplate = Chestplate(blocks["fire"],
+    items["chainmail-chestplate"], "chainmail")
+leatherLeggings = Leggings(items["leather"], items["leather-leggings"],
+    "leather")
 goldleggings = Leggings(items["gold-ingot"], items["gold-leggings"], "gold")
 ironleggings = Leggings(items["iron-ingot"], items["iron-leggings"], "iron")
-diamondleggings = Leggings(items["diamond"], items["diamond-leggings"], "diamond")
-chainmailleggings = Leggings(blocks["fire"], items["chainmail-leggings"], "chainmail")
+diamondleggings = Leggings(items["diamond"], items["diamond-leggings"],
+    "diamond")
+chainmailleggings = Leggings(blocks["fire"], items["chainmail-leggings"],
+    "chainmail")
 leatherboots = Boots(items["leather"], items["leather-boots"], "leather")
 goldboots = Boots(items["gold-ingot"], items["gold-boots"], "gold")
 ironboots = Boots(items["iron-ingot"], items["iron-boots"], "iron")
@@ -672,21 +693,30 @@ chainmailboots = Boots(blocks["fire"], items["chainmail-boots"], "chainmail")
 
 #Transportation
 minecart = CartBoat(items["iron-ingot"], items["mine-cart"], "minecart")
-poweredmc = OneByTwo(blocks["furnace"], items["mine-cart"], items["powered-minecart"], 1, "poweredmc")
-storagemc = OneByTwo(blocks["chest"], items["mine-cart"], items["storage-minecart"], 1, "storagemc")
+poweredmc = OneByTwo(blocks["furnace"], items["mine-cart"],
+    items["powered-minecart"], 1, "poweredmc")
+storagemc = OneByTwo(blocks["chest"], items["mine-cart"],
+    items["storage-minecart"], 1, "storagemc")
 track = Track()
 boat = CartBoat(blocks["wood"], items["boat"], "boat")
 
 #Mechanism
 wooddoor = Door(blocks["wood"], blocks["wooden-door"], "wood")
 irondoor = Door(items["iron-ingot"], blocks["iron-door"], "iron")
-woodpressure = ThreeByOne(blocks["wood"], blocks["wooden-plate"], 1, "wood-plate")
-stonepressure = ThreeByOne(blocks["stone"], blocks["stone-plate"], 1, "stone-plate")
-stonebtn = OneByTwo(blocks["stone"], blocks["stone"], blocks["stone-button"], 1, "stone-btn")
-redstonetorch = OneByTwo(items["redstone"], items["stick"], blocks["redstone-torch"], 1, "redstone-torch")
-lever = OneByTwo(items["stick"], blocks["cobblestone"], blocks["lever"], 1, "lever")
-noteblock = ThreeByThree(blocks["wood"], items["redstone"], blocks["note-block"], "noteblock")
-jukebox = ThreeByThree(blocks["wood"], items["diamond"], blocks["jukebox"], "jukebox")
+woodpressure = ThreeByOne(blocks["wood"], blocks["wooden-plate"], 1,
+    "wood-plate")
+stonepressure = ThreeByOne(blocks["stone"], blocks["stone-plate"], 1,
+    "stone-plate")
+stonebtn = OneByTwo(blocks["stone"], blocks["stone"], blocks["stone-button"],
+    1, "stone-btn")
+redstonetorch = OneByTwo(items["redstone"], items["stick"],
+    blocks["redstone-torch"], 1, "redstone-torch")
+lever = OneByTwo(items["stick"], blocks["cobblestone"], blocks["lever"], 1,
+    "lever")
+noteblock = ThreeByThree(blocks["wood"], items["redstone"],
+    blocks["note-block"], "noteblock")
+jukebox = ThreeByThree(blocks["wood"], items["diamond"], blocks["jukebox"],
+    "jukebox")
 dispenser = Dispenser()
 
 #Food
@@ -695,13 +725,15 @@ shroomsoup = MushroomSoup()
 bread = ThreeByOne(items["wheat"], items["bread"], 1, "bread")
 sugar = OneBlock(blocks["sugar-cane"], items["sugar"], 1, "sugar")
 cake = Cake()
-goldenapple = ThreeByThree(blocks["gold"], items["apple"], items["golden-apple"], "goldapple")
+goldenapple = ThreeByThree(blocks["gold"], items["apple"],
+    items["golden-apple"], "goldapple")
 
 #Misc.
 ironingots = OneBlock(blocks["iron"], items["iron-ingot"], 9, "iron-ingots")
 goldingots = OneBlock(blocks["gold"], items["gold-ingot"], 9, "gold-ingots")
 diamonds = OneBlock(blocks["diamond"], items["diamond"], 9, "diamonds")
-painting = ThreeByThree(items["stick"], blocks["wool"], items["paintings"], "paintings")
+painting = ThreeByThree(items["stick"], blocks["wool"], items["paintings"],
+    "paintings")
 sign = Sign()
 ladder = Ladder()
 papers = ThreeByOne(blocks["sugar-cane"], items["paper"], 3, "paper")
