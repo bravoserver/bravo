@@ -83,6 +83,8 @@ class Block(object):
 
         if orientation:
             self._o_dict = dict(zip(faces, orientation))
+        else:
+            self._o_dict = {}
 
     def orientable(self):
         """
@@ -340,47 +342,24 @@ drops = {}
 # If the drop block is zero, then it drops nothing.
 drops[1]  = 4   # Stone           -> Cobblestone
 drops[2]  = 3   # Grass           -> Dirt
-drops[18] = 6   # Leaves          -> Sapling
 drops[20] = 0   # Glass
 drops[60] = 3   # Soil            -> Dirt
 drops[62] = 61  # Burning Furnace -> Furnace
 drops[78] = 0   # Snow
-drops[79] = 0   # Ice
 
 # Block -> item drops.
-drops[13] = 318 # Gravel            -> Flint
 drops[16] = 263 # Coal Ore Block    -> Coal
 drops[56] = 264 # Diamond Ore Block -> Diamond
 drops[63] = 323 # Sign Post         -> Sign Item
 drops[64] = 324 # Wooden Door       -> Wooden Door Item
 drops[68] = 323 # Wall Sign         -> Sign Item
 drops[71] = 330 # Iron Door         -> Iron Door Item
-drops[73] = 331 # Redstone Ore      -> Redstone Dust
-drops[74] = 331 # Redstone Ore      -> Redstone Dust
-drops[82] = 337 # Clay              -> Clay Balls
 drops[83] = 338 # Reed              -> Reed Item
 drops[89] = 348 # Lightstone        -> Lightstone Dust
-
-replaces = {}
-
-replaces[79] = 8 # Ice -> Water
-
-ratios = {}
-
-ratios[13] = 1 / 10 # Gravel
-ratios[18] = 1 / 9  # Leaves
-
-quantities = {}
-
-quantities[73] = 5 # Redstone Ore -> Redstone Dust
-quantities[74] = 5 # Redstone Ore -> Redstone Dust
-quantities[82] = 4 # Clay         -> Clay Balls
 
 unbreakables = set()
 
 unbreakables.add(0)  # Bedrock
-unbreakables.add(7)  # Water
-unbreakables.add(8)  # Spring
 unbreakables.add(9)  # Lava
 unbreakables.add(10) # Lava spring
 
@@ -398,12 +377,26 @@ def _add_block(block):
 # Special blocks. Please remember to comment *what* makes the block special;
 # most of us don't have all blocks memorized yet.
 
+# Water (both kinds) is unbreakable, and dims by 3.
+_add_block(Block(7, "water", breakable=False, dim=3))
+_add_block(Block(8, "spring", breakable=False, dim=3))
+# Gravel drops flint, with 1 in 10 odds.
+_add_block(Block(13, "gravel", drop=318, ratio=1 / 10))
+# Leaves drop saplings, with 1 in 9 odds, and dims by 1.
+_add_block(Block(18, "leaves", drop=6, ratio=1 / 9, dim=1))
 # Torches are orientable.
 _add_block(Block(50, "torch", orientation=(None, 5, 4, 3, 2, 1)))
 # Ladders are orientable.
 _add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5)))
+# Redstone ore drops 5 redstone dusts.
+_add_block(Block(73, "redstone-ore", drop=331, quantity=5))
+_add_block(Block(74, "glowing-redstone-ore", drop=331, quantity=5))
 # Redstone torches are orientable.
 _add_block(Block(76, "redstone-torch", orientation=(None, 5, 4, 3, 2, 1)))
+# Ice drops nothing, is replaced by springs, and dims by 3.
+_add_block(Block(79, "ice", drop=0, replace=8, dim=3))
+# Clay drops 4 clay balls.
+_add_block(Block(82, "clay", drop=337, quantity=4))
 
 for block in blocks.values():
     blocks[block.name] = block
@@ -423,12 +416,6 @@ for i, name in enumerate(block_names):
     kwargs = {}
     if i in drops:
         kwargs["drop"] = drops[i]
-    if i in replaces:
-        kwargs["replace"] = replaces[i]
-    if i in ratios:
-        kwargs["ratio"] = ratios[i]
-    if i in quantities:
-        kwargs["quantity"] = quantities[i]
     if i in unbreakables:
         kwargs["breakable"] = False
     b = Block(i, name, **kwargs)
@@ -453,7 +440,3 @@ glowing_blocks = {
 }
 
 blocks["air"].dim = 0
-blocks["ice"].dim = 3
-blocks["leaves"].dim = 1
-blocks["spring"].dim = 3
-blocks["water"].dim = 3
