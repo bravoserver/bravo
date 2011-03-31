@@ -26,6 +26,8 @@ from bravo.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
+SUPPORTED_PROTOCOL = 10
+
 circle = [(i, j)
     for i, j in product(xrange(-10, 10), xrange(-10, 10))
     if i**2 + j**2 <= 100
@@ -106,10 +108,10 @@ class BetaServerProtocol(Protocol):
         callback.
         """
 
-        if container.protocol < 9:
+        if container.protocol < SUPPORTED_PROTOCOL:
             # Kick old clients.
             self.error("This server doesn't support your ancient client.")
-        elif container.protocol > 9:
+        elif container.protocol > SUPPORTED_PROTOCOL:
             # Kick new clients.
             self.error("This server doesn't support your newfangled client.")
         else:
@@ -539,11 +541,11 @@ class BravoProtocol(BetaServerProtocol):
         them depending on the results of the authentication.
         """
 
-        if container.protocol < 9:
+        if container.protocol < SUPPORTED_PROTOCOL:
             # Kick old clients.
             self.error("This server doesn't support your ancient client.")
             return
-        elif container.protocol > 9:
+        elif container.protocol > SUPPORTED_PROTOCOL:
             # Kick new clients.
             self.error("This server doesn't support your newfangled client.")
             return
