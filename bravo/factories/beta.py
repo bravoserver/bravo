@@ -302,6 +302,8 @@ class BravoFactory(Factory):
         shutdown tasks.
         """
 
+        log.msg("Shutting down; flushing world data...")
+
         # Flush all dirty chunks to disk.
         for chunk in self.world.dirty_chunk_cache.itervalues():
             self.world.save_chunk(chunk)
@@ -309,6 +311,8 @@ class BravoFactory(Factory):
         # Write back current world time.
         self.world.time = self.time
         self.world.serializer.save_level(self.world)
+
+        log.msg("World data saved!")
 
     def pauseProducing(self):
         pass
