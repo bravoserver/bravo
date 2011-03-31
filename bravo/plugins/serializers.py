@@ -16,6 +16,7 @@ from zope.interface import implements, classProvides
 from bravo.entity import entities, tiles
 from bravo.errors import SerializerReadException, SerializerWriteException
 from bravo.ibravo import ISerializer, ISerializerFactory
+from bravo.inventory import Slot
 from bravo.location import Location
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
@@ -358,7 +359,7 @@ class Alpha(object):
 
         for item in tag.tags:
             slot = item["Slot"].value
-            items[slot] = (item["id"].value,
+            items[slot] = Slot(item["id"].value,
                 item["Damage"].value, item["Count"].value)
 
         inventory.load_from_list(items)
