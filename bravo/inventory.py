@@ -1,3 +1,4 @@
+from collections import namedtuple
 from itertools import chain
 
 from construct import Container, ListContainer
@@ -31,6 +32,52 @@ def pad_to_stride(recipe, rstride, cstride):
         padded.extend(row)
 
     return padded
+
+class Slot(namedtuple("Slot", "primary, secondary, quantity")):
+    """
+    A slot in an inventory.
+    """
+
+    def holds(self, other):
+        """
+        Whether these slots hold the same item.
+
+        This method is comfortable with other ``Slot`` instances, and also
+        with regular {2,3}-tuples.
+        """
+
+        return self.primary == other[0] and self.secondary == other[1]
+
+    def decrement(self, quantity=1):
+        """
+        Return a copy of this slot, with quantity decremented, or None if the
+        slot is empty.
+        """
+
+        if quantity >= self.quantity:
+            return None
+
+        return self._replace(quantity=self.quantity - quantity)
+
+    def increment(self, quantity=1):
+        """
+        Return a copy of this slot, with quantity incremented.
+
+        For parity with ``decrement()``.
+        """
+
+        return self._replace(quantity=self.quantity + quantity)
+
+    def replace(self, **kwargs):
+        """
+        Exposed version of ``_replace()`` with slot semantics.
+        """
+
+        new = self._replace(**kwargs)
+        if new.quantity == 0:
+            return None
+
+        return new
 
 class Inventory(object):
     """
@@ -131,7 +178,7 @@ class Inventory(object):
             if item.id < 0:
                 items[i] = None
             else:
-                items[i] = item.id, item.damage, item.count
+                items[i] = Slot(item.id, item.damage, item.count)
 
         self.load_from_list(items)
 
@@ -142,8 +189,8 @@ class Inventory(object):
             if item is None:
                 lc.append(Container(primary=-1))
             else:
-                lc.append(Container(primary=item[0], secondary=item[1],
-                    count=item[2]))
+                lc.append(Container(primary=item.primary,
+                    secondary=item.secondary, count=item.quantity))
 
         packet = make_packet("inventory", name=self.identifier,
             length=len(lc), items=lc)
@@ -161,27 +208,25 @@ class Inventory(object):
         # Try to put it in holdables first.
         for stash in (self.holdables, self.storage):
             # Check in two separate loops, to avoid bad grouping patterns.
-            for i, t in enumerate(stash):
-                if t is not None:
-                    primary, secondary, count = t
-
-                    if (primary, secondary) == item and count < 64:
-                        count += quantity
+            for i, slot in enumerate(stash):
+                if slot is not None:
+                    if slot.holds(item) and slot.quantity < 64:
+                        count = slot.quantity + quantity
                         if count > 64:
                             count, quantity = 64, count - 64
                         else:
                             quantity = 0
-                        stash[i] = primary, secondary, count
+                        stash[i] = slot.replace(quantity=count)
                         if not quantity:
                             return True
-            for i, t in enumerate(stash):
-                if t is None:
-                    stash[i] = item[0], item[1], quantity
+            for i, slot in enumerate(stash):
+                if slot is None:
+                    stash[i] = Slot(item[0], item[1], quantity)
                     return True
 
         return False
 
-    def consume(self, item, slot):
+    def consume(self, item, index):
         """
         Attempt to remove a used holdable from the inventory.
 
@@ -193,17 +238,14 @@ class Inventory(object):
         :returns: whether the item was successfully removed
         """
 
-        try:
-            primary, secondary, count = self.holdables[slot]
-        except (TypeError, ValueError):
+        slot = self.holdables[index]
+
+        # Can't really remove things from an empty slot...
+        if slot is None:
             return False
 
-        if (primary, secondary) == item and count:
-            count -= 1
-            if count:
-                self.holdables[slot] = primary, secondary, count
-            else:
-                self.holdables[slot] = None
+        if slot.holds(item):
+            self.holdables[index] = slot.decrement()
             return True
 
         return False
@@ -237,10 +279,10 @@ class Inventory(object):
                     self.selected = self.crafted[0]
                     self.crafted[0] = None
                 else:
-                    sprimary, ssecondary, scount = self.selected
-                    if (sprimary, ssecondary) == self.recipe.provides[0]:
-                        scount += self.recipe.provides[1]
-                        self.selected = sprimary, ssecondary, scount
+                    sslot = self.selected
+                    if sslot.holds(self.recipe.provides[0]):
+                        self.selected = sslot.increment(
+                            self.recipe.provides[1])
                     else:
                         # Mismatch; don't allow it.
                         return False
@@ -251,7 +293,8 @@ class Inventory(object):
                     self.crafted[0] = None
                 else:
                     provides = self.recipe.provides
-                    self.crafted[0] = provides[0][0], provides[0][1], provides[1]
+                    self.crafted[0] = Slot(provides[0][0], provides[0][1],
+                        provides[1])
 
                 return True
             else:
@@ -259,28 +302,24 @@ class Inventory(object):
                 return False
 
         if self.selected is not None and l[index] is not None:
-            sprimary, ssecondary, scount = self.selected
-            iprimary, isecondary, icount = l[index]
-            if (sprimary, ssecondary) == (iprimary, isecondary):
+            sslot = self.selected
+            islot = l[index]
+            if islot.holds(sslot):
                 # both contain the same item
-                if scount + icount <= 64:
-                    # sum of all items is less than 64
+                if sslot.quantity + islot.quantity <= 64:
+                    # Sum of items fits in one slot, so this is easy.
                     if alternate:
-                        icount += 1
-                        scount -= 1
-                        l[index] = iprimary, isecondary, icount
-                        if scount <= 0:
-                            self.selected = None
-                        else:
-                            self.selected = sprimary, ssecondary, scount
+                        l[index] = islot.increment()
+                        self.selected = sslot.decrement()
                     else:
-                        l[index] = iprimary, isecondary, scount + icount
+                        l[index] = islot.increment(sslot.quantity)
                         self.selected = None
                 else:
                     # fill up slot to 64, move left overs to selection
                     # valid for left and right mouse click
-                    l[index] = iprimary, isecondary, 64
-                    self.selected = sprimary, ssecondary, scount + icount - 64
+                    l[index] = islot.replace(quantity=64)
+                    self.selected = sslot.replace(
+                        quantity=sslot.quantity + islot.quantity - 64)
             else:
                 # Default case: just swap
                 # valid for left and right mouse click
@@ -288,26 +327,19 @@ class Inventory(object):
         else:
             if alternate:
                 if self.selected is not None:
-                    sprimary, ssecondary, scount = self.selected
-                    l[index] = sprimary, ssecondary, 1
-                    if scount <= 1:
-                        self.selected = None
-                    else:
-                        self.selected = sprimary, ssecondary, scount - 1
+                    sslot = self.selected
+                    l[index] = sslot.replace(quantity=1)
+                    self.selected = sslot.decrement()
                 elif l[index] is None:
                     # Right click on empty inventory slot does nothing
                     return False
                 else:
                     # Logically, l[index] is not None, but self.selected is.
-                    lprimary, lsecondary, lcount = l[index]
-                    scount = lcount // 2
-                    scount, lcount = lcount - scount, scount
-                    if lcount > 0:
-                        l[index] = lprimary, lsecondary, lcount
-                    else:
-                        # remove original stack if no item is left
-                        l[index] = None
-                    self.selected = lprimary, lsecondary, scount
+                    islot = l[index]
+                    scount = islot.quantity // 2
+                    scount, lcount = islot.quantity - scount, scount
+                    l[index] = islot.replace(quantity=lcount)
+                    self.selected = islot.replace(quantity=scount)
             else:
                 # Default case: just swap.
                 self.selected, l[index] = l[index], self.selected
@@ -321,7 +353,8 @@ class Inventory(object):
                 self.crafted[0] = None
             else:
                 provides = self.recipe.provides
-                self.crafted[0] = provides[0][0], provides[0][1], provides[1]
+                self.crafted[0] = Slot(provides[0][0], provides[0][1],
+                    provides[1])
 
         return True
 
@@ -358,10 +391,8 @@ class Inventory(object):
                     if i is None and j is None:
                         matches_needed -= 1
                     elif i is not None and j is not None:
-                        cprimary, csecondary, ccount = j
                         skey, scount = i
-                        if ((cprimary, csecondary) == skey
-                            and ccount >= scount):
+                        if j.holds(skey) and j.quantity >= scount:
                             matches_needed -= 1
 
                     if matches_needed == 0:
@@ -391,13 +422,8 @@ class Inventory(object):
             if slot is not None:
                 index += offset
                 rcount = slot[1]
-                primary, secondary, ccount = self.crafting[index]
-                ccount -= rcount
-                if ccount:
-                    self.crafting[index] = primary, secondary, ccount
-                else:
-                    self.crafting[index] = None
-
+                slot = self.crafting[index]
+                self.crafting[index] = slot.decrement(rcount)
 
 
 class Equipment(Inventory):
