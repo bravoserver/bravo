@@ -86,6 +86,32 @@ class Block(object):
         else:
             self._o_dict = {}
 
+    def __str__(self):
+        """
+        Fairly verbose explanation of what this block is capable of.
+        """
+
+        attributes = []
+        if not self.breakable:
+            attributes.append("unbreakable")
+        if self.dim == 0:
+            attributes.append("transparent")
+        elif self.dim < 16:
+            attributes.append("translucent (%d)" % self.dim)
+        if self.replace:
+            attributes.append("becomes %d" % self.replace)
+        if self.ratio != 1 or self.quantity > 1 or self.drop != self.slot:
+            attributes.append("drops %d slot %d rate %2.2f%%" %
+                (self.quantity, self.drop, self.ratio * 100))
+        if attributes:
+            attributes = ": %s" % ", ".join(attributes)
+        else:
+            attributes = ""
+
+        return "Block(%d %r%s)" % (self.slot, self.name, attributes)
+
+    __repr__ = __str__
+
     def orientable(self):
         """
         Whether this block can be oriented.
