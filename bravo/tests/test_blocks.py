@@ -13,3 +13,6 @@ class TestBlockQuirks(unittest.TestCase):
 
     def test_unbreakable_bedrock(self):
         self.assertFalse(bravo.blocks.blocks["bedrock"].breakable)
+
+    def test_ladder_orientation(self):
+        self.assertEqual(bravo.blocks.blocks["ladder"].orientation("+x"), 0x5)

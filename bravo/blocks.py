@@ -1,13 +1,6 @@
 from __future__ import division
 
-faces = {
-    "-y": 0,
-    "+y": 1,
-    "-z": 2,
-    "+z": 3,
-    "-x": 4,
-    "+x": 5,
-}
+faces = ("-y", "+y", "-z", "+z", "-x", "+x")
 
 class Block(object):
     """
@@ -109,9 +102,12 @@ class Block(object):
         """
         Retrieve the metadata for a certain orientation, or None if this block
         cannot be built against the given face.
+
+        This method only returns valid data for orientable blocks; check
+        ``orientable()`` first.
         """
 
-        return self._o_dict(face)
+        return self._o_dict.get(face)
 
 class Item(object):
     """
@@ -395,6 +391,16 @@ A dictionary of ``Block`` objects.
 This dictionary can be indexed by slot number or block name.
 """
 
+# Special blocks. Please remember to comment *what* makes the block special;
+# most of us don't have all blocks memorized yet.
+
+# Ladders are orientable.
+blocks[65] = Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5))
+
+for block in blocks.values():
+    blocks[block.name] = block
+    blocks[block.slot] = block
+
 items = {}
 """
 A dictionary of ``Item`` objects.
@@ -403,6 +409,9 @@ This dictionary can be indexed by slot number or block name.
 """
 
 for i, name in enumerate(block_names):
+    if name in blocks:
+        continue
+
     kwargs = {}
     if i in drops:
         kwargs["drop"] = drops[i]
