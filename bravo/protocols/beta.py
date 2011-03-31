@@ -445,6 +445,8 @@ class BravoProtocol(BetaServerProtocol):
         for protocol in self.factory.protocols.itervalues():
             packet = protocol.player.save_to_packet()
             self.transport.write(packet)
+            packet = protocol.player.save_equipment_to_packet()
+            self.transport.write(packet)
             packet = make_packet("create", eid=protocol.player.eid)
             self.transport.write(packet)
 
@@ -765,6 +767,32 @@ class BravoProtocol(BetaServerProtocol):
             # XXX should be if there's any damage to the inventory
             packet = i.save_to_packet()
             self.transport.write(packet)
+
+            # Inform other players about changes to this player's equipment.
+            if container.wid == 0 and (container.slot in range(5, 9) or
+                                       container.slot == 36):
+
+                # Armor changes.
+                if container.slot in range(5, 9):
+                    item = i.armor[container.slot - 5]
+                    # Order of slots is reversed in the equipment package.
+                    slot = 4 - (container.slot - 5)
+                # Currently equipped item changes.
+                elif container.slot == 36:
+                    item = i.holdables[0]
+                    slot = 0
+
+                if item is None:
+                    primary, secondary = 65535, 0
+                else:
+                    primary, secondary, count = item
+                packet = make_packet("entity-equipment",
+                    eid=self.player.eid,
+                    slot=slot,
+                    primary=primary,
+                    secondary=secondary
+                )
+                self.factory.broadcast_for_others(packet, self)
 
         packet = make_packet("window-token", wid=0, token=container.token,
             acknowledged=selected)

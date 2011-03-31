@@ -411,6 +411,43 @@ class TestInventoryIntegration(unittest.TestCase):
         self.assertEqual(self.i.crafting[0], None)
         self.assertEqual(self.i.crafted[0], None)
 
+    def test_armor_slots_take_one_item_only(self):
+        self.i.add((bravo.blocks.items["iron-boots"].slot, 0), 5)
+        self.i.select(36)
+        self.i.select(5)
+        self.assertEqual(self.i.armor[0], (bravo.blocks.items["iron-boots"].slot, 0, 1))
+        self.assertEqual(self.i.selected, (bravo.blocks.items["iron-boots"].slot, 0, 4))
+
+    def test_armor_slots_take_armor_items_only(self):
+        self.i.add((bravo.blocks.blocks["dirt"].slot, 0), 10)
+        self.i.select(36)
+        self.assertFalse(self.i.select(5))
+        self.assertEqual(self.i.armor[0], None)
+        self.assertEqual(self.i.selected, (bravo.blocks.blocks["dirt"].slot, 0, 10))
+
+    def test_pumpkin_as_helmet(self):
+        self.i.add((bravo.blocks.blocks["pumpkin"].slot, 0), 1)
+        self.i.select(36)
+        self.i.select(5)
+        self.assertEqual(self.i.armor[0], (bravo.blocks.blocks["pumpkin"].slot, 0, 1))
+        self.assertEqual(self.i.selected, None)
+
+    def test_armor_only_in_matching_slots(self):
+        for index, item in enumerate(["leather-helmet", "chainmail-chestplate",
+                                      "diamond-leggings", "gold-boots"]):
+            self.i.add((bravo.blocks.items[item].slot, 0), 1)
+            self.i.select(36)
+
+            # Can't be placed in other armor slots.
+            other_slots = list(range(4))
+            other_slots.remove(index)
+            for i in other_slots:
+                self.assertFalse(self.i.select(5 + i))
+
+            # But it can in the appropriate slot.
+            self.assertTrue(self.i.select(5 + index))
+            self.assertEqual(self.i.armor[index], (bravo.blocks.items[item].slot, 0, 1))
+
 class TestWorkbenchIntegration(unittest.TestCase):
     """
     select() numbers
