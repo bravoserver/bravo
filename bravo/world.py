@@ -115,7 +115,8 @@ class World(object):
             log.msg(sre)
 
         # And now save our level.
-        self.serializer.save_level(self)
+        if self.saving:
+            self.serializer.save_level(self)
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
@@ -343,7 +344,7 @@ class World(object):
 
     def save_chunk(self, chunk):
 
-        if not chunk.dirty:
+        if not chunk.dirty or not self.saving:
             return
 
         self.serializer.save_chunk(chunk)
@@ -366,7 +367,8 @@ class World(object):
         return player
 
     def save_player(self, username, player):
-        self.serializer.save_player(player)
+        if self.saving:
+            self.serializer.save_player(player)
 
     # World-level geometry access.
     # These methods let external API users refrain from going through the
