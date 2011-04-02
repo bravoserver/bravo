@@ -193,3 +193,27 @@ class TestLightmaps(unittest.TestCase):
         self.c.regenerate()
 
         self.assertEqual(self.c.skylight[1, 1, 1], 13)
+
+    def test_skylight_arch_leaves_occluded(self):
+        """
+        Indirect illumination with dimming through occluded blocks only should
+        work.
+        """
+
+        # Floor.
+        self.c.blocks[:, :, 0].fill(1)
+
+        # Arch of bedrock, with an empty spot in the middle, which will be our
+        # indirect spot.
+        self.c.blocks[0:3, 0:3, 1:3].fill(1)
+        self.c.blocks[1, 1, 1] = 0
+
+        # Leaves in front of the spot should cause a dimming of 1, but since
+        # the leaves themselves are occluded, the total dimming should be 2.
+        self.c.blocks[2, 1, 1] = 18
+
+        # Illuminate and make sure that our indirect spot has just a little
+        # bit of illumination.
+        self.c.regenerate()
+
+        self.assertEqual(self.c.skylight[1, 1, 1], 12)

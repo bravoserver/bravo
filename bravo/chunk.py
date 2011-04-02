@@ -3,6 +3,7 @@ from warnings import warn
 
 from numpy import int8, uint8, uint32, bool
 from numpy import cast, logical_not, logical_and, transpose, where, zeros, amax
+from numpy import vectorize
 
 from bravo.blocks import blocks, glowing_blocks
 from bravo.packets import make_packet
@@ -197,7 +198,7 @@ class Chunk(object):
         # one glow level at a time, rather than spread each block
         # individually.
         max_height = amax(self.heightmap)
-        lightable = logical_not(self.blocks)
+        lightable = vectorize(lambda block: blocks[block].dim < 15)(self.blocks)
         unlighted = logical_not(lightmap) & lightable
 
         # Create a mask to find all blocks that have an unlighted block
@@ -243,7 +244,7 @@ class Chunk(object):
                         continue
 
                     if lightable[x, z, y] and lightmap[x, z, y] < glow:
-                        lightmap[x, z, y] = glow
+                        lightmap[x, z, y] = glow - blocks[self.blocks[x, z, y]].dim
                         visited.add((x, z, y))
             glow -= 1
             spread = visited
