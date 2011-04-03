@@ -390,12 +390,6 @@ unbreakables.add(7)  # Bedrock
 unbreakables.add(10) # Lava
 unbreakables.add(11) # Lava spring
 
-# Armor items.
-armor_helmets = (86, 298, 302, 306, 310, 314, ) # Pumpkin (86) as helmet.
-armor_chestplates = (299, 303, 307, 311, 315, )
-armor_leggings = (300, 304, 308, 312, 316, )
-armor_boots = (301, 305, 309, 313, 317, )
-
 blocks = {}
 """
 A dictionary of ``Block`` objects.
@@ -477,3 +471,28 @@ glowing_blocks = {
 }
 
 blocks["air"].dim = 0
+
+armor_helmets = (86, 298, 302, 306, 310, 314)
+"""
+List of slots of helmets.
+
+Note that slot 86 (pumpkin) is a helmet.
+"""
+
+armor_chestplates = (299, 303, 307, 311, 315)
+"""
+List of slots of chestplates.
+
+Note that slot 303 (chainmail chestplate) is a chestplate, even though it is
+not normally obtainable.
+"""
+
+armor_leggings = (300, 304, 308, 312, 316)
+"""
+List of slots of leggings.
+"""
+
+armor_boots = (301, 305, 309, 313, 317)
+"""
+List of slots of boots.
+"""
