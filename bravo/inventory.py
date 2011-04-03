@@ -251,6 +251,84 @@ class Inventory(object):
 
         return False
 
+
+    def select_armor(self, index, alternate):
+        """
+        Handle a slot selection on an armor slot.
+        """
+
+        # Special case for armor slots.
+        allowed_items_per_slot = {
+            0: blocks.armor_helmets, 1: blocks.armor_chestplates,
+            2: blocks.armor_leggings, 3: blocks.armor_boots
+        }
+
+        allowed_items = allowed_items_per_slot[index]
+
+        if self.selected is not None:
+            sslot = self.selected
+            if sslot.primary not in allowed_items:
+                return False
+
+            if self.armor[index] is None:
+                # Put one armor piece into the slot, decrement the amount
+                # in the selection.
+                self.armor[index] = sslot.replace(quantity=1)
+                self.selected = sslot.decrement()
+            else:
+                # If both slot and selection are the same item, do nothing.
+                # If not, the quantity needs to be 1, because only one item
+                # fits into the slot, and exchanging slot and selection is not
+                # possible otherwise.
+                if not self.armor[index].holds(sslot) and sslot.quantity == 1:
+                    self.selected, self.armor[index] = self.armor[index], self.selected
+                else:
+                    return False
+        else:
+            if self.armor[index] is None:
+                # Slot and selection are empty, do nothing.
+                return False
+            else:
+                # Move item in the slot into the selection.
+                self.selected = self.armor[index]
+                self.armor[index] = None
+
+        # Yeah, okay, success.
+        return True
+
+    def select_crafted(self, index, alternate):
+        """
+        Handle a slot selection on a crafted output.
+        """
+
+        if self.recipe and self.crafted[0]:
+            if self.selected is None:
+                self.selected = self.crafted[0]
+                self.crafted[0] = None
+            else:
+                sslot = self.selected
+                if sslot.holds(self.recipe.provides[0]):
+                    self.selected = sslot.increment(
+                        self.recipe.provides[1])
+                else:
+                    # Mismatch; don't allow it.
+                    return False
+
+            self.reduce_recipe()
+            self.check_recipes()
+            if self.recipe is None:
+                self.crafted[0] = None
+            else:
+                provides = self.recipe.provides
+                self.crafted[0] = Slot(provides[0][0], provides[0][1],
+                    provides[1])
+
+            return True
+        else:
+            # Forbid placing things in the crafted slot.
+            return False
+
+
     def select(self, slot, alternate=False):
         """
         Handle a slot selection.
@@ -273,75 +351,11 @@ class Inventory(object):
         except TypeError:
             return False
 
-        if l is self.crafted:
-            # Special case for crafted output.
-            if self.recipe and self.crafted[0]:
-                if self.selected is None:
-                    self.selected = self.crafted[0]
-                    self.crafted[0] = None
-                else:
-                    sslot = self.selected
-                    if sslot.holds(self.recipe.provides[0]):
-                        self.selected = sslot.increment(
-                            self.recipe.provides[1])
-                    else:
-                        # Mismatch; don't allow it.
-                        return False
-
-                self.reduce_recipe()
-                self.check_recipes()
-                if self.recipe is None:
-                    self.crafted[0] = None
-                else:
-                    provides = self.recipe.provides
-                    self.crafted[0] = Slot(provides[0][0], provides[0][1],
-                        provides[1])
-
-                return True
-            else:
-                # Forbid placing things in the crafted slot.
-                return False
-
         if l is self.armor:
-            # Special case for armor slots.
-            allowed_items_per_slot = {
-                0: blocks.armor_helmets, 1: blocks.armor_chestplates,
-                2: blocks.armor_leggings, 3: blocks.armor_boots
-            }
-
-            allowed_items = allowed_items_per_slot[index]
-
-            if self.selected is not None:
-                sslot = self.selected
-                if sslot.primary not in allowed_items:
-                    return False
-
-                if l[index] is None:
-                    # Put one armor piece into the slot, decrement the amount
-                    # in the selection.
-                    l[index] = sslot.replace(quantity=1)
-                    self.selected = sslot.decrement()
-                else:
-                    # If both slot and selection are the same item, do nothing.
-                    # If not, the quantity needs to be 1, because only one item
-                    # fits into the slot, and exchanging slot and selection is not
-                    # possible otherwise.
-                    if not l[index].holds(sslot) and sslot.quantity == 1:
-                        self.selected, l[index] = l[index], self.selected
-                    else:
-                        return False
-            else:
-                if l[index] is None:
-                    # Slot and selection are empty, do nothing.
-                    return False
-                else:
-                    # Move item in the slot into the selection.
-                    self.selected, l[index] = l[index], None
-
-            # Exit early, we have handled the armor slots.
-            return True
-
-        if self.selected is not None and l[index] is not None:
+            return self.select_armor(index, alternate)
+        elif l is self.crafted:
+            return self.select_crafted(index, alternate)
+        elif self.selected is not None and l[index] is not None:
             sslot = self.selected
             islot = l[index]
             if islot.holds(sslot):
