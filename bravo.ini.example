@@ -63,7 +63,7 @@ perm_cache = 3
 dig_hooks = give, replace, bravo_snow, alpha_sand_gravel, torch
 
 # Build hooks.
-build_hooks = build_snow, torch, tile, build, bravo_snow, alpha_sand_gravel
+build_hooks = build_snow, tile, build, bravo_snow, alpha_sand_gravel
 
 # Terrain generators.
 # Some important generators:
