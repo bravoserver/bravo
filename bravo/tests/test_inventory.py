@@ -433,17 +433,21 @@ class TestInventoryIntegration(unittest.TestCase):
         self.assertEqual(self.i.crafted[0], None)
 
     def test_armor_slots_take_one_item_only(self):
-        raise unittest.SkipTest("currently broken")
-
-        self.i.add((bravo.blocks.items["iron-boots"].slot, 0), 5)
+        self.i.add((bravo.blocks.items["iron-helmet"].slot, 0), 5)
         self.i.select(36)
         self.i.select(5)
-        self.assertEqual(self.i.armor[0], (bravo.blocks.items["iron-boots"].slot, 0, 1))
-        self.assertEqual(self.i.selected, (bravo.blocks.items["iron-boots"].slot, 0, 4))
+        self.assertEqual(self.i.armor[0], (bravo.blocks.items["iron-helmet"].slot, 0, 1))
+        self.assertEqual(self.i.selected, (bravo.blocks.items["iron-helmet"].slot, 0, 4))
+
+        # Exchanging one iron-helmet in the armor slot against 5 gold-helmet in the hand
+        # is not possible.
+        self.i.add((bravo.blocks.items["gold-helmet"].slot, 0), 5)
+        self.i.select(36)
+        self.i.select(5)
+        self.assertEqual(self.i.armor[0], (bravo.blocks.items["iron-helmet"].slot, 0, 1))
+        self.assertEqual(self.i.selected, (bravo.blocks.items["gold-helmet"].slot, 0, 5))
 
     def test_armor_slots_take_armor_items_only(self):
-        raise unittest.SkipTest("currently broken")
-
         self.i.add((bravo.blocks.blocks["dirt"].slot, 0), 10)
         self.i.select(36)
         self.assertFalse(self.i.select(5))
@@ -458,8 +462,6 @@ class TestInventoryIntegration(unittest.TestCase):
         self.assertEqual(self.i.selected, None)
 
     def test_armor_only_in_matching_slots(self):
-        raise unittest.SkipTest("currently broken")
-
         for index, item in enumerate(["leather-helmet", "chainmail-chestplate",
                                       "diamond-leggings", "gold-boots"]):
             self.i.add((bravo.blocks.items[item].slot, 0), 1)
