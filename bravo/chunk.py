@@ -9,8 +9,8 @@ from bravo.utilities import pack_nibbles
 
 # Set up glow tables.
 # These tables provide glow maps for illuminated points.
-glow = [None] * 15
-for i in range(15):
+glow = [None] * 16
+for i in range(16):
     dim = 2 * i + 1
     glow[i] = zeros((dim, dim, dim), dtype=int8)
     for x, y, z in product(xrange(dim), repeat=3):
