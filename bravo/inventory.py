@@ -3,6 +3,7 @@ from itertools import chain
 
 from construct import Container, ListContainer
 
+from bravo import blocks
 from bravo.ibravo import IRecipe
 from bravo.packets import make_packet
 from bravo.plugin import retrieve_plugins
@@ -300,6 +301,45 @@ class Inventory(object):
             else:
                 # Forbid placing things in the crafted slot.
                 return False
+
+        if l is self.armor:
+            # Special case for armor slots.
+            allowed_items_per_slot = {
+                0: blocks.armor_helmets, 1: blocks.armor_chestplates,
+                2: blocks.armor_leggings, 3: blocks.armor_boots
+            }
+
+            allowed_items = allowed_items_per_slot[index]
+
+            if self.selected is not None:
+                sslot = self.selected
+                if sslot.primary not in allowed_items:
+                    return False
+
+                if l[index] is None:
+                    # Put one armor piece into the slot, decrement the amount
+                    # in the selection.
+                    l[index] = sslot.replace(quantity=1)
+                    self.selected = sslot.decrement()
+                else:
+                    # If both slot and selection are the same item, do nothing.
+                    # If not, the quantity needs to be 1, because only one item
+                    # fits into the slot, and exchanging slot and selection is not
+                    # possible otherwise.
+                    if not l[index].holds(sslot) and sslot.quantity == 1:
+                        self.selected, l[index] = l[index], self.selected
+                    else:
+                        return False
+            else:
+                if l[index] is None:
+                    # Slot and selection are empty, do nothing.
+                    return False
+                else:
+                    # Move item in the slot into the selection.
+                    self.selected, l[index] = l[index], None
+
+            # Exit early, we have handled the armor slots.
+            return True
 
         if self.selected is not None and l[index] is not None:
             sslot = self.selected

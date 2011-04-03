@@ -390,6 +390,12 @@ unbreakables.add(7)  # Bedrock
 unbreakables.add(10) # Lava
 unbreakables.add(11) # Lava spring
 
+# Armor items.
+armor_helmets = (86, 298, 302, 306, 310, 314, ) # Pumpkin (86) as helmet.
+armor_chestplates = (299, 303, 307, 311, 315, )
+armor_leggings = (300, 304, 308, 312, 316, )
+armor_boots = (301, 305, 309, 313, 317, )
+
 blocks = {}
 """
 A dictionary of ``Block`` objects.
