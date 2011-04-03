@@ -2,6 +2,14 @@ import unittest
 
 import bravo.blocks
 
+class TestBlockNames(unittest.TestCase):
+
+    def test_no_intersection(self):
+        self.assertTrue(set(bravo.blocks.block_names).isdisjoint(set(bravo.blocks.item_names)))
+        self.assertTrue(set(bravo.blocks.block_names).isdisjoint(set(bravo.blocks.special_item_names)))
+        self.assertTrue(set(bravo.blocks.item_names).isdisjoint(set(bravo.blocks.special_item_names)))
+
+
 class TestBlockQuirks(unittest.TestCase):
 
     def test_ice_no_drops(self):
