@@ -106,3 +106,24 @@ Bravo's core does not even provide Minecraft services by default.
 The reason for this extreme plugin approach is that Bravo was designed to be
 easily totally convertible; in theory, a proper set of configuration files and
 external plugins can completely change Bravo's behavior.
+
+Versioning
+==========
+
+Bravo's version numbers are not very complex. Here's a quick breakdown.
+
+Major version numbers indicate the core structure of Bravo. A major version
+bump probably means that lots of modules changed names, or that something
+significant was added. In practice, this probably means that an entirely new
+set of protocols was added. (The next major version bump will probably be for
+InfiniCraft support.)
+
+Minor version numbers are for changes to interfaces or any other change which
+means that external code relying on Bravo's API will have to be updated.
+
+Patchlevel version numbers aren't currently used, but probably will signify
+that the release is a bugfix-only release with no significant change in
+functionality.
+
+The hope of all of this is that, given a series of releases with the same
+major and minor, plugins do not have to be changed.
