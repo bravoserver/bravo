@@ -610,7 +610,7 @@ class BravoProtocol(BetaServerProtocol):
             if holding:
                 primary, secondary, count = holding
                 if i.consume((primary, secondary), self.player.equipped):
-                    dest = self.location.in_front_of(self.location)
+                    dest = self.location.in_front_of(2)
                     dest.y += 1
                     coords = (int(dest.x * 32) + 16, int(dest.y * 32) + 16,
                         int(dest.z * 32) + 16)
