@@ -5,8 +5,9 @@ import bravo.blocks
 class TestBlockNames(unittest.TestCase):
 
     def test_unique_blocks_and_items(self):
-        raise unittest.SkipTest("currently broken")
         self.assertTrue(set(bravo.blocks.block_names).isdisjoint(set(bravo.blocks.item_names)))
+
+    test_unique_blocks_and_items.todo = "Needs love and disambiguation"
 
     def test_unique_blocks_and_special_items(self):
         self.assertTrue(set(bravo.blocks.block_names).isdisjoint(set(bravo.blocks.special_item_names)))

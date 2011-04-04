@@ -15,11 +15,11 @@ class TestPacketDataStructures(unittest.TestCase):
                     "%d is missing" % slot)
 
     def test_packet_names_exist(self):
-        raise unittest.SkipTest("currently broken")
-
         for slot in bravo.packets.packets.iterkeys():
             self.assertTrue(slot in bravo.packets.packets_by_name.values(),
                     "%d is missing" % slot)
+
+    test_packet_names_exist.todo = "Missing a couple packet names still"
 
     def test_packet_names_match(self):
         for name, slot in bravo.packets.packets_by_name.iteritems():

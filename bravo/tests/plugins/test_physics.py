@@ -208,8 +208,6 @@ class TestWater(unittest.TestCase):
         keep that stray water alive.
         """
 
-        raise unittest.SkipTest("currently broken")
-
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
         self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
         self.hook.pending[self.f].add((0, 0, 0))
@@ -232,6 +230,8 @@ class TestWater(unittest.TestCase):
         for coords in ((1, 1, 0), (-1, 1, 0), (0, 1, 1), (0, 1, -1)):
             self.assertEqual(self.w.get_block(coords),
                 bravo.blocks.blocks["air"].slot)
+
+    test_spring_underneath_keepalive.todo = "Known bug in fluid simulator"
 
 class TestRedstone(unittest.TestCase):
 
