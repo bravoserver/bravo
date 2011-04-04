@@ -1,18 +1,20 @@
 from twisted.web.resource import Resource
 from twisted.web.server import Site
-from twisted.web.xmlrpc import XMLRPC
 
 from bravo import version
 
-class BravoXMLRPC(XMLRPC):
+class BravoResource(Resource):
 
-    def xmlrpc_version(self):
-        return "Bravo %s" % version
+    isLeaf = True
 
-def create_web():
-    root = Resource()
-    root.putChild("RPC2", BravoXMLRPC())
-    site = Site(root)
+    def __init__(self, services):
+        self.services = services
+
+    def render_GET(self, request):
+        response = u"Bravo %s" % version
+        return response.encode("utf8")
+
+def bravo_site(services):
+    resource = BravoResource(services)
+    site = Site(resource)
     return site
-
-site = create_web()
