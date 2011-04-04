@@ -598,9 +598,40 @@ class BravoProtocol(BetaServerProtocol):
         # XXX several improvements should happen here
         # ~ We should time started and stopped pairs to force clients to
         # slow-break their blocks
-        # ~ we should handle "dropped" state packets for item drops
         if container.x == -1 and container.z == -1 and container.y == 255:
             # Lala-land dig packet. Discard it for now.
+            return
+
+        # Player drops currently holding item/block.
+        if (container.state == "dropped" and container.face == "-y" and
+            container.x == 0 and container.y == 0 and container.z == 0):
+            i = self.player.inventory
+            holding = i.holdables[self.player.equipped]
+            if holding:
+                primary, secondary, count = holding
+                if i.consume((primary, secondary), self.player.equipped):
+                    # XXX move this into an utility function
+                    l = self.location
+                    x = l.x - 2 * sin(l.theta)
+                    y = l.y + 1
+                    z = l.z + 2 * cos(l.theta)
+                    coords = (int(x * 32) + 16, int(y * 32) + 16, int(z * 32) + 16)
+                    self.factory.give(coords, (primary, secondary), 1)
+
+                    # Re-send inventory.
+                    packet = self.player.inventory.save_to_packet()
+                    self.transport.write(packet)
+
+                    # If no items in this slot are left, this player isn't
+                    # holding an item anymore.
+                    if i.holdables[self.player.equipped] is None:
+                        packet = make_packet("entity-equipment",
+                            eid=self.player.eid,
+                            slot=0,
+                            primary=65535,
+                            secondary=0
+                        )
+                        self.factory.broadcast_for_others(packet, self)
             return
 
         if container.state != "stopped":
