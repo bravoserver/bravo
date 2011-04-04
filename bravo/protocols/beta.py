@@ -2,7 +2,7 @@ from collections import namedtuple
 from itertools import product
 from time import time
 from urlparse import urlunparse
-from math import pi, sin, cos
+from math import pi
 
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
@@ -610,12 +610,10 @@ class BravoProtocol(BetaServerProtocol):
             if holding:
                 primary, secondary, count = holding
                 if i.consume((primary, secondary), self.player.equipped):
-                    # XXX move this into an utility function
-                    l = self.location
-                    x = l.x - 2 * sin(l.theta)
-                    y = l.y + 1
-                    z = l.z + 2 * cos(l.theta)
-                    coords = (int(x * 32) + 16, int(y * 32) + 16, int(z * 32) + 16)
+                    dest = self.location.in_front_of(self.location)
+                    dest.y += 1
+                    coords = (int(dest.x * 32) + 16, int(dest.y * 32) + 16,
+                        int(dest.z * 32) + 16)
                     self.factory.give(coords, (primary, secondary), 1)
 
                     # Re-send inventory.
@@ -764,15 +762,11 @@ class BravoProtocol(BetaServerProtocol):
         if container.wid in self.windows:
             i = self.windows[container.wid]
             if i.identifier == 1:
-                # closing workbench
-                # XXX: this should be re-factored into an extra utility function
-                # Do some trig to put the pickup one block ahead of the player
-                # in the direction they are facing.
-                l = self.location
-                x = l.x - sin(l.theta)
-                y = l.y + 1
-                z = l.z + cos(l.theta)
-                coords = (int(x * 32) + 16, int(y * 32) + 16, int(z * 32) + 16)
+                # Closing the workbench.
+                dest = self.location.in_front_of(1)
+                dest.y += 1
+                coords = (int(dest.x * 32) + 16, int(dest.y * 32) + 16,
+                    int(dest.z * 32) + 16)
                 # loop over items left in workbench
                 for item in i.crafting:
                     if item is None:

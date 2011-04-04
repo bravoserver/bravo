@@ -67,3 +67,24 @@ class TestLocationProperties(unittest.TestCase):
     def test_yaw_wrap_negative(self):
         self.l.yaw = -10
         self.assertEqual(self.l.yaw, 350)
+
+class TestLocationMethods(unittest.TestCase):
+
+    def setUp(self):
+        self.l = bravo.location.Location()
+
+    def test_trivial(self):
+        pass
+
+    def test_in_front_of(self):
+        self.l.yaw = 0
+        other = self.l.in_front_of(1)
+
+        self.assertEqual(other.x, 0)
+        self.assertEqual(other.z, 1)
+
+        self.l.yaw = 90
+        other = self.l.in_front_of(1)
+
+        self.assertEqual(other.x, -1)
+        self.assertEqual(other.z, 0)

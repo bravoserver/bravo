@@ -176,20 +176,11 @@ class Give(object):
         block = parse_block(block)
         count = parse_int(count)
 
-        x = player.player.location.x
-        y = player.player.location.y
-        z = player.player.location.z
-        theta = player.player.location.theta
+        # Get a location two blocks in front of the player.
+        dest = player.player.location.in_front_of(2)
+        dest.y += 1
 
-        # Do some trig to put the pickup two blocks ahead of the player in the
-        # direction they are facing. Note that all three coordinates are
-        # "misnamed;" the unit circle actually starts at (0, 1) and goes
-        # *backwards* towards (-1, 0).
-        x -= 2 * math.sin(theta)
-        y += 1
-        z += 2 * math.cos(theta)
-
-        coords = int(x * 32), int(y * 32), int(z * 32)
+        coords = int(dest.x * 32), int(dest.y * 32), int(dest.z * 32)
 
         factory.give(coords, block, count)
 

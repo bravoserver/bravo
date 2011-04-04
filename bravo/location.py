@@ -1,4 +1,5 @@
-from math import degrees, radians, pi, sqrt
+from copy import copy
+from math import cos, degrees, radians, pi, sin, sqrt
 
 from construct import Container
 
@@ -87,3 +88,25 @@ class Location(object):
         dy = (self.y - other.y)**2
         dz = (self.z - other.z)**2
         return sqrt(dx + dy + dz)
+
+    def in_front_of(self, distance):
+        """
+        Return a ``Location`` a certain number of blocks in front of this
+        position.
+
+        The orientation of the returned location is undefined.
+
+        :param int distance: the number of blocks by which to offset this
+                             position
+        """
+
+        other = copy(self)
+
+        # Do some trig to put the other location a few blocks ahead of the
+        # player in the direction they are facing. Note that all three
+        # coordinates are "misnamed;" the unit circle actually starts at (0,
+        # 1) and goes *backwards* towards (-1, 0).
+        other.x = self.x - distance * sin(self.theta)
+        other.z = self.z + distance * cos(self.theta)
+
+        return other
