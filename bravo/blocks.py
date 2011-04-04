@@ -253,6 +253,9 @@ block_names = [
     "portal",
     "jack-o-lantern",
     "cake",
+    "redstone-repeater-off",
+    "redstone-repeater-on",
+    "locked-chest",
 ]
 
 item_names = [
@@ -355,6 +358,9 @@ item_names = [
     "bone",
     "sugar",
     "cake",
+    "bed",
+    "redstone-repeater",
+    "cookie",
 ]
 
 special_item_names = [
@@ -382,6 +388,9 @@ drops[68] = 323 # Wall Sign         -> Sign Item
 drops[71] = 330 # Iron Door         -> Iron Door Item
 drops[83] = 338 # Reed              -> Reed Item
 drops[89] = 348 # Lightstone        -> Lightstone Dust
+drops[93] = 356 # Redstone-repeater-on  -> Redstone-repeater
+drops[94] = 356 # Redstone-repeater-off -> Redstone-repeater
+
 
 unbreakables = set()
 
@@ -468,6 +477,18 @@ for i, name in enumerate(special_item_names):
 
 glowing_blocks = {
     blocks["torch"].slot: 14,
+    blocks["lightstone"].slot: 15,
+    blocks["jack-o-lantern"].slot: 15,
+    blocks["fire"].slot: 15,
+    blocks["lava"].slot: 15,
+    blocks["lava-spring"].slot: 15,
+    blocks["locked-chest"].slot: 15,
+    blocks["burning-furnace"].slot: 13,
+    blocks["portal"].slot: 11,
+    blocks["glowing-redstone-ore"].slot: 9,
+    blocks["redstone-repeater-on"].slot: 9,
+    blocks["redstone-torch"].slot: 7,
+    blocks["brown-mushroom"].slot: 1,
 }
 
 blocks["air"].dim = 0
