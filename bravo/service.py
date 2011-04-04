@@ -50,7 +50,8 @@ class BravoService(MultiService):
                     log.msg("Couldn't import web stuff!")
                 else:
                     factory = bravo_site(self.namedServices)
-                    server = TCPServer(8080, factory)
+                    port = configuration.getint("web", "port")
+                    server = TCPServer(port, factory)
                     server.setName("web")
                     self.addService(server)
             elif section.startswith("irc "):
