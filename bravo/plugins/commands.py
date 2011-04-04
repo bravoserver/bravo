@@ -1,5 +1,3 @@
-import math
-
 from zope.interface import implements
 from twisted.internet import reactor
 
