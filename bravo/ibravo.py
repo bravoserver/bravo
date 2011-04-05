@@ -10,6 +10,9 @@ class IBravoPlugin(IPlugin):
 
     name = Attribute("""
         The name of the plugin.
+
+        This name is used to reference the plugin in configurations, and also
+        to uniquely index the plugin.
         """)
 
 class ISortedPlugin(IBravoPlugin):
@@ -17,15 +20,19 @@ class ISortedPlugin(IBravoPlugin):
     Parent interface for sorted plugins.
 
     Sorted plugins have an innate and automatic ordering inside lists thanks
-    to dependency lists.
+    to the ability to advertise their dependencies.
     """
 
     before = Attribute("""
         Plugins which must come before this plugin in the pipeline.
+
+        Should be a tuple, list, or some other iterable.
         """)
 
     after = Attribute("""
         Plugins which must come after this plugin in the pipeline.
+
+        Should be a tuple, list, or some other iterable.
         """)
 
 class IAuthenticator(IBravoPlugin):
