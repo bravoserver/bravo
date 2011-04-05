@@ -1,6 +1,6 @@
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
-from twisted.web.template import flattenString, renderer, Element, XMLString
+from twisted.web.template import flattenString, renderer, tags, Element, XMLString
 
 from bravo import version
 
@@ -10,6 +10,7 @@ root_template = """
     <title t:render="title" />
 </head>
 <h1 t:render="title" />
+<div t:render="service" />
 </html>
 """
 
@@ -17,9 +18,23 @@ class BravoElement(Element):
 
     loader = XMLString(root_template)
 
+    def __init__(self, services):
+        Element.__init__(self)
+
+        self.services = services
+
     @renderer
     def title(self, request, tag):
         return tag("Bravo %s" % version)
+
+    @renderer
+    def service(self, request, tag):
+        l = []
+        for name in self.services:
+            item = tags.li("%s (%s)" % (name, self.services[name].__class__))
+            l.append(item)
+        ul = tags.ul(*l)
+        return tag(ul)
 
 class BravoResource(Resource):
 
@@ -29,7 +44,7 @@ class BravoResource(Resource):
         self.services = services
 
     def render_GET(self, request):
-        d = flattenString(request, BravoElement())
+        d = flattenString(request, BravoElement(self.services))
         def complete_request(html):
             request.write(html)
             request.finish()
