@@ -291,3 +291,25 @@ class ISignHook(ISortedPlugin):
         :param list text: list of lines of text
         :param bool new: whether this sign is newly placed
         """
+
+class IUseHook(IBravoPlugin):
+    """
+    Hook for actions to be taken when a player interacts with an entity.
+
+    Each plugin needs to specify a list of entity types it is interested in
+    in advance, and it will only be called for those.
+    """
+
+    def use_hook(factory, player, target, alternate):
+        """
+        Do things.
+
+        :param `Factory` factory: factory
+        :param `Player` player: player
+        :param `Entity` target: target of the interaction
+        :param bool alternate: whether the player right-clicked the target
+        """
+
+    targets = Attribute("""
+        List of entity names this plugin wants to be called for.
+        """)
