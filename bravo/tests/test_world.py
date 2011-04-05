@@ -123,6 +123,21 @@ class TestWorldChunks(unittest.TestCase):
             self.assertEqual(chunk.get_metadata((x, y, z)),
                 self.w.get_metadata((x, y, z)))
 
+    def test_world_level_mark_chunk_dirty(self):
+        chunk = self.w.load_chunk(0, 0)
+
+        # Reload chunk.
+        self.w.save_chunk(chunk)
+        del chunk
+        self.w.chunk_cache.clear()
+        self.w.dirty_chunk_cache.clear()
+        chunk = self.w.load_chunk(0, 0)
+
+        self.assertFalse(chunk.dirty)
+        self.w.mark_dirty((12, 64, 4))
+        chunk = self.w.load_chunk(0, 0)
+        self.assertTrue(chunk.dirty)
+
 class TestWorldInit(unittest.TestCase):
 
     def setUp(self):

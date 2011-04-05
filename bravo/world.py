@@ -420,3 +420,11 @@ class World(object):
         """
 
         chunk.destroy(coords)
+
+    @coords_to_chunk
+    def mark_dirty(self, chunk, coords):
+        """
+        Mark an unknown chunk dirty.
+        """
+
+        chunk.dirty = True
