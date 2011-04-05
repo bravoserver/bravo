@@ -138,6 +138,21 @@ class TestWorldChunks(unittest.TestCase):
         chunk = self.w.load_chunk(0, 0)
         self.assertTrue(chunk.dirty)
 
+    def test_world_level_mark_chunk_dirty_offset(self):
+        chunk = self.w.load_chunk(1, 2)
+
+        # Reload chunk.
+        self.w.save_chunk(chunk)
+        del chunk
+        self.w.chunk_cache.clear()
+        self.w.dirty_chunk_cache.clear()
+        chunk = self.w.load_chunk(1, 2)
+
+        self.assertFalse(chunk.dirty)
+        self.w.mark_dirty((29, 64, 43))
+        chunk = self.w.load_chunk(1, 2)
+        self.assertTrue(chunk.dirty)
+
 class TestWorldInit(unittest.TestCase):
 
     def setUp(self):
