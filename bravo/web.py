@@ -44,8 +44,10 @@ class BravoElement(Element):
         return tag(ul, div)
 
     def bravofactory(self, request, tag, factory):
+        g = (tags.li(username) for username in factory.protocols)
+        users = tags.div(tags.h3("Users"), tags.ul(*g))
         world = self.world(request, tags.div, factory.world)
-        return tag(tags.h2("Bravo world %s" % factory.name), world)
+        return tag(tags.h2("Bravo world %s" % factory.name), users, world)
 
     def world(self, request, tag, world):
         l = []
