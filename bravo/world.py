@@ -67,6 +67,13 @@ class World(object):
     XXX Currently pegged to 0; change this when Nether work gets underway.
     """
 
+    permanent_cache = None
+    """
+    A permanent cache of chunks which are never evicted from memory.
+
+    This cache is used to speed up logins near the spawn point.
+    """
+
     def __init__(self, name):
         """
         Load a world from disk.
