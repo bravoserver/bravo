@@ -80,3 +80,28 @@ class TestBravoFactory(unittest.TestCase):
         # 65 blocks should be split into two stacks.
         self.f.give((0, 0, 0), (2, 0), 65)
         self.assertEqual(count[0], 2)
+
+    def test_players_near(self):
+        # Register some players on the factory first.
+        players = [
+            self.f.create_entity(0, 0, 0, "Player", username=""),   # eid 2
+            self.f.create_entity(0, 2, 0, "Player", username=""),   # eid 3
+            self.f.create_entity(1, 0, 3, "Player", username=""),   # eid 4
+            self.f.create_entity(0, 4, 1, "Player", username="")    # eid 5
+        ]
+
+        for i, player in enumerate(players):
+            self.f.protocols[i] = player
+
+        # List of tests (player in the center, radius, expected eids).
+        expected_results = [
+            (players[0], 1, []),
+            (players[0], 2, [3]),
+            (players[0], 4, [3, 4]),
+            (players[0], 5, [3, 4, 5]),
+            (players[1], 3, [2, 5])
+        ]
+
+        for player, radius, result in expected_results:
+            found = [p.eid for p in self.f.players_near(player, radius)]
+            self.assertEqual(set(found), set(result))
