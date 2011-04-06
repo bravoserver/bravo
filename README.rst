@@ -99,6 +99,9 @@ external libraries from PyPI:
 For IRC support, Twisted Words is required; it is usually called
 python-twisted-words or twisted-words in package managers.
 
+For web service support, Twisted 11.0 is required and the Twisted Web package
+must be installed; it is generally called python-twisted-web or twisted-web.
+
 **Important: Bravo's installation process is currently broken. Until this
 notice is removed, please don't install, just run directly from the git
 checkout. It's easier and runs just as well.**

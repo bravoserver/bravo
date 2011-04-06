@@ -75,3 +75,8 @@ build_hooks = build_snow, tile, build, bravo_snow, alpha_sand_gravel
 # well.
 #generators = boring, erosion, watertable, grass, safety
 generators = simplex, erosion, watertable, beaches, grass, safety
+
+# The web service. Comment out to disable.
+[web]
+# Port to listen on.
+port = 8080

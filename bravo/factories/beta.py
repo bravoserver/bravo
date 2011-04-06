@@ -296,6 +296,18 @@ class BravoFactory(Factory):
 
             quantity -= 64
 
+    def players_near(self, player, radius):
+        """
+        Obtain other players within a radius of a given player.
+
+        Radius is measured in blocks.
+        """
+
+        for i in (p for p in self.protocols.itervalues()
+            if player.location.distance(p.location) <= radius and
+            p != player):
+            yield i
+
     def stopFactory(self):
         """
         Called before factory stops listening on ports. Used to perform
