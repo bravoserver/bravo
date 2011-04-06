@@ -31,9 +31,12 @@ def coords_to_chunk(f):
         x, y, z = coords
 
         bigx, smallx, bigz, smallz = split_coords(x, z)
-        chunk = self.load_chunk(bigx, bigz)
+        d = self.request_chunk(bigx, bigz)
 
-        return f(self, chunk, (smallx, y, smallz), *args, **kwargs)
+        def cb(chunk):
+            return f(self, chunk, (smallx, y, smallz), *args, **kwargs)
+        d.addCallback(cb)
+        return d
 
     return decorated
 
@@ -259,13 +262,6 @@ class World(object):
         :returns: Deferred that will be called with the Chunk
         """
 
-        if not self.async:
-            return deferLater(reactor, 0.000001, self.load_chunk,
-                x, z)
-
-        from ampoule import deferToAMPProcess
-        from bravo.remote import MakeChunk
-
         if (x, z) in self.chunk_cache:
             return succeed(self.chunk_cache[x, z])
         elif (x, z) in self.dirty_chunk_cache:
@@ -282,13 +278,20 @@ class World(object):
             self.postprocess_chunk(chunk)
             return succeed(chunk)
 
-        d = deferToAMPProcess(MakeChunk,
-            x=x,
-            z=z,
-            seed=self.seed,
-            generators=configuration.getlist(self.config_name, "generators")
-        )
-        self._pending_chunks[x, z] = d
+        if self.async:
+            from ampoule import deferToAMPProcess
+            from bravo.remote import MakeChunk
+
+            d = deferToAMPProcess(MakeChunk,
+                x=x,
+                z=z,
+                seed=self.seed,
+                generators=configuration.getlist(self.config_name, "generators")
+            )
+            self._pending_chunks[x, z] = d
+        else:
+            self.populate_chunk(chunk)
+            d = succeed(chunk)
 
         def pp(kwargs):
             chunk.blocks = fromstring(kwargs["blocks"],
@@ -319,35 +322,6 @@ class World(object):
         # going to keep it for ourselves and fork off another Deferred for our
         # caller.
         return fork_deferred(d)
-
-    def load_chunk(self, x, z):
-        """
-        Retrieve a ``Chunk`` synchronously.
-
-        This method does lots of automatic caching of chunks to ensure that
-        disk I/O is kept to a minimum.
-        """
-
-        if (x, z) in self.chunk_cache:
-            return self.chunk_cache[x, z]
-        elif (x, z) in self.dirty_chunk_cache:
-            return self.dirty_chunk_cache[x, z]
-
-        chunk = Chunk(x, z)
-        self.serializer.load_chunk(chunk)
-
-        if chunk.populated:
-            self.chunk_cache[x, z] = chunk
-        else:
-            self.populate_chunk(chunk)
-            chunk.populated = True
-            chunk.dirty = True
-
-            self.dirty_chunk_cache[x, z] = chunk
-
-        self.postprocess_chunk(chunk)
-
-        return chunk
 
     def save_chunk(self, chunk):
 

@@ -49,11 +49,14 @@ class Tile(object):
                 z += 1
 
             bigx, smallx, bigz, smallz = split_coords(x, z)
-            chunk = factory.world.load_chunk(bigx, bigz)
+
+            d = factory.world.request_chunk(bigx, bigz)
 
             # Let's build a sign!
             s = Sign(smallx, y, smallz)
-            chunk.tiles[smallx, y, smallz] = s
+            def set_sign(chunk):
+                chunk.tiles[smallx, y, smallz] = s
+            d.addCallback(set_sign)
 
         elif item.slot == blocks["chest"].slot:
             if face == "-x":
@@ -70,11 +73,13 @@ class Tile(object):
                 z += 1
 
             bigx, smallx, bigz, smallz = split_coords(x, z)
-            chunk = factory.world.load_chunk(bigx, bigz)
+            d = factory.world.request_chunk(bigx, bigz)
 
             # Not much to do, just tell the chunk about this chest.
             c = Chest(smallx, y, smallz)
-            chunk.tiles[smallx, y, smallz] = c
+            def set_chest(chunk):
+                chunk.tiles[smallx, y, smallz] = c
+            d.addCallback(set_chest)
 
         return True, builddata
 

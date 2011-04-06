@@ -131,10 +131,9 @@ class BravoFactory(Factory):
         bigx = entity.location.x // 16
         bigz = entity.location.z // 16
 
-        chunk = self.world.load_chunk(bigx, bigz)
-        chunk.entities.add(entity)
-
-        log.msg("Created entity %s" % entity)
+        d = self.world.request_chunk(bigx, bigz)
+        d.addCallback(lambda chunk: chunk.entities.add(entity))
+        d.addCallback(lambda none: log.msg("Created entity %s" % entity))
 
         return entity
 
@@ -163,10 +162,9 @@ class BravoFactory(Factory):
         bigx = entity.location.x // 16
         bigz = entity.location.z // 16
 
-        chunk = self.world.load_chunk(bigx, bigz)
-        chunk.entities.discard(entity)
-
-        log.msg("Destroyed entity %s" % entity)
+        d = self.world.request_chunk(bigx, bigz)
+        d.addCallback(lambda chunk: chunk.entities.discard(entity))
+        d.addCallback(lambda none: log.msg("Destroyed entity %s" % entity))
 
     def update_time(self):
         """

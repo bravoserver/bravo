@@ -213,12 +213,13 @@ class Fluid(object):
                                 new.add(coords)
 
             # Flush affected chunks.
+            # XXX not super-efficient...
             to_flush = defaultdict(set)
             for x, y, z in chain(self.pending[factory], new):
-                to_flush[factory].add(factory.world.load_chunk(x // 16, z // 16))
-            for factory, chunks in to_flush.iteritems():
-                for chunk in chunks:
-                    factory.flush_chunk(chunk)
+                to_flush[factory].add(factory.world.request_chunk(x // 16, z // 16))
+            for factory, deferreds in to_flush.iteritems():
+                for d in deferreds:
+                    d.addCallback(factory.flush_chunk)
 
             self.pending[factory] = new
 
