@@ -6,6 +6,12 @@ from twisted.trial import unittest
 import bravo.config
 import bravo.factories.beta
 
+class MockProtocol(object):
+
+    def __init__(self, player):
+        self.player = player
+        self.location = player.location
+
 class TestBravoFactory(unittest.TestCase):
 
     def setUp(self):
@@ -82,7 +88,7 @@ class TestBravoFactory(unittest.TestCase):
         self.assertEqual(count[0], 2)
 
     def test_players_near(self):
-        # Register some players on the factory first.
+        # Register some protocols with a player on the factory first.
         players = [
             self.f.create_entity(0, 0, 0, "Player", username=""),   # eid 2
             self.f.create_entity(0, 2, 0, "Player", username=""),   # eid 3
@@ -91,7 +97,7 @@ class TestBravoFactory(unittest.TestCase):
         ]
 
         for i, player in enumerate(players):
-            self.f.protocols[i] = player
+            self.f.protocols[i] = MockProtocol(player)
 
         # List of tests (player in the center, radius, expected eids).
         expected_results = [
