@@ -6,9 +6,9 @@ import weakref
 
 from numpy import fromstring, uint8
 
-from twisted.internet import reactor
-from twisted.internet.defer import succeed
-from twisted.internet.task import coiterate, deferLater, LoopingCall
+from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
+                                    returnValue, succeed)
+from twisted.internet.task import coiterate, LoopingCall
 from twisted.python import log
 
 from bravo.chunk import Chunk
@@ -118,11 +118,13 @@ class World(object):
 
         # First, try loading the level, to see if there's any data out there
         # which we can use. If not, don't worry about it.
-        try:
-            self.serializer.load_level(self)
-        except SerializerReadException, sre:
+        d = maybeDeferred(self.serializer.load_level, self)
+        d.addCallback(lambda chaff: log.msg("Loaded level data!"))
+        def sre(failure):
+            failure.trap(SerializerReadException)
             log.msg("Had issues loading level data...")
-            log.msg(sre)
+            log.msg(failure)
+        d.addErrback(sre)
 
         # And now save our level.
         if self.saving:
@@ -255,28 +257,30 @@ class World(object):
         # Return the chunk, in case we are in a Deferred chain.
         return chunk
 
+    @inlineCallbacks
     def request_chunk(self, x, z):
         """
         Request a ``Chunk`` to be delivered later.
 
-        :returns: Deferred that will be called with the Chunk
+        :returns: ``Deferred`` that will be called with the ``Chunk``
         """
 
         if (x, z) in self.chunk_cache:
-            return succeed(self.chunk_cache[x, z])
+            returnValue(self.chunk_cache[x, z])
         elif (x, z) in self.dirty_chunk_cache:
-            return succeed(self.dirty_chunk_cache[x, z])
+            returnValue(self.dirty_chunk_cache[x, z])
         elif (x, z) in self._pending_chunks:
             # Rig up another Deferred and wrap it up in a to-go box.
-            return fork_deferred(self._pending_chunks[x, z])
+            retval = yield fork_deferred(self._pending_chunks[x, z])
+            returnValue(retval)
 
         chunk = Chunk(x, z)
-        self.serializer.load_chunk(chunk)
+        yield maybeDeferred(self.serializer.load_chunk, chunk)
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
             self.postprocess_chunk(chunk)
-            return succeed(chunk)
+            returnValue(chunk)
 
         if self.async:
             from ampoule import deferToAMPProcess
@@ -327,7 +331,8 @@ class World(object):
         # Multiple people might be subscribed to this pending callback. We're
         # going to keep it for ourselves and fork off another Deferred for our
         # caller.
-        return fork_deferred(d)
+        retval = yield fork_deferred(d)
+        returnValue(retval)
 
     def save_chunk(self, chunk):
 
