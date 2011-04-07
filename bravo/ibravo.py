@@ -243,16 +243,30 @@ class IBuildHook(ISortedPlugin):
         of building should continue after this hook runs. Use it to halt build
         hook processing, if needed.
 
+        For sanity purposes, build hooks may return a ``Deferred`` which will
+        fire with their return values, but are not obligated to do so.
+
         A trivial do-nothing build hook looks like the following:
 
         >>> def build_hook(self, factory, player, builddata):
         ...     return True, builddata
 
+        To make life more pleasant when returning deferred values, use
+        ``inlineCallbacks``, which many of the standard build hooks use:
+
+        >>> @inlineCallbacks
+        ... def build_hook(self, factory, player, builddata):
+        ...     returnValue((True, builddata))
+
+        This form makes it much easier to deal with asynchronous operations on
+        the factory and world.
+
         :param ``Factory`` factory: factory
         :param ``Player`` player: player entity doing the building
         :param namedtuple builddata: permanent building location and data
 
-        :returns: tuple of build data and whether subsequent hooks will run
+        :returns: ``Deferred`` with tuple of build data and whether subsequent
+                  hooks will run
         """
 
 class IDigHook(ISortedPlugin):

@@ -5,7 +5,7 @@ from urlparse import urlunparse
 from math import pi
 
 from twisted.internet import reactor
-from twisted.internet.defer import succeed
+from twisted.internet.defer import inlineCallbacks, maybeDeferred, succeed
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import cooperate, LoopingCall
@@ -657,6 +657,7 @@ class BravoProtocol(BetaServerProtocol):
 
         self.factory.flush_chunk(chunk)
 
+    @inlineCallbacks
     def build(self, container):
         if container.x == -1 and container.z == -1 and container.y == 255:
             # Lala-land build packet. Discard it for now.
@@ -712,8 +713,8 @@ class BravoProtocol(BetaServerProtocol):
             container.z, container.face)
 
         for hook in self.build_hooks:
-            cont, builddata = hook.build_hook(self.factory, self.player,
-                builddata)
+            cont, builddata = yield maybeDeferred(hook.build_hook,
+                self.factory, self.player, builddata)
             if not cont:
                 break
 

@@ -1,3 +1,4 @@
+from twisted.internet.defer import inlineCallbacks, returnValue
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
@@ -14,6 +15,7 @@ class Tile(object):
 
     implements(IBuildHook)
 
+    @inlineCallbacks
     def build_hook(self, factory, player, builddata):
         item, metadata, x, y, z, face = builddata
 
@@ -30,7 +32,7 @@ class Tile(object):
                 x += 1
             elif face == "-y":
                 # Ceiling Sign is watching you read.
-                return False, builddata
+                returnValue((False, builddata))
             elif face == "+y":
                 # Put +Y signs on signposts. We're fancy that way. Also,
                 # calculate the proper orientation based on player
@@ -50,13 +52,10 @@ class Tile(object):
 
             bigx, smallx, bigz, smallz = split_coords(x, z)
 
-            d = factory.world.request_chunk(bigx, bigz)
-
             # Let's build a sign!
+            chunk = yield factory.world.request_chunk(bigx, bigz)
             s = Sign(smallx, y, smallz)
-            def set_sign(chunk):
-                chunk.tiles[smallx, y, smallz] = s
-            d.addCallback(set_sign)
+            chunk.tiles[smallx, y, smallz] = s
 
         elif item.slot == blocks["chest"].slot:
             if face == "-x":
@@ -73,15 +72,13 @@ class Tile(object):
                 z += 1
 
             bigx, smallx, bigz, smallz = split_coords(x, z)
-            d = factory.world.request_chunk(bigx, bigz)
 
             # Not much to do, just tell the chunk about this chest.
+            chunk = yield factory.world.request_chunk(bigx, bigz)
             c = Chest(smallx, y, smallz)
-            def set_chest(chunk):
-                chunk.tiles[smallx, y, smallz] = c
-            d.addCallback(set_chest)
+            chunk.tiles[smallx, y, smallz] = c
 
-        return True, builddata
+        returnValue((True, builddata))
 
     name = "tile"
 
@@ -134,6 +131,7 @@ class Build(object):
 
         builddata = builddata._replace(x=x, y=y, z=z, face="noop")
 
+        # Set the block and data. Don't bother collecting the Deferreds.
         factory.world.set_block((x, y, z), block.slot)
         if metadata:
             factory.world.set_metadata((x, y, z), metadata)
@@ -154,14 +152,15 @@ class BuildSnow(object):
 
     implements(IBuildHook)
 
+    @inlineCallbacks
     def build_hook(self, factory, player, builddata):
-        block = factory.world.get_block((builddata.x, builddata.y, builddata.z))
+        block = yield factory.world.get_block((builddata.x, builddata.y, builddata.z))
 
         if block == blocks["snow"].slot:
             # Building any block on snow causes snow to get replaced.
             builddata = builddata._replace(face="+y", y=builddata.y - 1)
 
-        return True, builddata
+        returnValue((True, builddata))
 
     name = "build_snow"
 
