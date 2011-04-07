@@ -172,41 +172,57 @@ class ISerializer(IBravoPlugin):
     def save_chunk(chunk):
         """
         Save a chunk.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def load_chunk(chunk):
         """
         Load a chunk.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def save_level(level):
         """
         Save a level.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def load_level(level):
         """
         Load a level.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def save_player(player):
         """
         Save a player.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def load_player(player):
         """
         Load a player.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def load_plugin_data(name):
         """
-        Load data of a plugin.
+        Load plugin-specific data.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def save_plugin_data(name, value):
         """
-        Save data of a plugin.
+        Save plugin-specific data.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
 class ISerializerFactory(IBravoPlugin):
