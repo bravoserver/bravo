@@ -1,6 +1,7 @@
 from collections import defaultdict
 from itertools import chain, product
 
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
@@ -47,6 +48,7 @@ class Fluid(object):
         Load all of the important blocks in the chunk into memory.
         """
 
+    @inlineCallbacks
     def process(self):
         for factory in self.pending:
             w = factory.world
@@ -59,7 +61,7 @@ class Fluid(object):
                 # Our downstairs pal.
                 below = (x, y - 1, z)
 
-                block = w.get_block((x, y, z))
+                block = yield w.get_block((x, y, z))
                 if block == self.sponge:
                     # Track this sponge.
                     self.sponges[factory][x, y, z] = True
@@ -70,7 +72,7 @@ class Fluid(object):
                         xrange(max(y - 2, 0), min(y + 3, 128)),
                         xrange(z - 2, z + 3),
                         ):
-                        target = w.get_block(coords)
+                        target = yield w.get_block(coords)
                         if target == self.spring:
                             if (coords[0], coords[2]) in self.springs[factory]:
                                 del self.springs[factory][coords[0],
@@ -101,14 +103,16 @@ class Fluid(object):
 
                     # Spawn water from springs.
                     for coords in neighbors:
-                        if (w.get_block(coords) in self.whitespace and
+                        neighbor = yield w.get_block(coords)
+                        if (neighbor in self.whitespace and
                             not any(self.sponges[factory].iteritemsnear(coords, 2))):
                             w.set_block(coords, self.fluid)
                             w.set_metadata(coords, 0x0)
                             new.add(coords)
 
                     # Is this water falling down to the next y-level?
-                    if (y > 0 and w.get_block(below) in self.whitespace and
+                    neighbor = w.get_block(below)
+                    if (y > 0 and neighbor in self.whitespace and
                         not any(self.sponges[factory].iteritemsnear(below, 2))):
                         w.set_block(below, self.fluid)
                         w.set_metadata(below, FALLING)
@@ -138,13 +142,14 @@ class Fluid(object):
                     newmd = self.levels + 1
 
                     for coords in neighbors:
-                        jones = w.get_block(coords)
+                        jones = yield w.get_block(coords)
                         if jones == self.spring:
                             newmd = 0
                             new.update(neighbors)
                             break
                         elif jones == self.fluid:
-                            jonesmd = w.get_metadata(coords) & ~FALLING
+                            jonesmd = yield w.get_metadata(coords)
+                            jonesmd &= ~FALLING
                             if jonesmd + 1 < newmd:
                                 newmd = jonesmd + 1
 
@@ -159,7 +164,8 @@ class Fluid(object):
                     # will only mark lower water levels than ourselves, and
                     # only if they are definitely too low.
                     for coords in neighbors:
-                        if w.get_metadata(coords) & ~FALLING > newmd + 1:
+                        neighbor = yield w.get_metadata(coords)
+                        if neighbor & ~FALLING > newmd + 1:
                             new.add(coords)
 
                     # Now, it's time to extend water. Remember, either the
@@ -167,7 +173,8 @@ class Fluid(object):
                     # flows out across the xz-level, but *not* both.
 
                     # Fall down to the next y-level, if possible.
-                    if (y > 0 and w.get_block(below) in self.whitespace and
+                    neighbor = w.get_block(below)
+                    if (y > 0 and neighbor in self.whitespace and
                         not any(self.sponges[factory].iteritemsnear(below, 2))):
                         w.set_block(below, self.fluid)
                         w.set_metadata(below, newmd | FALLING)
@@ -183,7 +190,8 @@ class Fluid(object):
                     if newmd < self.levels:
                         newmd += 1
                         for coords in neighbors:
-                            if (w.get_block(coords) in self.whitespace and
+                            neighbor = yield w.get_block(coords)
+                            if (neighbor in self.whitespace and
                                 not any(self.sponges[factory].iteritemsnear(coords, 2))):
                                 w.set_block(coords, self.fluid)
                                 w.set_metadata(coords, newmd)
@@ -213,12 +221,12 @@ class Fluid(object):
                                 new.add(coords)
 
             # Flush affected chunks.
-            # XXX not super-efficient...
             to_flush = defaultdict(set)
             for x, y, z in chain(self.pending[factory], new):
-                to_flush[factory].add(factory.world.request_chunk(x // 16, z // 16))
-            for factory, deferreds in to_flush.iteritems():
-                for d in deferreds:
+                to_flush[factory].add((x // 16, z // 16))
+            for factory, coords in to_flush.iteritems():
+                for x, z in coords:
+                    d = factory.world.request_chunk(x, z)
                     d.addCallback(factory.flush_chunk)
 
             self.pending[factory] = new
@@ -334,6 +342,7 @@ class Redstone(object):
 
         self.loop = LoopingCall(self.process)
 
+    @inlineCallbacks
     def update_wires(self, factory, x, y, z, enabled):
         """
         Trace the wires starting at a certain point, and either enable or
@@ -347,7 +356,7 @@ class Redstone(object):
         while traveling:
             # Visit nodes.
             for coords in traveling:
-                metadata = factory.world.get_metadata(coords)
+                metadata = yield factory.world.get_metadata(coords)
                 if metadata != level:
                     factory.world.set_metadata(coords, level)
                     traveled.add(coords)
@@ -363,9 +372,10 @@ class Redstone(object):
                 for (i, j, k) in traveling]
             traveling.clear()
             for l in nodes:
-                traveling.update(coords for coords in l
-                if factory.world.get_block(coords) ==
-                    blocks["redstone-wire"].slot)
+                for coords in l:
+                    block = yield factory.world.get_block(coords)
+                    if block == blocks["redstone-wire"].slot:
+                        traveling.add(coords)
             traveling.difference_update(traveled)
 
             if level:
