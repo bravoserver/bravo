@@ -422,11 +422,12 @@ class BravoProtocol(BetaServerProtocol):
 
         self.last_dig_build_timer = time()
 
+    @inlineCallbacks
     def authenticated(self):
         BetaServerProtocol.authenticated(self)
 
         # Init player, and copy data into it.
-        self.player = self.factory.world.load_player(self.username)
+        self.player = yield self.factory.world.load_player(self.username)
         self.player.eid = self.eid
         self.location = self.player.location
 

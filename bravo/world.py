@@ -346,6 +346,8 @@ class World(object):
     def load_player(self, username):
         """
         Retrieve player data.
+
+        :returns: a ``Deferred`` that will be fired with a ``Player``
         """
 
         player = Player(username=username)
@@ -354,9 +356,9 @@ class World(object):
         player.location.stance = self.spawn[1]
         player.location.z = self.spawn[2]
 
-        self.serializer.load_player(player)
-
-        return player
+        d = maybeDeferred(self.serializer.load_player, player)
+        d.addCallback(lambda none: player)
+        return d
 
     def save_player(self, username, player):
         if self.saving:
