@@ -289,22 +289,28 @@ class World(object):
                 generators=configuration.getlist(self.config_name, "generators")
             )
             self._pending_chunks[x, z] = d
+
+            # Get chunk data into our chunk object.
+            def fill_chunk(kwargs):
+                chunk.blocks = fromstring(kwargs["blocks"],
+                    dtype=uint8).reshape(chunk.blocks.shape)
+                chunk.heightmap = fromstring(kwargs["heightmap"],
+                    dtype=uint8).reshape(chunk.heightmap.shape)
+                chunk.metadata = fromstring(kwargs["metadata"],
+                    dtype=uint8).reshape(chunk.metadata.shape)
+                chunk.skylight = fromstring(kwargs["skylight"],
+                    dtype=uint8).reshape(chunk.skylight.shape)
+                chunk.blocklight = fromstring(kwargs["blocklight"],
+                    dtype=uint8).reshape(chunk.blocklight.shape)
+
+                return chunk
+            d.addCallback(fill_chunk)
         else:
             self.populate_chunk(chunk)
             d = succeed(chunk)
+            self._pending_chunks[x, z] = d
 
-        def pp(kwargs):
-            chunk.blocks = fromstring(kwargs["blocks"],
-                dtype=uint8).reshape(chunk.blocks.shape)
-            chunk.heightmap = fromstring(kwargs["heightmap"],
-                dtype=uint8).reshape(chunk.heightmap.shape)
-            chunk.metadata = fromstring(kwargs["metadata"],
-                dtype=uint8).reshape(chunk.metadata.shape)
-            chunk.skylight = fromstring(kwargs["skylight"],
-                dtype=uint8).reshape(chunk.skylight.shape)
-            chunk.blocklight = fromstring(kwargs["blocklight"],
-                dtype=uint8).reshape(chunk.blocklight.shape)
-
+        def pp(chunk):
             chunk.populated = True
             chunk.dirty = True
 
@@ -359,6 +365,8 @@ class World(object):
     def get_block(self, chunk, coords):
         """
         Get a block from an unknown chunk.
+
+        :returns: a ``Deferred`` with the requested value
         """
 
         return chunk.get_block(coords)
@@ -367,6 +375,8 @@ class World(object):
     def set_block(self, chunk, coords, value):
         """
         Set a block in an unknown chunk.
+
+        :returns: a ``Deferred`` that will fire on completion
         """
 
         chunk.set_block(coords, value)
@@ -375,6 +385,8 @@ class World(object):
     def get_metadata(self, chunk, coords):
         """
         Get a block's metadata from an unknown chunk.
+
+        :returns: a ``Deferred`` with the requested value
         """
 
         return chunk.get_metadata(coords)
@@ -383,6 +395,8 @@ class World(object):
     def set_metadata(self, chunk, coords, value):
         """
         Set a block's metadata in an unknown chunk.
+
+        :returns: a ``Deferred`` that will fire on completion
         """
 
         chunk.set_metadata(coords, value)
@@ -391,6 +405,8 @@ class World(object):
     def destroy(self, chunk, coords):
         """
         Destroy a block in an unknown chunk.
+
+        :returns: a ``Deferred`` that will fire on completion
         """
 
         chunk.destroy(coords)
@@ -399,6 +415,8 @@ class World(object):
     def mark_dirty(self, chunk, coords):
         """
         Mark an unknown chunk dirty.
+
+        :returns: a ``Deferred`` that will fire on completion
         """
 
         chunk.dirty = True

@@ -1,5 +1,7 @@
 from twisted.trial import unittest
 
+from twisted.internet.defer import inlineCallbacks
+
 import numpy
 import shutil
 import tempfile
@@ -34,57 +36,39 @@ class TestWorldChunks(unittest.TestCase):
     def test_trivial(self):
         pass
 
+    @inlineCallbacks
     def test_get_block(self):
-        chunk = self.w.load_chunk(0, 0)
+        chunk = yield self.w.request_chunk(0, 0)
 
         # Fill the chunk with random stuff.
         chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
             dtype=numpy.uint8)
         chunk.blocks.shape = (16, 16, 128)
 
-        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
+        for x, y, z in product(xrange(2), xrange(2), xrange(2)):
             # This works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
-            self.assertEqual(chunk.get_block((x, y, z)),
-                self.w.get_block((x, y, z)))
+            block = yield self.w.get_block((x, y, z))
+            self.assertEqual(block, chunk.get_block((x, y, z)))
 
+    @inlineCallbacks
     def test_get_metadata(self):
-        chunk = self.w.load_chunk(0, 0)
+        chunk = yield self.w.request_chunk(0, 0)
 
-        # fill the chunk with random stuff.
-        chunk.metadata = numpy.fromstring(numpy.random.bytes(chunk.metadata.size),
+        # Fill the chunk with random stuff.
+        chunk.metadata = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
             dtype=numpy.uint8)
         chunk.metadata.shape = (16, 16, 128)
 
-        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
-            # this works because the chunk is at (0, 0) so the coords don't
-            # need to be adjusted.
-            self.assertEqual(chunk.get_metadata((x, y, z)),
-                self.w.get_metadata((x, y, z)))
-
-    def test_get_block_readback(self):
-        chunk = self.w.load_chunk(0, 0)
-
-        # Fill the chunk with random stuff.
-        chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
-            dtype=numpy.uint8)
-        chunk.blocks.shape = (16, 16, 128)
-
-        # Evict the chunk and grab it again.
-        self.w.save_chunk(chunk)
-        del chunk
-        self.w.chunk_cache.clear()
-        self.w.dirty_chunk_cache.clear()
-        chunk = self.w.load_chunk(0, 0)
-
-        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
+        for x, y, z in product(xrange(2), xrange(2), xrange(2)):
             # This works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
-            self.assertEqual(chunk.get_block((x, y, z)),
-                self.w.get_block((x, y, z)))
+            metadata = yield self.w.get_metadata((x, y, z))
+            self.assertEqual(metadata, chunk.get_metadata((x, y, z)))
 
-    def test_get_block_readback_negative(self):
-        chunk = self.w.load_chunk(-1, -1)
+    @inlineCallbacks
+    def test_get_block_readback(self):
+        chunk = yield self.w.request_chunk(0, 0)
 
         # Fill the chunk with random stuff.
         chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
@@ -96,17 +80,40 @@ class TestWorldChunks(unittest.TestCase):
         del chunk
         self.w.chunk_cache.clear()
         self.w.dirty_chunk_cache.clear()
-        chunk = self.w.load_chunk(-1, -1)
+        chunk = yield self.w.request_chunk(0, 0)
 
-        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
-            self.assertEqual(chunk.get_block((x, y, z)),
-                self.w.get_block((x - 16, y, z - 16)))
+        for x, y, z in product(xrange(2), xrange(2), xrange(2)):
+            # This works because the chunk is at (0, 0) so the coords don't
+            # need to be adjusted.
+            block = yield self.w.get_block((x, y, z))
+            self.assertEqual(block, chunk.get_block((x, y, z)))
 
+    @inlineCallbacks
+    def test_get_block_readback_negative(self):
+        chunk = yield self.w.request_chunk(-1, -1)
+
+        # Fill the chunk with random stuff.
+        chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
+            dtype=numpy.uint8)
+        chunk.blocks.shape = (16, 16, 128)
+
+        # Evict the chunk and grab it again.
+        self.w.save_chunk(chunk)
+        del chunk
+        self.w.chunk_cache.clear()
+        self.w.dirty_chunk_cache.clear()
+        chunk = yield self.w.request_chunk(-1, -1)
+
+        for x, y, z in product(xrange(2), xrange(2), xrange(2)):
+            block = yield self.w.get_block((x - 16, y, z - 16))
+            self.assertEqual(block, chunk.get_block((x, y, z)))
+
+    @inlineCallbacks
     def test_get_metadata_readback(self):
-        chunk = self.w.load_chunk(0, 0)
+        chunk = yield self.w.request_chunk(0, 0)
 
-        # fill the chunk with random stuff.
-        chunk.metadata = numpy.fromstring(numpy.random.bytes(chunk.metadata.size),
+        # Fill the chunk with random stuff.
+        chunk.metadata = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
             dtype=numpy.uint8)
         chunk.metadata.shape = (16, 16, 128)
 
@@ -115,42 +122,44 @@ class TestWorldChunks(unittest.TestCase):
         del chunk
         self.w.chunk_cache.clear()
         self.w.dirty_chunk_cache.clear()
-        chunk = self.w.load_chunk(0, 0)
+        chunk = yield self.w.request_chunk(0, 0)
 
-        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
-            # this works because the chunk is at (0, 0) so the coords don't
+        for x, y, z in product(xrange(2), xrange(2), xrange(2)):
+            # This works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
-            self.assertEqual(chunk.get_metadata((x, y, z)),
-                self.w.get_metadata((x, y, z)))
+            metadata = yield self.w.get_metadata((x, y, z))
+            self.assertEqual(metadata, chunk.get_metadata((x, y, z)))
 
+    @inlineCallbacks
     def test_world_level_mark_chunk_dirty(self):
-        chunk = self.w.load_chunk(0, 0)
+        chunk = yield self.w.request_chunk(0, 0)
 
         # Reload chunk.
         self.w.save_chunk(chunk)
         del chunk
         self.w.chunk_cache.clear()
         self.w.dirty_chunk_cache.clear()
-        chunk = self.w.load_chunk(0, 0)
+        chunk = yield self.w.request_chunk(0, 0)
 
         self.assertFalse(chunk.dirty)
         self.w.mark_dirty((12, 64, 4))
-        chunk = self.w.load_chunk(0, 0)
+        chunk = yield self.w.request_chunk(0, 0)
         self.assertTrue(chunk.dirty)
 
+    @inlineCallbacks
     def test_world_level_mark_chunk_dirty_offset(self):
-        chunk = self.w.load_chunk(1, 2)
+        chunk = yield self.w.request_chunk(1, 2)
 
         # Reload chunk.
         self.w.save_chunk(chunk)
         del chunk
         self.w.chunk_cache.clear()
         self.w.dirty_chunk_cache.clear()
-        chunk = self.w.load_chunk(1, 2)
+        chunk = yield self.w.request_chunk(1, 2)
 
         self.assertFalse(chunk.dirty)
         self.w.mark_dirty((29, 64, 43))
-        chunk = self.w.load_chunk(1, 2)
+        chunk = yield self.w.request_chunk(1, 2)
         self.assertTrue(chunk.dirty)
 
 class TestWorldInit(unittest.TestCase):
