@@ -1,9 +1,10 @@
+from collections import namedtuple
 import functools
 
 from construct import Struct, Container, Embed, Enum, MetaField
 from construct import MetaArray, If, Switch, Const, Peek
 from construct import OptionalGreedyRange
-from construct import PascalString
+from construct import PascalString, Adapter
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32, SBInt64
 from construct import BFloat32, BFloat64
@@ -40,6 +41,26 @@ items = Struct("items",
     ),
 )
 
+Metadata = namedtuple("Metadata", "type id value")
+metadata_types = ["byte", "short", "int", "float", "string", "slot",
+    "coords"]
+
+# Metadata adaptor.
+class MetadataAdapter(Adapter):
+
+    def _decode(self, obj, context):
+        return Metadata(
+            metadata_types[obj["id"]["first"]],
+            obj["id"]["second"],
+            obj["value"]
+        )
+
+    def _encode(self, obj, context):
+        c = Container(value=obj.value)
+        c["id"] = Container(first=metadata_types.index(obj.type),
+            second=obj.id)
+        return c
+
 # Metadata inner container.
 metadata_switch = {
     0: UBInt8("value"),
@@ -62,13 +83,15 @@ metadata_switch = {
 # Metadata subconstruct.
 metadata = Struct("metadata",
     OptionalGreedyRange(
-        Struct("data",
-            BitStruct("id",
-                BitField("first", 3),
-                BitField("second", 5),
+        MetadataAdapter(
+            Struct("data",
+                BitStruct("id",
+                    BitField("first", 3),
+                    BitField("second", 5),
+                ),
+                Switch("value", lambda context: context["id"]["first"],
+                    metadata_switch),
             ),
-            Switch("value", lambda context: context["id"]["first"],
-                metadata_switch),
         ),
     ),
     Const(UBInt8("terminator"), 0x7f),
