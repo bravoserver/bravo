@@ -150,9 +150,7 @@ class BuildSnow(object):
     implements(IBuildHook)
 
     def build_hook(self, factory, player, builddata):
-        bigx, smallx, bigz, smallz = split_coords(builddata.x, builddata.z)
-        chunk = factory.world.load_chunk(bigx, bigz)
-        block = chunk.get_block((smallx, builddata.y, smallz))
+        block = factory.world.get_block((builddata.x, builddata.y, builddata.z))
 
         if block == blocks["snow"].slot:
             # Building any block on snow causes snow to get replaced.
