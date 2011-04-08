@@ -6,9 +6,9 @@ import weakref
 
 from numpy import fromstring, uint8
 
-from twisted.internet import reactor
-from twisted.internet.defer import succeed
-from twisted.internet.task import coiterate, deferLater, LoopingCall
+from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
+                                    returnValue, succeed)
+from twisted.internet.task import coiterate, LoopingCall
 from twisted.python import log
 
 from bravo.chunk import Chunk
@@ -31,9 +31,12 @@ def coords_to_chunk(f):
         x, y, z = coords
 
         bigx, smallx, bigz, smallz = split_coords(x, z)
-        chunk = self.load_chunk(bigx, bigz)
+        d = self.request_chunk(bigx, bigz)
 
-        return f(self, chunk, (smallx, y, smallz), *args, **kwargs)
+        def cb(chunk):
+            return f(self, chunk, (smallx, y, smallz), *args, **kwargs)
+        d.addCallback(cb)
+        return d
 
     return decorated
 
@@ -115,11 +118,13 @@ class World(object):
 
         # First, try loading the level, to see if there's any data out there
         # which we can use. If not, don't worry about it.
-        try:
-            self.serializer.load_level(self)
-        except SerializerReadException, sre:
+        d = maybeDeferred(self.serializer.load_level, self)
+        d.addCallback(lambda chaff: log.msg("Loaded level data!"))
+        def sre(failure):
+            failure.trap(SerializerReadException)
             log.msg("Had issues loading level data...")
-            log.msg(sre)
+            log.msg(failure)
+        d.addErrback(sre)
 
         # And now save our level.
         if self.saving:
@@ -252,56 +257,64 @@ class World(object):
         # Return the chunk, in case we are in a Deferred chain.
         return chunk
 
+    @inlineCallbacks
     def request_chunk(self, x, z):
         """
         Request a ``Chunk`` to be delivered later.
 
-        :returns: Deferred that will be called with the Chunk
+        :returns: ``Deferred`` that will be called with the ``Chunk``
         """
 
-        if not self.async:
-            return deferLater(reactor, 0.000001, self.load_chunk,
-                x, z)
-
-        from ampoule import deferToAMPProcess
-        from bravo.remote import MakeChunk
-
         if (x, z) in self.chunk_cache:
-            return succeed(self.chunk_cache[x, z])
+            returnValue(self.chunk_cache[x, z])
         elif (x, z) in self.dirty_chunk_cache:
-            return succeed(self.dirty_chunk_cache[x, z])
+            returnValue(self.dirty_chunk_cache[x, z])
         elif (x, z) in self._pending_chunks:
             # Rig up another Deferred and wrap it up in a to-go box.
-            return fork_deferred(self._pending_chunks[x, z])
+            retval = yield fork_deferred(self._pending_chunks[x, z])
+            returnValue(retval)
 
         chunk = Chunk(x, z)
-        self.serializer.load_chunk(chunk)
+        yield maybeDeferred(self.serializer.load_chunk, chunk)
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
             self.postprocess_chunk(chunk)
-            return succeed(chunk)
+            returnValue(chunk)
 
-        d = deferToAMPProcess(MakeChunk,
-            x=x,
-            z=z,
-            seed=self.seed,
-            generators=configuration.getlist(self.config_name, "generators")
-        )
-        self._pending_chunks[x, z] = d
+        if self.async:
+            from ampoule import deferToAMPProcess
+            from bravo.remote import MakeChunk
 
-        def pp(kwargs):
-            chunk.blocks = fromstring(kwargs["blocks"],
-                dtype=uint8).reshape(chunk.blocks.shape)
-            chunk.heightmap = fromstring(kwargs["heightmap"],
-                dtype=uint8).reshape(chunk.heightmap.shape)
-            chunk.metadata = fromstring(kwargs["metadata"],
-                dtype=uint8).reshape(chunk.metadata.shape)
-            chunk.skylight = fromstring(kwargs["skylight"],
-                dtype=uint8).reshape(chunk.skylight.shape)
-            chunk.blocklight = fromstring(kwargs["blocklight"],
-                dtype=uint8).reshape(chunk.blocklight.shape)
+            d = deferToAMPProcess(MakeChunk,
+                x=x,
+                z=z,
+                seed=self.seed,
+                generators=configuration.getlist(self.config_name, "generators")
+            )
+            self._pending_chunks[x, z] = d
 
+            # Get chunk data into our chunk object.
+            def fill_chunk(kwargs):
+                chunk.blocks = fromstring(kwargs["blocks"],
+                    dtype=uint8).reshape(chunk.blocks.shape)
+                chunk.heightmap = fromstring(kwargs["heightmap"],
+                    dtype=uint8).reshape(chunk.heightmap.shape)
+                chunk.metadata = fromstring(kwargs["metadata"],
+                    dtype=uint8).reshape(chunk.metadata.shape)
+                chunk.skylight = fromstring(kwargs["skylight"],
+                    dtype=uint8).reshape(chunk.skylight.shape)
+                chunk.blocklight = fromstring(kwargs["blocklight"],
+                    dtype=uint8).reshape(chunk.blocklight.shape)
+
+                return chunk
+            d.addCallback(fill_chunk)
+        else:
+            self.populate_chunk(chunk)
+            d = succeed(chunk)
+            self._pending_chunks[x, z] = d
+
+        def pp(chunk):
             chunk.populated = True
             chunk.dirty = True
 
@@ -318,36 +331,8 @@ class World(object):
         # Multiple people might be subscribed to this pending callback. We're
         # going to keep it for ourselves and fork off another Deferred for our
         # caller.
-        return fork_deferred(d)
-
-    def load_chunk(self, x, z):
-        """
-        Retrieve a ``Chunk`` synchronously.
-
-        This method does lots of automatic caching of chunks to ensure that
-        disk I/O is kept to a minimum.
-        """
-
-        if (x, z) in self.chunk_cache:
-            return self.chunk_cache[x, z]
-        elif (x, z) in self.dirty_chunk_cache:
-            return self.dirty_chunk_cache[x, z]
-
-        chunk = Chunk(x, z)
-        self.serializer.load_chunk(chunk)
-
-        if chunk.populated:
-            self.chunk_cache[x, z] = chunk
-        else:
-            self.populate_chunk(chunk)
-            chunk.populated = True
-            chunk.dirty = True
-
-            self.dirty_chunk_cache[x, z] = chunk
-
-        self.postprocess_chunk(chunk)
-
-        return chunk
+        retval = yield fork_deferred(d)
+        returnValue(retval)
 
     def save_chunk(self, chunk):
 
@@ -361,6 +346,8 @@ class World(object):
     def load_player(self, username):
         """
         Retrieve player data.
+
+        :returns: a ``Deferred`` that will be fired with a ``Player``
         """
 
         player = Player(username=username)
@@ -369,9 +356,9 @@ class World(object):
         player.location.stance = self.spawn[1]
         player.location.z = self.spawn[2]
 
-        self.serializer.load_player(player)
-
-        return player
+        d = maybeDeferred(self.serializer.load_player, player)
+        d.addCallback(lambda none: player)
+        return d
 
     def save_player(self, username, player):
         if self.saving:
@@ -385,6 +372,8 @@ class World(object):
     def get_block(self, chunk, coords):
         """
         Get a block from an unknown chunk.
+
+        :returns: a ``Deferred`` with the requested value
         """
 
         return chunk.get_block(coords)
@@ -393,6 +382,8 @@ class World(object):
     def set_block(self, chunk, coords, value):
         """
         Set a block in an unknown chunk.
+
+        :returns: a ``Deferred`` that will fire on completion
         """
 
         chunk.set_block(coords, value)
@@ -401,6 +392,8 @@ class World(object):
     def get_metadata(self, chunk, coords):
         """
         Get a block's metadata from an unknown chunk.
+
+        :returns: a ``Deferred`` with the requested value
         """
 
         return chunk.get_metadata(coords)
@@ -409,6 +402,8 @@ class World(object):
     def set_metadata(self, chunk, coords, value):
         """
         Set a block's metadata in an unknown chunk.
+
+        :returns: a ``Deferred`` that will fire on completion
         """
 
         chunk.set_metadata(coords, value)
@@ -417,6 +412,8 @@ class World(object):
     def destroy(self, chunk, coords):
         """
         Destroy a block in an unknown chunk.
+
+        :returns: a ``Deferred`` that will fire on completion
         """
 
         chunk.destroy(coords)
@@ -425,6 +422,8 @@ class World(object):
     def mark_dirty(self, chunk, coords):
         """
         Mark an unknown chunk dirty.
+
+        :returns: a ``Deferred`` that will fire on completion
         """
 
         chunk.dirty = True

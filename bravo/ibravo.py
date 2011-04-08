@@ -179,41 +179,57 @@ class ISerializer(IBravoPlugin):
     def save_chunk(chunk):
         """
         Save a chunk.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def load_chunk(chunk):
         """
         Load a chunk.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def save_level(level):
         """
         Save a level.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def load_level(level):
         """
         Load a level.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def save_player(player):
         """
         Save a player.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def load_player(player):
         """
         Load a player.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def load_plugin_data(name):
         """
-        Load data of a plugin.
+        Load plugin-specific data.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
     def save_plugin_data(name, value):
         """
-        Save data of a plugin.
+        Save plugin-specific data.
+
+        May return a ``Deferred`` that will fire on completion.
         """
 
 class ISerializerFactory(IBravoPlugin):
@@ -250,16 +266,30 @@ class IBuildHook(ISortedPlugin):
         of building should continue after this hook runs. Use it to halt build
         hook processing, if needed.
 
+        For sanity purposes, build hooks may return a ``Deferred`` which will
+        fire with their return values, but are not obligated to do so.
+
         A trivial do-nothing build hook looks like the following:
 
         >>> def build_hook(self, factory, player, builddata):
         ...     return True, builddata
 
+        To make life more pleasant when returning deferred values, use
+        ``inlineCallbacks``, which many of the standard build hooks use:
+
+        >>> @inlineCallbacks
+        ... def build_hook(self, factory, player, builddata):
+        ...     returnValue((True, builddata))
+
+        This form makes it much easier to deal with asynchronous operations on
+        the factory and world.
+
         :param ``Factory`` factory: factory
         :param ``Player`` player: player entity doing the building
         :param namedtuple builddata: permanent building location and data
 
-        :returns: tuple of build data and whether subsequent hooks will run
+        :returns: ``Deferred`` with tuple of build data and whether subsequent
+                  hooks will run
         """
 
 class IDigHook(ISortedPlugin):

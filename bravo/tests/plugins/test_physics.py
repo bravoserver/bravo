@@ -1,9 +1,11 @@
+from twisted.trial import unittest
+
 import shutil
 import tempfile
 
 from numpy.testing import assert_array_equal
 
-from twisted.trial import unittest
+from twisted.internet.defer import inlineCallbacks
 
 import bravo.blocks
 import bravo.config
@@ -70,6 +72,7 @@ class TestWater(unittest.TestCase):
         while self.hook.pending:
             self.hook.process()
 
+    @inlineCallbacks
     def test_spring_spread(self):
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
         self.hook.pending[self.f].add((0, 0, 0))
@@ -79,17 +82,19 @@ class TestWater(unittest.TestCase):
             self.hook.process()
 
         for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
-            self.assertEqual(self.w.get_block(coords),
-                bravo.blocks.blocks["water"].slot)
-            self.assertEqual(self.w.get_metadata(coords), 0x0)
+            block = yield self.w.get_block(coords)
+            metadata = yield self.w.get_metadata(coords)
+            self.assertEqual(block, bravo.blocks.blocks["water"].slot)
+            self.assertEqual(metadata, 0x0)
 
+    @inlineCallbacks
     def test_obstacle(self):
         """
         Test that obstacles are flowed around correctly.
         """
 
-        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.w.set_block((1, 0, 0), bravo.blocks.blocks["stone"].slot)
+        yield self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        yield self.w.set_block((1, 0, 0), bravo.blocks.blocks["stone"].slot)
         self.hook.pending[self.f].add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
@@ -97,8 +102,10 @@ class TestWater(unittest.TestCase):
             self.hook.process()
 
         # Make sure that the water level behind the stone is 0x3, not 0x0.
-        self.assertEqual(self.w.get_metadata((2, 0, 0)), 0x3)
+        metadata = yield self.w.get_metadata((2, 0, 0))
+        self.assertEqual(metadata, 0x3)
 
+    @inlineCallbacks
     def test_sponge(self):
         """
         Test that sponges prevent water from spreading near them.
@@ -114,9 +121,10 @@ class TestWater(unittest.TestCase):
             self.hook.process()
 
         # Make sure that water did not spread near the sponge.
-        self.assertNotEqual(self.w.get_block((1, 0, 0)),
-            bravo.blocks.blocks["water"].slot)
+        block = yield self.w.get_block((1, 0, 0))
+        self.assertNotEqual(block, bravo.blocks.blocks["water"].slot)
 
+    @inlineCallbacks
     def test_sponge_absorb_spring(self):
         """
         Test that sponges can absorb springs and will cause all of the
@@ -137,13 +145,14 @@ class TestWater(unittest.TestCase):
             self.hook.process()
 
         for coords in ((0, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
-            self.assertEqual(self.w.get_block(coords),
-                bravo.blocks.blocks["air"].slot)
+            block = yield self.w.get_block(coords)
+            self.assertEqual(block, bravo.blocks.blocks["air"].slot)
 
         # Make sure that water did not spread near the sponge.
-        self.assertNotEqual(self.w.get_block((1, 0, 0)),
-            bravo.blocks.blocks["water"].slot)
+        block = yield self.w.get_block((1, 0, 0))
+        self.assertNotEqual(block, bravo.blocks.blocks["water"].slot)
 
+    @inlineCallbacks
     def test_sponge_salt(self):
         """
         Test that sponges don't "salt the earth" or have any kind of lasting
@@ -158,7 +167,7 @@ class TestWater(unittest.TestCase):
             self.hook.process()
 
         # Take a snapshot.
-        chunk = self.w.load_chunk(0, 0)
+        chunk = yield self.w.request_chunk(0, 0)
         before = chunk.blocks[:, :, 0], chunk.metadata[:, :, 0]
 
         self.w.set_block((3, 0, 0), bravo.blocks.blocks["sponge"].slot)
@@ -178,6 +187,7 @@ class TestWater(unittest.TestCase):
         # Make sure that the sponge didn't permanently change anything.
         assert_array_equal(before, after)
 
+    @inlineCallbacks
     def test_spring_remove(self):
         """
         Test that water dries up if no spring is providing it.
@@ -199,9 +209,10 @@ class TestWater(unittest.TestCase):
             self.hook.process()
 
         for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
-            self.assertEqual(self.w.get_block(coords),
-                bravo.blocks.blocks["air"].slot)
+            block = yield self.w.get_block(coords)
+            self.assertEqual(block, bravo.blocks.blocks["air"].slot)
 
+    @inlineCallbacks
     def test_spring_underneath_keepalive(self):
         """
         Test that springs located at a lower altitude than stray water do not
@@ -228,8 +239,8 @@ class TestWater(unittest.TestCase):
         # Check that the upper water blocks dried out. Don't care about the
         # lower ones in this test.
         for coords in ((1, 1, 0), (-1, 1, 0), (0, 1, 1), (0, 1, -1)):
-            self.assertEqual(self.w.get_block(coords),
-                bravo.blocks.blocks["air"].slot)
+            block = yield self.w.get_block(coords)
+            self.assertEqual(block, bravo.blocks.blocks["air"].slot)
 
     test_spring_underneath_keepalive.todo = "Known bug in fluid simulator"
 
@@ -273,6 +284,7 @@ class TestRedstone(unittest.TestCase):
     def test_trivial(self):
         pass
 
+    @inlineCallbacks
     def test_update_wires_enable(self):
         for i in range(16):
             self.w.set_block((i, 0, 0),
@@ -283,8 +295,10 @@ class TestRedstone(unittest.TestCase):
         self.hook.update_wires(self.f, 0, 0, 0, True)
 
         for i in range(16):
-            self.assertEqual(self.w.get_metadata((i, 0, 0)), 0xf - i)
+            metadata = yield self.w.get_metadata((i, 0, 0))
+            self.assertEqual(metadata, 0xf - i)
 
+    @inlineCallbacks
     def test_update_wires_disable(self):
         for i in range(16):
             self.w.set_block((i, 0, 0),
@@ -295,4 +309,5 @@ class TestRedstone(unittest.TestCase):
         self.hook.update_wires(self.f, 0, 0, 0, False)
 
         for i in range(16):
-            self.assertEqual(self.w.get_metadata((i, 0, 0)), 0x0)
+            metadata = yield self.w.get_metadata((i, 0, 0))
+            self.assertEqual(metadata, 0x0)

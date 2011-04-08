@@ -1,6 +1,8 @@
 # This test suite *does* require trial, for sane conditional test skipping.
 from twisted.trial import unittest
 
+from twisted.internet.defer import inlineCallbacks, succeed
+
 import bravo.blocks
 import bravo.ibravo
 import bravo.plugin
@@ -61,13 +63,13 @@ class TileMockFactory(object):
     def __init__(self):
         class TileMockWorld(object):
 
-            def load_chunk(self, x, z):
+            def request_chunk(self, x, z):
                 class TileMockChunk(object):
 
                     def __init__(self):
                         self.tiles = {}
 
-                return TileMockChunk()
+                return succeed(TileMockChunk())
 
         self.world = TileMockWorld()
 
@@ -84,18 +86,20 @@ class TestTile(unittest.TestCase):
     def test_trivial(self):
         pass
 
+    @inlineCallbacks
     def test_sign(self):
         builddata = bravo.protocols.beta.BuildData(
             bravo.blocks.items["sign"],
             0, 0, 0, 0, "+x"
         )
-        success, newdata = self.hook.build_hook(TileMockFactory(), None,
-            builddata)
+        success, newdata = yield self.hook.build_hook(TileMockFactory(), None,
+                                                      builddata)
         self.assertTrue(success)
         builddata = builddata._replace(block=bravo.blocks.blocks["wall-sign"],
             metadata=0x5)
         self.assertEqual(builddata, newdata)
 
+    @inlineCallbacks
     def test_sign_floor(self):
         player = bravo.entity.Player()
 
@@ -103,13 +107,14 @@ class TestTile(unittest.TestCase):
             bravo.blocks.items["sign"],
             0, 0, 0, 0, "+y"
         )
-        success, newdata = self.hook.build_hook(TileMockFactory(), player,
-            builddata)
+        success, newdata = yield self.hook.build_hook(TileMockFactory(),
+                                                      player, builddata)
         self.assertTrue(success)
         builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
             metadata=0x8)
         self.assertEqual(builddata, newdata)
 
+    @inlineCallbacks
     def test_sign_floor_oriented(self):
         player = bravo.entity.Player()
         player.location.yaw = 42
@@ -118,13 +123,14 @@ class TestTile(unittest.TestCase):
             bravo.blocks.items["sign"],
             0, 0, 0, 0, "+y"
         )
-        success, newdata = self.hook.build_hook(TileMockFactory(), player,
-            builddata)
+        success, newdata = yield self.hook.build_hook(TileMockFactory(),
+                                                      player, builddata)
         self.assertTrue(success)
         builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
             metadata=0x9)
         self.assertEqual(builddata, newdata)
 
+    @inlineCallbacks
     def test_passthrough(self):
         """
         Check that non-tile items and blocks pass through untouched.
@@ -136,7 +142,7 @@ class TestTile(unittest.TestCase):
             bravo.blocks.blocks["ladder"],
             0, 0, 0, 0, "+x"
         )
-        success, newdata = self.hook.build_hook(TileMockFactory(), None,
-            builddata)
+        success, newdata = yield self.hook.build_hook(TileMockFactory(), None,
+                                                      builddata)
         self.assertTrue(success)
         self.assertEqual(builddata, newdata)
