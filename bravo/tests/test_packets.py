@@ -3,7 +3,7 @@
 from twisted.trial import unittest
 
 from construct import Container
-from construct import MappingError
+from construct import ArrayError, MappingError
 
 import bravo.packets
 
@@ -175,10 +175,19 @@ class TestPacketHelpers(unittest.TestCase):
         parser = bravo.packets.AlphaString("test")
         self.assertEqual(parser.build(s), "\x00\x0bJust a test")
 
-    def test_metadata(self):
+    def test_metadata_empty(self):
+        s = "\x7f"
+        self.assertRaises(ArrayError, bravo.packets.metadata.parse, s)
+
+    def test_metadata_value(self):
         s = "\x00\x04\x7f"
         parsed = bravo.packets.metadata.parse(s)
         self.assertEqual(parsed.data[0].value, 4)
+
+    def test_metadata_trailing(self):
+        s = "\x00\x04\x7f\x7f"
+        parsed = bravo.packets.metadata.parse(s)
+        self.assertEqual(len(parsed.data), 1)
 
 class TestPacketIntegration(unittest.TestCase):
 
