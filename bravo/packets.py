@@ -3,7 +3,7 @@ import functools
 
 from construct import Struct, Container, Embed, Enum, MetaField
 from construct import MetaArray, If, Switch, Const, Peek
-from construct import OptionalGreedyRange
+from construct import OptionalGreedyRange, RepeatUntil
 from construct import PascalString, Adapter
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32, SBInt64
@@ -41,7 +41,7 @@ items = Struct("items",
     ),
 )
 
-Metadata = namedtuple("Metadata", "type id value")
+Metadata = namedtuple("Metadata", "type id value final")
 metadata_types = ["byte", "short", "int", "float", "string", "slot",
     "coords"]
 
@@ -49,14 +49,16 @@ metadata_types = ["byte", "short", "int", "float", "string", "slot",
 class MetadataAdapter(Adapter):
 
     def _decode(self, obj, context):
+        final = obj["peeked"] == 0x7f
         return Metadata(
             metadata_types[obj["id"]["first"]],
             obj["id"]["second"],
-            obj["value"]
+            obj["value"],
+            final,
         )
 
     def _encode(self, obj, context):
-        c = Container(value=obj.value)
+        c = Container(value=obj.value, peeked=None)
         c["id"] = Container(first=metadata_types.index(obj.type),
             second=obj.id)
         return c
@@ -82,7 +84,7 @@ metadata_switch = {
 
 # Metadata subconstruct.
 metadata = Struct("metadata",
-    OptionalGreedyRange(
+    RepeatUntil(lambda obj, context: obj.final,
         MetadataAdapter(
             Struct("data",
                 BitStruct("id",
@@ -91,6 +93,7 @@ metadata = Struct("metadata",
                 ),
                 Switch("value", lambda context: context["id"]["first"],
                     metadata_switch),
+                Peek(UBInt8("peeked")),
             ),
         ),
     ),
