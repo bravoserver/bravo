@@ -16,6 +16,7 @@ from twisted.web.client import getPage
 from bravo.blocks import blocks, items
 from bravo.config import configuration
 from bravo.entity import Sign
+from bravo.motd import get_motd
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook, ISignHook
 from bravo.inventory import Workbench, sync_inventories
@@ -419,6 +420,9 @@ class BravoProtocol(BetaServerProtocol):
         names = configuration.getlistdefault(self.config_name, "sign_hooks",
             [])
         self.sign_hooks = retrieve_sorted_plugins(ISignHook, names)
+
+        # Retrieve the MOTD. Only needs to be done once.
+        self.motd = configuration.getdefault(self.config_name, "motd", None)
 
         self.last_dig_build_timer = time()
 
@@ -928,12 +932,15 @@ class BravoProtocol(BetaServerProtocol):
         # spawned.
         d.addCallback(lambda none: self.update_location())
         d.addCallback(lambda none: self.position_changed())
-        d.addCallback(lambda none: self.update_chunks())
 
-        # Finally, send the MOTD.
-        packet = make_packet("chat",
-            self.motd.replace("<tagline>", get_motd()))
-        self.transport.write(packet)
+        # Send the MOTD.
+        if self.motd:
+            packet = make_packet("chat",
+                message=self.motd.replace("<tagline>", get_motd()))
+            d.addCallback(lambda none: self.transport.write(packet))
+
+        # Finally, start the secondary chunk loop.
+        d.addCallback(lambda none: self.update_chunks())
 
     def update_location(self):
         bigx, smallx, bigz, smallz = split_coords(self.location.x,
