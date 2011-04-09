@@ -930,6 +930,11 @@ class BravoProtocol(BetaServerProtocol):
         d.addCallback(lambda none: self.position_changed())
         d.addCallback(lambda none: self.update_chunks())
 
+        # Finally, send the MOTD.
+        packet = make_packet("chat",
+            self.motd.replace("<tagline>", get_motd()))
+        self.transport.write(packet)
+
     def update_location(self):
         bigx, smallx, bigz, smallz = split_coords(self.location.x,
             self.location.z)
