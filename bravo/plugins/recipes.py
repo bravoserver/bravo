@@ -108,6 +108,7 @@ class TNT(Recipe):
         (blocks["sand"].key, 1),
         (items["sulphur"].key, 1),
         (blocks["sand"].key, 1),
+        (items["sulphur"].key, 1),
     )
     provides = (blocks["tnt"].key, 1)
 
@@ -277,12 +278,8 @@ class Shovel(Recipe):
         self.name = "%s-shovel" % name
         self.recipe = (
             (material.key, 1),
-            None,
             (items["stick"].key, 1),
-            None,
-            None,
             (items["stick"].key, 1),
-            None,
         )
         self.provides = (provides.key, 1)
 
@@ -348,7 +345,6 @@ class FishingRod(Recipe):
         None,
         (items["stick"].key, 1),
         (items["string"].key, 1),
-        None,
         (items["stick"].key, 1),
         None,
         (items["string"].key, 1),
@@ -486,6 +482,7 @@ class Dispenser(Recipe):
         (blocks["cobblestone"].key, 1),
         (items["bow"].key, 1),
         (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
         (items["redstone"].key, 1),
         (blocks["cobblestone"].key, 1),
     )
@@ -552,6 +549,7 @@ class Ladder(Recipe):
     recipe = (
         (items["stick"].key, 1),
         None,
+        (items["stick"].key, 1),
         (items["stick"].key, 1),
         (items["stick"].key, 1),
         (items["stick"].key, 1),
