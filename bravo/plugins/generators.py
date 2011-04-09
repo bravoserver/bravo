@@ -140,7 +140,7 @@ class WaterTableGenerator(object):
     name = "watertable"
 
     before = tuple()
-    after = tuple()
+    after = ("trees", "caves")
 
 class ErosionGenerator(object):
     """
