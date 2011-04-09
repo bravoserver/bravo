@@ -1,5 +1,10 @@
 from twisted.plugin import IPlugin
-from zope.interface import Attribute
+from zope.interface import invariant, Attribute
+
+class InvariantException(Exception):
+    """
+    Exception raised by failed invariant conditions.
+    """
 
 class IBravoPlugin(IPlugin):
     """

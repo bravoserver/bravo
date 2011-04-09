@@ -5,7 +5,7 @@ from zope.interface.exceptions import BrokenImplementation
 from zope.interface.exceptions import BrokenMethodImplementation
 from zope.interface.verify import verifyObject
 
-from bravo.ibravo import ISortedPlugin
+from bravo.ibravo import InvariantException, ISortedPlugin
 import bravo.plugins
 
 class PluginException(Exception):
@@ -87,7 +87,10 @@ def expand_names(plugins, names):
 
 def verify_plugin(interface, plugin):
     """
-    Lightweight wrapper around ``verifyObject()``.
+    Plugin interface verification.
+
+    This function will call ``verifyObject()`` and ``validateInvariants()`` on
+    the plugins passed to it.
 
     The primary purpose of this wrapper is to do logging, but it also permits
     code to be slightly cleaner, easier to test, and callable from other
@@ -96,6 +99,7 @@ def verify_plugin(interface, plugin):
 
     try:
         verifyObject(interface, plugin)
+        interface.validateInvariants(plugin)
         log.msg(" ( ^^) Plugin: %s" % plugin.name)
     except BrokenImplementation, bi:
         if hasattr(plugin, "name"):
@@ -106,7 +110,10 @@ def verify_plugin(interface, plugin):
     except BrokenMethodImplementation, bmi:
         log.msg(" ( Oo) Plugin %s has a broken %s()!" % (plugin.name,
             bmi.method))
-        log.err()
+        log.msg(bmi)
+    except InvariantException, ie:
+        log.msg(" ( >&) Plugin %s failed validation!" % plugin.name)
+        log.msg(ie)
     else:
         return plugin
 
