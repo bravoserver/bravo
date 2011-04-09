@@ -132,10 +132,17 @@ class IConsoleCommand(ICommand):
         :returns: a generator object or other iterable yielding lines
         """
 
+def recipe_invariant(r):
+    # Size invariant.
+    if len(r.recipe) != r.dimensions[0] * r.dimensions[1]:
+        raise InvariantException("Recipe size is invalid")
+
 class IRecipe(IBravoPlugin):
     """
     Recipe for crafting materials from other materials.
     """
+
+    invariant(recipe_invariant)
 
     dimensions = Attribute("""
         Tuple representing the size of the recipe.
