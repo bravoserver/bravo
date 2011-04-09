@@ -1,4 +1,5 @@
 from twisted.plugin import IPlugin
+from twisted.web.resource import IResource
 from zope.interface import Attribute
 
 class IBravoPlugin(IPlugin):
@@ -328,3 +329,8 @@ class ISignHook(ISortedPlugin):
         :param list text: list of lines of text
         :param bool new: whether this sign is newly placed
         """
+
+class IWorldResource(IBravoPlugin, IResource):
+    """
+    Interface for a world specific web resource.
+    """

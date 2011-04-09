@@ -1,3 +1,5 @@
+from bravo.ibravo import IWorldResource
+from plugin import retrieve_plugins
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
 from twisted.web.template import flattenString, renderer, tags, Element, XMLString
@@ -10,19 +12,39 @@ root_template = """
 <head>
     <title t:render="title" />
 </head>
+<body>
 <h1 t:render="title" />
+<div t:render="world" />
 <div t:render="service" />
+</body>
 </html>
 """
 
-class BravoElement(Element):
+world_template = """
+<html xmlns:t="http://twistedmatrix.com/ns/twisted.web.template/0.1">
+<head>
+    <title t:render="title" />
+</head>
+<body>
+<h1 t:render="title" />
+<div t:render="user" />
+<div t:render="status" />
+<div t:render="plugin" />
+</body>
+</html>
+"""
+
+class BravoRootElement(Element):
+    """
+    Element representing the web site root.
+    """
 
     loader = XMLString(root_template)
 
-    def __init__(self, services):
+    def __init__(self, worlds, services):
         Element.__init__(self)
-
         self.services = services
+        self.worlds = worlds
 
     @renderer
     def title(self, request, tag):
@@ -30,26 +52,42 @@ class BravoElement(Element):
 
     @renderer
     def service(self, request, tag):
-        l = []
         services = []
-        for name, service in self.services.iteritems():
-            factory = service.args[1]
-            if isinstance(factory, BravoFactory):
-                services.append(self.bravofactory(request, tags.div, factory))
-            else:
-                l.append(tags.li("%s (%s)" %
-                    (name, self.services[name].__class__)))
-        ul = tags.ul(*l)
-        div = tags.div(*services)
-        return tag(ul, div)
+        for name, factory in self.services.iteritems():
+            services.append(tags.li("%s (%s)" % (name, factory.__class__)))
+        return tag(tags.h2("Services"), tags.ul(*services))
 
-    def bravofactory(self, request, tag, factory):
-        g = (tags.li(username) for username in factory.protocols)
-        users = tags.div(tags.h3("Users"), tags.ul(*g))
-        world = self.world(request, tags.div, factory.world)
-        return tag(tags.h2("Bravo world %s" % factory.name), users, world)
+    @renderer
+    def world(self, request, tag):
+        worlds = []
+        for name in self.worlds.keys():
+            worlds.append(tags.li(tags.a(name.title(), href=name)))
+        return tag(tags.h2("Worlds"), tags.ul(*worlds))
 
-    def world(self, request, tag, world):
+class BravoWorldElement(Element):
+    """
+    Element representing a single world.
+    """
+
+    loader = XMLString(world_template)
+
+    def __init__(self, factory, plugins):
+        Element.__init__(self)
+        self.factory = factory
+        self.plugins = plugins
+
+    @renderer
+    def title(self, request, tag):
+        return tag("World %s" % self.factory.name.title())
+
+    @renderer
+    def user(self, request, tag):
+        users = (tags.li(username) for username in self.factory.protocols)
+        return tag(tags.h2("Users"), tags.ul(*users))
+
+    @renderer
+    def status(self, request, tag):
+        world = self.factory.world
         l = []
         total = (len(world.chunk_cache) + len(world.dirty_chunk_cache) +
             len(world._pending_chunks))
@@ -64,29 +102,58 @@ class BravoElement(Element):
         else:
             l.append(tags.li("Permanent cache: disabled"))
         status = tags.ul(*l)
-        return tag(tags.h3("World status"), status)
+        return tag(tags.h2("Status"), status)
+
+    @renderer
+    def plugin(self, request, tag):
+        plugins = []
+        for name in self.plugins.keys():
+            plugins.append(tags.li(tags.a(name.title(),
+                href='%s/%s' % (self.factory.name, name))))
+        return tag(tags.h2("Plugins"), tags.ul(*plugins))
 
 class BravoResource(Resource):
 
-    isLeaf = True
-
-    def __init__(self, services):
-        self.services = services
+    def __init__(self, element, isLeaf=True):
+        Resource.__init__(self)
+        self.element = element
+        self.isLeaf = isLeaf
 
     def render_GET(self, request):
-        d = flattenString(request, BravoElement(self.services))
+        d = flattenString(request, self.element)
         def complete_request(html):
             request.write(html)
             request.finish()
         d.addCallback(complete_request)
         return NOT_DONE_YET
 
-        response = u"<h1>Bravo %s</h1>" % version
-        for name, service in self.services.iteritems():
-            response += u"<h2>%s</h2><p>%s</p>" % (name, type(service))
-        return response.encode("utf8")
-
 def bravo_site(services):
-    resource = BravoResource(services)
-    site = Site(resource)
+    # extract worlds and non-world services only once at startup
+    worlds = {}
+    other_services = {}
+    for name, service in services.iteritems():
+        factory = service.args[1]
+        if isinstance(factory, BravoFactory):
+            worlds[name] = factory
+        else:
+            # XXX: do we really need those ?
+            other_services[name] = factory
+    # add site root
+    root = Resource()
+    root.putChild('', BravoResource(BravoRootElement(worlds, other_services)))
+    # add world sub pages and related plugins
+    plugins = retrieve_plugins(IWorldResource)
+    for world, factory in worlds.iteritems():
+        # add sub page
+        child = BravoResource(BravoWorldElement(factory, plugins), False)
+        root.putChild(world, child)
+        # add plugins
+        for name, resource in plugins.iteritems():
+            # set factory because they are initialized without factory for
+            # plugin discovery
+            resource.factory = factory
+            # add plugin page
+            child.putChild(name, resource)
+    # create site
+    site = Site(root)
     return site
