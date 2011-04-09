@@ -81,11 +81,6 @@ class BravoResource(Resource):
         d.addCallback(complete_request)
         return NOT_DONE_YET
 
-        response = u"<h1>Bravo %s</h1>" % version
-        for name, service in self.services.iteritems():
-            response += u"<h2>%s</h2><p>%s</p>" % (name, type(service))
-        return response.encode("utf8")
-
 def bravo_site(services):
     resource = BravoResource(services)
     site = Site(resource)
