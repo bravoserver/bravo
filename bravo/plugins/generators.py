@@ -1,7 +1,7 @@
 from __future__ import division
 
-from itertools import product
-from random import randint
+from itertools import combinations, product
+from random import Random
 import sys
 
 from numpy import array, where
@@ -11,6 +11,8 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import ITerrainGenerator
 from bravo.simplex import simplex2, octaves2, octaves3, set_seed
+
+R = Random()
 
 class BoringGenerator(object):
     """
@@ -367,6 +369,8 @@ class FloatGenerator(object):
         Eat moar stone
         """
 
+        R.seed(seed)
+
         factor = 1 / 256
         for x, z in product(xrange(16), repeat=2):
             magx = ((chunk.x+16) * 16 + x) * factor
@@ -379,7 +383,7 @@ class FloatGenerator(object):
             if abs(chunk.heightmap[x, z] - height) < 10:
                 column.fill(blocks["air"].slot)
             else:
-                height = height - 30 + randint(-15, 10)
+                height = height - 30 + R.randint(-15, 10)
                 column[:height].fill(blocks["air"].slot)
 
     name = "float"
@@ -437,6 +441,18 @@ class TreeGenerator(object):
 
     implements(ITerrainGenerator)
 
+    primes = [101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163,
+              167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233,
+              239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311,
+              313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389,
+              397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461, 463,
+              467, 479, 487, 491, 499]
+    """
+    A field of prime numbers, used to select factors for trees.
+    """
+
+    ground = (blocks["grass"].slot, blocks["dirt"].slot)
+
     def populate(self, chunk, seed):
         """
         Place saplings.
@@ -450,8 +466,8 @@ class TreeGenerator(object):
         Saplings are only placed on dirt and grass blocks.
         """
 
-        factors = 23, 47, 71
-        ground = (blocks["grass"].slot, blocks["dirt"].slot)
+        R.seed(seed)
+        factors = R.choice(list(combinations(self.primes, 3)))
 
         for x, z in product(xrange(16), repeat=2):
             # Make a Morton number.
@@ -470,7 +486,7 @@ class TreeGenerator(object):
             if not all(morton % factor for factor in factors):
                 # Plant a sapling.
                 y = chunk.height_at(x, z)
-                if chunk.get_block((x, y, z)) in ground:
+                if chunk.get_block((x, y, z)) in self.ground:
                     chunk.set_block((x, y + 1, z), blocks["sapling"].slot)
 
     name = "trees"
