@@ -430,6 +430,54 @@ class CaveGenerator(object):
     before = ("grass", "erosion", "simplex", "complex", "boring")
     after = tuple()
 
+class TreeGenerator(object):
+    """
+    Plant saplings at relatively silly places around the map.
+    """
+
+    implements(ITerrainGenerator)
+
+    def populate(self, chunk, seed):
+        """
+        Place saplings.
+
+        The algorithm used to pick locations for the saplings is quite
+        simple, although slightly involved. The basic technique is to
+        calculate a Morton number for every xz-column in the chunk, and then
+        use coprime offsets to sprinkle selected points fairly evenly
+        throughout the chunk.
+
+        Saplings are only placed on dirt and grass blocks.
+        """
+
+        factors = 23, 47, 71
+        ground = (blocks["grass"].slot, blocks["dirt"].slot)
+
+        for x, z in product(xrange(16), repeat=2):
+            # Make a Morton number.
+            gx = (chunk.x * 16 + x) & 0xffff
+            gz = (chunk.z * 16 + z) & 0xffff
+
+            b = 0x00ff00ff, 0x0f0f0f0f, 0x55555555, 0x33333333
+            s = 8, 4, 2, 1
+
+            for i, j in zip(b, s):
+                gx = (gx | gx << j) & i
+                gz = (gz | gz << j) & i
+
+            morton = gx | (gz << 1)
+
+            if not all(morton % factor for factor in factors):
+                # Plant a sapling.
+                y = chunk.height_at(x, z)
+                if chunk.get_block((x, y, z)) in ground:
+                    chunk.set_block((x, y + 1, z), blocks["sapling"].slot)
+
+    name = "trees"
+
+    before = ("grass", "erosion", "simplex", "complex", "boring")
+    after = tuple()
+
 float = FloatGenerator()
 cliffs = CliffGenerator()
 boring = BoringGenerator()
@@ -442,3 +490,4 @@ beaches = BeachGenerator()
 ore = OreGenerator()
 safety = SafetyGenerator()
 caves = CaveGenerator()
+trees = TreeGenerator()
