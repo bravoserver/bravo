@@ -447,19 +447,16 @@ class BravoProtocol(BetaServerProtocol):
         # ourselves.
         for protocol in self.factory.protocols.itervalues():
             packet = protocol.player.save_to_packet()
-            self.transport.write(packet)
-            packet = protocol.player.save_equipment_to_packet()
-            self.transport.write(packet)
-            packet = make_packet("create", eid=protocol.player.eid)
+            packet += protocol.player.save_equipment_to_packet()
+            packet += make_packet("create", eid=protocol.player.eid)
             self.transport.write(packet)
 
         self.factory.protocols[self.username] = self
 
+        # Send spawn and inventory.
         spawn = self.factory.world.spawn
         packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
-        self.transport.write(packet)
-
-        packet = self.player.inventory.save_to_packet()
+        packet += self.player.inventory.save_to_packet()
         self.transport.write(packet)
 
         self.send_initial_chunk_and_location()
