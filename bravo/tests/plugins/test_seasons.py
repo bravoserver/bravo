@@ -75,6 +75,15 @@ class TestWinter(unittest.TestCase):
         self.assertNotEqual(self.c.get_block((0, 2, 0)),
             bravo.blocks.blocks["snow"].slot)
 
+    def test_top_of_world_snow(self):
+        """
+        Blocks at the top of the world should not cause exceptions when snow
+        is placed on them.
+        """
+
+        self.c.set_block((0, 127, 0), bravo.blocks.blocks["stone"].slot)
+        self.hook.transform(self.c)
+
 class Spring(unittest.TestCase):
     
     def setUp(self):

@@ -14,6 +14,7 @@ snow_resistant = set([
     blocks["lava"].slot,
     blocks["rose"].slot,
     blocks["sapling"].slot,
+    blocks["snow"].slot,
     blocks["spring"].slot,
     blocks["torch"].slot,
     blocks["water"].slot,
@@ -36,11 +37,13 @@ class Winter(object):
         # Lay snow over anything not already snowed and not snow-resistant.
         for x, z in product(xrange(16), xrange(16)):
             height = chunk.height_at(x, z)
+            if height == 128:
+                continue
+
             top_block = chunk.get_block((x, height, z))
 
-            if top_block != blocks["snow"].slot:
-                if top_block not in snow_resistant:
-                    chunk.set_block((x, height + 1, z), blocks["snow"].slot)
+            if top_block not in snow_resistant:
+                chunk.set_block((x, height + 1, z), blocks["snow"].slot)
 
     name = "winter"
 
