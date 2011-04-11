@@ -1,4 +1,5 @@
 from itertools import product
+from warnings import warn
 
 from numpy import int8, uint8, uint32, bool
 from numpy import cast, logical_not, logical_and, transpose, where, zeros, amax
@@ -6,6 +7,12 @@ from numpy import cast, logical_not, logical_and, transpose, where, zeros, amax
 from bravo.blocks import blocks, glowing_blocks
 from bravo.packets import make_packet
 from bravo.utilities import pack_nibbles
+
+class ChunkWarning(Warning):
+    """
+    Somebody did something inappropriate to this chunk, but it probably isn't
+    lethal, so the chunk is issuing a warning instead of an exception.
+    """
 
 # Set up glow tables.
 # These tables provide glow maps for illuminated points.
@@ -364,9 +371,14 @@ class Chunk(object):
         :returns: int representing block type
         """
 
-        x, y, z = coords
-
-        return self.blocks[x, z, y]
+        try:
+            x, y, z = coords
+            return self.blocks[x, z, y]
+        except IndexError:
+            # Coordinates were out-of-bounds; warn and pretend it's air.
+            warn("Coordinates %s are out-of-bounds in %s" % (coords, self),
+                 ChunkWarning)
+            return 0
 
     def set_block(self, coords, block):
         """
@@ -378,33 +390,39 @@ class Chunk(object):
 
         x, y, z = coords
 
-        if self.blocks[x, z, y] != block:
-            self.blocks[x, z, y] = block
+        try:
+            if self.blocks[x, z, y] != block:
+                self.blocks[x, z, y] = block
 
-            if not self.populated:
-                return
+                if not self.populated:
+                    return
 
-            # Regenerate heightmap at this coordinate.
-            if not block:
-                # If we replace the highest block with air, we need to go
-                # through all blocks below it to find the new top block.
-                height = self.heightmap[x, z]
-                if y == height:
-                    for y in range(height, -1, -1):
-                        if self.blocks[x, z, y]:
-                            break
-                    self.heightmap[x, z] = y
-            else:
-                self.heightmap[x, z] = max(self.heightmap[x, z], y)
+                # Regenerate heightmap at this coordinate.
+                if not block:
+                    # If we replace the highest block with air, we need to go
+                    # through all blocks below it to find the new top block.
+                    height = self.heightmap[x, z]
+                    if y == height:
+                        for y in range(height, -1, -1):
+                            if self.blocks[x, z, y]:
+                                break
+                        self.heightmap[x, z] = y
+                else:
+                    self.heightmap[x, z] = max(self.heightmap[x, z], y)
 
-            # Add to lightmap at this coordinate.
-            if block in glowing_blocks:
-                composite_glow(self.blocklight, glowing_blocks[block], x, y, z)
+                # Add to lightmap at this coordinate.
+                if block in glowing_blocks:
+                    composite_glow(self.blocklight, glowing_blocks[block],
+                        x, y, z)
 
-                self.blocklight = cast[uint8](self.blocklight.clip(0, 15))
+                    self.blocklight = cast[uint8](self.blocklight.clip(0, 15))
 
-            self.dirty = True
-            self.damage(coords)
+                self.dirty = True
+                self.damage(coords)
+        except IndexError:
+            # Coordinates were out-of-bounds; warn and run away.
+            warn("Coordinates %s are out-of-bounds in %s" % (coords, self),
+                 ChunkWarning)
 
     def get_metadata(self, coords):
         """
@@ -417,7 +435,13 @@ class Chunk(object):
 
         x, y, z = coords
 
-        return self.metadata[x, z, y]
+        try:
+            return self.metadata[x, z, y]
+        except IndexError:
+            # Coordinates were out-of-bounds; warn.
+            warn("Coordinates %s are out-of-bounds in %s" % (coords, self),
+                 ChunkWarning)
+            return 0
 
     def set_metadata(self, coords, metadata):
         """
@@ -429,11 +453,16 @@ class Chunk(object):
 
         x, y, z = coords
 
-        if self.metadata[x, z, y] != metadata:
-            self.metadata[x, z, y] = metadata
+        try:
+            if self.metadata[x, z, y] != metadata:
+                self.metadata[x, z, y] = metadata
 
-            self.dirty = True
-            self.damage(coords)
+                self.dirty = True
+                self.damage(coords)
+        except IndexError:
+            # Coordinates were out-of-bounds; warn.
+            warn("Coordinates %s are out-of-bounds in %s" % (coords, self),
+                 ChunkWarning)
 
     def destroy(self, coords):
         """
