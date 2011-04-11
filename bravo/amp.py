@@ -2,6 +2,7 @@ from twisted.internet.protocol import Factory
 from twisted.protocols.amp import AMP, Command, Unicode, ListOf
 
 from bravo import version as bravo_version
+from bravo.factories.beta import BravoFactory
 from bravo.ibravo import IConsoleCommand
 from bravo.plugin import retrieve_plugins
 
@@ -82,9 +83,15 @@ class ConsoleRPCFactory(Factory):
     protocol = ConsoleRPCProtocol
 
     def __init__(self, service):
-        self.factories = service.namedServices
+        self.services = service.namedServices
 
     def buildProtocol(self, addr):
-        protocol = self.protocol(self.factories)
+        factories = {}
+        for name, service in self.services.iteritems():
+            factory = service.args[1]
+            if isinstance(factory, BravoFactory):
+                factories[factory.name] = factory
+
+        protocol = self.protocol(factories)
         protocol.factory = self
         return protocol
