@@ -194,6 +194,15 @@ class TestPacketHelpers(unittest.TestCase):
         built = bravo.packets.metadata.build(d)
         self.assertEqual(built, "\x00\x00\x7f")
 
+    def test_metadata_build_tuple(self):
+        """
+        Tuples can be used instead of the ``Metadata`` named tuple.
+        """
+
+        d = {0: ("byte", 0)}
+        built = bravo.packets.metadata.build(d)
+        self.assertEqual(built, "\x00\x00\x7f")
+
 class TestPacketIntegration(unittest.TestCase):
 
     def test_location_round_trip(self):
