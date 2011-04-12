@@ -182,17 +182,15 @@ class TestPacketHelpers(unittest.TestCase):
     def test_metadata_value(self):
         s = "\x00\x04\x7f"
         parsed = bravo.packets.metadata.parse(s)
-        self.assertEqual(parsed.data[0].value, 4)
+        self.assertEqual(parsed[0].value, 4)
 
     def test_metadata_trailing(self):
         s = "\x00\x04\x7f\x7f"
         parsed = bravo.packets.metadata.parse(s)
-        self.assertEqual(len(parsed.data), 1)
+        self.assertEqual(len(parsed), 1)
 
     def test_metadata_build(self):
-        d = Container(
-            data=[bravo.packets.Metadata(type='byte', id=0, value=0, final=True)],
-            terminator=127)
+        d = {0: bravo.packets.Metadata(type='byte', value=0)}
         built = bravo.packets.metadata.build(d)
         self.assertEqual(built, "\x00\x00\x7f")
 

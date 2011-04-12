@@ -41,7 +41,7 @@ items = Struct("items",
     ),
 )
 
-Metadata = namedtuple("Metadata", "type id value final")
+Metadata = namedtuple("Metadata", "type value")
 metadata_types = ["byte", "short", "int", "float", "string", "slot",
     "coords"]
 
@@ -49,18 +49,21 @@ metadata_types = ["byte", "short", "int", "float", "string", "slot",
 class MetadataAdapter(Adapter):
 
     def _decode(self, obj, context):
-        final = obj["peeked"] == 0x7f
-        return Metadata(
-            metadata_types[obj["id"]["first"]],
-            obj["id"]["second"],
-            obj["value"],
-            final,
-        )
+        d = {}
+        for m in obj.data:
+            d[m.id.second] = Metadata(metadata_types[m.id.first], m.value)
+        return d
 
     def _encode(self, obj, context):
-        c = Container(value=obj.value, peeked=None)
-        c["id"] = Container(first=metadata_types.index(obj.type),
-            second=obj.id)
+        c = Container(data=[], terminator=None)
+        for k, v in obj.iteritems():
+            t, value = v
+            d = Container(
+                id=Container(first=metadata_types.index(t), second=k),
+                value=value,
+                peeked=None)
+            c.data.append(d)
+        c.data[-1].peeked = 127
         return c
 
 # Metadata inner container.
@@ -83,9 +86,9 @@ metadata_switch = {
 }
 
 # Metadata subconstruct.
-metadata = Struct("metadata",
-    RepeatUntil(lambda obj, context: obj.final,
-        MetadataAdapter(
+metadata = MetadataAdapter(
+    Struct("metadata",
+        RepeatUntil(lambda obj, context: obj["peeked"] == 0x7f,
             Struct("data",
                 BitStruct("id",
                     BitField("first", 3),
@@ -96,8 +99,8 @@ metadata = Struct("metadata",
                 Peek(UBInt8("peeked")),
             ),
         ),
+        Const(UBInt8("terminator"), 0x7f),
     ),
-    Const(UBInt8("terminator"), 0x7f),
 )
 
 # Build faces, used during dig and build.
