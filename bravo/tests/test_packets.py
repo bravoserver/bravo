@@ -189,6 +189,13 @@ class TestPacketHelpers(unittest.TestCase):
         parsed = bravo.packets.metadata.parse(s)
         self.assertEqual(len(parsed.data), 1)
 
+    def test_metadata_build(self):
+        d = Container(
+            data=[bravo.packets.Metadata(type='byte', id=0, value=0, final=True)],
+            terminator=127)
+        built = bravo.packets.metadata.build(d)
+        self.assertEqual(built, "\x00\x00\x7f")
+
 class TestPacketIntegration(unittest.TestCase):
 
     def test_location_round_trip(self):
