@@ -140,10 +140,51 @@ class Pickup(Entity):
             roll=0
         )
 
+class Mob(Entity):
+    """
+    A creature.
+    """
+
+    name = "Mob"
+
+class Sheep(Mob):
+    """
+    A wooly mob.
+    """
+
+    name = "Sheep"
+
+    metadata = {0: ("byte", 0), 16: ("byte", 0)}
+
+    def __init__(self, sheared=False, color=0, **kwargs):
+        """
+        Create a sheep.
+
+        This method calls super().
+        """
+
+        super(Sheep, self).__init__(**kwargs)
+
+        self.sheared = sheared
+        self.color = color
+
+    def save_to_packet(self):
+        return make_packet("mob",
+            eid=self.eid,
+            type="sheep",
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=0,
+            pitch=0,
+            metadata=self.metadata
+        )
+
 entities = dict((entity.name, entity)
     for entity in (
         Player,
         Pickup,
+        Sheep,
     )
 )
 

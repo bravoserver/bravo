@@ -107,10 +107,12 @@ class Alpha(object):
 
         self._entity_loaders = {
             "Item": self._load_item_from_tag,
+            "Sheep": self._load_sheep_from_tag,
         }
 
         self._entity_savers = {
             "Item": self._save_item_to_tag,
+            "Sheep": self._save_sheep_to_tag,
         }
 
         self._tile_loaders = {
@@ -187,6 +189,14 @@ class Alpha(object):
         tag["Item"]["id"] = TAG_Short(item.item[0])
         tag["Item"]["Damage"] = TAG_Short(item.item[1])
         tag["Item"]["Count"] = TAG_Short(item.quantity)
+
+    def _load_sheep_from_tag(self, sheep, tag):
+        sheep.sheared = bool(tag["Sheared"].value)
+        sheep.color = tag["Color"].value
+
+    def _save_sheep_to_tag(self, sheep, tag):
+        tag["Sheared"] = TAG_Byte(sheep.sheared)
+        tag["Color"] = TAG_Byte(sheep.color)
 
     # Tile serializers. Tiles are blocks and entities at the same time, in the
     # worst way. Each of these helpers will be called during chunk serialize
