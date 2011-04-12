@@ -169,6 +169,13 @@ class Sheep(Mob):
         self.color = color
 
     def save_to_packet(self):
+        # Prepare metadata.
+        metadata = self.metadata.copy()
+        color = self.color
+        if self.sheared:
+            color |= 0x10
+        metadata[16] = "byte", color
+
         return make_packet("mob",
             eid=self.eid,
             type="sheep",
