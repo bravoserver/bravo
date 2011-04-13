@@ -146,6 +146,21 @@ class Mob(Entity):
     """
 
     name = "Mob"
+    type = "mob"
+
+    metadata = {0: ("byte", 0)}
+
+    def save_to_packet(self):
+        return make_packet("mob",
+            eid=self.eid,
+            type=self.type,
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=0,
+            pitch=0,
+            metadata=self.metadata
+        )
 
 class Sheep(Mob):
     """
@@ -187,11 +202,20 @@ class Sheep(Mob):
             metadata=self.metadata
         )
 
+class Squid(Mob):
+    """
+    An aquatic source of ink.
+    """
+
+    name = "Squid"
+    type = "squid"
+
 entities = dict((entity.name, entity)
     for entity in (
         Player,
         Pickup,
         Sheep,
+        Squid,
     )
 )
 

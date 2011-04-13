@@ -108,11 +108,13 @@ class Alpha(object):
         self._entity_loaders = {
             "Item": self._load_item_from_tag,
             "Sheep": self._load_sheep_from_tag,
+            "Squid": lambda entity, tag: None,
         }
 
         self._entity_savers = {
             "Item": self._save_item_to_tag,
             "Sheep": self._save_sheep_to_tag,
+            "Squid": lambda entity, tag: None,
         }
 
         self._tile_loaders = {
