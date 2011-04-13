@@ -5,7 +5,8 @@ from urlparse import urlunparse
 from math import pi
 
 from twisted.internet import reactor
-from twisted.internet.defer import inlineCallbacks, maybeDeferred, succeed
+from twisted.internet.defer import (DeferredList, inlineCallbacks,
+    maybeDeferred, succeed)
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import cooperate, LoopingCall
@@ -653,11 +654,13 @@ class BravoProtocol(BetaServerProtocol):
 
         oldblock = blocks[chunk.get_block((smallx, container.y, smallz))]
 
+        l = []
         for hook in self.dig_hooks:
-            hook.dig_hook(self.factory, chunk, smallx, container.y, smallz,
-                oldblock)
+            l.append(maybeDeferred(hook.dig_hook,
+                self.factory, chunk, smallx, container.y, smallz, oldblock))
 
-        self.factory.flush_chunk(chunk)
+        dl = DeferredList(l)
+        dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
 
     @inlineCallbacks
     def build(self, container):
