@@ -264,7 +264,7 @@ packets = {
             pig=90,
             sheep=91,
             cow=92,
-            hen=93,
+            chuck=93,
             squid=94,
         ),
         SBInt32("x"),
