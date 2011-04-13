@@ -37,7 +37,7 @@ class Winter(object):
         # Lay snow over anything not already snowed and not snow-resistant.
         for x, z in product(xrange(16), xrange(16)):
             height = chunk.height_at(x, z)
-            if height == 128:
+            if height == 127:
                 continue
 
             top_block = chunk.get_block((x, height, z))
