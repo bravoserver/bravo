@@ -106,13 +106,19 @@ class Alpha(object):
                 raise Exception("Could not create world in %s" % self.folder)
 
         self._entity_loaders = {
+            "Chicken": lambda entity, tag: None,
+            "Cow": lambda entity, tag: None,
             "Item": self._load_item_from_tag,
+            "Pig": lambda entity, tag: None,
             "Sheep": self._load_sheep_from_tag,
             "Squid": lambda entity, tag: None,
         }
 
         self._entity_savers = {
+            "Chicken": lambda entity, tag: None,
+            "Cow": lambda entity, tag: None,
             "Item": self._save_item_to_tag,
+            "Pig": lambda entity, tag: None,
             "Sheep": self._save_sheep_to_tag,
             "Squid": lambda entity, tag: None,
         }

@@ -162,6 +162,32 @@ class Mob(Entity):
             metadata=self.metadata
         )
 
+class Chuck(Mob):
+    """
+    A cross between a duck and a chicken.
+    """
+
+    name = "Chicken"
+    type = "chuck"
+
+class Cow(Mob):
+    """
+    Large, four-legged milk containers.
+    """
+
+    name = "Cow"
+    type = "cow"
+
+class Pig(Mob):
+    """
+    A provider of bacon and piggyback rides.
+    """
+
+    name = "Pig"
+    type = "pig"
+
+    metadata = {0: ("byte", 0), 16: ("byte", 0)}
+
 class Sheep(Mob):
     """
     A wooly mob.
@@ -212,6 +238,9 @@ class Squid(Mob):
 
 entities = dict((entity.name, entity)
     for entity in (
+        Chuck,
+        Cow,
+        Pig,
         Player,
         Pickup,
         Sheep,
