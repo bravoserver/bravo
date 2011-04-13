@@ -50,6 +50,7 @@ class Fluid(object):
 
     @inlineCallbacks
     def process(self):
+
         for factory in self.pending:
             w = factory.world
             new = set()
@@ -247,7 +248,6 @@ class Fluid(object):
         """
 
         block, metadata, x, y, z, face = builddata
-
         # No, you may not place this. Only I may place it.
         if block.slot == self.fluid:
             factory.world.destroy((x, y, z))
@@ -260,6 +260,7 @@ class Fluid(object):
 
         return True, builddata
 
+    @inlineCallbacks
     def dig_hook(self, factory, chunk, x, y, z, block):
         """
         Check for neighboring water that might want to spread.
@@ -290,7 +291,8 @@ class Fluid(object):
                 ( 1, 0,  0),
                 (-1, 0,  0)):
                 coords = x + dx, y + dy, z + dz
-                if factory.world.get_block(coords) in (self.spring, self.fluid):
+                test_block = yield factory.world.get_block(coords)
+                if test_block in (self.spring, self.fluid):
                     self.pending[factory].add(coords)
 
         if any(self.pending.itervalues()) and not self.loop.running:
