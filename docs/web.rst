@@ -12,5 +12,5 @@ Only one web service can be defined; it uses the configuration key ``[web]``
 and has only one parameter, ``port``, specifying the port on which to listen.
 An example configuration snippet might look like this::
 
-[web]
-port = 8080
+    [web]
+    port = 8080
