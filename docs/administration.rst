@@ -16,10 +16,10 @@ format of Windows 32-bit configuration settings, nor the format of PHP's
 configuration files. Specifically, bravo.ini is parsed and written using
 Python's :py:class:`ConfigParser <ConfigParser.ConfigParser>` class.
 
-An example configuration file is provided as bravo.ini.example, and is a good
-starting point for new configurations.
+An example configuration file is provided as :file:`bravo.ini.example`, 
+and is a good starting point for new configurations.
 
-bravo.ini should live in one of three locations:
+:file:`bravo.ini` should live in one of three locations:
 
 1. /etc/bravo
 2. ~/.bravo
@@ -27,8 +27,8 @@ bravo.ini should live in one of three locations:
 
 All three locations will be checked, in that order, and more-recently-loaded
 configurations will override configurations in previous directories. For
-sanity purposes, it is highly encouraged to either use /etc/bravo if running
-as root, or ~/.bravo if running as a normal user.
+sanity purposes, it is highly encouraged to either use :file:`/etc/bravo` 
+if running as root, or :file:`~/.bravo` if running as a normal user.
 
 The configuration file is divided up into **sections**. Each section starts
 with a name, like ``[section name]``, and only ends when another section
@@ -106,9 +106,9 @@ build_hooks
 dig_hooks
     Which dig hooks to enable. This is a list of plugins.
 generators
-    Which terrain generators to use. This is a list of plugins.
+    Which :ref:`terrain_generator_plugins` to use. This is a list of plugins.
 seasons
-    Which seasons to enable. This, too, is a list of plugins.
+    Which :ref:`season_plugins` to enable. This, too, is a list of plugins.
 
 Build hooks
 ^^^^^^^^^^^

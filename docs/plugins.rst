@@ -30,6 +30,8 @@ directly authenticates clients against a server without consulting
 minecraft.net or any other central authority. However, it is not correctly
 implemented in the Notchian client, and will not work with that client.
 
+.. _terrain_generator_plugins:
+
 Terrain generators
 ==================
 
@@ -113,6 +115,8 @@ Watertable
 ----------
 
 Creates a flat water table half-way up the map (Y = 64).
+
+.. _season_plugins:
 
 Seasons
 =======
