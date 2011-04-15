@@ -120,5 +120,9 @@ Seasons
 Winter
 ------
 
+Causes water to freeze, and snow to be placed on certain block types.
+
 Spring
 ------
+
+Thaws frozen water and removes snow as that was placed during Winter.
