@@ -1,5 +1,6 @@
 import random
 
+from twisted.internet.defer import inlineCallbacks
 from zope.interface import implements
 
 from bravo.blocks import blocks
@@ -86,6 +87,7 @@ class Torch(object):
 
     implements(IDigHook)
 
+    @inlineCallbacks
     def dig_hook(self, factory, chunk, x, y, z, block):
         """
         Whenever a block is dug out, destroy any torches attached to the
@@ -104,13 +106,13 @@ class Torch(object):
             (0,  1,  0, 0x5)):
             # Check whether the attached block is a torch.
             coords = (x + dx, y + dy, z + dz)
-            dblock = world.get_block(coords)
+            dblock = yield world.get_block(coords)
             if dblock not in (blocks["torch"].slot,
                 blocks["redstone-torch"].slot):
                 continue
 
             # Check whether this torch is attached to the block being dug out.
-            metadata = world.get_metadata(coords)
+            metadata = yield world.get_metadata(coords)
             if dmetadata != metadata:
                 continue
 
