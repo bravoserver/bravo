@@ -25,7 +25,7 @@ Online authentication is the traditional authentication with minecraft.net.
 Password
 --------
 
-Password authentication is an experiemental authentication scheme which
+Password authentication is an experimental authentication scheme which
 directly authenticates clients against a server without consulting
 minecraft.net or any other central authority. However, it is not correctly
 implemented in the Notchian client, and will not work with that client.
@@ -37,8 +37,8 @@ The following terrain generators may be added to the ``generators`` setting
 in your :file:`bravo.ini` under the ``[world]`` section. The order in which
 these appear in the list is not important. 
 
-Beach
------
+Beaches
+-------
 
 Generates simple beaches.
 
@@ -57,8 +57,8 @@ Grass
 
 Grows grass on exposed dirt.
 
-Cave
-----
+Caves
+-----
 
 Carves caves and seams out of terrain.
 
@@ -96,8 +96,8 @@ Simplex
 
 Generates organic-looking, continuously smooth terrain.
 
-Tree
-----
+Trees
+-----
 
 Plants saplings at relatively silly places around the map.
 
