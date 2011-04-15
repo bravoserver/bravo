@@ -32,7 +32,12 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.pngmath',
     'sphinx.ext.viewcode',
+    'sphinx.ext.intersphinx',
 ]
+
+intersphinx_mapping = {
+    'python': ('http://docs.python.org/', None),
+}
 
 autodoc_default_flags = ["members", "show-inheritance"]
 
