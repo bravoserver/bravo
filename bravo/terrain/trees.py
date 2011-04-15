@@ -4,7 +4,7 @@ from itertools import product
 from math import copysign, cos, pi, sin, sqrt
 from random import choice, random
 
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, returnValue
 from zope.interface import Interface, implements
 
 from bravo.blocks import blocks
