@@ -3,12 +3,42 @@ from __future__ import division
 from math import copysign, cos, pi, sin, sqrt
 from random import choice, random
 
+from twisted.internet.defer import inlineCallbacks
 from zope.interface import Interface, implements
 
 from bravo.blocks import blocks
 
 PHI = (sqrt(5) - 1) * 0.5
 IPHI = (sqrt(5) + 1) * 0.5
+
+@inlineCallbacks
+def dist_to_mat(cord, vec, matidxlist, world, invert=False, limit=None):
+    """
+    Find the distance from the given coordinates to any of a set of blocks
+    along a certain vector.
+    """
+
+    curcord = [i + .5 for i in cord]
+    iterations = 0
+    on_map = True
+    while on_map:
+        x = int(curcord[0])
+        y = int(curcord[1])
+        z = int(curcord[2])
+        if not 0 <= y < 128:
+            break
+        block = yield world.get_block((x, y, z))
+
+        if block in matidxlist and not invert:
+            break
+        elif block not in matidxlist and invert:
+            break
+        else:
+            curcord = [curcord[i] + vec[i] for i in range(3)]
+            iterations += 1
+        if limit and iterations > limit:
+            break
+    returnValue(iterations)
 
 class ITree(Interface):
     """
@@ -312,6 +342,7 @@ class ProceduralTree(Tree):
             self.taperedcylinder(startcoord,coord,startsize,endsize,
                              world,WOODINFO)
 
+    @inlineCallbacks
     def make_roots(self, rootbases, world):
         """generate the roots and enter them in world.
 
@@ -375,13 +406,15 @@ class ProceduralTree(Tree):
                 # roots will go some distance before changing directions
                 # or stopping.
                 startdist = int(random()*6*sqrt(rootstartsize) + 2.8)
-                # searchstart is the coordinate where the search should begin
-                searchstart = [startcoord[i] + startdist*vec[i]
-                               for i in xrange(3)]
+                # searchstart is the coordinate where the search should begin.
+                searchstart = [startdist * v + sc
+                    for v, sc in zip(vec, startcoord)]
                 # dist stores how far the search went (including searchstart)
-                # before encountering the expected marterial.
-                dist = startdist + dist_to_mat(searchstart,vec,
-                                        searchindex,world, limit=offlength)
+                # before encountering the expected material.
+                dist = startdist
+                dist += yield dist_to_mat(searchstart, vec, searchindex,
+                    world, limit=offlength)
+
                 # If the distance to the material is less than the length
                 # of the root, change the end point of the root to where
                 # the search found the material.
@@ -512,6 +545,7 @@ class ProceduralTree(Tree):
                                  mid_radius,top_radius,
                                  world,TRUNKFILLINFO)
 
+    @inlineCallbacks
     def prepare(self,world):
         """Initialize the internal values for the Tree object.
 
@@ -572,8 +606,8 @@ class ProceduralTree(Tree):
                     if offlength > 0:
                         # unit vector for the search
                         vec = [i / offlength for i in offset]
-                        mat_dist = dist_to_mat(start,vec,STOPSBRANCHES,
-                                               world,limit=offlength)
+                        mat_dist = yield dist_to_mat(start, vec,
+                            STOPSBRANCHES, world, limit=offlength)
                         # after all that, if you find something, don't add
                         # this coordinate to the list
                         if mat_dist < offlength:
