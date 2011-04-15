@@ -87,4 +87,4 @@ Plugins
 -------
 
 Bravo supports several different types of plugins. For more information, see
-:ref:``Plugins``.
+:ref:`Plugins`.
