@@ -14,7 +14,7 @@ Bravo uses a single configuration file, bravo.ini, for all of its settings.
 The file is in standard INI format. Note that this is not the extended INI
 format of Windows 32-bit configuration settings, nor the format of PHP's
 configuration files. Specifically, bravo.ini is parsed and written using
-Python's ``ConfigParser`` class.
+Python's :py:class:`ConfigParser <ConfigParser.ConfigParser>` class.
 
 An example configuration file is provided as bravo.ini.example, and is a good
 starting point for new configurations.
