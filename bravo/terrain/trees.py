@@ -1,5 +1,6 @@
 from __future__ import division
 
+from itertools import product
 from math import copysign, cos, pi, sin, sqrt
 from random import choice, random
 
@@ -213,12 +214,11 @@ class ProceduralTree(Tree):
         This list must be set in a subclass of ProceduralTree.
         """
 
-        level_radius = self.foliage_shape
         x = center[0]
         y = center[1]
         z = center[2]
         for i in self.foliage_shape:
-            self.crossection([x,y,z], i, 1, blocks["leaves"].slot, world)
+            self.cross_section([x, y, z], i, 1, blocks["leaves"].slot, world)
             y += 1
 
     def taperedcylinder(self, start, end, startsize, endsize, world, blockdata):
