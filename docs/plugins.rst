@@ -64,8 +64,8 @@ Caves
 
 Carves caves and seams out of terrain.
 
-Cliff
------
+Cliffs
+------
 
 Generates sheer cliffs.
 
