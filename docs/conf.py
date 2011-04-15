@@ -37,6 +37,7 @@ extensions = [
 
 intersphinx_mapping = {
     'python': ('http://docs.python.org/', None),
+    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
 }
 
 autoclass_content = "both"
