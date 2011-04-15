@@ -117,12 +117,18 @@ Creates a flat water table half-way up the map (Y = 64).
 Seasons
 =======
 
+Bravo's years are 360 days long, with each day being 20 minutes long. For
+those who would like seasons, the following seasons be added to the 
+``seasons`` setting in your :file:`bravo.ini` under the ``[world]`` section.
+
 Winter
 ------
 
-Causes water to freeze, and snow to be placed on certain block types.
+Causes water to freeze, and snow to be placed on certain block types. Winter
+starts on the first day of the year.
 
 Spring
 ------
 
-Thaws frozen water and removes snow as that was placed during Winter.
+Thaws frozen water and removes snow as that was placed during Winter. Spring
+starts on the 90th day of the the year.
