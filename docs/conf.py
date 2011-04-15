@@ -39,6 +39,8 @@ intersphinx_mapping = {
     'python': ('http://docs.python.org/', None),
 }
 
+autoclass_content = "both"
+
 autodoc_default_flags = ["members", "show-inheritance"]
 
 # Add any paths that contain templates here, relative to this directory.
