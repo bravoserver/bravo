@@ -339,8 +339,8 @@ class ProceduralTree(Tree):
                           int(branchy),
                           treeposition[2]+rndz]
             endsize = 1.0
-            self.taperedcylinder(startcoord,coord,startsize,endsize,
-                             world,WOODINFO)
+            self.taperedcylinder(startcoord, coord, startsize, endsize, world,
+                blocks["wood"].slot)
 
     @inlineCallbacks
     def make_roots(self, rootbases, world):
@@ -436,17 +436,17 @@ class ProceduralTree(Tree):
                         bottomcord = endcoord[:]
                         bottomcord[1] += -int(remaining_dist)
                         # Make the hanging part of the hanging root.
-                        self.taperedcylinder(endcoord,bottomcord,
-                             rootmid,endsize,world,WOODINFO)
+                        self.taperedcylinder(endcoord, bottomcord, rootmid,
+                            endsize, world, blocks["wood"].slot)
 
                 # make the beginning part of hanging or "tostone" roots
-                self.taperedcylinder(startcoord,endcoord,
-                     rootstartsize,rootmid,world,WOODINFO)
+                self.taperedcylinder(startcoord, endcoord, rootstartsize,
+                    rootmid, world, blocks["wood"].slot)
 
             # If you aren't searching for stone or air, just make the root.
             else:
-                self.taperedcylinder(startcoord,endcoord,
-                             rootstartsize,endsize,world,WOODINFO)
+                self.taperedcylinder(startcoord, endcoord, rootstartsize,
+                    endsize, world, blocks["wood"].slot)
 
     def make_trunk(self, world):
         """Generate the trunk, roots, and branches in world.
@@ -497,9 +497,9 @@ class ProceduralTree(Tree):
                 if thisbuttressradius < 1.0:
                     thisbuttressradius = 1.0
                 # Make the root buttress.
-                self.taperedcylinder([thisx,starty,thisz],[x,midy,z],
-                                 thisbuttressradius,thisbuttressradius,
-                                 world,WOODINFO)
+                self.taperedcylinder([thisx,starty,thisz], [x,midy,z],
+                    thisbuttressradius, thisbuttressradius, world,
+                    blocks["wood"].slot)
                 # Add this root buttress as a possible location at
                 # which roots can spawn.
                 rootbases += [[thisx,thisz,thisbuttressradius]]
@@ -509,15 +509,15 @@ class ProceduralTree(Tree):
             startrad = trunkradius
             rootbases = [[x,z,startrad]]
         # Make the lower and upper sections of the trunk.
-        self.taperedcylinder([x,starty,z],[x,midy,z],startrad,midrad,
-                         world,WOODINFO)
-        self.taperedcylinder([x,midy,z],[x,topy,z],midrad,endrad,
-                         world,WOODINFO)
+        self.taperedcylinder([x,starty,z], [x,midy,z], startrad, midrad,
+            world, blocks["wood"].slot)
+        self.taperedcylinder([x,midy,z], [x,topy,z], midrad, endrad, world,
+            blocks["wood"].slot)
         #Make the branches
         self.makebranches(world)
         #Make the roots, if indicated.
         if ROOTS in ["yes","tostone","hanging"]:
-            self.makeroots(rootbases,world)
+            self.makeroots(rootbases, world)
         # Hollow the trunk, if specified
         # check to make sure that the trunk is large enough to be hollow
         if trunkradius > 2 and HOLLOWTRUNK:
