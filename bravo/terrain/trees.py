@@ -449,8 +449,10 @@ class ProceduralTree(Tree):
                     endsize, world, blocks["wood"].slot)
 
     def make_trunk(self, world):
-        """Generate the trunk, roots, and branches in world.
         """
+        Make the trunk, roots, buttresses, branches, etc.
+        """
+
         height = self.height
         trunkheight = self.trunkheight
         trunkradius = self.trunkradius
@@ -462,12 +464,8 @@ class ProceduralTree(Tree):
         x = treeposition[0]
         z = treeposition[2]
         end_size_factor = trunkheight/height
-        midrad = trunkradius * (1 - end_size_factor * .5)
-        endrad = trunkradius * (1 - end_size_factor)
-        if endrad < 1.0:
-            endrad = 1.0
-        if midrad < endrad:
-            midrad = endrad
+        endrad = max(trunkradius * (1 - end_size_factor), 1)
+        midrad = max(trunkradius * (1 - end_size_factor * .5), endrad)
         # Make the root buttresses, if indicated
         if ROOTBUTTRESSES or SHAPE == "mangrove":
             # The start radius of the trunk should be a little smaller if we
@@ -493,11 +491,10 @@ class ProceduralTree(Tree):
                 thisz = z + int(thisposradius * cos(rndang))
                 # thisbuttressradius is the radius of the buttress.
                 # Currently, root buttresses do not taper.
-                thisbuttressradius = buttress_radius * (PHI + random())
-                if thisbuttressradius < 1.0:
-                    thisbuttressradius = 1.0
+                thisbuttressradius = max(buttress_radius * (PHI + random()),
+                    1)
                 # Make the root buttress.
-                self.taperedcylinder([thisx,starty,thisz], [x,midy,z],
+                self.taperedcylinder([thisx, starty, thisz], [x, midy, z],
                     thisbuttressradius, thisbuttressradius, world,
                     blocks["wood"].slot)
                 # Add this root buttress as a possible location at
@@ -523,19 +520,15 @@ class ProceduralTree(Tree):
         if trunkradius > 2 and HOLLOWTRUNK:
             # wall thickness is actually the double the wall thickness
             # it is a diameter difference, not a radius difference.
-            wall_thickness = (1 + trunkradius * 0.1 * random())
-            if wall_thickness < 1.3: wall_thickness = 1.3
-            base_radius = trunkradius - wall_thickness
-            if base_radius < 1: base_radius = 1.0
+            wall_thickness = max(1 + trunkradius * 0.1 * random(), 1.3)
+            base_radius = max(trunkradius - wall_thickness, 1)
             mid_radius = midrad - wall_thickness
             top_radius = endrad - wall_thickness
             # the starting x and y can be offset by up to the wall thickness.
             base_offset = int(wall_thickness)
-            x_choices = [i for i in xrange(x-base_offset,
-                                          x + base_offset+1)]
+            x_choices = range(x - base_offset, x + base_offset + 1)
+            z_choices = range(z - base_offset, z + base_offset + 1)
             start_x = choice(x_choices)
-            z_choices = [i for i in xrange(z-base_offset,
-                                          z + base_offset+1)]
             start_z = choice(z_choices)
             self.taperedcylinder([start_x, starty, start_z], [x, midy, z],
                 base_radius, mid_radius, world, blocks["air"].slot)
