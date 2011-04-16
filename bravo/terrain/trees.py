@@ -537,13 +537,11 @@ class ProceduralTree(Tree):
             z_choices = [i for i in xrange(z-base_offset,
                                           z + base_offset+1)]
             start_z = choice(z_choices)
-            self.taperedcylinder([start_x,starty,start_z],[x,midy,z],
-                                 base_radius,mid_radius,
-                         world,TRUNKFILLINFO)
+            self.taperedcylinder([start_x, starty, start_z], [x, midy, z],
+                base_radius, mid_radius, world, blocks["air"].slot)
             hollow_top_y = int(topy + trunkradius + 1.5)
-            self.taperedcylinder([x,midy,z],[x,hollow_top_y,z],
-                                 mid_radius,top_radius,
-                                 world,TRUNKFILLINFO)
+            self.taperedcylinder([x, midy, z], [x, hollow_top_y, z],
+                mid_radius, top_radius, world, blocks["air"].slot)
 
     @inlineCallbacks
     def prepare(self,world):
@@ -666,10 +664,9 @@ class ConeTree(ProceduralTree):
             return twigs
         if y < self.height * (.25 + .05 * sqrt(random())) :
             return None
-        radius = (self.height - y) / (PHI + 1)
-        if radius < 0:
-            radius = 0
-        return radius
+
+        # Radius.
+        return max((self.height - y) / (PHI + 1), 0)
 
 class RainforestTree(ProceduralTree):
     """
@@ -684,11 +681,12 @@ class RainforestTree(ProceduralTree):
         self.trunkradius /= PHI + 1
         self.trunkheight *= .9
 
-    def shapefunc(self,y):
+    def shapefunc(self, y):
+        # Bottom 4/5 of the tree is probably branch-free.
         if y < self.height * 0.8:
             if EDGEHEIGHT < self.height:
                 twigs = ProceduralTree.shapefunc(self,y)
-                if (twigs is not None) and random() < 0.07:
+                if twigs is not None and random() < 0.07:
                     return twigs
             return None
         else:
@@ -700,6 +698,9 @@ class RainforestTree(ProceduralTree):
 class MangroveTree(RoundTree):
     """
     A mangrove tree.
+
+    Like the round deciduous tree, but bigger, taller, and generally more
+    awesome.
     """
 
     branchslope = 1
@@ -708,9 +709,8 @@ class MangroveTree(RoundTree):
         RoundTree.prepare(self, world)
         self.trunkradius *= PHI
 
-    def shapefunc(self,y):
+    def shapefunc(self, y):
         val = RoundTree.shapefunc(self, y)
-        if val is None:
-            return val
-        val *= IPHI
+        if val is not None:
+            val *= IPHI
         return val
