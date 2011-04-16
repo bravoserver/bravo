@@ -153,19 +153,43 @@ class TestLightmaps(unittest.TestCase):
 
         assert_array_equal(self.c.skylight[:, :, 1], reference)
 
-    def test_skylight_glow_spreading_strength(self):
-        # build some sort of arch which is lit by light that
-        # has fallen through some leaves
+    def test_skylight_arch(self):
+        """
+        Indirect illumination should work.
+        """
 
-        # Fill it as if we were the boring generator.
+        # Floor.
         self.c.blocks[:, :, 0].fill(1)
-        # set up a wall height 2, width 2
-        self.c.blocks[:, 0:2, 1:3].fill(1)
-        # cut out one block
+
+        # Arch of bedrock, with an empty spot in the middle, which will be our
+        # indirect spot.
+        self.c.blocks[0:2, 0:3, 1:3].fill(1)
         self.c.blocks[1, 1, 1] = 0
-        # a floor out of leaves
-        # so the light under it will be 11
-        self.c.blocks[:, 2:, 2:6].fill(18)
+
+        # Illuminate and make sure that our indirect spot has just a little
+        # bit of illumination.
         self.c.regenerate()
 
-        self.assertEqual(self.c.skylight[1, 1, 1], 10)
+        self.assertEqual(self.c.skylight[1, 1, 1], 14)
+
+    def test_skylight_arch_leaves(self):
+        """
+        Indirect illumination with dimming should work.
+        """
+
+        # Floor.
+        self.c.blocks[:, :, 0].fill(1)
+
+        # Arch of bedrock, with an empty spot in the middle, which will be our
+        # indirect spot.
+        self.c.blocks[0:2, 0:3, 1:3].fill(1)
+        self.c.blocks[1, 1, 1] = 0
+
+        # Leaves in front of the spot should cause a dimming of 1.
+        self.c.blocks[2, 1, 1] = 18
+
+        # Illuminate and make sure that our indirect spot has just a little
+        # bit of illumination.
+        self.c.regenerate()
+
+        self.assertEqual(self.c.skylight[1, 1, 1], 13)
