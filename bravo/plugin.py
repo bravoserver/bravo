@@ -8,7 +8,6 @@ from zope.interface.exceptions import BrokenMethodImplementation
 from zope.interface.verify import verifyObject
 
 from bravo.ibravo import InvariantException, ISortedPlugin
-import bravo.plugins
 
 class PluginException(Exception):
     """
