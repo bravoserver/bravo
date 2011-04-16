@@ -1,4 +1,6 @@
-from twisted.plugin import getPlugins
+from exocet import getModule, load, pep302Mapper
+
+from twisted.plugin import IPlugin
 from twisted.python import log
 
 from zope.interface.exceptions import BrokenImplementation
@@ -119,6 +121,32 @@ def verify_plugin(interface, plugin):
 
     raise PluginException("Plugin failed verification")
 
+def get_plugins(interface, package):
+    """
+    Lazily find objects in a package which implement a given interface.
+
+    The objects must also implement ``twisted.plugin.IPlugin``.
+
+    This is a rewrite of Twisted's ``twisted.plugin.getPlugins`` which uses
+    Exocet instead of Twisted to find the plugins.
+
+    :param interface interface: the interface to match against
+    :param str package: the name of the package to search
+    """
+
+    p = getModule(package)
+    for pm in p.iterModules():
+        m = load(pm, pep302Mapper)
+        for obj in vars(m).itervalues():
+            try:
+                adapted = IPlugin(obj, None)
+                adapted = interface(adapted, None)
+            except:
+                log.err()
+            else:
+                if adapted is not None:
+                    yield adapted
+
 def retrieve_plugins(interface, cached=True, cache={}):
     """
     Look up all plugins for a certain interface.
@@ -138,7 +166,7 @@ def retrieve_plugins(interface, cached=True, cache={}):
 
     log.msg("Discovering %s..." % interface)
     d = {}
-    for p in getPlugins(interface, bravo.plugins):
+    for p in get_plugins(interface, "bravo.plugins"):
         try:
             verify_plugin(interface, p)
             d[p.name] = p
