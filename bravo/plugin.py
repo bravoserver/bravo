@@ -146,7 +146,19 @@ def get_plugins(interface, package):
                 if adapted is not None:
                     yield adapted
 
-def retrieve_plugins(interface, cached=True, cache={}):
+__plugin_cache = {}
+
+def clear_plugin_cache():
+    """
+    Clear the plugin cache.
+
+    This has the (intended) side effect of causing all plugins to be reloaded
+    on the next retrieval.
+    """
+
+    __plugin_cache.clear()
+
+def retrieve_plugins(interface, cached=True):
     """
     Look up all plugins for a certain interface.
 
@@ -160,8 +172,8 @@ def retrieve_plugins(interface, cached=True, cache={}):
     :raises PluginException: no plugins could be found for the given interface
     """
 
-    if cached and interface in cache:
-        return cache[interface]
+    if cached and interface in __plugin_cache:
+        return __plugin_cache[interface]
 
     log.msg("Discovering %s..." % interface)
     d = {}
@@ -176,7 +188,7 @@ def retrieve_plugins(interface, cached=True, cache={}):
         # Sortable plugins need their edges mirrored.
         d = add_plugin_edges(d)
 
-    cache[interface] = d
+    __plugin_cache[interface] = d
     return d
 
 def retrieve_named_plugins(interface, names):
