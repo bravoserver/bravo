@@ -1,9 +1,9 @@
+from itertools import chain
 import random
 
 from zope.interface import implements
 
 from bravo.blocks import items
-from bravo.compat import chain
 from bravo.ibravo import IBuildHook, IUseHook
 from bravo.packets import make_packet
 
