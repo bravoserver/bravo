@@ -699,8 +699,8 @@ track = Track()
 boat = CartBoat(blocks["wood"], items["boat"], "boat")
 
 #Mechanism
-wooddoor = Door(blocks["wood"], blocks["wooden-door"], "wood")
-irondoor = Door(items["iron-ingot"], blocks["iron-door"], "iron")
+wooddoor = Door(blocks["wood"], items["wooden-door"], "wood")
+irondoor = Door(items["iron-ingot"], items["iron-door"], "iron")
 woodpressure = ThreeByOne(blocks["wood"], blocks["wooden-plate"], 1,
     "wood-plate")
 stonepressure = ThreeByOne(blocks["stone"], blocks["stone-plate"], 1,
@@ -721,7 +721,7 @@ dispenser = Dispenser()
 bowl = BowlBucket(blocks["wood"], items["bowl"], 4, "bowl")
 shroomsoup = MushroomSoup()
 bread = ThreeByOne(items["wheat"], items["bread"], 1, "bread")
-sugar = OneBlock(blocks["sugar-cane"], items["sugar"], 1, "sugar")
+sugar = OneBlock(items["sugar-cane"], items["sugar"], 1, "sugar")
 cake = Cake()
 goldenapple = ThreeByThree(blocks["gold"], items["apple"],
     items["golden-apple"], "goldapple")
