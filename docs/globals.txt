@@ -1,0 +1,2 @@
+.. _PyPy: http://pypy.org/
+.. _Twisted: http://twistedmatrix.com/

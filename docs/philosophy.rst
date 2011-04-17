@@ -1,3 +1,5 @@
+.. include:: globals.txt
+
 ==========
 Philosophy
 ==========
@@ -28,7 +30,7 @@ there are several advantages to Python which are too important to sacrifice:
  * Simple types
  * Twisted
 
-Additionally, with the advent of PyPy, the question of whether a full-fledged
+Additionally, with the advent of PyPy_, the question of whether a full-fledged
 Python application is too slow for consumer hardware is rapidly fading.
 
 No Extension Modules
@@ -74,7 +76,7 @@ which it would supposedly supplant.
 Twisted
 ^^^^^^^
 
-Apparently, in this day and age, people are still of the opinion that Twisted
+Apparently, in this day and age, people are still of the opinion that Twisted_
 is too big and not necessary for speedy, relatively bug-free networking.
 Nothing written here will convince these people; so, instead, I offer this
 promise: If anybody contributes a patch which makes Bravo not depend on
