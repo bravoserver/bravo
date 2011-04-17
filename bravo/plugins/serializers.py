@@ -131,6 +131,7 @@ class Alpha(object):
             "Chest": self._load_chest_from_tag,
             "Furnace": self._load_furnace_from_tag,
             "MobSpawner": self._load_mobspawner_from_tag,
+            "Music": self._load_music_from_tag,
             "Sign": self._load_sign_from_tag,
         }
 
@@ -138,6 +139,7 @@ class Alpha(object):
             "Chest": self._save_chest_to_tag,
             "Furnace": self._save_furnace_to_tag,
             "MobSpawner": self._save_mobspawner_to_tag,
+            "Music": self._save_music_to_tag,
             "Sign": self._save_sign_to_tag,
         }
 
@@ -292,6 +294,12 @@ class Alpha(object):
         tag["EntityId"] = TAG_String(ms.mob)
         tag["Delay"] = TAG_Short(ms.delay)
 
+    def _load_music_from_tag(self, music, tag):
+        music.note = tag["note"].value
+
+    def _save_music_to_tag(self, music, tag):
+        tag["Music"] = TAG_Byte(music.note)
+
     def _load_sign_from_tag(self, sign, tag):
         sign.text1 = tag["Text1"].value
         sign.text2 = tag["Text2"].value
@@ -348,6 +356,8 @@ class Alpha(object):
                     chunk.tiles[tile.x, tile.y, tile.z] = tile
                 except KeyError:
                     print "Unknown tile entity %s" % tag["id"].value
+                    print "Tag for tile:"
+                    print tag.pretty_tree()
 
         chunk.dirty = not chunk.populated
 

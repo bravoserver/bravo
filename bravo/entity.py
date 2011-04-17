@@ -133,7 +133,6 @@ class Painting(Entity):
             direction=self.direction
         )
 
-
 class Pickup(Entity):
     """
     Class representing a dropped block or item.
@@ -370,6 +369,13 @@ class MobSpawner(Tile):
 
     name = "MobSpawner"
 
+class Music(Tile):
+    """
+    A tile which produces a pitch when whacked.
+    """
+
+    name = "Music"
+
 class Sign(Tile):
     """
     A tile that stores text.
@@ -406,6 +412,7 @@ tiles = dict((tile.name, tile)
         Chest,
         Furnace,
         MobSpawner,
+        Music,
         Sign,
     )
 )
