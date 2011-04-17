@@ -1,5 +1,5 @@
-from collections import namedtuple
-from itertools import product
+from collections import namedtuple, defaultdict
+from itertools import product, chain
 from time import time
 from urlparse import urlunparse
 from math import pi
@@ -19,11 +19,11 @@ from bravo.config import configuration
 from bravo.entity import Sign
 from bravo.motd import get_motd
 from bravo.factories.infini import InfiniClientFactory
-from bravo.ibravo import IChatCommand, IBuildHook, IDigHook, ISignHook
+from bravo.ibravo import IChatCommand, IBuildHook, IDigHook, ISignHook, IUseHook
 from bravo.inventory import Workbench, sync_inventories
 from bravo.location import Location
 from bravo.packets import parse_packets, make_packet, make_error_packet
-from bravo.plugin import retrieve_plugins, retrieve_sorted_plugins
+from bravo.plugin import retrieve_plugins, retrieve_sorted_plugins, retrieve_named_plugins
 from bravo.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
@@ -72,6 +72,7 @@ class BetaServerProtocol(Protocol):
             1: self.login,
             2: self.handshake,
             3: self.chat,
+            7: self.use,
             10: self.grounded,
             11: self.position,
             12: self.orientation,
@@ -127,6 +128,11 @@ class BetaServerProtocol(Protocol):
     def chat(self, container):
         """
         Hook for chat packets.
+        """
+
+    def use(self, container):
+        """
+        Hook for use packets.
         """
 
     def grounded(self, container):
@@ -422,6 +428,13 @@ class BravoProtocol(BetaServerProtocol):
             [])
         self.sign_hooks = retrieve_sorted_plugins(ISignHook, names)
 
+        names = configuration.getlistdefault(self.config_name, "use_hooks",
+            [])
+        self.use_hooks = defaultdict(list)
+        for plugin in retrieve_named_plugins(IUseHook, names):
+            for target in plugin.targets:
+                self.use_hooks[target].append(plugin)
+
         # Retrieve the MOTD. Only needs to be done once.
         self.motd = configuration.getdefault(self.config_name, "motd", None)
 
@@ -596,6 +609,20 @@ class BravoProtocol(BetaServerProtocol):
             # Send the message up to the factory to be chatified.
             message = "<%s> %s" % (self.username, container.message)
             self.factory.chat(message)
+
+    def use(self, container):
+        """
+        For each entity in proximity (4 blocks), check if it is the target
+        of this packet and call all hooks that stated interested in this
+        type.
+        """
+        nearby_players = self.factory.players_near(self.player, 4)
+        for entity in chain(self.entities_near(4), nearby_players):
+            if entity.eid == container.target:
+                for hook in self.use_hooks[entity.name]:
+                    hook.use_hook(self.factory, self.player, entity,
+                        container.button == 0)
+                break
 
     def digging(self, container):
         # XXX several improvements should happen here
