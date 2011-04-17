@@ -131,6 +131,7 @@ class TestPacketParsing(unittest.TestCase):
     def test_mob_pig(self):
         packet = "AAih/lr///YwAAAIYAAB/hCzAAAAEAB/".decode("base64")
         parsed = bravo.packets.packets[24].parse(packet)
+        self.assertEqual(parsed.metadata, {0: ("byte", 0), 16: ("byte", 0)})
 
 class TestPacketAssembly(unittest.TestCase):
 
