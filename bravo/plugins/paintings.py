@@ -67,9 +67,6 @@ class Paintings(object):
         return False, builddata
 
     def use_hook(self, factory, player, target, button):
-        if target.name != "Painting":
-            return
-
         # Block coordinates.
         x, y, z = target.location.x, target.location.y, target.location.z
 
@@ -97,6 +94,8 @@ class Paintings(object):
 
         # Force the chunk (with its entities) to be saved to disk.
         factory.world.mark_dirty((x, y, z))
+
+    targets = ("Painting",)
 
     before = tuple()
     after = ("build", )

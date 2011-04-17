@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 from bravo.ibravo import IAuthenticator, ITerrainGenerator, IBuildHook
-from bravo.ibravo import IDigHook, IRecipe, ISeason
+from bravo.ibravo import IDigHook, IRecipe, ISeason, IUseHook
 from bravo.plugin import retrieve_plugins
 
-for interface in (IAuthenticator, IBuildHook, IDigHook, ISeason,
+for interface in (IAuthenticator, IBuildHook, IDigHook, IUseHook, ISeason,
     ITerrainGenerator, IRecipe):
     print "Interface: %s" % interface
     print "Number of plugins: %d" % len(retrieve_plugins(interface))

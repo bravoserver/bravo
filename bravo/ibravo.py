@@ -341,7 +341,7 @@ class ISignHook(ISortedPlugin):
         :param bool new: whether this sign is newly placed
         """
 
-class IUseHook(IBravoPlugin):
+class IUseHook(ISortedPlugin):
     """
     Hook for actions to be taken when a player interacts with an entity.
 
