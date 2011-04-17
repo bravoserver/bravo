@@ -93,8 +93,8 @@ class TestWater(unittest.TestCase):
         Falling water should appear below springs.
         """
 
-        self.w.set_block((0, 0, 1), bravo.blocks.blocks["spring"].slot)
-        self.hook.pending[self.f].add((0, 0, 1))
+        self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
+        self.hook.pending[self.f].add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
         while self.hook.pending:
