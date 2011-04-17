@@ -258,6 +258,42 @@ class Sheep(Mob):
             metadata=self.metadata
         )
 
+class Slime(Mob):
+    """
+    A gelatinous blob.
+    """
+
+    name = "Slime"
+
+    metadata = {0: ("byte", 0), 16: ("byte", 0)}
+
+    def __init__(self, size=1, **kwargs):
+        """
+        Create a slime.
+
+        This method calls super().
+        """
+
+        super(Sheep, self).__init__(**kwargs)
+
+        self.size = size
+
+    def save_to_packet(self):
+        # Prepare metadata.
+        metadata = self.metadata.copy()
+        metadata[16] = "byte", self.size
+
+        return make_packet("mob",
+            eid=self.eid,
+            type="slime",
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=0,
+            pitch=0,
+            metadata=self.metadata
+        )
+
 class Squid(Mob):
     """
     An aquatic source of ink.
