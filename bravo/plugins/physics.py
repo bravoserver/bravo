@@ -112,7 +112,7 @@ class Fluid(object):
                             new.add(coords)
 
                     # Is this water falling down to the next y-level?
-                    neighbor = w.get_block(below)
+                    neighbor = yield w.get_block(below)
                     if (y > 0 and neighbor in self.whitespace and
                         not any(self.sponges[factory].iteritemsnear(below, 2))):
                         w.set_block(below, self.fluid)
@@ -174,7 +174,7 @@ class Fluid(object):
                     # flows out across the xz-level, but *not* both.
 
                     # Fall down to the next y-level, if possible.
-                    neighbor = w.get_block(below)
+                    neighbor = yield w.get_block(below)
                     if (y > 0 and neighbor in self.whitespace and
                         not any(self.sponges[factory].iteritemsnear(below, 2))):
                         w.set_block(below, self.fluid)
