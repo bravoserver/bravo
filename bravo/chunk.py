@@ -73,13 +73,13 @@ class Chunk(object):
     """
     A chunk of blocks.
 
-    Chunks are large pieces of world geometry (block data). The blocks, light 
+    Chunks are large pieces of world geometry (block data). The blocks, light
     maps, and associated metadata are stored in chunks. Chunks are
-    always measured 16x128x16 and are aligned on 16x16 boundaries in 
+    always measured 16x128x16 and are aligned on 16x16 boundaries in
     the xz-plane.
-    
+
     :cvar bool dirty: Whether this chunk needs to be flushed to disk.
-    :cvar bool populated: Whether this chunk has had its initial block data 
+    :cvar bool populated: Whether this chunk has had its initial block data
         filled out.
     """
 
@@ -90,14 +90,14 @@ class Chunk(object):
         """
         :param int x: X coordinate in chunk coords
         :param int z: Z coordinate in chunk coords
-        
+
         :ivar numpy.ndarray heightmap: Tracks the tallest block in each xz-column.
         :ivar numpy.ndarray skylight: Ambient light map.
         :ivar numpy.ndarray damaged: Array for tracking damaged coordinates.
-        :ivar bool all_damaged: Flag for forcing the entire chunk to be 
-            damaged. This is for efficiency; past a certain point, it is not 
-            efficient to batch block updates or track damage. Heavily damaged 
-            chunks have their damage represented as a complete resend of the 
+        :ivar bool all_damaged: Flag for forcing the entire chunk to be
+            damaged. This is for efficiency; past a certain point, it is not
+            efficient to batch block updates or track damage. Heavily damaged
+            chunks have their damage represented as a complete resend of the
             entire chunk.
         """
 
@@ -105,7 +105,7 @@ class Chunk(object):
         self.z = int(z)
 
         self.blocks = zeros((16, 16, 128), dtype=uint8)
-        self.heightmap = zeros((16, 16), dtype=uint8)        
+        self.heightmap = zeros((16, 16), dtype=uint8)
         self.blocklight = zeros((16, 16, 128), dtype=uint8)
         self.metadata = zeros((16, 16, 128), dtype=uint8)
         self.skylight = zeros((16, 16, 128), dtype=uint8)
@@ -468,7 +468,7 @@ class Chunk(object):
 
         This is safe as a no-op; for example, destroying a block of air with
         no metadata is not going to cause state changes.
-        
+
         :param tuple coords: coordinate triplet
         """
 
@@ -513,7 +513,7 @@ class Chunk(object):
 
         The slice is a numpy array, so you do not have to set it again if you
         are modifying it in-place.
-        
+
         :rtype: :py:class:`numpy.ndarray`
         """
         return self.blocks[x, z]
@@ -521,7 +521,7 @@ class Chunk(object):
     def set_column(self, x, z, column):
         """
         Atomically set an entire xz-column's block data.
-        
+
         :param int x: X coordinate
         :param int z: Z coordinate
         :type column: :py:class:`numpy.ndarray`

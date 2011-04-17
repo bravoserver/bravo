@@ -16,7 +16,7 @@ format of Windows 32-bit configuration settings, nor the format of PHP's
 configuration files. Specifically, bravo.ini is parsed and written using
 Python's :py:class:`ConfigParser <ConfigParser.ConfigParser>` class.
 
-An example configuration file is provided as :file:`bravo.ini.example`, 
+An example configuration file is provided as :file:`bravo.ini.example`,
 and is a good starting point for new configurations.
 
 :file:`bravo.ini` should live in one of three locations:
@@ -27,7 +27,7 @@ and is a good starting point for new configurations.
 
 All three locations will be checked, in that order, and more-recently-loaded
 configurations will override configurations in previous directories. For
-sanity purposes, it is highly encouraged to either use :file:`/etc/bravo` 
+sanity purposes, it is highly encouraged to either use :file:`/etc/bravo`
 if running as root, or :file:`~/.bravo` if running as a normal user.
 
 The configuration file is divided up into **sections**. Each section starts

@@ -35,23 +35,23 @@ class Block(object):
         """
         :param int slot: The index of this block. Must be globally unique.
         :param str name: A common name for this block.
-        :param int drop: The type of block that should be dropped when an 
-            instance of this block is destroyed. Defaults to the slot value, to 
+        :param int drop: The type of block that should be dropped when an
+            instance of this block is destroyed. Defaults to the slot value, to
             drop instances of this same type of block. To indicate that this
             block does not drop anything, set to air.
-        :param int replace: The type of block to place in the map when 
+        :param int replace: The type of block to place in the map when
             instances of this block are destroyed. Defaults to air.
-        :param float ratio: The probability of this block dropping a block 
+        :param float ratio: The probability of this block dropping a block
             on destruction.
-        :param int quantity: The number of blocks dropped when this block 
+        :param int quantity: The number of blocks dropped when this block
             is destroyed.
-        :param int dim: How much light dims when passing through this kind 
+        :param int dim: How much light dims when passing through this kind
             of block. Defaults to 16 = opaque block.
-        :param bool breakable: Whether this block is diggable, breakable, 
-            bombable, explodeable, etc. Only a few blocks actually genuinely 
+        :param bool breakable: Whether this block is diggable, breakable,
+            bombable, explodeable, etc. Only a few blocks actually genuinely
             cannot be broken, so the default is True.
-        :param tuple orientation: The orientation data for a block. See 
-            :meth:`orientable` for an explanation. The data should be in standard 
+        :param tuple orientation: The orientation data for a block. See
+            :meth:`orientable` for an explanation. The data should be in standard
             face order.
         """
 
@@ -113,7 +113,7 @@ class Block(object):
         determine the face against which they were built.
 
         Ladders are orientable, signposts are not.
-        
+
         :rtype: bool
         :returns: True if this block can be oriented, False if not.
         """

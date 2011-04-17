@@ -37,7 +37,7 @@ Terrain generators
 
 The following terrain generators may be added to the ``generators`` setting
 in your :file:`bravo.ini` under the ``[world]`` section. The order in which
-these appear in the list is not important. 
+these appear in the list is not important.
 
 Beaches
 -------
@@ -122,7 +122,7 @@ Seasons
 =======
 
 Bravo's years are 360 days long, with each day being 20 minutes long. For
-those who would like seasons, the following seasons be added to the 
+those who would like seasons, the following seasons be added to the
 ``seasons`` setting in your :file:`bravo.ini` under the ``[world]`` section.
 
 Winter
