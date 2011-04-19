@@ -1,14 +1,10 @@
-from collections import namedtuple
 import functools
 
-from construct import Struct, Container, Embed, Enum, MetaField
-from construct import MetaArray, If, Switch, Const, Peek
-from construct import OptionalGreedyRange, RepeatUntil
-from construct import PascalString, Adapter
-from construct import UBInt8, UBInt16, UBInt32, UBInt64
-from construct import SBInt8, SBInt16, SBInt32, SBInt64
-from construct import BFloat32, BFloat64
-from construct import BitStruct, BitField
+from construct import Struct, Container, Embed, MetaField
+from construct import Switch, Const, Peek
+from construct import OptionalGreedyRange
+from construct import PascalString
+from construct import UBInt8, UBInt16, UBInt32
 
 AlphaString = functools.partial(PascalString,
     length_field=UBInt16("length"),
