@@ -34,5 +34,3 @@ def ucs2(name):
         streamwriter=UCS2StreamWriter,
         streamreader=UCS2StreamReader,
     )
-
-register(ucs2)
