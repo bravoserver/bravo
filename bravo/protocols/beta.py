@@ -355,8 +355,8 @@ class BetaProxyProtocol(BetaServerProtocol):
     def login(self, container):
         self.username = container.username
 
-        packet = make_packet("login", protocol=0, username="", unused="",
-            seed=0, dimension=0)
+        packet = make_packet("login", protocol=0, username="", seed=0,
+            dimension=0)
         self.transport.write(packet)
 
         url = urlunparse(("http", self.gateway, "/node/0/0/", None, None,

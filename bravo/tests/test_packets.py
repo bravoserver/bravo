@@ -37,7 +37,6 @@ class TestPacketParsing(unittest.TestCase):
         parsed = bravo.packets.packets[1].parse(packet)
         self.assertEqual(parsed.protocol, 9)
         self.assertEqual(parsed.username, "Corbin")
-        self.assertEqual(parsed.unused, "")
         self.assertEqual(parsed.seed, -1646555943028388268)
         self.assertEqual(parsed.dimension, 0)
 
@@ -140,7 +139,7 @@ class TestPacketAssembly(unittest.TestCase):
         self.assertEqual(assembled, "")
 
     def test_login(self):
-        container = Container(protocol=0, username="", unused="", seed=0,
+        container = Container(protocol=0, username="", seed=0,
             dimension=0)
         assembled = bravo.packets.packets[1].build(container)
         self.assertEqual(assembled,

@@ -127,7 +127,6 @@ packets = {
     1: Struct("login",
         UBInt32("protocol"),
         AlphaString("username"),
-        AlphaString("unused"),
         SBInt64("seed"),
         UBInt8("dimension"),
     ),
