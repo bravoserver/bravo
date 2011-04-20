@@ -129,7 +129,7 @@ class Fluid(object):
                     # Let's see if there are any springs nearby which are
                     # above us and thus able to fuel us.
                     if not any(springy >= y
-                        for springy in self.springs[factory].iterkeysnear(
+                        for springy in self.springs[factory].itervaluesnear(
                             (x, z), self.levels + 1
                         )
                     ):
