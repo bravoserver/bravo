@@ -1,5 +1,7 @@
-from zope.interface import implements
+from textwrap import wrap
+
 from twisted.internet import reactor
+from zope.interface import implements
 
 from bravo.blocks import blocks, items
 from bravo.config import configuration
@@ -46,36 +48,57 @@ class Help(object):
 
     implements(IChatCommand, IConsoleCommand)
 
-    def dispatch(self, plugins):
-        l = []
+    def general_help(self, plugins):
+        """
+        Return a list of commands.
+        """
 
-        # This is fairly brute-force and inelegant. I'm very open to
-        # suggestions on improving it.
-        for plugin in set(plugins.itervalues()):
-            usage = "%s %s" % (plugin.name, plugin.usage)
-            l.append((plugin.name, usage, plugin.info))
-            for alias in plugin.aliases:
-                alias_usage = usage.replace(plugin.name, alias)
-                info = "Alias for %s" % plugin.name
-                l.append((alias, alias_usage, info))
+        commands = [plugin.name for plugin in set(plugins.itervalues())]
+        commands.sort()
 
-        name_pad = max(len(i[0]) for i in l) + 1
-        usage_pad = max(len(i[1]) for i in l) + 1
+        wrapped = wrap(", ".join(commands), 60)
 
-        yield "%s %s %s" % ("Name:".ljust(name_pad),
-            "Usage:".ljust(usage_pad), "Info:")
+        help_text = [
+            "Use /help <command> for more information on a command.",
+            "List of commands:",
+        ] + wrapped
 
-        for name, usage, info in sorted(l):
-            yield "%s %s %s" % (name.ljust(name_pad), usage.ljust(usage_pad),
-                info)
+        return wrapped
+
+    def specific_help(self, plugins, name):
+        """
+        Return specific help about a single plugin.
+        """
+
+        try:
+            plugin = plugins[name]
+        except:
+            return ("No such command!",)
+
+        help_text = [
+            "Usage: %s %s" % (plugin.name, plugin.usage),
+        ]
+
+        if plugin.aliases:
+            help_text.append("Aliases: %s" % ", ".join(plugin.aliases))
+
+        help_text.append(plugin.info)
+
+        return help_text
 
     def chat_command(self, factory, username, parameters):
-        for i in self.dispatch(retrieve_plugins(IChatCommand)):
-            yield i
+        if parameters:
+            return self.specific_help(retrieve_plugins(IChatCommand),
+                "".join(parameters))
+        else:
+            return self.general_help(retrieve_plugins(IChatCommand))
 
     def console_command(self, factory, parameters):
-        for i in self.dispatch(retrieve_plugins(IConsoleCommand)):
-            yield i
+        if parameters:
+            return self.specific_help(retrieve_plugins(IConsoleCommand),
+                "".join(parameters))
+        else:
+            return self.general_help(retrieve_plugins(IConsoleCommand))
 
     name = "help"
     aliases = tuple()
