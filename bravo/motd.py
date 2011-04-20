@@ -21,6 +21,8 @@ MIT-licensed!
 %
 Unit-tested!
 %
+Documented!
+%
 Password login!
 %
 Fluid simulations!
