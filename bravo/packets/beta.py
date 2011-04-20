@@ -408,7 +408,7 @@ packets = {
             furnace=2,
             dispenser=3,
         ),
-        AlphaString("title"),
+        UTFString("title"),
         UBInt8("slots"),
     ),
     101: Struct("window-close",
