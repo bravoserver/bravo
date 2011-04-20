@@ -11,7 +11,7 @@ from construct import BFloat32, BFloat64
 from construct import BitStruct, BitField
 from construct import StringAdapter, LengthValueAdapter, Sequence
 
-DUMP_ALL_PACKETS = True
+DUMP_ALL_PACKETS = False
 
 # Strings.
 # This one is a UCS2 string, which effectively decodes single writeChar()

@@ -28,7 +28,7 @@ from bravo.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
-SUPPORTED_PROTOCOL = 10
+SUPPORTED_PROTOCOL = 11
 
 circle = [(i, j)
     for i, j in product(xrange(-10, 10), xrange(-10, 10))
@@ -253,13 +253,11 @@ class BetaServerProtocol(Protocol):
 
     def dataReceived(self, data):
         self.buf += data
-        log.msg(repr(data))
 
         packets, self.buf = parse_packets(self.buf)
 
         for header, payload in packets:
             if header in self.handlers:
-                log.msg("Handling packet %d" % header)
                 self.handlers[header](payload)
             else:
                 log.err("Didn't handle parseable packet %d!" % header)
