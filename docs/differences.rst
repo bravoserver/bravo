@@ -44,7 +44,5 @@ historically plagued the Notchian codebase.
 Minecarts
 =========
 
-The following blocks may have minecart tracks placed on them in Bravo, but not
-in the Notchian server:
-
- * Glass
+Bravo unlike the Notchian server, permits minecraft tracks to be placed on
+glass.
