@@ -2,7 +2,6 @@ from __future__ import division
 
 from itertools import combinations, product
 from random import Random
-import sys
 
 from numpy import array, where
 
