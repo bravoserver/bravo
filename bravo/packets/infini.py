@@ -6,6 +6,8 @@ from construct import OptionalGreedyRange
 from construct import PascalString
 from construct import UBInt8, UBInt16, UBInt32
 
+DUMP_ALL_PACKETS = False
+
 AlphaString = functools.partial(PascalString,
     length_field=UBInt16("length"),
     encoding="utf8")
@@ -35,7 +37,7 @@ def InfiniPacket(name, identifier, subconstruct):
 
     return Struct(name, header, subconstruct)
 
-infinipackets = {
+packets = {
     0: InfiniPacket("ping", 0x00,
         Struct("payload",
             UBInt16("uid"),
@@ -57,7 +59,7 @@ infinipackets = {
     ),
 }
 
-infinipackets_by_name = {
+packets_by_name = {
     "ping"       : 0,
     "disconnect" : 255,
 }
@@ -67,7 +69,7 @@ infinipacket_parser = Struct("parser",
         Struct("packets",
             Peek(UBInt8("header")),
             Embed(Switch("packet", lambda context: context["header"],
-                infinipackets)),
+                packets)),
         ),
     ),
     OptionalGreedyRange(
@@ -75,7 +77,7 @@ infinipacket_parser = Struct("parser",
     ),
 )
 
-def parse_infinipackets(bytestream):
+def parse_packets(bytestream):
     container = infinipacket_parser.parse(bytestream)
 
     l = [(i.header, i.payload) for i in container.packets]
@@ -88,7 +90,7 @@ def parse_infinipackets(bytestream):
 
     return l, leftovers
 
-def make_infinipacket(packet, *args, **kwargs):
+def make_packet(packet, *args, **kwargs):
     """
     Constructs a packet bytestream from a packet header and payload.
 
@@ -97,7 +99,7 @@ def make_infinipacket(packet, *args, **kwargs):
     well.
     """
 
-    if packet not in infinipackets_by_name:
+    if packet not in packets_by_name:
         print "Couldn't find packet name %s!" % packet
         return ""
 

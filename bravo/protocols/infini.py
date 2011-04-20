@@ -1,7 +1,7 @@
 from twisted.internet.protocol import Protocol
 from twisted.python import log
 
-from bravo.packets.infini import parse_infinipackets
+from bravo.packets.infini import parse_packets
 
 class InfiniProtocol(Protocol):
 
@@ -24,7 +24,7 @@ class InfiniProtocol(Protocol):
     def dataReceived(self, data):
         self.buf += data
 
-        packets, self.buf = parse_infinipackets(self.buf)
+        packets, self.buf = parse_packets(self.buf)
 
         for header, payload in packets:
             if header.identifier in self.handlers:
