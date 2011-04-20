@@ -5,7 +5,7 @@ from zope.interface import implements
 
 from bravo.blocks import items
 from bravo.ibravo import IBuildHook, IUseHook
-from bravo.packets import make_packet
+from bravo.packets.beta import make_packet
 
 available_paintings = {
     (1, 1): ("Kebab", "Aztec", "Alban", "Aztec2", "Bomb", "Plant",

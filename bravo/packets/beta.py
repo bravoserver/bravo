@@ -9,14 +9,35 @@ from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32, SBInt64
 from construct import BFloat32, BFloat64
 from construct import BitStruct, BitField
+from construct import StringAdapter, LengthValueAdapter, Sequence
 
 DUMP_ALL_PACKETS = False
 
-# Our tricky Java string decoder.
-# Note that Java has a weird encoding for the NULL byte which we do not
-# respect or honor since no client will generate it. Instead, we will get two
-# NULL bytes in a row.
-AlphaString = functools.partial(PascalString,
+# Strings.
+# This one is a UCS2 string, which effectively decodes single writeChar()
+# invocations. We need to import the encoding for it first, though.
+from bravo.packets.encodings import ucs2
+from codecs import register
+register(ucs2)
+
+class DoubleAdapter(LengthValueAdapter):
+
+    def _encode(self, obj, context):
+        return len(obj) / 2, obj
+
+def AlphaString(name):
+    return StringAdapter(
+        DoubleAdapter(
+            Sequence(name,
+                UBInt16("length"),
+                MetaField("data", lambda ctx: ctx["length"] * 2),
+            )
+        ),
+        encoding="ucs2",
+    )
+
+# This one is a UTF8 string, which almost exactly handles writeUTF().
+UTFString = functools.partial(PascalString,
     length_field=UBInt16("length"),
     encoding="utf8")
 
@@ -120,7 +141,6 @@ packets = {
     1: Struct("login",
         UBInt32("protocol"),
         AlphaString("username"),
-        AlphaString("unused"),
         SBInt64("seed"),
         UBInt8("dimension"),
     ),
@@ -402,7 +422,7 @@ packets = {
             furnace=2,
             dispenser=3,
         ),
-        AlphaString("title"),
+        UTFString("title"),
         UBInt8("slots"),
     ),
     101: Struct("window-close",
@@ -597,106 +617,3 @@ def make_error_packet(message):
     """
 
     return make_packet("error", message=message)
-
-def String(name):
-    """
-    UTF-8 length-prefixed string.
-    """
-
-    return PascalString(name, length_field=UBInt16("length"),
-        encoding="utf-8")
-
-def InfiniPacket(name, identifier, subconstruct):
-    """
-    Common header structure for packets.
-
-    This is possibly not the best way to go about building these kinds of
-    things.
-    """
-
-    header = Struct("header",
-        # XXX Should this be Magic(chr(identifier))?
-        Const(UBInt8("identifier"), identifier),
-        UBInt8("flags"),
-        UBInt32("length"),
-    )
-
-    return Struct(name, header, subconstruct)
-
-infinipackets = {
-    0: InfiniPacket("ping", 0x00,
-        Struct("payload",
-            UBInt16("uid"),
-            UBInt32("timestamp"),
-        )
-    ),
-    255: InfiniPacket("disconnect", 0xff,
-        Struct("payload",
-            AlphaString("explanation"),
-        )
-    ),
-    "__default__": Struct("unknown",
-        Struct("header",
-            UBInt8("identifier"),
-            UBInt8("flags"),
-            UBInt32("length"),
-        ),
-        MetaField("data", lambda context: context["length"]),
-    ),
-}
-
-infinipackets_by_name = {
-    "ping"       : 0,
-    "disconnect" : 255,
-}
-
-infinipacket_parser = Struct("parser",
-    OptionalGreedyRange(
-        Struct("packets",
-            Peek(UBInt8("header")),
-            Embed(Switch("packet", lambda context: context["header"],
-                infinipackets)),
-        ),
-    ),
-    OptionalGreedyRange(
-        UBInt8("leftovers"),
-    ),
-)
-
-def parse_infinipackets(bytestream):
-    container = infinipacket_parser.parse(bytestream)
-
-    l = [(i.header, i.payload) for i in container.packets]
-    leftovers = "".join(chr(i) for i in container.leftovers)
-
-    if DUMP_ALL_PACKETS:
-        for packet in l:
-            print "Parsed packet %d" % packet[0]
-            print packet[1]
-
-    return l, leftovers
-
-def make_infinipacket(packet, *args, **kwargs):
-    """
-    Constructs a packet bytestream from a packet header and payload.
-
-    The payload should be passed as keyword arguments. Additional containers
-    or dictionaries to be added to the payload may be passed positionally, as
-    well.
-    """
-
-    if packet not in infinipackets_by_name:
-        print "Couldn't find packet name %s!" % packet
-        return ""
-
-    header = packets_by_name[packet]
-
-    for arg in args:
-        kwargs.update(dict(arg))
-    payload = Container(**kwargs)
-
-    if DUMP_ALL_PACKETS:
-        print "Making packet %s (%d)" % (packet, header)
-        print payload
-    payload = packets[header].build(payload)
-    return chr(header) + payload

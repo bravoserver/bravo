@@ -22,13 +22,13 @@ from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook, ISignHook, IUseHook
 from bravo.inventory import Workbench, sync_inventories
 from bravo.location import Location
-from bravo.packets import parse_packets, make_packet, make_error_packet
+from bravo.packets.beta import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins, retrieve_sorted_plugins, retrieve_named_plugins
 from bravo.utilities import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
-SUPPORTED_PROTOCOL = 10
+SUPPORTED_PROTOCOL = 11
 
 circle = [(i, j)
     for i, j in product(xrange(-10, 10), xrange(-10, 10))
@@ -361,8 +361,8 @@ class BetaProxyProtocol(BetaServerProtocol):
     def login(self, container):
         self.username = container.username
 
-        packet = make_packet("login", protocol=0, username="", unused="",
-            seed=0, dimension=0)
+        packet = make_packet("login", protocol=0, username="", seed=0,
+            dimension=0)
         self.transport.write(packet)
 
         url = urlunparse(("http", self.gateway, "/node/0/0/", None, None,
