@@ -1,5 +1,5 @@
 from codecs import (BufferedIncrementalDecoder, CodecInfo, IncrementalEncoder,
-                    register, StreamReader, StreamWriter, utf_16_be_encode,
+                    StreamReader, StreamWriter, utf_16_be_encode,
                     utf_16_be_decode)
 
 def ucs2(name):
