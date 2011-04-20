@@ -4,7 +4,7 @@ from twisted.python import log
 
 from bravo.inventory import Equipment, ChestStorage
 from bravo.location import Location
-from bravo.packets import make_packet
+from bravo.packets.beta import make_packet
 
 class Entity(object):
     """

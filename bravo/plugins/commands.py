@@ -6,7 +6,7 @@ from bravo.config import configuration
 from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
 from bravo.plugin import retrieve_plugins, retrieve_named_plugins
 from bravo.plugin import PluginException
-from bravo.packets import make_packet
+from bravo.packets.beta import make_packet
 from bravo.utilities import split_time
 
 def parse_player(factory, name):

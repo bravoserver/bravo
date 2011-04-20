@@ -5,7 +5,7 @@ from construct import Container, ListContainer
 
 from bravo import blocks
 from bravo.ibravo import IRecipe
-from bravo.packets import make_packet
+from bravo.packets.beta import make_packet
 from bravo.plugin import retrieve_plugins
 
 def grouper(n, iterable):

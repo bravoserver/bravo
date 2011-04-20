@@ -22,7 +22,7 @@ from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook, ISignHook
 from bravo.inventory import Workbench, sync_inventories
 from bravo.location import Location
-from bravo.packets import parse_packets, make_packet, make_error_packet
+from bravo.packets.beta import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins, retrieve_sorted_plugins
 from bravo.utilities import split_coords
 

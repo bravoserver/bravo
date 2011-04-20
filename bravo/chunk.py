@@ -5,7 +5,7 @@ from numpy import int8, uint8, uint32, bool
 from numpy import cast, logical_not, logical_and, transpose, where, zeros, amax
 
 from bravo.blocks import blocks, glowing_blocks
-from bravo.packets import make_packet
+from bravo.packets.beta import make_packet
 from bravo.utilities import pack_nibbles
 
 class ChunkWarning(Warning):
