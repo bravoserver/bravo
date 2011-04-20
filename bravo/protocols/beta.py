@@ -253,11 +253,13 @@ class BetaServerProtocol(Protocol):
 
     def dataReceived(self, data):
         self.buf += data
+        log.msg(repr(data))
 
         packets, self.buf = parse_packets(self.buf)
 
         for header, payload in packets:
             if header in self.handlers:
+                log.msg("Handling packet %d" % header)
                 self.handlers[header](payload)
             else:
                 log.err("Didn't handle parseable packet %d!" % header)
