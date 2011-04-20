@@ -9,7 +9,7 @@ from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32, SBInt64
 from construct import BFloat32, BFloat64
 from construct import BitStruct, BitField
-from construct import StringAdapter, LengthValueAdapter, Field, Sequence
+from construct import StringAdapter, LengthValueAdapter, Sequence
 
 DUMP_ALL_PACKETS = True
 
@@ -20,22 +20,21 @@ from bravo.packets.encodings import ucs2
 from codecs import register
 register(ucs2)
 
-AlphaString = functools.partial(PascalString,
-    length_field=UBInt16("length"),
-    encoding="ucs2")
+class DoubleAdapter(LengthValueAdapter):
 
-"""
+    def _encode(self, obj, context):
+        return len(obj) / 2, obj
+
 def AlphaString(name):
     return StringAdapter(
-        LengthValueAdapter(
+        DoubleAdapter(
             Sequence(name,
                 UBInt16("length"),
-                Field("data", lambda ctx: ctx["length"] * 2),
+                MetaField("data", lambda ctx: ctx["length"] * 2),
             )
         ),
         encoding="ucs2",
     )
-"""
 
 # This one is a UTF8 string, which almost exactly handles writeUTF().
 UTFString = functools.partial(PascalString,

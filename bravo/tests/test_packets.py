@@ -52,7 +52,9 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.username, u"§")
 
     def test_chat_color(self):
-        packet = "\x00\x15<\xc2\xa7fMrZunz\xc2\xa7f> Alrite"
+        packet = """
+        ABMAPACnAGYATQByAFoAdQBuAHoApwBmAD4AIABBAGwAcgBpAHQAZQ==
+        """.decode("base64")
         parsed = bravo.packets.beta.packets[3].parse(packet)
         self.assertEqual(parsed.message, u"<§fMrZunz§f> Alrite")
 
