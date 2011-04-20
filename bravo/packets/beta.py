@@ -12,11 +12,18 @@ from construct import BitStruct, BitField
 
 DUMP_ALL_PACKETS = False
 
-# Our tricky Java string decoder.
-# Note that Java has a weird encoding for the NULL byte which we do not
-# respect or honor since no client will generate it. Instead, we will get two
-# NULL bytes in a row.
+# Strings.
+# This one is a UCS2 string, which effectively decodes single writeChar()
+# invocations. We need to import the encoding for it first, though.
+from bravo.packets.encodings import ucs2
+from codecs import register
+register(ucs2)
 AlphaString = functools.partial(PascalString,
+    length_field=UBInt16("length"),
+    encoding="ucs2")
+
+# This one is a UTF8 string, which almost exactly handles writeUTF().
+UTFString = functools.partial(PascalString,
     length_field=UBInt16("length"),
     encoding="utf8")
 
