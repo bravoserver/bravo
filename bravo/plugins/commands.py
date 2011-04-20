@@ -63,7 +63,7 @@ class Help(object):
             "List of commands:",
         ] + wrapped
 
-        return wrapped
+        return help_text
 
     def specific_help(self, plugins, name):
         """
