@@ -2,16 +2,18 @@
 
 from setuptools import find_packages, setup
 
+from bravo import version
+
 setup(
     name="Bravo",
-    version="1.3",
+    version=version.encode("utf8"),
     packages=find_packages() + [
         "twisted.plugins",
     ],
     install_requires=[
         "numpy",
         "construct>=2.03",
-        "Twisted>=10",
+        "Twisted>=10.1",
     ],
     author="Corbin Simpson",
     author_email="MostAwesomeDude@gmail.com",
