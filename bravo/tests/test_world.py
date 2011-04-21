@@ -180,16 +180,6 @@ class TestWorldInit(unittest.TestCase):
     def test_trivial(self):
         pass
 
-    def test_serializer_exception(self):
-        self.patch(bravo.plugins.serializers.Alpha, "load_level",
-                   lambda self, too, many, args: None)
-
-        self.assertRaises(RuntimeError, bravo.world.World, self.name)
-
-        # There's an error in the log from deep in plugin.verify_plugin(), so
-        # toss it out.
-        self.flushLoggedErrors()
-
     def test_load_level_exception(self):
         def raiser(self, level):
             raise bravo.errors.SerializerReadException("testing")
