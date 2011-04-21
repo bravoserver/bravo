@@ -151,10 +151,10 @@ class ChatToConsole(object):
         self.usage = "<username> %s" % self.chatcommand.usage
 
     def console_command(self, factory, parameters):
-        if IConsoleCommand.implementedBy(self.chatcommand):
+        if IConsoleCommand.providedBy(self.chatcommand):
             return self.chatcommand.console_command(factory, parameters)
         else:
-            username = parameters.pop(0)
+            username = parameters.pop(0) if parameters else ""
             return self.chatcommand.chat_command(factory, username,
                 parameters)
 
