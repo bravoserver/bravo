@@ -293,3 +293,7 @@ THE SOFTWARE.
 The NBT handling code (bravo/nbt.py) is from Thomas Woolford's fantastic NBT
 library, located at http://github.com/twoolie/NBT, and is used here under the
 terms of the MIT/X11 license.
+
+Exocet is provided verbatim from W. Allen Short, hosted at
+https://launchpad.net/exocet, and is used here under the terms of the MIT/X11
+license. 
