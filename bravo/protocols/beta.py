@@ -7,7 +7,6 @@ from math import pi
 from twisted.internet import reactor
 from twisted.internet.defer import (DeferredList, inlineCallbacks,
     maybeDeferred, succeed)
-from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import cooperate, LoopingCall
 from twisted.internet.task import TaskDone, TaskFailed
@@ -380,6 +379,8 @@ class BetaProxyProtocol(BetaServerProtocol):
         """
         Add a new node to this client.
         """
+
+        from twisted.internet.endpoints import TCP4ClientEndpoint
 
         log.msg("Adding node %s:%d" % (address, port))
 
