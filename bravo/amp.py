@@ -3,7 +3,7 @@ from twisted.protocols.amp import AMP, Command, Unicode, ListOf
 
 from bravo import version as bravo_version
 from bravo.factories.beta import BravoFactory
-from bravo.ibravo import IConsoleCommand
+from bravo.ibravo import IChatCommand, IConsoleCommand
 from bravo.plugin import retrieve_plugins
 
 class Version(Command):
@@ -48,6 +48,10 @@ class ConsoleRPCProtocol(AMP):
 
         # XXX hax
         self.commands = retrieve_plugins(IConsoleCommand)
+        # And chat commands, too.
+        chat = retrieve_plugins(IChatCommand)
+        for name, plugin in chat.iteritems():
+            self.commands[name] = IConsoleCommand(plugin)
         # Register aliases.
         for plugin in self.commands.values():
             for alias in plugin.aliases:
