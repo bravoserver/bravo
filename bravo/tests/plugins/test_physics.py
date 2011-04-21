@@ -262,8 +262,6 @@ class TestWater(unittest.TestCase):
             block = yield self.w.get_block(coords)
             self.assertEqual(block, bravo.blocks.blocks["air"].slot)
 
-    test_spring_underneath_keepalive.todo = "Known bug in fluid simulator"
-
 class TestRedstone(unittest.TestCase):
 
     def setUp(self):
