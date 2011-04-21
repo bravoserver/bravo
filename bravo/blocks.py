@@ -366,12 +366,14 @@ drops = {}
 drops[1]  = 4   # Stone           -> Cobblestone
 drops[2]  = 3   # Grass           -> Dirt
 drops[20] = 0   # Glass
+drops[52] = 0   # Mob spawner
 drops[60] = 3   # Soil            -> Dirt
 drops[62] = 61  # Burning Furnace -> Furnace
 drops[78] = 0   # Snow
 
 # Block -> item drops.
 drops[16] = 263 # Coal Ore Block    -> Coal
+drops[26] = 355 # Bed block         -> Bed
 drops[56] = 264 # Diamond Ore Block -> Diamond
 drops[63] = 323 # Sign Post         -> Sign Item
 drops[64] = 324 # Wooden Door       -> Wooden Door Item
@@ -389,6 +391,44 @@ unbreakables.add(0)  # Air
 unbreakables.add(7)  # Bedrock
 unbreakables.add(10) # Lava
 unbreakables.add(11) # Lava spring
+
+dims = {}
+
+dims[0]  = 0 # Air
+dims[6]  = 0 # Sapling
+dims[10] = 0 # Lava
+dims[11] = 0 # Lava spring
+dims[20] = 0 # Glass
+dims[26] = 0 # Bed
+dims[37] = 0 # Yellow Flowers
+dims[38] = 0 # Red Flowers
+dims[39] = 0 # Brown Mushrooms
+dims[40] = 0 # Red Mushrooms
+dims[44] = 0 # Single Step
+dims[51] = 0 # Fire
+dims[52] = 0 # Mob spawner
+dims[53] = 0 # Wooden stairs
+dims[55] = 0 # Redstone (Wire)
+dims[59] = 0 # Crops
+dims[60] = 0 # Soil
+dims[63] = 0 # Sign
+dims[64] = 0 # Wood door
+dims[66] = 0 # Rails
+dims[67] = 0 # Stone stairs
+dims[68] = 0 # Sign (on wall)
+dims[69] = 0 # Lever
+dims[70] = 0 # Stone Pressure Plate
+dims[71] = 0 # Iron door
+dims[72] = 0 # Wood Pressure Plate
+dims[78] = 0 # Snow
+dims[81] = 0 # Cactus
+dims[83] = 0 # Sugar Cane
+dims[85] = 0 # Fence
+dims[90] = 0 # Portal
+dims[92] = 0 # Cake
+dims[93] = 0 # redstone-repeater-off
+dims[94] = 0 # redstone-repeater-on
+
 
 blocks = {}
 """
@@ -412,18 +452,19 @@ _add_block(Block(13, "gravel", drop=318, ratio=1 / 10))
 # Leaves drop saplings, with 1 in 9 odds, and dims by 1.
 _add_block(Block(18, "leaves", drop=6, ratio=1 / 9, dim=1))
 # Torches are orientable.
-_add_block(Block(50, "torch", orientation=(None, 5, 4, 3, 2, 1)))
+_add_block(Block(50, "torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Furnaces are orientable.
 _add_block(Block(61, "furnace", orientation=(0, 1, 2, 3, 4, 5)))
 # Ladders are orientable.
-_add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5)))
+_add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5), dim=0))
 # Redstone ore drops 5 redstone dusts.
 _add_block(Block(73, "redstone-ore", drop=331, quantity=5))
 _add_block(Block(74, "glowing-redstone-ore", drop=331, quantity=5))
 # Redstone torches are orientable.
-_add_block(Block(76, "redstone-torch", orientation=(None, 5, 4, 3, 2, 1)))
+_add_block(Block(75, "redstone-torch-off", orientation=(None, 5, 4, 3, 2, 1), dim=0))
+_add_block(Block(76, "redstone-torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Stone buttons are orientable.
-_add_block(Block(77, "stone-button", orientation=(None, None, 1, 2, 3, 4)))
+_add_block(Block(77, "stone-button", orientation=(None, None, 1, 2, 3, 4), dim=0))
 # Ice drops nothing, is replaced by springs, and dims by 3.
 _add_block(Block(79, "ice", drop=0, replace=8, dim=3))
 # Clay drops 4 clay balls.
@@ -449,6 +490,9 @@ for i, name in enumerate(block_names):
         kwargs["drop"] = drops[i]
     if i in unbreakables:
         kwargs["breakable"] = False
+    if i in dims:
+        kwargs["dim"] = dims[i]
+
     b = Block(i, name, **kwargs)
     _add_block(b)
 
@@ -481,8 +525,6 @@ glowing_blocks = {
     blocks["redstone-torch"].slot: 7,
     blocks["brown-mushroom"].slot: 1,
 }
-
-blocks["air"].dim = 0
 
 armor_helmets = (86, 298, 302, 306, 310, 314)
 """
