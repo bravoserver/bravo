@@ -99,6 +99,8 @@ external libraries from PyPI:
 For IRC support, Twisted Words is required; it is usually called
 python-twisted-words or twisted-words in package managers.
 
+For IC support, Twisted 10.2 is required.
+
 For web service support, Twisted 11.0 is required and the Twisted Web package
 must be installed; it is generally called python-twisted-web or twisted-web.
 
