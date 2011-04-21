@@ -1,4 +1,6 @@
-from twisted.plugin import getPlugins
+from exocet import ExclusiveMapper, getModule, load, pep302Mapper
+
+from twisted.plugin import IPlugin
 from twisted.python import log
 
 from zope.interface.exceptions import BrokenImplementation
@@ -6,7 +8,20 @@ from zope.interface.exceptions import BrokenMethodImplementation
 from zope.interface.verify import verifyObject
 
 from bravo.ibravo import InvariantException, ISortedPlugin
-import bravo.plugins
+
+blacklisted = set([
+    "asyncore",        # Use Twisted's event loop.
+    "ctypes",          # Segfault protection.
+    "gc",              # Haha, no.
+    "imp",             # Haha, no.
+    "inspect",         # Haha, no.
+    "multiprocessing", # Use Twisted's process interface.
+    "socket",          # Use Twisted's socket interface.
+    "subprocess",      # Use Twisted's process interface.
+    "thread",          # Use Twisted's thread interface.
+    "threading",       # Use Twisted's thread interface.
+])
+bravoMapper = ExclusiveMapper(pep302Mapper, blacklisted)
 
 class PluginException(Exception):
     """
@@ -119,7 +134,48 @@ def verify_plugin(interface, plugin):
 
     raise PluginException("Plugin failed verification")
 
-def retrieve_plugins(interface, cached=True, cache={}):
+def get_plugins(interface, package):
+    """
+    Lazily find objects in a package which implement a given interface.
+
+    The objects must also implement ``twisted.plugin.IPlugin``.
+
+    This is a rewrite of Twisted's ``twisted.plugin.getPlugins`` which uses
+    Exocet instead of Twisted to find the plugins.
+
+    :param interface interface: the interface to match against
+    :param str package: the name of the package to search
+    """
+
+    p = getModule(package)
+    for pm in p.iterModules():
+        try:
+            m = load(pm, bravoMapper)
+            for obj in vars(m).itervalues():
+                try:
+                    adapted = IPlugin(obj, None)
+                    adapted = interface(adapted, None)
+                except:
+                    log.err()
+                else:
+                    if adapted is not None:
+                        yield adapted
+        except ImportError, ie:
+            log.msg(ie)
+
+__plugin_cache = {}
+
+def clear_plugin_cache():
+    """
+    Clear the plugin cache.
+
+    This has the (intended) side effect of causing all plugins to be reloaded
+    on the next retrieval.
+    """
+
+    __plugin_cache.clear()
+
+def retrieve_plugins(interface, cached=True):
     """
     Look up all plugins for a certain interface.
 
@@ -133,12 +189,12 @@ def retrieve_plugins(interface, cached=True, cache={}):
     :raises PluginException: no plugins could be found for the given interface
     """
 
-    if cached and interface in cache:
-        return cache[interface]
+    if cached and interface in __plugin_cache:
+        return __plugin_cache[interface]
 
     log.msg("Discovering %s..." % interface)
     d = {}
-    for p in getPlugins(interface, bravo.plugins):
+    for p in get_plugins(interface, "bravo.plugins"):
         try:
             verify_plugin(interface, p)
             d[p.name] = p
@@ -149,7 +205,7 @@ def retrieve_plugins(interface, cached=True, cache={}):
         # Sortable plugins need their edges mirrored.
         d = add_plugin_edges(d)
 
-    cache[interface] = d
+    __plugin_cache[interface] = d
     return d
 
 def retrieve_named_plugins(interface, names):
