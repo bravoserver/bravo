@@ -523,7 +523,7 @@ class PackageContext(object):
                                                     self.mapper)
                     setattr(parent, seg, new)
                     parent = new
-            setattr(parent, modulePath[-1], initModule)
+                setattr(parent, modulePath[-1], initModule)
         self.allModules  = analyzePackage(self.packageMaker)
         sortedModules = robust_topological_sort(self.allModules)
         self.loadOrder = list(itertools.chain(*sortedModules))
