@@ -8,7 +8,10 @@ from types import ModuleType
 from zope.interface import Interface, implements
 
 DEBUG = False
-_sysModulesSpecialCases = {"os": ['path']}
+_sysModulesSpecialCases = {
+    "os": ['path'],
+    "twisted.internet": ["reactor"],
+}
 
 def trace(*args):
     if DEBUG:
