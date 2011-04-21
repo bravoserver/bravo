@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
-from zope.interface import invariant, Attribute
+from twisted.python.components import registerAdapter
+from zope.interface import implements, invariant, Attribute
 
 class InvariantException(Exception):
     """
@@ -131,6 +132,33 @@ class IConsoleCommand(ICommand):
 
         :returns: a generator object or other iterable yielding lines
         """
+
+class ChatToConsole(object):
+    """
+    Adapt a chat command to be used on the console.
+
+    This largely consists of passing the username correctly.
+    """
+
+    implements(IConsoleCommand)
+
+    def __init__(self, chatcommand):
+        self.chatcommand = chatcommand
+
+        self.aliases = self.chatcommand.aliases
+        self.info = self.chatcommand.info
+        self.name = self.chatcommand.name
+        self.usage = "<username> %s" % self.chatcommand.usage
+
+    def console_command(self, factory, parameters):
+        if IConsoleCommand.implementedBy(self.chatcommand):
+            return self.chatcommand.console_command(factory, parameters)
+        else:
+            username = parameters.pop(0)
+            return self.chatcommand.chat_command(factory, username,
+                parameters)
+
+registerAdapter(ChatToConsole, IChatCommand, IConsoleCommand)
 
 def recipe_invariant(r):
     # Size invariant.
