@@ -10,8 +10,16 @@ from zope.interface.verify import verifyObject
 from bravo.ibravo import InvariantException, ISortedPlugin
 
 blacklisted = set([
-    "imp",
-    "inspect",
+    "asyncore",        # Use Twisted's event loop.
+    "ctypes",          # Segfault protection.
+    "gc",              # Haha, no.
+    "imp",             # Haha, no.
+    "inspect",         # Haha, no.
+    "multiprocessing", # Use Twisted's process interface.
+    "socket",          # Use Twisted's socket interface.
+    "subprocess",      # Use Twisted's process interface.
+    "thread",          # Use Twisted's thread interface.
+    "threading",       # Use Twisted's thread interface.
 ])
 bravoMapper = ExclusiveMapper(pep302Mapper, blacklisted)
 
@@ -152,8 +160,8 @@ def get_plugins(interface, package):
                 else:
                     if adapted is not None:
                         yield adapted
-        except ImportError:
-            log.err()
+        except ImportError, ie:
+            log.msg(ie)
 
 __plugin_cache = {}
 
