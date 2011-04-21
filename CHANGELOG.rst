@@ -1,5 +1,5 @@
-master
-======
+1.4
+===
 
 * Started keeping a changelog
 * Created a separate license file
@@ -45,7 +45,7 @@ master
 * Rewrote /help
 * Rewrote "caves" terrain generator
 * Introduced "trees" terrain generator
-* Fixed bugs in fluid simulator
+* Fixed several bugs in fluid simulator
 * Fixed several broken recipes: TNT, ladders, shovels, fishing rods
 * Fixed bug with snow on Notchian server geometry
-* Introduce web service
+* Introduced web service
