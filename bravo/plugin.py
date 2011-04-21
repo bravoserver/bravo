@@ -1,5 +1,6 @@
 from exocet import ExclusiveMapper, getModule, load, pep302Mapper
 
+from twisted.internet import reactor
 from twisted.plugin import IPlugin
 from twisted.python import log
 
@@ -21,7 +22,11 @@ blacklisted = set([
     "thread",          # Use Twisted's thread interface.
     "threading",       # Use Twisted's thread interface.
 ])
-bravoMapper = ExclusiveMapper(pep302Mapper, blacklisted)
+overrides = {
+    "twisted.internet.reactor": reactor,
+}
+bravoMapper = ExclusiveMapper(pep302Mapper,
+                              blacklisted).withOverrides(overrides)
 
 class PluginException(Exception):
     """
