@@ -181,7 +181,7 @@ class Say(object):
 
 class Give(object):
 
-    implements(IChatCommand, IConsoleCommand)
+    implements(IChatCommand)
 
     def chat_command(self, factory, username, parameters):
         if len(parameters) == 0:
@@ -210,10 +210,6 @@ class Give(object):
 
         # Return an empty tuple for iteration
         return tuple()
-
-    def console_command(self, factory, parameters):
-        for i in self.chat_command(factory, parameters[0], parameters[1:]):
-            yield i
 
     name = "give"
     aliases = tuple()
@@ -332,21 +328,18 @@ class Season(object):
     info = "Advance date to the beginning of the given season"
 
 class Me(object):
+
     implements(IChatCommand)
 
-    def dispatch(self, username, says):
-        say = " ".join(says)
-        msg = "* %s %s" % (username,say)
-        yield msg
-
     def chat_command(self, factory, username, parameters):
-        for i in self.dispatch(username, parameters):
-            yield i
+        say = " ".join(parameters)
+        msg = "* %s %s" % (username, say)
+        return (msg,)
 
     name = "me"
     aliases = tuple()
     usage = "<message>"
-    info = "/me like IRC"
+    info = "Emote"
 
 class Kick(object):
     """
