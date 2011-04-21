@@ -1,4 +1,4 @@
-from exocet import getModule, load, pep302Mapper
+from exocet import ExclusiveMapper, getModule, load, pep302Mapper
 
 from twisted.plugin import IPlugin
 from twisted.python import log
@@ -8,6 +8,12 @@ from zope.interface.exceptions import BrokenMethodImplementation
 from zope.interface.verify import verifyObject
 
 from bravo.ibravo import InvariantException, ISortedPlugin
+
+blacklisted = set([
+    "imp",
+    "inspect",
+])
+bravoMapper = ExclusiveMapper(pep302Mapper, blacklisted)
 
 class PluginException(Exception):
     """
@@ -135,16 +141,19 @@ def get_plugins(interface, package):
 
     p = getModule(package)
     for pm in p.iterModules():
-        m = load(pm, pep302Mapper)
-        for obj in vars(m).itervalues():
-            try:
-                adapted = IPlugin(obj, None)
-                adapted = interface(adapted, None)
-            except:
-                log.err()
-            else:
-                if adapted is not None:
-                    yield adapted
+        try:
+            m = load(pm, bravoMapper)
+            for obj in vars(m).itervalues():
+                try:
+                    adapted = IPlugin(obj, None)
+                    adapted = interface(adapted, None)
+                except:
+                    log.err()
+                else:
+                    if adapted is not None:
+                        yield adapted
+        except ImportError:
+            log.err()
 
 __plugin_cache = {}
 
