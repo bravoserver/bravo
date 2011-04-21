@@ -156,6 +156,49 @@ class _StackedMapper(object):
 
 
 
+class ExclusiveMapper(object):
+    """
+    A mapper that wraps another mapper, but excludes certain names.
+
+    This mapper can be used to implement a blacklist.
+    """
+
+    implements(IMapper)
+
+    def __init__(self, submapper, excluded):
+        self._submapper = submapper
+        self._excluded = excluded
+
+
+    def lookup(self, name):
+        """
+        @see l{Imapper.lookup}
+        """
+
+        if name in self._excluded:
+            raise ImportError("Module %s blacklisted in mapper %s"
+                % (name, self))
+        return self._submapper.lookup(name)
+
+
+    def contains(self, name):
+        """
+        @see l{Imapper.contains}
+        """
+
+        if name in self._excluded:
+            return False
+        return self._submapper.contains(name)
+
+
+    def withOverrides(self, overrides):
+        """
+        @see L{IMapper.withOverrides}
+        """
+        return _StackedMapper([DictMapper(overrides), self])
+
+
+
 class _PackageMapper(CallableMapper):
     """
     A mapper that allows direct mutation as a result of intrapackage

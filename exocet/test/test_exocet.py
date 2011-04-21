@@ -3,7 +3,7 @@ import sys
 from unittest import TestCase
 from exocet import (loadPackageNamed, loadNamed, load, loadPackage,
                     emptyMapper, pep302Mapper, getModule,
-                    IMapper, DictMapper, proxyModule)
+                    IMapper, DictMapper, ExclusiveMapper, proxyModule)
 from zope.interface.verify import verifyObject
 
 def assertIdentical(self, left, right):
@@ -86,6 +86,33 @@ class MapperTests(TestCase):
         for name in ["email", "foobaz"]:
             self.assertRaises(ImportError, dm.lookup, name)
             self.assertFalse(dm.contains(name))
+
+
+    def test_exclusiveMapper(self):
+        """
+        L{ExclusiveMapper} implements an effective blacklist.
+        """
+
+        l = ["sys", "exocet.test"]
+        em = ExclusiveMapper(pep302Mapper, l)
+
+        verifyObject(IMapper, em)
+
+        for name in l:
+            self.assertRaises(ImportError, em.lookup, name)
+            self.assertFalse(em.contains(name))
+
+
+    def test_exclusiveMapperOverrides(self):
+        """
+        L{ExclusiveMapper} can be overriden.
+        """
+
+        l = ["sys", "exocet.test"]
+        d = {"sys": object()}
+        em = ExclusiveMapper(pep302Mapper, l).withOverrides(d)
+
+        self.assertEqual(em.lookup("sys"), d["sys"])
 
 
     def test_pep302Mapper(self):
