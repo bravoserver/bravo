@@ -390,3 +390,15 @@ class IUseHook(ISortedPlugin):
     targets = Attribute("""
         List of entity names this plugin wants to be called for.
         """)
+
+class IAutomaton(IBravoPlugin):
+    """
+    An automaton.
+
+    Automatons are given blocks from chunks which interest them, and may do
+    processing on those blocks.
+    """
+
+    blocks = Attribute("""
+        List of blocks which this automaton is interested in.
+        """)
