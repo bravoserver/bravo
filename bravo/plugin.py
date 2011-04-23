@@ -212,7 +212,7 @@ def retrieve_plugins(interface, parameters=None):
 
     log.msg("Discovering %s..." % interface)
     d = {}
-    for p in get_plugins(interface, "bravo.plugins"):
+    for p in get_plugins(interface, "bravo.plugins", parameters):
         try:
             verify_plugin(interface, p)
             d[p.name] = p
@@ -239,7 +239,7 @@ def retrieve_named_plugins(interface, names, parameters=None):
     :raises PluginException: no plugins could be found for the given interface
     """
 
-    d = retrieve_plugins(interface)
+    d = retrieve_plugins(interface, parameters)
 
     # Handle wildcards and options.
     names = expand_names(d, names)
@@ -257,7 +257,7 @@ def retrieve_sorted_plugins(interface, names, parameters=None):
     :param dict parameters: parameters to pass into the plugins
     """
 
-    l = retrieve_named_plugins(interface, names)
+    l = retrieve_named_plugins(interface, names, parameters)
     try:
         return sort_plugins(l)
     except KeyError, e:

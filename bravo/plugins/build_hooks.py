@@ -6,6 +6,8 @@ from bravo.entity import Chest, Sign
 from bravo.ibravo import IPreBuildHook
 from bravo.utilities.coords import split_coords
 
+from parameters import factory
+
 class Tile(object):
     """
     Place tiles.

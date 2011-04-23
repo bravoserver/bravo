@@ -435,15 +435,33 @@ class BravoProtocol(BetaServerProtocol):
         self.config_name = "world %s" % name
 
         log.msg("Registering client hooks...")
+
+        # Retrieve the MOTD. Only needs to be done once.
+        self.motd = configuration.getdefault(self.config_name, "motd", None)
+
+        # XXX this would be a good starting point for 1KO
+        self.last_dig_build_timer = time()
+
+        # Register hooks, *after* __init__.
+        reactor.callLater(0, self.register_hooks)
+
+    def register_hooks(self):
+
+        pp = {"factory": self.factory}
+
+        log.msg("Registering client plugin hooks...")
+
         names = configuration.getlistdefault(self.config_name, "pre_build_hooks",
             [])
         self.pre_build_hooks = retrieve_sorted_plugins(IPreBuildHook, names)
         names = configuration.getlistdefault(self.config_name, "post_build_hooks",
             [])
         self.post_build_hooks = retrieve_sorted_plugins(IPostBuildHook, names)
+
         names = configuration.getlistdefault(self.config_name, "dig_hooks",
             [])
         self.dig_hooks = retrieve_sorted_plugins(IDigHook, names)
+
         names = configuration.getlistdefault(self.config_name, "sign_hooks",
             [])
         self.sign_hooks = retrieve_sorted_plugins(ISignHook, names)
@@ -460,6 +478,8 @@ class BravoProtocol(BetaServerProtocol):
 
         # Retrieve the MOTD. Only needs to be done once.
         self.motd = configuration.getdefault(self.config_name, "motd", None)
+
+        log.msg("Registered client plugin hooks!")
 
     @inlineCallbacks
     def authenticated(self):
