@@ -1,3 +1,4 @@
+from types import ModuleType
 from xml.sax import saxutils
 
 from exocet import ExclusiveMapper, getModule, load, pep302Mapper
@@ -142,23 +143,47 @@ def verify_plugin(interface, plugin):
 
     raise PluginException("Plugin failed verification")
 
-def get_plugins(interface, package):
+def synthesize_parameters(parameters):
+    """
+    Create a faked module which has the given parameters in it.
+
+    This should work everywhere. If it doesn't, let me know.
+    """
+
+    module = ModuleType("parameters")
+    module.__dict__.update(parameters)
+    return module
+
+def get_plugins(interface, package, parameters=None):
     """
     Lazily find objects in a package which implement a given interface.
 
     The objects must also implement ``twisted.plugin.IPlugin``.
+
+    If the optional dictionary of parameters is provided, it will be passed
+    into each plugin module as the "parameters" module. An example access from
+    inside the plugin:
+
+    >>> from parameters import foo, bar
 
     This is a rewrite of Twisted's ``twisted.plugin.getPlugins`` which uses
     Exocet instead of Twisted to find the plugins.
 
     :param interface interface: the interface to match against
     :param str package: the name of the package to search
+    :param dict parameters: parameters to pass into the plugins
     """
+
+    mapper = bravoMapper
+
+    if parameters:
+        mapper = mapper.withOverrides(
+            {"parameters": synthesize_parameters(parameters)})
 
     p = getModule(package)
     for pm in p.iterModules():
         try:
-            m = load(pm, bravoMapper)
+            m = load(pm, mapper)
             for obj in vars(m).itervalues():
                 try:
                     adapted = IPlugin(obj, None)
@@ -171,19 +196,7 @@ def get_plugins(interface, package):
         except ImportError, ie:
             log.msg(ie)
 
-__plugin_cache = {}
-
-def clear_plugin_cache():
-    """
-    Clear the plugin cache.
-
-    This has the (intended) side effect of causing all plugins to be reloaded
-    on the next retrieval.
-    """
-
-    __plugin_cache.clear()
-
-def retrieve_plugins(interface, cached=True):
+def retrieve_plugins(interface, parameters=None):
     """
     Look up all plugins for a certain interface.
 
@@ -191,14 +204,11 @@ def retrieve_plugins(interface, cached=True):
     plugins from disk or discover new plugins.
 
     :param interface interface: the interface to use
-    :param bool cached: whether to use the in-memory plugin cache
+    :param dict parameters: parameters to pass into the plugins
 
     :returns: a dict of plugins, keyed by name
     :raises PluginException: no plugins could be found for the given interface
     """
-
-    if cached and interface in __plugin_cache:
-        return __plugin_cache[interface]
 
     log.msg("Discovering %s..." % interface)
     d = {}
@@ -213,10 +223,9 @@ def retrieve_plugins(interface, cached=True):
         # Sortable plugins need their edges mirrored.
         d = add_plugin_edges(d)
 
-    __plugin_cache[interface] = d
     return d
 
-def retrieve_named_plugins(interface, names):
+def retrieve_named_plugins(interface, names, parameters=None):
     """
     Look up a list of plugins by name.
 
@@ -224,6 +233,7 @@ def retrieve_named_plugins(interface, names):
 
     :param interface interface: the interface to use
     :param list names: plugins to find
+    :param dict parameters: parameters to pass into the plugins
 
     :returns: a list of plugins
     :raises PluginException: no plugins could be found for the given interface
@@ -240,9 +250,11 @@ def retrieve_named_plugins(interface, names):
         raise PluginException("Couldn't find plugin %s for interface %s!" %
             (e.args[0], interface))
 
-def retrieve_sorted_plugins(interface, names):
+def retrieve_sorted_plugins(interface, names, parameters=None):
     """
     Look up a list of plugins, sorted by interdependencies.
+
+    :param dict parameters: parameters to pass into the plugins
     """
 
     l = retrieve_named_plugins(interface, names)
