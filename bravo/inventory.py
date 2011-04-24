@@ -108,6 +108,8 @@ class Inventory(object):
     storage = 0
     holdables = 0
 
+    slots_conversion = {}
+
     def __init__(self):
         if self.crafting:
             self.crafting = [None] * self.crafting
@@ -140,6 +142,16 @@ class Inventory(object):
         retval = len(self.crafted) + len(self.crafting) + len(self.armor)
         retval += len(self.storage) + len(self.holdables)
         return retval
+
+    def encode_slot(self, slot):
+        return self.slots_conversion.get(slot, slot)
+
+    def decode_slot(self, slot):
+        for key, value in self.slots_conversion.iteritems():
+            if value == slot:
+                return key
+
+        return slot
 
     def container_for_slot(self, slot):
         """
@@ -487,6 +499,28 @@ class Equipment(Inventory):
     armor = 4
     storage = 27
     holdables = 9
+
+    slots_conversion = {}
+
+    slots_conversion[36] = 0
+    slots_conversion[37] = 1
+    slots_conversion[38] = 2
+    slots_conversion[39] = 3
+    slots_conversion[40] = 4
+    slots_conversion[41] = 5
+    slots_conversion[42] = 6
+    slots_conversion[43] = 7
+    slots_conversion[44] = 8
+
+    slots_conversion[1] = 80
+    slots_conversion[2] = 81
+    slots_conversion[3] = 82
+    slots_conversion[4] = 83
+
+    slots_conversion[8] = 100
+    slots_conversion[7] = 101
+    slots_conversion[6] = 102
+    slots_conversion[5] = 103
 
     identifier = 0
 

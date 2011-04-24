@@ -414,6 +414,7 @@ class Alpha(object):
 
         for item in tag.tags:
             slot = item["Slot"].value
+            slot = inventory.decode_slot(slot)
             items[slot] = Slot(item["id"].value,
                 item["Damage"].value, item["Count"].value)
 
@@ -428,10 +429,11 @@ class Alpha(object):
             if item is not None:
                 d = TAG_Compound()
                 id, damage, count = item
+                slot = inventory.encode_slot(i)
                 d["id"] = TAG_Short(id)
                 d["Damage"] = TAG_Short(damage)
                 d["Count"] = TAG_Byte(count)
-                d["Slot"] = TAG_Byte(i)
+                d["Slot"] = TAG_Byte(slot)
                 tag.tags.append(d)
 
         return tag
