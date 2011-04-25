@@ -1,11 +1,16 @@
-from bravo.blocks import blocks
-from bravo.ibravo import IWorldResource
 from itertools import product
+from StringIO import StringIO
+
+from PIL import Image
+
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.template import flattenString, renderer, tags, Element, XMLString
+
 from zope.interface import implements
 
+from bravo.blocks import blocks
+from bravo.ibravo import IWorldResource
 
 block_colors = {
     blocks["stone"].slot: 'gray',
@@ -22,13 +27,20 @@ block_colors = {
 }
 default_color = 'black'
 
-tile_template = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 64 64"
-    height="64" width="64">
-%s
-</svg>
-"""
-tile_line = '<rect x="%d" y="%d" width="4" height="4" fill="%s" opacity="1.0"/>'
+# http://en.wikipedia.org/wiki/Web_colors X11 color names
+names_to_colors = {
+    "black":     (0, 0, 0),
+    "blue":      (0, 0, 255),
+    "brown":     (165, 42, 42),
+    "burlywood": (22, 184, 135),
+    "darkgreen": (0, 100, 0),
+    "dimgray":   (105, 105, 105),
+    "gray":      (128, 128, 128),
+    "green":     (0, 128, 0),
+    "khaki":     (240, 230, 140),
+    "red":       (255, 0, 0),
+    "snow":      (255, 250, 250),
+}
 
 class ChunkIllustrator(Resource):
     """
@@ -41,8 +53,9 @@ class ChunkIllustrator(Resource):
         self.z = z
 
     def _cb_render_GET(self, chunk, request):
-        request.setHeader('content-type', 'image/svg+xml; charset=UTF-8')
-        out = ''
+        request.setHeader('content-type', 'image/png')
+        i = Image.new("RGB", (16, 16))
+        pbo = i.load()
         for x, z in product(xrange(16), repeat=2):
             for y in range(127, -1, -1):
                 if chunk.blocks[x, z, y]:
@@ -55,8 +68,12 @@ class ChunkIllustrator(Resource):
                     color = color[y / 5 % 2]
             else:
                 color = default_color
-            out += tile_line % (x * 4, z * 4, color)
-        request.write(tile_template % out)
+            pbo[x, z] = names_to_colors[color]
+
+        data = StringIO()
+        i.save(data, "PNG")
+
+        request.write(data.getvalue())
         request.finish()
 
     def render_GET(self, request):
@@ -90,7 +107,7 @@ class WorldMapElement(Element):
         for y in range(-5, 5):
             for x in range(-5, 5):
                 child = path.child("%s,%s" % (x, y))
-                l.append(tags.img(src=str(child)))
+                l.append(tags.img(src=str(child), height="64", width="64"))
             l.append(tags.br())
         return tag(*l)
 
