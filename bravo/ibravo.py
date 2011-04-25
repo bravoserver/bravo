@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.python.components import registerAdapter
+from twisted.web.resource import IResource
 from zope.interface import implements, invariant, Attribute
 
 class InvariantException(Exception):
@@ -402,3 +403,8 @@ class IAutomaton(IBravoPlugin):
     blocks = Attribute("""
         List of blocks which this automaton is interested in.
         """)
+
+class IWorldResource(IBravoPlugin, IResource):
+    """
+    Interface for a world specific web resource.
+    """
