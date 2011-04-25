@@ -13,17 +13,18 @@ from bravo.blocks import blocks
 from bravo.ibravo import IWorldResource
 
 block_colors = {
-    blocks["stone"].slot: 'gray',
-    blocks["grass"].slot: ('green', 'darkgreen'),
-    blocks["dirt"].slot: 'brown',
+    blocks["clay"].slot: "rosybrown",
     blocks["cobblestone"].slot: 'dimgray',
-    blocks["wood"].slot: 'burlywood',
-    blocks["water"].slot: 'blue',
-    blocks["spring"].slot: 'blue',
+    blocks["dirt"].slot: 'brown',
+    blocks["grass"].slot: ('green', 'darkgreen'),
     blocks["lava"].slot: 'red',
     blocks["lava-spring"].slot: 'red',
     blocks["sand"].slot: 'khaki',
-    blocks["snow"].slot: 'snow'
+    blocks["snow"].slot: 'snow',
+    blocks["spring"].slot: 'blue',
+    blocks["stone"].slot: 'gray',
+    blocks["water"].slot: 'blue',
+    blocks["wood"].slot: 'burlywood',
 }
 default_color = 'black'
 
@@ -39,6 +40,7 @@ names_to_colors = {
     "green":     (0, 128, 0),
     "khaki":     (240, 230, 140),
     "red":       (255, 0, 0),
+    "rosybrown": (188, 143, 143),
     "snow":      (255, 250, 250),
 }
 
