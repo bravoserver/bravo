@@ -108,7 +108,7 @@ class Inventory(object):
     storage = 0
     holdables = 0
 
-    slots_conversion = {}
+    slot_table = tuple()
 
     def __init__(self):
         if self.crafting:
@@ -137,21 +137,32 @@ class Inventory(object):
         self.recipe = None
         self.recipe_offset = None
 
-    def __len__(self):
+        # Prep decoder rings.
+        self.slot_encoder_ring = dict(self.slot_table)
+        self.slot_decoder_ring = dict((v, k) for k, v in self.slot_table)
 
+    def __len__(self):
         retval = len(self.crafted) + len(self.crafting) + len(self.armor)
         retval += len(self.storage) + len(self.holdables)
         return retval
 
     def encode_slot(self, slot):
-        return self.slots_conversion.get(slot, slot)
+        """
+        Turn a server-side slot into a Notchian slot.
+
+        Only used for old serializers.
+        """
+
+        return self.slot_encoder_ring.get(slot, slot)
 
     def decode_slot(self, slot):
-        for key, value in self.slots_conversion.iteritems():
-            if value == slot:
-                return key
+        """
+        Turn a Notchian slot into a server-side slot.
 
-        return slot
+        Only used for old serializers.
+        """
+
+        return self.slot_decoder_ring.get(slot, slot)
 
     def container_for_slot(self, slot):
         """
@@ -500,27 +511,10 @@ class Equipment(Inventory):
     storage = 27
     holdables = 9
 
-    slots_conversion = {}
-
-    slots_conversion[36] = 0
-    slots_conversion[37] = 1
-    slots_conversion[38] = 2
-    slots_conversion[39] = 3
-    slots_conversion[40] = 4
-    slots_conversion[41] = 5
-    slots_conversion[42] = 6
-    slots_conversion[43] = 7
-    slots_conversion[44] = 8
-
-    slots_conversion[1] = 80
-    slots_conversion[2] = 81
-    slots_conversion[3] = 82
-    slots_conversion[4] = 83
-
-    slots_conversion[8] = 100
-    slots_conversion[7] = 101
-    slots_conversion[6] = 102
-    slots_conversion[5] = 103
+    slot_table = (
+        (36, 0), (37, 1), (38, 2), (39, 3), (40, 4), (41, 5), (42, 6),
+        (43, 7), (44, 8), (1, 80), (2, 81), (3, 82), (4, 83), (8, 100),
+        (7, 101), (6, 102), (5, 103))
 
     identifier = 0
 

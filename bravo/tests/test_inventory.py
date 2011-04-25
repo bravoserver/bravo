@@ -1,9 +1,8 @@
 from twisted.trial import unittest
 
 import bravo.blocks
-import bravo.inventory
 
-from bravo.inventory import Slot
+from bravo.inventory import Equipment, Inventory, Slot, Workbench
 
 class TestSlot(unittest.TestCase):
     """
@@ -19,6 +18,15 @@ class TestSlot(unittest.TestCase):
         slot2 = Slot(4, 5, 1)
         self.assertTrue(slot1.holds(slot2))
 
+    def test_holds_secondary(self):
+        """
+        Secondary attributes always matter for .holds.
+        """
+
+        slot1 = Slot(4, 5, 1)
+        slot2 = Slot(4, 6, 1)
+        self.assertFalse(slot1.holds(slot2))
+
 class TestInventoryInternals(unittest.TestCase):
     """
     The Inventory class might be near-useless when not subclassed, but we can
@@ -26,7 +34,7 @@ class TestInventoryInternals(unittest.TestCase):
     """
 
     def setUp(self):
-        self.i = bravo.inventory.Inventory()
+        self.i = Inventory()
 
     def test_trivial(self):
         pass
@@ -37,7 +45,7 @@ class TestInventoryInternals(unittest.TestCase):
 class TestEquipmentInternals(unittest.TestCase):
 
     def setUp(self):
-        self.i = bravo.inventory.Equipment()
+        self.i = Equipment()
 
     def test_trivial(self):
         pass
@@ -188,6 +196,18 @@ class TestEquipmentInternals(unittest.TestCase):
         # still hold the left overs
         self.assertEqual(self.i.selected, (2, 0, 6))
 
+    def test_encoder_ring(self):
+        self.assertEqual(self.i.encode_slot(36), 0)
+
+    def test_encoder_ring_noop(self):
+        self.assertEqual(self.i.encode_slot(20), 20)
+
+    def test_decoder_ring(self):
+        self.assertEqual(self.i.decode_slot(100), 8)
+
+    def test_decoder_ring_noop(self):
+        self.assertEqual(self.i.decode_slot(21), 21)
+
 class TestCraftingWood(unittest.TestCase):
     """
     Test basic crafting functionality.
@@ -198,7 +218,7 @@ class TestCraftingWood(unittest.TestCase):
     """
 
     def setUp(self):
-        self.i = bravo.inventory.Equipment()
+        self.i = Equipment()
 
     def test_trivial(self):
         pass
@@ -238,7 +258,7 @@ class TestCraftingSticks(unittest.TestCase):
     """
 
     def setUp(self):
-        self.i = bravo.inventory.Equipment()
+        self.i = Equipment()
 
     def test_trivial(self):
         pass
@@ -280,7 +300,7 @@ class TestCraftingTorches(unittest.TestCase):
     """
 
     def setUp(self):
-        self.i = bravo.inventory.Equipment()
+        self.i = Equipment()
 
     def test_trivial(self):
         pass
@@ -323,7 +343,7 @@ class TestCraftingFurnace(unittest.TestCase):
     """
 
     def setUp(self):
-        self.i = bravo.inventory.Workbench()
+        self.i = Workbench()
 
     def test_trivial(self):
         pass
@@ -361,7 +381,7 @@ class TestCraftingFurnace(unittest.TestCase):
 class TestInventoryIntegration(unittest.TestCase):
 
     def setUp(self):
-        self.i = bravo.inventory.Equipment()
+        self.i = Equipment()
 
     def test_trivial(self):
         pass
@@ -487,7 +507,7 @@ class TestWorkbenchIntegration(unittest.TestCase):
     """
 
     def setUp(self):
-        self.i = bravo.inventory.Workbench()
+        self.i = Workbench()
 
     def test_trivial(self):
         pass
