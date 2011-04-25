@@ -57,9 +57,7 @@ class ChunkIllustrator(Resource):
         i = Image.new("RGB", (16, 16))
         pbo = i.load()
         for x, z in product(xrange(16), repeat=2):
-            for y in range(127, -1, -1):
-                if chunk.blocks[x, z, y]:
-                    break
+            y = chunk.height_at(x, z)
             block = chunk.blocks[x, z, y]
             if block in block_colors:
                 color = block_colors[block]
