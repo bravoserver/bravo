@@ -1,3 +1,5 @@
+from xml.sax import saxutils
+
 from exocet import ExclusiveMapper, getModule, load, pep302Mapper
 
 from twisted.internet import reactor
@@ -24,6 +26,7 @@ blacklisted = set([
 ])
 overrides = {
     "twisted.internet.reactor": reactor,
+    "saxutils": saxutils,
 }
 bravoMapper = ExclusiveMapper(pep302Mapper,
                               blacklisted).withOverrides(overrides)

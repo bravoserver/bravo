@@ -1,11 +1,13 @@
-from bravo.ibravo import IWorldResource
-from plugin import retrieve_plugins
+from xml.sax import saxutils
+
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
 from twisted.web.template import flattenString, renderer, tags, Element, XMLString
 
 from bravo import version
 from bravo.factories.beta import BravoFactory
+from bravo.ibravo import IWorldResource
+from bravo.plugin import retrieve_plugins
 
 root_template = """
 <html xmlns:t="http://twistedmatrix.com/ns/twisted.web.template/0.1">
@@ -151,6 +153,7 @@ def bravo_site(services):
         for name, resource in plugins.iteritems():
             # set factory because they are initialized without factory for
             # plugin discovery
+            # XXX parameterize me plz
             resource.factory = factory
             # add plugin page
             child.putChild(name, resource)
