@@ -1,3 +1,10 @@
+master
+======
+
+* Added web plugin support
+
+  * Added worldmap plugin for viewing the spawn area
+
 1.4
 ===
 
