@@ -154,7 +154,8 @@ class Fluid(object):
                             if jonesmd + 1 < newmd:
                                 newmd = jonesmd + 1
 
-                    if newmd > self.levels:
+                    current_md = yield w.get_metadata((x,y,z))
+                    if newmd > self.levels and current_md < FALLING:
                         # We should dry up.
                         new.update(neighbors)
                         new.add(below)
@@ -184,7 +185,8 @@ class Fluid(object):
 
                     # Clamp our newmd and assign. Also, set ourselves again;
                     # we changed this time and we might change again.
-                    w.set_metadata((x, y, z), newmd)
+                    if current_md < FALLING:
+                        w.set_metadata((x, y, z), newmd)
 
                     # Otherwise, just fill our neighbors with water, where
                     # applicable, and mark them.
