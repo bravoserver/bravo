@@ -185,7 +185,8 @@ class Fluid(object):
 
                     # Clamp our newmd and assign. Also, set ourselves again;
                     # we changed this time and we might change again.
-                    w.set_metadata((x, y, z), newmd)
+                    if current_md < FALLING:
+                        w.set_metadata((x, y, z), newmd)
 
                     # Otherwise, just fill our neighbors with water, where
                     # applicable, and mark them.
