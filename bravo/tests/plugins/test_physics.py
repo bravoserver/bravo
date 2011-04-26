@@ -108,6 +108,31 @@ class TestWater(unittest.TestCase):
     test_spring_fall.todo = "Metadata is wrong for some reason"
 
     @inlineCallbacks
+    def test_spring_fall_dig(self):
+        """
+        Destroying ground underneath spring should allow water to continue
+        falling downwards.
+        """
+
+        self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 0, 0), bravo.blocks.blocks["dirt"].slot)
+        self.hook.pending[self.f].add((0, 1, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.pending:
+            self.hook.process()
+
+        #dig away dirt under spring
+        self.w.destroy((0, 0, 0))
+        self.hook.pending[self.f].add((0, 1, 0))
+
+        while self.hook.pending:
+            self.hook.process()
+
+        block = yield self.w.get_block((0, 0, 0))
+        self.assertEqual(block, bravo.blocks.blocks["water"].slot)
+
+    @inlineCallbacks
     def test_obstacle(self):
         """
         Test that obstacles are flowed around correctly.
