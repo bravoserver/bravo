@@ -286,6 +286,7 @@ packets = {
             cow=92,
             chuck=93,
             squid=94,
+            wolf=95,
         ),
         SBInt32("x"),
         SBInt32("y"),
