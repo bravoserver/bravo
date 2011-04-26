@@ -154,7 +154,8 @@ class Fluid(object):
                             if jonesmd + 1 < newmd:
                                 newmd = jonesmd + 1
 
-                    if newmd > self.levels:
+                    current_md = yield w.get_metadata((x,y,z))
+                    if newmd > self.levels and current_md < FALLING:
                         # We should dry up.
                         new.update(neighbors)
                         new.add(below)
