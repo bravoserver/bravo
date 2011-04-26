@@ -105,8 +105,6 @@ class TestWater(unittest.TestCase):
         self.assertEqual(block, bravo.blocks.blocks["water"].slot)
         self.assertEqual(metadata, 0x8)
 
-    test_spring_fall.todo = "Metadata is wrong for some reason"
-
     @inlineCallbacks
     def test_spring_fall_dig(self):
         """
