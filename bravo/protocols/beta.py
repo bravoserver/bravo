@@ -148,9 +148,10 @@ class BetaServerProtocol(Protocol):
 
         old_position = self.location.x, self.location.y, self.location.z
 
-        self.location.x = int(container.position.x)
+	# Location represents the block the player is within
+        self.location.x = int(container.position.x) if container.position.x > 0 else int(container.position.x) - 1
         self.location.y = int(container.position.y)
-        self.location.z = int(container.position.z)
+        self.location.z = int(container.position.z) if container.position.z > 0 else int(container.position.z) - 1
         # Stance is the current jumping position, plus a small offset of
         # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
         # or the anti-grounded code kicks the client.
