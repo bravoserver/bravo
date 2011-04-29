@@ -43,6 +43,8 @@ Comfortably numb!
 %
 The hidden riddle!
 %
+We are all made of stars!
+%
 Out of beta and releasing on time!
 %
 Still alive!
