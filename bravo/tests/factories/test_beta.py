@@ -16,17 +16,11 @@ class TestBravoFactory(unittest.TestCase):
 
     def setUp(self):
         # Same setup as World, because Factory is very automagical.
-        self.d = tempfile.mkdtemp()
         self.name = "unittest"
 
         bravo.config.configuration.add_section("world unittest")
         d = {
-            "authenticator" : "offline",
-            "generators"    : "",
             "port"          : "0",
-            "seasons"       : "",
-            "serializer"    : "alpha",
-            "url"           : "file://%s" % self.d,
         }
         for k, v in d.items():
             bravo.config.configuration.set("world unittest", k, v)
@@ -35,11 +29,6 @@ class TestBravoFactory(unittest.TestCase):
 
     def tearDown(self):
         bravo.config.configuration.remove_section("world unittest")
-
-        self.f.world.chunk_management_loop.stop()
-        self.f.time_loop.stop()
-
-        shutil.rmtree(self.d)
 
     def test_trivial(self):
         pass
@@ -55,6 +44,44 @@ class TestBravoFactory(unittest.TestCase):
         self.assertEqual(self.f.config_name, "world unittest")
 
         self.assertEqual(self.f.eid, 1)
+
+class TestBravoFactoryStarted(unittest.TestCase):
+    """
+    Tests which require ``startFactory()`` to be called.
+    """
+
+    def setUp(self):
+        # Same setup as World, because Factory is very automagical.
+        self.d = tempfile.mkdtemp()
+        self.name = "unittest"
+
+        bravo.config.configuration.add_section("world unittest")
+        d = {
+            "authenticator" : "offline",
+            "automatons"    : "",
+            "generators"    : "",
+            "port"          : "0",
+            "seasons"       : "",
+            "serializer"    : "alpha",
+            "url"           : "file://%s" % self.d,
+        }
+        for k, v in d.items():
+            bravo.config.configuration.set("world unittest", k, v)
+
+        self.f = bravo.factories.beta.BravoFactory(self.name)
+        # And now start the factory.
+        self.f.startFactory()
+
+    def tearDown(self):
+        bravo.config.configuration.remove_section("world unittest")
+
+        self.f.world.chunk_management_loop.stop()
+        self.f.time_loop.stop()
+
+        shutil.rmtree(self.d)
+
+    def test_trivial(self):
+        pass
 
     def test_create_entity_pickup(self):
         entity = self.f.create_entity(0, 0, 0, "Item")
