@@ -468,6 +468,12 @@ class TestInventoryIntegration(unittest.TestCase):
         self.assertEqual(self.i.selected, (bravo.blocks.items["gold-helmet"].slot, 0, 5))
 
     def test_armor_slots_take_armor_items_only(self):
+        """
+        Confirm that dirt cannot be used as a helmet.
+
+        This is the exact test case from #175.
+        """
+
         self.i.add((bravo.blocks.blocks["dirt"].slot, 0), 10)
         self.i.select(36)
         self.assertFalse(self.i.select(5))
