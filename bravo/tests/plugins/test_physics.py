@@ -21,9 +21,9 @@ class PhysicsMockFactory(object):
 class TestWater(unittest.TestCase):
 
     def setUp(self):
-        # Using build hook to grab the plugin, but dig hook should work as
-        # well.
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IBuildHook)
+        # Using dig hook to grab the plugin since the build hook was nuked in
+        # favor of the automaton interface.
+        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IDigHook)
 
         if "water" not in self.p:
             raise unittest.SkipTest("Plugin not present")
