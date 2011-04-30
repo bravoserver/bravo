@@ -2,7 +2,7 @@ from __future__ import division
 
 from itertools import product
 from math import copysign, cos, pi, sin, sqrt
-from random import choice, random
+from random import choice, random, randint
 
 from twisted.internet.defer import inlineCallbacks, returnValue
 from zope.interface import Interface, implements
@@ -70,8 +70,11 @@ class Tree(object):
 
     implements(ITree)
 
-    def __init__(self, height=1, pos=(0, 0, 0)):
-        self.height = height
+    def __init__(self, height=None, pos=(0, 0, 0)):
+        if height != None:
+            self.height = height
+        else:
+            self.height = randint(4,7)
         self.pos = pos
 
 class StickTree(Tree):
@@ -84,7 +87,7 @@ class StickTree(Tree):
     def make_trunk(self, world):
         x, y, z = self.pos
         for i in xrange(self.height):
-            world.set_block((x, y, z), blocks["wood"].slot)
+            world.set_block((x, y, z), blocks["log"].slot)
             y += 1
 
 class NormalTree(StickTree):
@@ -111,7 +114,7 @@ class NormalTree(StickTree):
                 x = self.pos[0] + xoff
                 z = self.pos[2] + zoff
 
-                world.set_block((x, y, z), blocks["wood"].slot)
+                world.set_block((x, y, z), blocks["leaves"].slot)
 
 class BambooTree(StickTree):
     """
