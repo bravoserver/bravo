@@ -155,7 +155,11 @@ class Time(object):
         if len(parameters) >= 1:
             # Set the time
             time = parameters[0]
-            if ':' in time:
+            if time == 'sunset':
+                time = 12000
+            elif time == 'sunrise':
+                time = 24000
+            elif ':' in time:
                 # Interpret it as a real-world esque time (24hr clock)
                 hours, minutes = time.split(':')
                 hours, minutes = int(hours), int(minutes)
@@ -166,8 +170,9 @@ class Time(object):
             if len(parameters) >= 2:
                 factory.day = int(parameters[1])
 
-            factory.time = time
+            factory.time = int(time)
             factory.update_time()
+            # Factory will send the time to the client in a moment.
 
         # Tell the user what time it is
         for i in self.dispatch(factory):
