@@ -6,7 +6,7 @@ from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
 from bravo.blocks import blocks
-from bravo.ibravo import IBuildHook, IDigHook
+from bravo.ibravo import IAutomaton, IBuildHook, IDigHook
 from bravo.spatial import Block2DSpatialDict, Block3DSpatialDict
 
 FALLING = 0x8
@@ -26,7 +26,7 @@ class Fluid(object):
     Fluid simulator.
     """
 
-    implements(IBuildHook, IDigHook)
+    implements(IAutomaton, IDigHook)
 
     sponge = None
     """
@@ -43,6 +43,23 @@ class Fluid(object):
 
         self.loop = LoopingCall(self.process)
 
+    @property
+    def blocks(self):
+        retval = [self.spring, self.fluid]
+        if self.sponge:
+            retval.append(self.sponge)
+        return retval
+
+    def feed(self, factory, coordinates):
+        """
+        Accept the coordinates and stash them for later processing.
+        """
+
+        self.pending[factory].add(coordinates)
+
+        if any(self.pending.itervalues()) and not self.loop.running:
+            self.loop.start(self.step)
+
     def scan(self, chunk):
         """
         Load all of the important blocks in the chunk into memory.
@@ -50,7 +67,6 @@ class Fluid(object):
 
     @inlineCallbacks
     def process(self):
-
         for factory in self.pending:
             w = factory.world
             new = set()
@@ -241,26 +257,6 @@ class Fluid(object):
                     del dd[factory]
         if not self.pending and self.loop.running:
             self.loop.stop()
-
-    def build_hook(self, factory, player, builddata):
-        """
-        Check for placed springs.
-
-        This method comes after build, so coordinates are pre-adjusted.
-        """
-
-        block, metadata, x, y, z, face = builddata
-        # No, you may not place this. Only I may place it.
-        if block.slot == self.fluid:
-            factory.world.destroy((x, y, z))
-            return False, builddata
-        else:
-            self.pending[factory].add((x, y, z))
-
-        if any(self.pending.itervalues()) and not self.loop.running:
-            self.loop.start(self.step)
-
-        return True, builddata
 
     @inlineCallbacks
     def dig_hook(self, factory, chunk, x, y, z, block):

@@ -8,7 +8,8 @@ from zope.interface import implements
 
 from bravo.config import configuration
 from bravo.entity import entities
-from bravo.ibravo import IAuthenticator, ISeason, ITerrainGenerator
+from bravo.ibravo import (IAutomaton, IAuthenticator, ISeason,
+    ITerrainGenerator)
 from bravo.location import Location
 from bravo.packets.beta import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
@@ -82,6 +83,12 @@ class BravoFactory(Factory):
 
         log.msg("Using generators %s" % ", ".join(i.name for i in generators))
         self.world.pipeline = generators
+
+        automatons = configuration.getlist(self.config_name, "automatons")
+        automatons = retrieve_named_plugins(IAutomaton, automatons)
+
+        log.msg("Using automatons %s" % ", ".join(i.name for i in automatons))
+        self.automatons = automatons
 
         self.chat_consumers = set()
 

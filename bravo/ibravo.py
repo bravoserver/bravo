@@ -404,6 +404,11 @@ class IAutomaton(IBravoPlugin):
         List of blocks which this automaton is interested in.
         """)
 
+    def feed(factory, coordinates):
+        """
+        Provide this automaton with block coordinates to handle later.
+        """
+
 class IWorldResource(IBravoPlugin, IResource):
     """
     Interface for a world specific web resource.

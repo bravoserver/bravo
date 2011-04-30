@@ -752,6 +752,14 @@ class BravoProtocol(BetaServerProtocol):
             if not cont:
                 break
 
+        newblock = builddata.block.slot
+
+        # Feed automatons.
+        for automaton in self.factory.automatons:
+            if newblock in automaton.blocks:
+                automaton.feed(self.factory,
+                    (builddata.x, builddata.y, builddata.z))
+
         # Re-send inventory.
         # XXX this could be optimized if/when inventories track damage.
         packet = self.player.inventory.save_to_packet()
