@@ -152,6 +152,24 @@ class Time(object):
         yield "%02d:%02d, %s" % (hours, minutes, date)
 
     def chat_command(self, factory, username, parameters):
+        if len(parameters) >= 1:
+            # Set the time
+            time = parameters[0]
+            if ':' in time:
+                # Interpret it as a real-world esque time (24hr clock)
+                hours, minutes = time.split(':')
+                hours, minutes = int(hours), int(minutes)
+                # 24000 ticks / day = 1000 ticks / hour ~= 16.6 ticks / minute
+                time = (hours * 1000) + (minutes * 50 / 3)
+                time -= 6000 # to account for 24000 being high noon in minecraft.
+
+            if len(parameters) >= 2:
+                factory.day = int(parameters[1])
+
+            factory.time = time
+            factory.update_time()
+
+        # Tell the user what time it is
         for i in self.dispatch(factory):
             yield i
 
@@ -161,8 +179,8 @@ class Time(object):
 
     name = "time"
     aliases = ("date",)
-    usage = ""
-    info = "Gives the current in-game time and date"
+    usage = "[time] [day]"
+    info = "Gives the current in-game time and date, or changes it."
 
 class Say(object):
 
