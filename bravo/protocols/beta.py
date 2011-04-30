@@ -85,6 +85,7 @@ class BetaServerProtocol(Protocol):
             101: self.wclose,
             102: self.waction,
             104: self.inventory,
+            106: self.wacknowledge,
             130: self.sign,
             255: self.quit,
         }
@@ -232,6 +233,11 @@ class BetaServerProtocol(Protocol):
     def inventory(self, container):
         """
         Hook for inventory packets.
+        """
+
+    def wacknowledge(self, container):
+        """
+        Hook for wacknowledge packets.
         """
 
     def sign(self, container):
