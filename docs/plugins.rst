@@ -98,8 +98,8 @@ Simplex
 
 Generates organic-looking, continuously smooth terrain.
 
-Trees
------
+Saplings
+--------
 
 Plants saplings at relatively silly places around the map.
 
