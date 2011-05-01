@@ -7,7 +7,7 @@ from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IBuildHook, IDigHook
-from bravo.spatial import Block2DSpatialDict, Block3DSpatialDict
+from bravo.utilities.spatial import Block2DSpatialDict, Block3DSpatialDict
 
 FALLING = 0x8
 """
