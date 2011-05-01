@@ -1,6 +1,4 @@
-import numpy
-from numpy import uint8, cast
-# XXX clean up imports
+from numpy import uint8, cast, dstack, fromstring
 
 """
 Bit-twiddling devices.
@@ -22,8 +20,8 @@ def unpack_nibbles(l):
 
     :returns: list of nibbles
     """
-    data = numpy.fromstring(l, dtype=uint8)
-    return numpy.dstack((data & 0xf, data >> 4)).flat
+    data = fromstring(l, dtype=uint8)
+    return dstack((data & 0xf, data >> 4)).flat
 
 def pack_nibbles(a):
     """

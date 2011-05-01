@@ -1,5 +1,4 @@
-import math
-# XXX clean up
+from math import cos, sin
 
 def rotated_cosine(x, y, theta, lambd):
     r"""
@@ -23,4 +22,4 @@ def rotated_cosine(x, y, theta, lambd):
     :returns: float of f(x, y)
     """
 
-    return -math.cos((x * math.cos(theta) - y * math.sin(theta)) / lambd) / 2 + 1
+    return -cos((x * cos(theta) - y * sin(theta)) / lambd) / 2 + 1
