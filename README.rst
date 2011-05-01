@@ -234,11 +234,11 @@ Where did the docs go?
  http://mc.kev009.com/wiki/ now, since it allows us to share data faster. All
  general Minecraft data goes to that wiki. Bravo-specific docs are shipped in
  ReST form, and a processed Sphinx version is available online at
- http://mostawesomedude.github.com/bravo/.
+ http://www.docs.bravoserver.org/.
 
 Why did you make design decision <X>?
  There's an entire page dedicated to this in the documentation. Look at
- docs/philosophy.rst or http://mostawesomedude.github.com/bravo/philosophy.html.
+ docs/philosophy.rst or http://www.docs.bravoserver.org/philosophy.html.
 
 It doesn't install? Okay, maybe it installed, but I'm having issues!
  On Freenode IRC (irc.freenode.net), #bravo is dedicated to Bravo development
