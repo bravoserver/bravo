@@ -67,7 +67,10 @@ class BravoFactory(Factory):
 
         self.protocols = dict()
 
+        log.msg("Starting timekeeping...")
+        self.timestamp = time()
         self.time = self.world.time
+        self.update_season()
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
 
@@ -184,11 +187,6 @@ class BravoFactory(Factory):
         minutes. The day clock goes from 0 to 360, which works out to a reset
         once every 5 days. This is a Babylonian in-game year.
         """
-
-        if self.timestamp is None:
-            # First run since the start of the factory; re-init everything.
-            self.timestamp = time()
-            self.update_season()
 
         t = time()
         self.time += 20 * (t - self.timestamp)
