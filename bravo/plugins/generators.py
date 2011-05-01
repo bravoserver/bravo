@@ -432,7 +432,7 @@ class CaveGenerator(object):
     before = ("grass", "erosion", "simplex", "complex", "boring")
     after = tuple()
 
-class TreeGenerator(object):
+class SaplingGenerator(object):
     """
     Plant saplings at relatively silly places around the map.
     """
@@ -485,7 +485,7 @@ class TreeGenerator(object):
                 if chunk.get_block((x, y, z)) in self.ground:
                     chunk.set_block((x, y + 1, z), blocks["sapling"].slot)
 
-    name = "trees"
+    name = "saplings"
 
     before = ("grass", "erosion", "simplex", "complex", "boring")
     after = tuple()
@@ -502,4 +502,4 @@ beaches = BeachGenerator()
 ore = OreGenerator()
 safety = SafetyGenerator()
 caves = CaveGenerator()
-trees = TreeGenerator()
+saplings = SaplingGenerator()
