@@ -9,6 +9,8 @@ from bravo.plugins.commands import parse_block
 
 class CommandsMockFactory(object):
 
+    time = 0
+
     def __init__(self):
         class CommandsMockProtocol(object):
 
@@ -21,6 +23,9 @@ class CommandsMockFactory(object):
         }
 
     def give(self, coords, block, count):
+        pass
+
+    def update_time(self):
         pass
 
 class TestGetpos(unittest.TestCase):
@@ -70,6 +75,41 @@ class TestGive(unittest.TestCase):
         self.hook.chat_command(factory, "unittest", [])
 
         self.assertFalse(called[0])
+
+class TestTime(unittest.TestCase):
+
+    def setUp(self):
+        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand)
+
+        if "time" not in self.p:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.hook = self.p["time"]
+
+    def test_trivial(self):
+        pass
+
+    def test_set_sunset(self):
+        """
+        Set the time directly.
+        """
+
+        factory = CommandsMockFactory()
+
+        self.hook.chat_command(factory, "unittest", ["sunset"])
+
+        self.assertEqual(factory.time, 12000)
+
+    def test_set_day(self):
+        """
+        Set the day.
+        """
+
+        factory = CommandsMockFactory()
+
+        self.hook.chat_command(factory, "unittest", ["0", "1"])
+
+        self.assertEqual(factory.day, 1)
 
 class TestParser(unittest.TestCase):
     def test_block_parser(self):

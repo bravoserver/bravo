@@ -174,13 +174,11 @@ class Time(object):
             factory.update_time()
             # Factory will send the time to the client in a moment.
 
-        # Tell the user what time it is
-        for i in self.dispatch(factory):
-            yield i
+        # Tell the user the current time.
+        return self.dispatch(factory)
 
     def console_command(self, factory, parameters):
-        for i in self.dispatch(factory):
-            yield i
+        return self.dispatch(factory)
 
     name = "time"
     aliases = ("date",)
