@@ -21,7 +21,7 @@ from bravo.location import Location
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
-from bravo.utilities import unpack_nibbles, pack_nibbles
+from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 
 # Due to technical limitations in the way Twisted discovers plugins, here is
 # how this file works:

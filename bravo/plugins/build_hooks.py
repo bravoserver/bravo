@@ -4,7 +4,7 @@ from zope.interface import implements
 from bravo.blocks import blocks, items
 from bravo.entity import Chest, Sign
 from bravo.ibravo import IBuildHook
-from bravo.utilities import split_coords
+from bravo.utilities.coords import split_coords
 
 class Tile(object):
     """

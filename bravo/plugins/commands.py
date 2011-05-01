@@ -9,7 +9,7 @@ from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
 from bravo.plugin import retrieve_plugins, retrieve_named_plugins
 from bravo.plugin import PluginException
 from bravo.packets.beta import make_packet
-from bravo.utilities import split_time
+from bravo.utilities.temporal import split_time
 
 def parse_player(factory, name):
     if name in factory.protocols:

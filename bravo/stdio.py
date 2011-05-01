@@ -15,7 +15,7 @@ from twisted.protocols.basic import LineReceiver
 
 from bravo.amp import Version, Worlds, RunCommand
 from bravo.config import configuration
-from bravo.utilities import fancy_console_name
+from bravo.utilities.chat import fancy_console_name
 
 try:
     import termios

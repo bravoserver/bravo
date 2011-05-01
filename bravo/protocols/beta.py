@@ -23,7 +23,7 @@ from bravo.inventory import Workbench, sync_inventories
 from bravo.location import Location
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins, retrieve_sorted_plugins, retrieve_named_plugins
-from bravo.utilities import split_coords
+from bravo.utilities.coords import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 

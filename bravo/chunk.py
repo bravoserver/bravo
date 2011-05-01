@@ -7,7 +7,7 @@ from numpy import vectorize
 
 from bravo.blocks import blocks, glowing_blocks
 from bravo.packets.beta import make_packet
-from bravo.utilities import pack_nibbles
+from bravo.utilities.bits import pack_nibbles
 
 class ChunkWarning(Warning):
     """

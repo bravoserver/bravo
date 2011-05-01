@@ -4,7 +4,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 from bravo.blocks import blocks
 from bravo.ibravo import IBuildHook, IDigHook
-from bravo.utilities import split_coords
+from bravo.utilities.coords import split_coords
 
 class Fallables(object):
     """

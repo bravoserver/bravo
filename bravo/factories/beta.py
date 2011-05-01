@@ -14,7 +14,7 @@ from bravo.location import Location
 from bravo.packets.beta import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
 from bravo.protocols.beta import BannedProtocol, BravoProtocol
-from bravo.utilities import chat_name, sanitize_chat
+from bravo.utilities.chat import chat_name, sanitize_chat
 from bravo.world import World
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,

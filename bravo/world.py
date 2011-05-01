@@ -18,7 +18,8 @@ from bravo.errors import SerializerReadException
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import (retrieve_named_plugins, verify_plugin,
     PluginException)
-from bravo.utilities import fork_deferred, split_coords
+from bravo.utilities.coords import split_coords
+from bravo.utilities.temporal import fork_deferred
 
 def coords_to_chunk(f):
     """

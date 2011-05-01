@@ -2,7 +2,7 @@ from collections import defaultdict
 from itertools import product
 from UserDict import DictMixin
 
-from bravo.utilities import taxicab2
+from bravo.utilities.coords import taxicab2
 
 class SpatialDict(object, DictMixin):
     """
