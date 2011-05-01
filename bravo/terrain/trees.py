@@ -65,16 +65,18 @@ class ITree(Interface):
         """
 
 class Tree(object):
-    """Set up the interface for tree objects.  Designed for subclassing.
+    """
+    Set up the interface for tree objects.  Designed for subclassing.
     """
 
     implements(ITree)
 
     def __init__(self, height=None, pos=(0, 0, 0)):
-        if height != None:
-            self.height = height
-        else:
+        if height is None:
             self.height = randint(4,7)
+        else:
+            self.height = height
+
         self.pos = pos
 
 class StickTree(Tree):
