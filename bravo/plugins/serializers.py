@@ -632,7 +632,7 @@ class Beta(Alpha):
         handle = fp.open("r")
         handle.seek(position * 4096)
         data = handle.read(pages * 4096)
-        length = unpack(">L", data[:4])[0]
+        length = unpack(">L", data[:4])[0] - 1
         version = ord(data[4])
 
         data = data[5:length+5]
@@ -677,7 +677,7 @@ class Beta(Alpha):
             position, pages = 0, 0
 
         # Pack up the data, all ready to go.
-        data = "%s\x02%s" % (pack(">L", len(data)), data)
+        data = "%s\x02%s" % (pack(">L", len(data) + 1), data)
         needed_pages = (len(data) + 4095) // 4096
 
         handle = fp.open("r+")
