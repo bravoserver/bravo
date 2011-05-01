@@ -65,6 +65,10 @@ dig_hooks = give, replace, bravo_snow, alpha_sand_gravel, torch
 # Build hooks.
 build_hooks = build_snow, tile, build, bravo_snow, alpha_sand_gravel
 
+# Automatons. These make grass grow, birds fly, sun shine, and, well...
+# You probably want all of these.
+automatons = water, lava
+
 # Terrain generators.
 # Some important generators:
 # ~ erosion: make dirt appear
