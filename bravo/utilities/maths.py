@@ -36,11 +36,11 @@ def morton2(x, y):
     gx = x & 0xffff
     gy = y & 0xffff
 
-    b = 0x00ff00ff, 0x0f0f0f0f, 0x55555555, 0x33333333
+    b = 0x00ff00ff, 0x0f0f0f0f, 0x33333333, 0x55555555
     s = 8, 4, 2, 1
 
     for i, j in zip(b, s):
-        gx = (gx | gx << j) & i
-        gz = (gy | gy << j) & i
+        gx = (gx | (gx << j)) & i
+        gy = (gy | (gy << j)) & i
 
     return gx | (gy << 1)

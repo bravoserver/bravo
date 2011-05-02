@@ -14,7 +14,7 @@ class TestMorton(unittest.TestCase):
         self.assertEqual(morton2(0, 1), 2)
 
     def test_first_full(self):
-        self.assertEqual(morton2(0xffff, 0x0), 0xaaaaaaaa)
+        self.assertEqual(morton2(0xffff, 0x0), 0x55555555)
 
     def test_second_full(self):
-        self.assertEqual(morton2(0x0, 0xffff), 0x55555555)
+        self.assertEqual(morton2(0x0, 0xffff), 0xaaaaaaaa)
