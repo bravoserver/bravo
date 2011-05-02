@@ -21,6 +21,12 @@ class Trees(object):
     def __init__(self):
         self.saplings = set()
         self.loop = LoopingCall(self.process)
+        self.trees = [
+            NormalTree,
+            NormalTree,
+            NormalTree,
+            NormalTree,
+        ]
 
     def feed(self, factory, coords):
         self.saplings.add((factory, coords))
@@ -35,10 +41,13 @@ class Trees(object):
         # check.
         if metadata >= 12:
             # Tree time!
-            tree = NormalTree(pos=coords)
+            tree = self.trees[metadata % 4](pos=coords)
             tree.make_trunk(factory.world)
             tree.make_foliage(factory.world)
             self.saplings.discard((factory, coords))
+            # We can't easily tell how many chunks were modified, so we have
+            # to flush all of them.
+            factory.flush_all_chunks()
         else:
             # Increment metadata.
             metadata += 4
