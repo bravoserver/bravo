@@ -1,3 +1,4 @@
+from itertools import chain
 from time import time
 
 from twisted.internet.interfaces import IPushProducer
@@ -273,6 +274,21 @@ class BravoFactory(Factory):
                 if (chunk.x, chunk.z) in player.chunks:
                     player.transport.write(packet)
             chunk.clear_damage()
+
+    def flush_all_chunks(self):
+        """
+        Flush any damage anywhere in this world to all players.
+
+        This is a sledgehammer which should be used sparingly at best, and is
+        only well-suited to plugins which touch multiple chunks at once.
+
+        In other words, if I catch you using this in your plugin needlessly,
+        I'm gonna have a chat with you.
+        """
+
+        for chunk in chain(self.world.chunk_cache.itervalues(),
+            self.world.dirty_chunk_cache.itervalues()):
+            self.flush_chunk(chunk)
 
     def give(self, coords, block, quantity):
         """
