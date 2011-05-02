@@ -133,19 +133,14 @@ class Time(object):
     def dispatch(self, factory):
         hours, minutes = split_time(factory.time)
 
-        # Find seasons, and figure out which season we're in.
+        # Check if the world has seasons enabled
         seasons = retrieve_plugins(ISeason).values()
-        seasons.sort(reverse=True, key=lambda season: season.day)
         if seasons:
-            if all(s.day > factory.day for s in seasons):
-                # We are too close to the beginning of the year; grab the last
-                # season of "last" year.
-                date = "%d (%d %s)" % (factory.day,
-                    factory.day + 360 - seasons[0].day, seasons[0].name)
-            else:
-                # Grab the closest season, Price-is-Right-style.
-                season = (s for s in seasons if s.day <= factory.day).next()
-                date = "%d (%d %s)" % (factory.day, factory.day - season.day,
+            season = factory.world.season
+            day_of_season = factory.day - season.day
+            while day_of_season < 0:
+                day_of_season += 360
+            date = "{0} ({1} {2})".format(factory.day, day_of_season,
                     season.name)
         else:
             date = "%d" % factory.day
@@ -172,7 +167,10 @@ class Time(object):
 
             factory.time = int(time)
             factory.update_time()
-            # Factory will send the time to the client in a moment.
+            factory.update_season()
+            # Update the time for the clients
+            for player in factory.protocols.itervalues():
+                player.update_time()
 
         # Tell the user the current time.
         return self.dispatch(factory)
