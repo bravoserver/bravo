@@ -63,7 +63,7 @@ class BravoService(MultiService):
                     factory = BravoIRC(self.namedServices, section[4:])
                     client = TCPClient(factory.host, factory.port, factory)
                     client.setName(factory.name)
-                    self.addService()
+                    self.addService(client)
             elif section.startswith("infiniproxy "):
                 factory = BetaProxyFactory(section[12:])
                 server = TCPServer(factory.port, factory)
