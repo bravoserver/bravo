@@ -61,7 +61,7 @@ class TestBravoFactoryStarted(unittest.TestCase):
             "automatons"    : "",
             "generators"    : "",
             "port"          : "0",
-            "seasons"       : "",
+            "seasons"       : "winter, spring",
             "serializer"    : "alpha",
             "url"           : "file://%s" % self.d,
         }
@@ -138,3 +138,23 @@ class TestBravoFactoryStarted(unittest.TestCase):
         for player, radius, result in expected_results:
             found = [p.eid for p in self.f.players_near(player, radius)]
             self.assertEqual(set(found), set(result))
+
+    def test_update_season_simple(self):
+        self.f.day = 90
+        self.f.update_season()
+        self.assertEqual(self.f.world.season.name, "spring")
+
+        self.f.day = 0
+        self.f.update_season()
+        self.assertEqual(self.f.world.season.name, "winter")
+
+    def test_update_season_advanced(self):
+        self.f.day = 0
+        self.f.update_season()
+        self.assertEqual(self.f.world.season.name, "winter")
+
+        self.f.day = 92
+        self.f.update_season()
+        self.assertEqual(self.f.world.season.name, "spring")
+
+    test_update_season_advanced.todo = "update_seasons can't handle skipping the start day"
