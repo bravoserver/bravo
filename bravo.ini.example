@@ -67,7 +67,7 @@ build_hooks = build_snow, tile, build, bravo_snow, alpha_sand_gravel
 
 # Automatons. These make grass grow, birds fly, sun shine, and, well...
 # You probably want all of these.
-automatons = water, lava
+automatons = water, lava, grow_saplings
 
 # Terrain generators.
 # Some important generators:
