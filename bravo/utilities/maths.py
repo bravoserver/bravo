@@ -23,3 +23,24 @@ def rotated_cosine(x, y, theta, lambd):
     """
 
     return -cos((x * cos(theta) - y * sin(theta)) / lambd) / 2 + 1
+
+def morton2(x, y):
+    """
+    Create a Morton number by interleaving the bits of two numbers.
+
+    This can be used to map 2D coordinates into the integers.
+
+    Inputs will be masked off to 16 bits, unsigned.
+    """
+
+    gx = x & 0xffff
+    gy = y & 0xffff
+
+    b = 0x00ff00ff, 0x0f0f0f0f, 0x55555555, 0x33333333
+    s = 8, 4, 2, 1
+
+    for i, j in zip(b, s):
+        gx = (gx | gx << j) & i
+        gz = (gy | gy << j) & i
+
+    return gx | (gy << 1)

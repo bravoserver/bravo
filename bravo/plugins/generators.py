@@ -10,6 +10,7 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import ITerrainGenerator
 from bravo.simplex import octaves2, octaves3, set_seed
+from bravo.utilities.maths import morton2
 
 R = Random()
 
@@ -467,17 +468,7 @@ class SaplingGenerator(object):
 
         for x, z in product(xrange(16), repeat=2):
             # Make a Morton number.
-            gx = (chunk.x * 16 + x) & 0xffff
-            gz = (chunk.z * 16 + z) & 0xffff
-
-            b = 0x00ff00ff, 0x0f0f0f0f, 0x55555555, 0x33333333
-            s = 8, 4, 2, 1
-
-            for i, j in zip(b, s):
-                gx = (gx | gx << j) & i
-                gz = (gz | gz << j) & i
-
-            morton = gx | (gz << 1)
+            morton = morton2(chunk.x * 16 + x, chunk.z * 16 + z)
 
             if not all(morton % factor for factor in factors):
                 # Plant a sapling.
