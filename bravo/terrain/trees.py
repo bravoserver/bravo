@@ -71,7 +71,7 @@ class Tree(object):
 
     implements(ITree)
 
-    def __init__(self, height=None, pos=(0, 0, 0)):
+    def __init__(self, pos, height=None):
         if height is None:
             self.height = randint(4,7)
         else:
