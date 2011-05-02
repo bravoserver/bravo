@@ -6,7 +6,7 @@ from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton
 from bravo.terrain.trees import NormalTree
 
-from random import choice
+from random import randint
 
 class GrowSaplings(object):
     """
@@ -16,7 +16,8 @@ class GrowSaplings(object):
     implements(IAutomaton)
 
     blocks = (blocks["sapling"].slot,)
-    grow_step = 15
+    grow_step_max = 60
+    grow_step_min = 15
 
     def __init__(self):
         self.trees = [
@@ -43,10 +44,12 @@ class GrowSaplings(object):
             # Increment metadata.
             metadata += 4
             factory.world.set_metadata(coords, metadata)
-            callLater(self.grow_step, self.process, factory, coords)
+            callLater(randint(self.grow_step_min, self.grow_step_max), 
+                self.process, factory, coords)
 
     def feed(self, factory, coords):
-        callLater(self.grow_step, self.process, factory, coords)
+        callLater(randint(self.grow_step_min, self.grow_step_max), 
+            self.process, factory, coords)
 
     name = "grow_saplings"
 
