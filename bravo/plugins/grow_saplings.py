@@ -1,5 +1,5 @@
 from twisted.internet.defer import inlineCallbacks
-from twisted.internet.task import LoopingCall
+from twisted.internet.reactor import callLater
 from zope.interface import implements
 
 from bravo.blocks import blocks
@@ -16,11 +16,9 @@ class GrowSaplings(object):
     implements(IAutomaton)
 
     blocks = (blocks["sapling"].slot,)
-    step = 2
+    grow_step = 15
 
     def __init__(self):
-        self.saplings = set()
-        self.loop = LoopingCall(self.process)
         self.trees = [
             NormalTree,
             NormalTree,
@@ -29,8 +27,7 @@ class GrowSaplings(object):
         ]
 
     @inlineCallbacks
-    def process(self):
-        factory, coords = choice(list(self.saplings))
+    def process(self, factory, coords):
         metadata = yield factory.world.get_metadata(coords)
         # Is this sapling ready to grow into a big tree? We use a bit-trick to
         # check.
@@ -39,7 +36,6 @@ class GrowSaplings(object):
             tree = self.trees[metadata % 4](pos=coords)
             tree.make_trunk(factory.world)
             tree.make_foliage(factory.world)
-            self.saplings.discard((factory, coords))
             # We can't easily tell how many chunks were modified, so we have
             # to flush all of them.
             factory.flush_all_chunks()
@@ -47,13 +43,10 @@ class GrowSaplings(object):
             # Increment metadata.
             metadata += 4
             factory.world.set_metadata(coords, metadata)
-        if not self.saplings and self.loop.running:
-            self.loop.stop()
+            callLater(self.grow_step, self.process, factory, coords)
 
     def feed(self, factory, coords):
-        self.saplings.add((factory, coords))
-        if not self.loop.running:
-            self.loop.start(self.step)
+        callLater(self.grow_step, self.process, factory, coords)
 
     name = "grow_saplings"
 
