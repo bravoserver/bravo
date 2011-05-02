@@ -5,7 +5,6 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton
 from bravo.terrain.trees import NormalTree
-from bravo.utilities import split_coords
 
 from random import randint
 
@@ -15,17 +14,17 @@ class GrowSaplings(object):
     """
     Grow saplings!
     """
-    
+
     implements(IAutomaton)
-    
+
     blocks = [blocks["sapling"].slot]
-    
+
     def __init__(self):
         self.loop = LoopingCall(self.process)
         self.tracking = []
         self.step = 1
         self.updatetime = (4,8) # Random number of seconds to wait before growing
-    
+
     @inlineCallbacks
     def process(self):
         for i in filter(lambda x: time() > x["timeout"], self.tracking):
@@ -42,19 +41,19 @@ class GrowSaplings(object):
                 self.tracking.remove(i)
         if not self.tracking and self.loop.running:
             self.loop.stop()
-    
+
     def feed(self, factory, coords):
         """
         Accept the coordinates and stash them for later processing.
         """
-        
+
         self.tracking.append({"coords": coords,"factory": factory,"timeout": time()+randint(*self.updatetime)})
         if self.tracking and not self.loop.running:
             self.loop.start(self.step)
-        
+
     name = "grow_saplings"
 
     before = tuple()
     after = tuple()
-    
+
 grow_saplings = GrowSaplings()
