@@ -156,5 +156,3 @@ class TestBravoFactoryStarted(unittest.TestCase):
         self.f.day = 92
         self.f.update_season()
         self.assertEqual(self.f.world.season.name, "spring")
-
-    test_update_season_advanced.todo = "update_seasons can't handle skipping the start day"
