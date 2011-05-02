@@ -6,54 +6,55 @@ from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton
 from bravo.terrain.trees import NormalTree
 
-from random import randint
-
-from time import time
+from random import choice
 
 class GrowSaplings(object):
     """
-    Grow saplings!
+    Turn saplings into trees.
     """
 
     implements(IAutomaton)
 
-    blocks = [blocks["sapling"].slot]
+    blocks = (blocks["sapling"].slot,)
+    step = 2
 
     def __init__(self):
+        self.saplings = set()
         self.loop = LoopingCall(self.process)
-        self.tracking = []
-        self.step = 1
-        self.updatetime = (4,8) # Random number of seconds to wait before growing
+        self.trees = [
+            NormalTree,
+            NormalTree,
+            NormalTree,
+            NormalTree,
+        ]
 
     @inlineCallbacks
     def process(self):
-        for i in filter(lambda x: time() > x["timeout"], self.tracking):
-            meta = yield i["factory"].world.get_metadata(i["coords"])
-            # Bit-shift discards type (normal/birch/oak) data, but keeps growth
-            meta = meta >> 2
-            if meta < 3:
-                i["factory"].world.set_metadata(i["coords"],(meta+1)<<2)
-                i["timeout"] = time()+randint(*self.updatetime)
-            else:
-                tree = NormalTree(i["coords"])
-                tree.make_trunk(i["factory"].world)
-                tree.make_foliage(i["factory"].world)
-                self.tracking.remove(i)
-        if not self.tracking and self.loop.running:
+        factory, coords = choice(list(self.saplings))
+        metadata = yield factory.world.get_metadata(coords)
+        # Is this sapling ready to grow into a big tree? We use a bit-trick to
+        # check.
+        if metadata >= 12:
+            # Tree time!
+            tree = self.trees[metadata % 4](pos=coords)
+            tree.make_trunk(factory.world)
+            tree.make_foliage(factory.world)
+            self.saplings.discard((factory, coords))
+            # We can't easily tell how many chunks were modified, so we have
+            # to flush all of them.
+            factory.flush_all_chunks()
+        else:
+            # Increment metadata.
+            metadata += 4
+            factory.world.set_metadata(coords, metadata)
+        if not self.saplings and self.loop.running:
             self.loop.stop()
 
     def feed(self, factory, coords):
-        """
-        Accept the coordinates and stash them for later processing.
-        """
-
-        self.tracking.append({"coords": coords,"factory": factory,"timeout": time()+randint(*self.updatetime)})
-        if self.tracking and not self.loop.running:
+        self.saplings.add((factory, coords))
+        if not self.loop.running:
             self.loop.start(self.step)
 
     name = "grow_saplings"
-
-    before = tuple()
-    after = tuple()
 
 grow_saplings = GrowSaplings()
