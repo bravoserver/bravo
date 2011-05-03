@@ -407,29 +407,21 @@ class ProceduralTree(Tree):
         Make the trunk, roots, buttresses, branches, etc.
         """
 
-        height = self.height
-        trunkheight = self.trunkheight
-        trunkradius = self.trunkradius
-        treeposition = self.pos
-        starty = treeposition[1]
-        midy = treeposition[1]+int(trunkheight * 1 / (PHI + 1))
-        topy = treeposition[1]+int(trunkheight + 0.5)
         # In this method, x and z are the position of the trunk.
-        x = treeposition[0]
-        z = treeposition[2]
-        end_size_factor = trunkheight/height
-        endrad = max(trunkradius * (1 - end_size_factor), 1)
-        midrad = max(trunkradius * (1 - end_size_factor * .5), endrad)
-
-        startrad = trunkradius
-        rootbases = [[x,z,startrad]]
+        x, starty, z = self.pos
+        midy = starty + int(self.trunkheight / (PHI + 1))
+        topy = starty + int(self.trunkheight + 0.5)
+        end_size_factor = self.trunkheight / self.height
+        endrad = max(self.trunkradius * (1 - end_size_factor), 1)
+        midrad = max(self.trunkradius * (1 - end_size_factor * .5), endrad)
 
         # Make the lower and upper sections of the trunk.
-        self.taperedcylinder([x,starty,z], [x,midy,z], startrad, midrad,
-            world, blocks["log"].slot)
+        self.taperedcylinder([x,starty,z], [x,midy,z], self.trunkradius,
+            midrad, world, blocks["log"].slot)
         self.taperedcylinder([x,midy,z], [x,topy,z], midrad, endrad, world,
             blocks["log"].slot)
-        #Make the branches
+
+        #Make the branches.
         self.makebranches(world)
 
     @inlineCallbacks
@@ -519,7 +511,7 @@ class ConeTree(ProceduralTree):
         twigs = ProceduralTree.shapefunc(self, y)
         if twigs is not None:
             return twigs
-        if y < self.height * (.25 + .05 * sqrt(random())) :
+        if y < self.height * (.25 + .05 * sqrt(random())):
             return None
 
         # Radius.

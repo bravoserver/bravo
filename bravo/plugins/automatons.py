@@ -35,6 +35,7 @@ class Trees(object):
         if metadata >= 12:
             # Tree time!
             tree = self.trees[metadata % 4](pos=coords)
+            tree.prepare(factory.world)
             tree.make_trunk(factory.world)
             tree.make_foliage(factory.world)
             # We can't easily tell how many chunks were modified, so we have
