@@ -51,23 +51,37 @@ authenticator = offline
 # full. It is highly recommended to keep this cache enabled. The level of
 # caching done is dependent on the number used. 3 is the minimum required to
 # let clients login immediately with no glitches; 10 is the level of caching
-# done by Notchian servers.
+# done by Notchian servers. Anywhere between 3 and 10 is a good value. This
+# option does not increase overall RAM usage, just idle RAM usage!
+#
+# For the technically minded, the amount of additional RAM consumed by the
+# permanent cache is roughly (2s+1)^2 * c, where s is the size of the cache
+# according to this setting and c is the amount of RAM consumed by an
+# individual chunk, 80KiB or so. Thus, a few common settings and their RAM
+# usage:
+# ~ 3 -> 3 MiB
+# ~ 7 -> 17 MiB
+# ~ 8 -> 22 MiB
+# ~ 10 -> 34 MiB
+# ~ 20 -> 131 MiB
 perm_cache = 3
 
 # Plugins.
 # Bravo's plugin architecture is quite complex; if you're not sure how to
 # manage this section, read the documentation first to get things like the
-# names of plugins.
+# names of plugins. While some examples are given, it's very important to read
+# the documentation in order to get a good grasp of how to customize your
+# server.
 
 # Dig hooks.
-dig_hooks = give, replace, bravo_snow, alpha_sand_gravel, torch
+dig_hooks = give, replace, bravo_snow, alpha_sand_gravel, torch, water, lava
 
 # Build hooks.
 build_hooks = build_snow, tile, build, bravo_snow, alpha_sand_gravel
 
 # Automatons. These make grass grow, birds fly, sun shine, and, well...
 # You probably want all of these.
-automatons = water, lava, grow_saplings
+automatons = water, lava, trees
 
 # Terrain generators.
 # Some important generators:
@@ -78,7 +92,7 @@ automatons = water, lava, grow_saplings
 # You'll probably want simplex, complex, or some other terrain provider, as
 # well.
 #generators = boring, erosion, watertable, grass, safety
-generators = simplex, erosion, watertable, beaches, grass, safety
+generators = simplex, erosion, watertable, beaches, grass, saplings, safety
 
 # The web service. Comment out to disable.
 [web]
