@@ -441,7 +441,7 @@ class BravoProtocol(BetaServerProtocol):
                 self.use_hooks[target].append(plugin)
 
         log.msg("Registering policies...")
-        self.dig_policy = dig_policies["speedy"]
+        self.dig_policy = dig_policies["notchy"]
 
         # Retrieve the MOTD. Only needs to be done once.
         self.motd = configuration.getdefault(self.config_name, "motd", None)
@@ -764,11 +764,6 @@ class BravoProtocol(BetaServerProtocol):
             log.err("Ignoring request to place unknown block %d" %
                 container.primary)
             return
-
-        if time() - self.last_dig_build_timer < 0.05:
-            self.error("You are building too fast.")
-
-        self.last_dig_build_timer = time()
 
         # it's the top of the world, you can't build here
         if container.y == 127 and container.face == '+y':
