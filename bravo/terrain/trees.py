@@ -11,6 +11,19 @@ from bravo.blocks import blocks
 
 PHI = (sqrt(5) - 1) * 0.5
 IPHI = (sqrt(5) + 1) * 0.5
+"""
+Phi and inverse phi constants.
+"""
+
+# add lights in the middle of foliage clusters
+# for those huge trees that get so dark underneath
+# or for enchanted forests that should glow and stuff
+# Only works if SHAPE is "round" or "cone" or "procedural"
+# 0 makes just normal trees
+# 1 adds one light inside the foliage clusters for a bit of light
+# 2 adds two lights around the base of each cluster, for more light
+# 4 adds lights all around the base of each cluster for lots of light
+LIGHTTREE = 0
 
 @inlineCallbacks
 def dist_to_mat(cord, vec, matidxlist, world, invert=False, limit=None):
@@ -73,7 +86,7 @@ class Tree(object):
 
     def __init__(self, pos, height=None):
         if height is None:
-            self.height = randint(4,7)
+            self.height = randint(4, 7)
         else:
             self.height = height
 
@@ -382,76 +395,12 @@ class ProceduralTree(Tree):
             startcoord = [rootx+rndx,treeposition[1]+rndy,rootz+rndz]
             # offset is the distance from the root base to the root tip.
             offset = [startcoord[i]-coord[i] for i in xrange(3)]
-            # If this is a mangrove tree, make the roots longer.
-            if SHAPE == "mangrove":
-                offset = [int(val * IPHI - 1.5) for val in offset]
             endcoord = [startcoord[i]+offset[i] for i in xrange(3)]
             rootstartsize = (rootbaseradius * IPHI * abs(offset[1])/
                              (height * IPHI))
             if rootstartsize < 1.0:
                 rootstartsize = 1.0
             endsize = 1.0
-            # If ROOTS is set to "tostone" or "hanging" we need to check
-            # along the distance for collision with existing materials.
-            if ROOTS in ["tostone","hanging"]:
-                offlength = sqrt(float(offset[0])**2 +
-                                 float(offset[1])**2 +
-                                 float(offset[2])**2)
-                if offlength < 1:
-                    continue
-                rootmid = endsize
-                # vec is a unit vector along the direction of the root.
-                vec = [offset[i]/offlength for i in xrange(3)]
-                if ROOTS == "tostone":
-                    searchindex = STOPSROOTS
-                elif ROOTS == "hanging":
-                    searchindex = [0]
-                # startdist is how many steps to travel before starting to
-                # search for the material.  It is used to ensure that large
-                # roots will go some distance before changing directions
-                # or stopping.
-                startdist = int(random()*6*sqrt(rootstartsize) + 2.8)
-                # searchstart is the coordinate where the search should begin.
-                searchstart = [startdist * v + sc
-                    for v, sc in zip(vec, startcoord)]
-                # dist stores how far the search went (including searchstart)
-                # before encountering the expected material.
-                dist = startdist
-                dist += yield dist_to_mat(searchstart, vec, searchindex,
-                    world, limit=offlength)
-
-                # If the distance to the material is less than the length
-                # of the root, change the end point of the root to where
-                # the search found the material.
-                if dist < offlength:
-                    # rootmid is the size of the crossection at endcoord.
-                    rootmid +=  (rootstartsize -
-                                         endsize)*(1-dist/offlength)
-                    # endcoord is the midpoint for hanging roots,
-                    # and the endpoint for roots stopped by stone.
-                    endcoord = [startcoord[i]+int(vec[i]*dist)
-                                for i in xrange(3)]
-                    if ROOTS == "hanging":
-                        # remaining_dist is how far the root had left
-                        # to go when it was stopped.
-                        remaining_dist = offlength - dist
-                        # Initialize bottomcord to the stopping point of
-                        # the root, and then hang straight down
-                        # a distance of remaining_dist.
-                        bottomcord = endcoord[:]
-                        bottomcord[1] += -int(remaining_dist)
-                        # Make the hanging part of the hanging root.
-                        self.taperedcylinder(endcoord, bottomcord, rootmid,
-                            endsize, world, blocks["wood"].slot)
-
-                # make the beginning part of hanging or "tostone" roots
-                self.taperedcylinder(startcoord, endcoord, rootstartsize,
-                    rootmid, world, blocks["wood"].slot)
-
-            # If you aren't searching for stone or air, just make the root.
-            else:
-                self.taperedcylinder(startcoord, endcoord, rootstartsize,
-                    endsize, world, blocks["wood"].slot)
 
     def make_trunk(self, world):
         """
@@ -471,45 +420,10 @@ class ProceduralTree(Tree):
         end_size_factor = trunkheight/height
         endrad = max(trunkradius * (1 - end_size_factor), 1)
         midrad = max(trunkradius * (1 - end_size_factor * .5), endrad)
-        # Make the root buttresses, if indicated
-        if ROOTBUTTRESSES or SHAPE == "mangrove":
-            # The start radius of the trunk should be a little smaller if we
-            # are using root buttresses.
-            startrad = trunkradius * .8
-            # rootbases is used later in self.makeroots(...) as
-            # starting locations for the roots.
-            rootbases = [[x,z,startrad]]
-            buttress_radius = trunkradius * 0.382
-            # posradius is how far the root buttresses should be offset
-            # from the trunk.
-            posradius = trunkradius
-            # In mangroves, the root buttresses are much more extended.
-            if SHAPE == "mangrove":
-                posradius = posradius * (IPHI + 1)
-            num_of_buttresses = int(sqrt(trunkradius) + 3.5)
-            for i in xrange(num_of_buttresses):
-                rndang = random()*2*pi
-                thisposradius = posradius * (0.9 + random()*.2)
-                # thisx and thisz are the x and z position for the base of
-                # the root buttress.
-                thisx = x + int(thisposradius * sin(rndang))
-                thisz = z + int(thisposradius * cos(rndang))
-                # thisbuttressradius is the radius of the buttress.
-                # Currently, root buttresses do not taper.
-                thisbuttressradius = max(buttress_radius * (PHI + random()),
-                    1)
-                # Make the root buttress.
-                self.taperedcylinder([thisx, starty, thisz], [x, midy, z],
-                    thisbuttressradius, thisbuttressradius, world,
-                    blocks["wood"].slot)
-                # Add this root buttress as a possible location at
-                # which roots can spawn.
-                rootbases += [[thisx,thisz,thisbuttressradius]]
-        else:
-            # If root buttresses are turned off, set the trunk radius
-            # to normal size.
-            startrad = trunkradius
-            rootbases = [[x,z,startrad]]
+
+        startrad = trunkradius
+        rootbases = [[x,z,startrad]]
+
         # Make the lower and upper sections of the trunk.
         self.taperedcylinder([x,starty,z], [x,midy,z], startrad, midrad,
             world, blocks["wood"].slot)
@@ -517,29 +431,6 @@ class ProceduralTree(Tree):
             blocks["wood"].slot)
         #Make the branches
         self.makebranches(world)
-        #Make the roots, if indicated.
-        if ROOTS in ["yes","tostone","hanging"]:
-            self.makeroots(rootbases, world)
-        # Hollow the trunk, if specified
-        # check to make sure that the trunk is large enough to be hollow
-        if trunkradius > 2 and HOLLOWTRUNK:
-            # wall thickness is actually the double the wall thickness
-            # it is a diameter difference, not a radius difference.
-            wall_thickness = max(1 + trunkradius * 0.1 * random(), 1.3)
-            base_radius = max(trunkradius - wall_thickness, 1)
-            mid_radius = midrad - wall_thickness
-            top_radius = endrad - wall_thickness
-            # the starting x and y can be offset by up to the wall thickness.
-            base_offset = int(wall_thickness)
-            x_choices = range(x - base_offset, x + base_offset + 1)
-            z_choices = range(z - base_offset, z + base_offset + 1)
-            start_x = choice(x_choices)
-            start_z = choice(z_choices)
-            self.taperedcylinder([start_x, starty, start_z], [x, midy, z],
-                base_radius, mid_radius, world, blocks["air"].slot)
-            hollow_top_y = int(topy + trunkradius + 1.5)
-            self.taperedcylinder([x, midy, z], [x, hollow_top_y, z],
-                mid_radius, top_radius, world, blocks["air"].slot)
 
     @inlineCallbacks
     def prepare(self,world):
@@ -548,21 +439,16 @@ class ProceduralTree(Tree):
         Primarily, sets up the foliage cluster locations.
         """
         treeposition = self.pos
-        self.trunkradius = PHI * sqrt(self.height * TRUNKTHICKNESS)
+        self.trunkradius = PHI * sqrt(self.height)
         if self.trunkradius < 1:
             self.trunkradius = 1
-        if BROKENTRUNK:
-            self.trunkheight = self.height * ( .3 + random() * .4 )
-            yend = int(treeposition[1] + self.trunkheight + .5)
-        else:
-            self.trunkheight = self.height
-            yend = int(treeposition[1] + self.height)
-        self.branchdensity = BRANCHDENSITY / FOLIAGEDENSITY
+        self.trunkheight = self.height
+        yend = int(treeposition[1] + self.height)
+        self.branchdensity = 1.0
         topy = treeposition[1]+int(self.trunkheight + 0.5)
         foliage_coords = []
         ystart = treeposition[1]
-        num_of_clusters_per_y = int(1.5 + (FOLIAGEDENSITY *
-                                           self.height / 19)**2)
+        num_of_clusters_per_y = int(1.5 + (self.height / 19)**2)
         if num_of_clusters_per_y < 1:
             num_of_clusters_per_y = 1
         # make sure we don't spend too much time off the top of the map
@@ -580,34 +466,7 @@ class ProceduralTree(Tree):
                 theta = random()*2*pi
                 x = int(r*sin(theta)) + treeposition[0]
                 z = int(r*cos(theta)) + treeposition[2]
-                # if there are values to search in STOPSBRANCHES
-                # then check to see if this cluster is blocked
-                # by stuff, like dirt or rock, or whatever
-                if len(STOPSBRANCHES):
-                    dist = (sqrt(float(x-treeposition[0])**2 +
-                                float(z-treeposition[2])**2))
-                    slope = self.branchslope
-                    if y - dist*slope > topy:
-                        # the top of the tree
-                        starty = topy
-                    else:
-                        starty = y-dist*slope
-                    # the start position of the search
-                    start = [treeposition[0], starty, treeposition[2]]
-                    offset = [x - treeposition[0],
-                              y - starty,
-                              z - treeposition[2]]
-                    offlength = sqrt(offset[0]**2 + offset[1]**2 + offset[2]**2)
-                    # if the branch is longer than... nothing
-                    if offlength > 0:
-                        # unit vector for the search
-                        vec = [i / offlength for i in offset]
-                        mat_dist = yield dist_to_mat(start, vec,
-                            STOPSBRANCHES, world, limit=offlength)
-                        # after all that, if you find something, don't add
-                        # this coordinate to the list
-                        if mat_dist < offlength:
-                            continue
+
                 foliage_coords += [[x,y,z]]
 
         self.foliage_cords = foliage_coords
@@ -624,7 +483,7 @@ class RoundTree(ProceduralTree):
     def prepare(self, world):
         ProceduralTree.prepare(self, world)
         self.trunkradius *= 0.8
-        self.trunkheight *= TRUNKHEIGHT
+        self.trunkheight *= 0.7
 
     def shapefunc(self, y):
         twigs = ProceduralTree.shapefunc(self, y)
@@ -682,7 +541,7 @@ class RainforestTree(ProceduralTree):
     def shapefunc(self, y):
         # Bottom 4/5 of the tree is probably branch-free.
         if y < self.height * 0.8:
-            if EDGEHEIGHT < self.height:
+            if self.edgeheight < self.height:
                 twigs = ProceduralTree.shapefunc(self,y)
                 if twigs is not None and random() < 0.07:
                     return twigs
@@ -712,3 +571,106 @@ class MangroveTree(RoundTree):
         if val is not None:
             val *= IPHI
         return val
+
+    @inlineCallbacks
+    def make_roots(self, rootbases, world):
+        """generate the roots and enter them in world.
+
+        rootbases = [[x,z,base_radius], ...] and is the list of locations
+        the roots can originate from, and the size of that location.
+        """
+        treeposition = self.pos
+        height = self.height
+        for coord in self.foliage_cords:
+            # First, set the threshhold for randomly selecting this
+            # coordinate for root creation.
+            dist = (sqrt(float(coord[0]-treeposition[0])**2 +
+                            float(coord[2]-treeposition[2])**2))
+            ydist = coord[1]-treeposition[1]
+            value = (self.branchdensity * 220 * height)/((ydist + dist) ** 3)
+            # Randomly skip roots, based on the above threshold
+            if value < random():
+                continue
+            # initialize the internal variables from a selection of
+            # starting locations.
+            rootbase = choice(rootbases)
+            rootx = rootbase[0]
+            rootz = rootbase[1]
+            rootbaseradius = rootbase[2]
+            # Offset the root origin location by a random amount
+            # (radialy) from the starting location.
+            rndr = sqrt(random()) * rootbaseradius * PHI
+            rndang = random()*2*pi
+            rndx = int(rndr*sin(rndang) + 0.5)
+            rndz = int(rndr*cos(rndang) + 0.5)
+            rndy = int(random()*rootbaseradius*0.5)
+            startcoord = [rootx+rndx,treeposition[1]+rndy,rootz+rndz]
+            # offset is the distance from the root base to the root tip.
+            offset = [startcoord[i]-coord[i] for i in xrange(3)]
+            # If this is a mangrove tree, make the roots longer.
+            offset = [int(val * IPHI - 1.5) for val in offset]
+            endcoord = [startcoord[i]+offset[i] for i in xrange(3)]
+            rootstartsize = (rootbaseradius * IPHI * abs(offset[1])/
+                             (height * IPHI))
+            if rootstartsize < 1.0:
+                rootstartsize = 1.0
+            endsize = 1.0
+
+    def make_trunk(self, world):
+        """
+        Make the trunk, roots, buttresses, branches, etc.
+        """
+
+        height = self.height
+        trunkheight = self.trunkheight
+        trunkradius = self.trunkradius
+        treeposition = self.pos
+        starty = treeposition[1]
+        midy = treeposition[1]+int(trunkheight * 1 / (PHI + 1))
+        topy = treeposition[1]+int(trunkheight + 0.5)
+        # In this method, x and z are the position of the trunk.
+        x = treeposition[0]
+        z = treeposition[2]
+        end_size_factor = trunkheight/height
+        endrad = max(trunkradius * (1 - end_size_factor), 1)
+        midrad = max(trunkradius * (1 - end_size_factor * .5), endrad)
+
+        # The start radius of the trunk should be a little smaller if we
+        # are using root buttresses.
+        startrad = trunkradius * .8
+        # rootbases is used later in self.makeroots(...) as
+        # starting locations for the roots.
+        rootbases = [[x,z,startrad]]
+        buttress_radius = trunkradius * 0.382
+        # posradius is how far the root buttresses should be offset
+        # from the trunk.
+        posradius = trunkradius
+        # In mangroves, the root buttresses are much more extended.
+        posradius = posradius * (IPHI + 1)
+        num_of_buttresses = int(sqrt(trunkradius) + 3.5)
+        for i in xrange(num_of_buttresses):
+            rndang = random()*2*pi
+            thisposradius = posradius * (0.9 + random()*.2)
+            # thisx and thisz are the x and z position for the base of
+            # the root buttress.
+            thisx = x + int(thisposradius * sin(rndang))
+            thisz = z + int(thisposradius * cos(rndang))
+            # thisbuttressradius is the radius of the buttress.
+            # Currently, root buttresses do not taper.
+            thisbuttressradius = max(buttress_radius * (PHI + random()),
+                1)
+            # Make the root buttress.
+            self.taperedcylinder([thisx, starty, thisz], [x, midy, z],
+                thisbuttressradius, thisbuttressradius, world,
+                blocks["wood"].slot)
+            # Add this root buttress as a possible location at
+            # which roots can spawn.
+            rootbases += [[thisx,thisz,thisbuttressradius]]
+
+        # Make the lower and upper sections of the trunk.
+        self.taperedcylinder([x,starty,z], [x,midy,z], startrad, midrad,
+            world, blocks["wood"].slot)
+        self.taperedcylinder([x,midy,z], [x,topy,z], midrad, endrad, world,
+            blocks["wood"].slot)
+        #Make the branches
+        self.makebranches(world)
