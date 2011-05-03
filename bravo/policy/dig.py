@@ -18,8 +18,21 @@ class NotchyDigPolicy(object):
 
     def is_1ko(self, block):
         return block in (
+            blocks["brown-mushroom"].slot,
+            blocks["crops"].slot,
+            blocks["flower"].slot,
+            blocks["red-mushroom"].slot,
+            blocks["redstone-repeater-off"].slot,
+            blocks["redstone-repeater-on"].slot,
+            blocks["redstone-torch"].slot,
+            blocks["redstone-torch-off"].slot,
+            blocks["redstone-wire"].slot,
+            blocks["rose"].slot,
             blocks["sapling"].slot,
             blocks["snow"].slot,
+            blocks["sugar-cane"].slot,
+            blocks["tnt"].slot,
+            blocks["torch"].slot,
         )
 
     def dig_time(self, block):
