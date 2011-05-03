@@ -6,7 +6,7 @@ from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton
-from bravo.terrain.trees import NormalTree
+from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
 
 class Trees(object):
     """
@@ -22,8 +22,8 @@ class Trees(object):
     def __init__(self):
         self.trees = [
             NormalTree,
-            NormalTree,
-            NormalTree,
+            ConeTree,
+            RoundTree,
             NormalTree,
         ]
 
