@@ -1,7 +1,7 @@
 from __future__ import division
 
 from itertools import product
-from math import copysign, cos, pi, sin, sqrt
+from math import cos, pi, sin, sqrt
 from random import choice, random, randint
 
 from twisted.internet.defer import inlineCallbacks, returnValue
@@ -262,9 +262,11 @@ class ProceduralTree(Tree):
         # secidx1 and secidx2 are the remaining indices out of [0,1,2].
         secidx1 = (primidx - 1) % 3
         secidx2 = (1 + primidx) % 3
+
         # primsign is the digit 1 or -1 depending on whether the limb is headed
         # along the positive or negative primidx axis.
-        primsign = copysign(1, delta[primidx])
+        primsign = cmp(delta[primidx], 0) or 1
+
         # secdelta1 and ...2 are the amount the associated values change
         # for every step along the prime axis.
         secdelta1 = delta[secidx1]
@@ -298,7 +300,7 @@ class ProceduralTree(Tree):
 
         foliage_coords = self.foliage_cords
         for coord in foliage_coords:
-            self.foliagecluster(coord,world)
+            self.foliage_cluster(coord,world)
         for x, y, z in foliage_coords:
             world.set_block((x, y, z), blocks["log"].slot)
             if LIGHTTREE == 1:
@@ -422,14 +424,15 @@ class ProceduralTree(Tree):
             blocks["log"].slot)
 
         #Make the branches.
-        self.makebranches(world)
+        self.make_branches(world)
 
-    @inlineCallbacks
-    def prepare(self,world):
-        """Initialize the internal values for the Tree object.
+    def prepare(self, world):
+        """
+        Initialize the internal values for the Tree object.
 
         Primarily, sets up the foliage cluster locations.
         """
+
         treeposition = self.pos
         self.trunkradius = PHI * sqrt(self.height)
         if self.trunkradius < 1:
@@ -664,5 +667,6 @@ class MangroveTree(RoundTree):
             world, blocks["log"].slot)
         self.taperedcylinder([x,midy,z], [x,topy,z], midrad, endrad, world,
             blocks["log"].slot)
+
         #Make the branches
-        self.makebranches(world)
+        self.make_branches(world)
