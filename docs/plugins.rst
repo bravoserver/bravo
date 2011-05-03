@@ -90,8 +90,8 @@ Safety
 Generates terrain features essential for the safety of clients, such as the
 indestructible bedrock at Y = 0.
 
-.. warning:: Removing this generator may result in issues if players dig
-    deep enough.
+.. warning:: Removing this generator will permit players to dig through the
+   bottom of the world.
 
 Simplex
 -------
@@ -103,8 +103,9 @@ Saplings
 
 Plants saplings at relatively silly places around the map.
 
-.. note:: This generator only places saplings, and is not responsible for
-    the growth of trees over time.
+.. note:: This generator only places saplings, and is not responsible for the
+   growth of trees over time. The ``trees`` automaton should be used for
+   ensuring that trees will grow.
 
 Ore
 ---
