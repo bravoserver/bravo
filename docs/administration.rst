@@ -110,6 +110,16 @@ generators
 seasons
     Which :ref:`season_plugins` to enable. This, too, is a list of plugins.
 
+Automatons
+^^^^^^^^^^
+
+Automatons marked with (Beta) provide Beta compatibility and should probably
+be enabled.
+
+ * **lava**: Enable physics for placed lava springs. (Beta)
+ * **trees**: Turn planted saplings into trees. (Beta)
+ * **water**: Enable physics for placed water springs. (Beta)
+
 Build hooks
 ^^^^^^^^^^^
 
@@ -125,12 +135,10 @@ enabled.
    (Beta)
  * **ladder**: Make ladders stick to the wall onto which they are placed.
    (Beta)
- * **lava**: Enable physics for placed lava springs. (Beta)
  * **redstone**: Enable physics for placed redstone. (Beta)
  * **tile**: Register tiles. Required for signs, furnaces, chests, etc. (Beta)
  * **torch**: Make torches stick to the wall or floor correctly. (Beta)
  * **tracks**: Align minecart tracks. (Beta)
- * **water**: Enable physics for placed water springs. (Beta)
 
 Dig hooks
 ^^^^^^^^^
