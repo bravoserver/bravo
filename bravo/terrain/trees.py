@@ -147,7 +147,7 @@ class BambooTree(StickTree):
                 zoff = choice([-1, 1])
                 x = self.pos[0] + xoff
                 z = self.pos[2] + zoff
-                world.set_block((x, y, z), blocks["wood"].slot)
+                world.set_block((x, y, z), blocks["log"].slot)
 
 class PalmTree(StickTree):
     """
@@ -163,7 +163,7 @@ class PalmTree(StickTree):
             if abs(xoff) == abs(zoff):
                 x = self.pos[0] + xoff
                 z = self.pos[2] + zoff
-                world.set_block((x, y, z), blocks["wood"].slot)
+                world.set_block((x, y, z), blocks["log"].slot)
 
 class ProceduralTree(Tree):
     """
@@ -300,7 +300,7 @@ class ProceduralTree(Tree):
         for coord in foliage_coords:
             self.foliagecluster(coord,world)
         for x, y, z in foliage_coords:
-            world.set_block((x, y, z), blocks["wood"].slot)
+            world.set_block((x, y, z), blocks["log"].slot)
             if LIGHTTREE == 1:
                 world.set_block((x, y + 1, z), blocks["lightstone"].slot)
             elif LIGHTTREE in [2,4]:
@@ -358,7 +358,7 @@ class ProceduralTree(Tree):
                           treeposition[2]+rndz]
             endsize = 1.0
             self.taperedcylinder(startcoord, coord, startsize, endsize, world,
-                blocks["wood"].slot)
+                blocks["log"].slot)
 
     @inlineCallbacks
     def make_roots(self, rootbases, world):
@@ -426,9 +426,9 @@ class ProceduralTree(Tree):
 
         # Make the lower and upper sections of the trunk.
         self.taperedcylinder([x,starty,z], [x,midy,z], startrad, midrad,
-            world, blocks["wood"].slot)
+            world, blocks["log"].slot)
         self.taperedcylinder([x,midy,z], [x,topy,z], midrad, endrad, world,
-            blocks["wood"].slot)
+            blocks["log"].slot)
         #Make the branches
         self.makebranches(world)
 
@@ -662,15 +662,15 @@ class MangroveTree(RoundTree):
             # Make the root buttress.
             self.taperedcylinder([thisx, starty, thisz], [x, midy, z],
                 thisbuttressradius, thisbuttressradius, world,
-                blocks["wood"].slot)
+                blocks["log"].slot)
             # Add this root buttress as a possible location at
             # which roots can spawn.
             rootbases += [[thisx,thisz,thisbuttressradius]]
 
         # Make the lower and upper sections of the trunk.
         self.taperedcylinder([x,starty,z], [x,midy,z], startrad, midrad,
-            world, blocks["wood"].slot)
+            world, blocks["log"].slot)
         self.taperedcylinder([x,midy,z], [x,topy,z], midrad, endrad, world,
-            blocks["wood"].slot)
+            blocks["log"].slot)
         #Make the branches
         self.makebranches(world)
