@@ -92,6 +92,15 @@ class Tree(object):
 
         self.pos = pos
 
+    def prepare(self, world):
+        pass
+
+    def make_trunk(world):
+        pass
+
+    def make_foliage(world):
+        pass
+
 class StickTree(Tree):
     """
     A large stick or log.
@@ -123,7 +132,8 @@ class NormalTree(StickTree):
             else:
                 rad = 2
             for xoff, zoff in product(xrange(-rad, rad + 1), repeat=2):
-                if random() > PHI and abs(xoff) == abs(zoff) == rad:
+                if (random() > PHI and abs(xoff) == abs(zoff) == rad or
+                       xoff == zoff == 0):
                     continue
 
                 x = self.pos[0] + xoff
@@ -147,7 +157,7 @@ class BambooTree(StickTree):
                 zoff = choice([-1, 1])
                 x = self.pos[0] + xoff
                 z = self.pos[2] + zoff
-                world.set_block((x, y, z), blocks["log"].slot)
+                world.set_block((x, y, z), blocks["leaves"].slot)
 
 class PalmTree(StickTree):
     """
@@ -163,7 +173,7 @@ class PalmTree(StickTree):
             if abs(xoff) == abs(zoff):
                 x = self.pos[0] + xoff
                 z = self.pos[2] + zoff
-                world.set_block((x, y, z), blocks["log"].slot)
+                world.set_block((x, y, z), blocks["leaves"].slot)
 
 class ProceduralTree(Tree):
     """
