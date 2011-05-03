@@ -1,5 +1,5 @@
 from twisted.internet.defer import inlineCallbacks
-from twisted.internet.task import LoopingCall
+from twisted.internet.reactor import callLater
 from zope.interface import implements
 
 from bravo.blocks import blocks
@@ -8,52 +8,49 @@ from bravo.terrain.trees import NormalTree
 
 from random import randint
 
-from time import time
-
 class GrowSaplings(object):
     """
-    Grow saplings!
+    Turn saplings into trees.
     """
 
     implements(IAutomaton)
 
-    blocks = [blocks["sapling"].slot]
+    blocks = (blocks["sapling"].slot,)
+    grow_step_max = 60
+    grow_step_min = 15
 
     def __init__(self):
-        self.loop = LoopingCall(self.process)
-        self.tracking = []
-        self.step = 1
-        self.updatetime = (4,8) # Random number of seconds to wait before growing
+        self.trees = [
+            NormalTree,
+            NormalTree,
+            NormalTree,
+            NormalTree,
+        ]
 
     @inlineCallbacks
-    def process(self):
-        for i in filter(lambda x: time() > x["timeout"], self.tracking):
-            meta = yield i["factory"].world.get_metadata(i["coords"])
-            # Bit-shift discards type (normal/birch/oak) data, but keeps growth
-            meta = meta >> 2
-            if meta < 3:
-                i["factory"].world.set_metadata(i["coords"],(meta+1)<<2)
-                i["timeout"] = time()+randint(*self.updatetime)
-            else:
-                tree = NormalTree(i["coords"])
-                tree.make_trunk(i["factory"].world)
-                tree.make_foliage(i["factory"].world)
-                self.tracking.remove(i)
-        if not self.tracking and self.loop.running:
-            self.loop.stop()
+    def process(self, factory, coords):
+        metadata = yield factory.world.get_metadata(coords)
+        # Is this sapling ready to grow into a big tree? We use a bit-trick to
+        # check.
+        if metadata >= 12:
+            # Tree time!
+            tree = self.trees[metadata % 4](pos=coords)
+            tree.make_trunk(factory.world)
+            tree.make_foliage(factory.world)
+            # We can't easily tell how many chunks were modified, so we have
+            # to flush all of them.
+            factory.flush_all_chunks()
+        else:
+            # Increment metadata.
+            metadata += 4
+            factory.world.set_metadata(coords, metadata)
+            callLater(randint(self.grow_step_min, self.grow_step_max), 
+                self.process, factory, coords)
 
     def feed(self, factory, coords):
-        """
-        Accept the coordinates and stash them for later processing.
-        """
-
-        self.tracking.append({"coords": coords,"factory": factory,"timeout": time()+randint(*self.updatetime)})
-        if self.tracking and not self.loop.running:
-            self.loop.start(self.step)
+        callLater(randint(self.grow_step_min, self.grow_step_max), 
+            self.process, factory, coords)
 
     name = "grow_saplings"
-
-    before = tuple()
-    after = tuple()
 
 grow_saplings = GrowSaplings()

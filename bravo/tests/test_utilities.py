@@ -7,7 +7,7 @@ from numpy.testing import assert_array_equal
 
 from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 from bravo.utilities.chat import sanitize_chat
-from bravo.utilities.coords import split_coords, taxicab2
+from bravo.utilities.coords import split_coords, taxicab2, taxicab3
 from bravo.utilities.temporal import split_time
 
 class TestCoordHandling(unittest.TestCase):
@@ -31,6 +31,15 @@ class TestCoordHandling(unittest.TestCase):
         }
         for case in cases:
             self.assertEqual(taxicab2(*case), cases[case])
+
+    def test_taxicab3(self):
+        cases = {
+            (1, 2, 1, 3, 4, 2): 5,
+            (1, 2, 3, 1, 2, 3): 0,
+            (2, 1, 2, 4, 3, 1): 5,
+        }
+        for case in cases:
+            self.assertEqual(taxicab3(*case), cases[case])
 
 class TestBitTwiddling(unittest.TestCase):
 
