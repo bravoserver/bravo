@@ -244,7 +244,7 @@ class BeachGenerator(object):
     name = "beaches"
 
     before = ("erosion", "complex")
-    after = tuple()
+    after = ("saplings",)
 
 class OreGenerator(object):
     """
