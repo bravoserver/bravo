@@ -12,15 +12,15 @@ class BravoIRCClient(IRCClient):
     https://github.com/ckolbeck/mc-bot.
     """
 
-    def __init__(self, worlds, config):
+    def __init__(self, factories, config):
         """
         Set up.
 
         :param str config: configuration key to use for finding settings
         """
 
-        self.factories = worlds
-        for factory in self.factories.itervalues():
+        self.factories = factories
+        for factory in self.factories:
             factory.chat_consumers.add(self)
 
         self.config = "irc %s" % config
@@ -78,14 +78,13 @@ class BravoIRCClient(IRCClient):
 class BravoIRC(ClientFactory):
     protocol = BravoIRCClient
 
-    def __init__(self, worlds, config):
-        self.worlds = worlds
+    def __init__(self, factories, config):
+        self.factories = factories
         self.config = config
-
         self.host = configuration.get("irc %s" % config, "server")
         self.port = configuration.getint("irc %s" % config, "port")
 
     def buildProtocol(self, a):
-        p = self.protocol(self.worlds, self.config)
+        p = self.protocol(self.factories, self.config)
         p.factory = self
         return p
