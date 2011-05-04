@@ -679,27 +679,22 @@ class BravoProtocol(BetaServerProtocol):
         if container.state == "started":
             # Check to see whether we should break this block.
             if self.dig_policy.is_1ko(block):
-                print "1KO block"
                 self.run_dig_hooks(chunk, coords, blocks[block])
             else:
                 # Set up a timer for breaking the block later.
-                print "Deferring dug block"
                 dtime = time() + self.dig_policy.dig_time(block)
                 self.last_dig = coords, block, dtime
         elif container.state == "stopped":
             # The client thinks it has broken a block. We shall see.
             if not self.last_dig:
-                print "Stopped without starting"
                 return
 
             oldcoords, oldblock, dtime = self.last_dig
             if oldcoords != coords or oldblock != block:
                 # Nope!
                 self.last_dig = None
-                print "WTF, client?!"
                 return
 
-            print "Prepping for dig"
             dtime -= time()
 
             # When enough time has elapsed, run the dig hooks.
@@ -711,8 +706,6 @@ class BravoProtocol(BetaServerProtocol):
         """
         Destroy a block and run the post-destroy dig hooks.
         """
-
-        print "running dig hooks"
 
         if block.breakable:
             chunk.destroy(coords)
