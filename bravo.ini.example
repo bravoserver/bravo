@@ -74,7 +74,7 @@ perm_cache = 3
 # server.
 
 # Dig hooks.
-dig_hooks = give, replace, bravo_snow, alpha_sand_gravel, torch, water, lava
+dig_hooks = give, bravo_snow, alpha_sand_gravel, torch, water, lava
 
 # Build hooks.
 build_hooks = build_snow, tile, build, bravo_snow, alpha_sand_gravel

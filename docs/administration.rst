@@ -147,7 +147,6 @@ Dig hooks
  * **give**: Spawn pickups for blocks and items destroyed by digging. (Beta)
  * **lava**: Enable physics for lava. (Beta)
  * **redstone**: Enable physics for redstone. (Beta)
- * **replace**: Enable blocks to be permanently dug out of the terrain. (Beta)
  * **torch**: Destroy torches that are not attached to walls or floors. (Beta)
  * **tracks**: Align minecart tracks. (Beta)
  * **water**: Enable physics for water. (Beta)
