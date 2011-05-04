@@ -30,11 +30,13 @@ class Block(object):
         "slot",
     )
 
-    def __init__(self, slot, name, drop=None, replace=0, ratio=1,
-            quantity=1, dim=16, breakable=True, orientation=None):
+    def __init__(self, slot, name, secondary=0, drop=None, replace=0, ratio=1,
+        quantity=1, dim=16, breakable=True, orientation=None):
         """
         :param int slot: The index of this block. Must be globally unique.
         :param str name: A common name for this block.
+        :param int secondary: The metadata/damage/secondary attribute for this
+            block. Defaults to zero.
         :param int drop: The type of block that should be dropped when an
             instance of this block is destroyed. Defaults to the slot value, to
             drop instances of this same type of block. To indicate that this
@@ -58,8 +60,7 @@ class Block(object):
         self.slot = slot
         self.name = name
 
-        # XXX
-        self.key = (self.slot, 0)
+        self.key = (self.slot, secondary)
 
         if drop is None:
             self.drop = slot
