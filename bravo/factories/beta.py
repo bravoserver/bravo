@@ -210,10 +210,13 @@ class BravoFactory(Factory):
         # Get a sorted list of all the seasons
         plugins = configuration.getlistdefault(self.config_name,
             "seasons", [])
-        all_seasons = [p for p in retrieve_named_plugins(ISeason, plugins)]
+        all_seasons = list(retrieve_named_plugins(ISeason, plugins))
         all_seasons.sort(key=lambda s: s.day)
 
-        # Get all the seasons that we have past the start date of this year
+        # Get all the seasons that we have past the start date of this year.
+        # We are looking for the season which is closest to our current day,
+        # without going over; I call this the Price-is-Right style of season
+        # handling. :3
         past_seasons = [s for s in all_seasons if s.day <= self.day]
         if past_seasons:
             # The most recent one is the one we are in
