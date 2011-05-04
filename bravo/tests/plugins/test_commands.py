@@ -18,6 +18,9 @@ class CommandsMockFactory(object):
                 self.player = bravo.entity.Player(bravo.location.Location(),
                     eid=0)
 
+            def update_time(self):
+                pass
+
         self.protocols = {
             "unittest": CommandsMockProtocol(),
         }
@@ -26,6 +29,9 @@ class CommandsMockFactory(object):
         pass
 
     def update_time(self):
+        pass
+
+    def update_season(self):
         pass
 
 class TestGetpos(unittest.TestCase):
