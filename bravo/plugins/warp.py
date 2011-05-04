@@ -1,9 +1,11 @@
 import csv
 from StringIO import StringIO
 
+from twisted.internet.defer import inlineCallbacks, returnValue
 from zope.interface import implements
 
 from bravo.ibravo import IChatCommand, IConsoleCommand
+from bravo.utilities.coords import split_coords
 
 csv.register_dialect("hey0", delimiter=":")
 
@@ -200,9 +202,79 @@ class RemoveWarp(object):
     usage = "<name>"
     info = "Remove warp"
 
+class Ascend(object):
+
+    implements(IChatCommand)
+
+    @inlineCallbacks
+    def chat_command(self, factory, username, parameters):
+        protocol = factory.protocols[username]
+        x = protocol.player.location.x
+        z = protocol.player.location.z
+        bigx, bigz, smallx, smallz = split_coords(x, z)
+
+        chunk = yield factory.world.request_chunk(bigx, bigz)
+        column = chunk.get_column(smallx, smallz)
+
+        y = protocol.player.location.y
+
+        # Find the next spot above us which has a platform and two empty
+        # blocks of air.
+        while y < 125:
+            y += 1
+            if column[y] and not column[y + 1] and not column[y + 2]:
+                break
+        else:
+            returnValue(("Couldn't find anywhere to ascend!",))
+
+        protocol.player.location.y = y
+        protocol.send_initial_chunk_and_location()
+        returnValue(("Ascended!",))
+
+    name = "ascend"
+    aliases = tuple()
+    usage = ""
+    info = "Ascend to a higher Y-level"
+
+class Descend(object):
+
+    implements(IChatCommand)
+
+    @inlineCallbacks
+    def chat_command(self, factory, username, parameters):
+        protocol = factory.protocols[username]
+        x = protocol.player.location.x
+        z = protocol.player.location.z
+        bigx, bigz, smallx, smallz = split_coords(x, z)
+
+        chunk = yield factory.world.request_chunk(bigx, bigz)
+        column = chunk.get_column(smallx, smallz)
+
+        y = protocol.player.location.y
+
+        # Find the next spot below us which has a platform and two empty
+        # blocks of air.
+        while y > 0:
+            y -= 1
+            if column[y] and not column[y + 1] and not column[y + 2]:
+                break
+        else:
+            returnValue(("Couldn't find anywhere to descend!",))
+
+        protocol.player.location.y = y
+        protocol.send_initial_chunk_and_location()
+        returnValue(("Descended!",))
+
+    name = "descend"
+    aliases = tuple()
+    usage = ""
+    info = "Descend to a lower Y-level"
+
 home = Home()
 sethome = SetHome()
 warp = Warp()
 listwarps = ListWarps()
 setwarp = SetWarp()
 removewarp = RemoveWarp()
+ascend = Ascend()
+descend = Descend()
