@@ -4,16 +4,24 @@ import bravo.blocks
 
 class TestBlockNames(unittest.TestCase):
 
+    def setUp(self):
+        self.bn = set(bravo.blocks.block_names)
+        self.ins = set(bravo.blocks.item_names)
+        self.sin = set(bravo.blocks.special_item_names)
+
+    def test_trivial(self):
+        pass
+
     def test_unique_blocks_and_items(self):
-        self.assertTrue(set(bravo.blocks.block_names).isdisjoint(set(bravo.blocks.item_names)))
+        self.assertTrue(self.bn.isdisjoint(self.ins), repr(self.bn & self.ins))
 
     test_unique_blocks_and_items.todo = "Needs love and disambiguation"
 
     def test_unique_blocks_and_special_items(self):
-        self.assertTrue(set(bravo.blocks.block_names).isdisjoint(set(bravo.blocks.special_item_names)))
+        self.assertTrue(self.bn.isdisjoint(self.sin), repr(self.bn & self.sin))
 
     def test_unique_items_and_special_items(self):
-        self.assertTrue(set(bravo.blocks.item_names).isdisjoint(set(bravo.blocks.special_item_names)))
+        self.assertTrue(self.ins.isdisjoint(self.sin), repr(self.ins & self.sin))
 
 
 class TestBlockQuirks(unittest.TestCase):
