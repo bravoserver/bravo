@@ -693,7 +693,7 @@ class BravoProtocol(BetaServerProtocol):
             else:
                 # Set up a timer for breaking the block later.
                 dtime = time() + self.dig_policy.dig_time(block,
-                    self.inventory.holdables[self.player.equipped])
+                    self.player.inventory.holdables[self.player.equipped])
                 self.last_dig = coords, block, dtime
         elif container.state == "stopped":
             # The client thinks it has broken a block. We shall see.
