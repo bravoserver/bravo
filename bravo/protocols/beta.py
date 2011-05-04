@@ -699,6 +699,9 @@ class BravoProtocol(BetaServerProtocol):
                 print "WTF, client?!"
                 return
 
+            print "Prepping for dig"
+            dtime -= time()
+
             # When enough time has elapsed, run the dig hooks.
             d = deferLater(reactor, max(dtime, 0), self.run_dig_hooks, chunk,
                            coords, blocks[block])
@@ -708,6 +711,8 @@ class BravoProtocol(BetaServerProtocol):
         """
         Destroy a block and run the post-destroy dig hooks.
         """
+
+        print "running dig hooks"
 
         if block.breakable:
             chunk.destroy(coords)
