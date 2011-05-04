@@ -434,6 +434,7 @@ packets = {
         UBInt16("slot"),
         UBInt8("button"),
         UBInt16("token"),
+        UBInt8("shift"),
         Embed(items),
     ),
     103: Struct("window-slot",
