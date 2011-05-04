@@ -602,16 +602,20 @@ class BravoProtocol(BetaServerProtocol):
             command = params.pop(0).lower()
 
             if command and command in commands:
-                try:
-                    for line in commands[command].chat_command(self.factory,
-                        self.username, params):
+                def cb(iterable):
+                    for line in iterable:
                         self.transport.write(
                             make_packet("chat", message=line)
                         )
-                except Exception, e:
+                def eb(error):
                     self.transport.write(
-                        make_packet("chat", message="Error: %s" % e)
+                        make_packet("chat", message="Error: %s" %
+                                    error.getErrorMessage())
                     )
+                d = maybeDeferred(commands[command].chat_command,
+                                  self.factory, self.username, params)
+                d.addCallback(cb)
+                d.addErrback(eb)
             else:
                 self.transport.write(
                     make_packet("chat",
