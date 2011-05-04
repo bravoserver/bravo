@@ -133,11 +133,8 @@ enabled.
    (Beta)
  * **build_snow**: Adjust things built on top of snow to replace the snow.
    (Beta)
- * **ladder**: Make ladders stick to the wall onto which they are placed.
-   (Beta)
  * **redstone**: Enable physics for placed redstone. (Beta)
  * **tile**: Register tiles. Required for signs, furnaces, chests, etc. (Beta)
- * **torch**: Make torches stick to the wall or floor correctly. (Beta)
  * **tracks**: Align minecart tracks. (Beta)
 
 Dig hooks
