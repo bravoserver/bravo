@@ -29,24 +29,6 @@ class AlphaSnow(object):
     before = tuple()
     after = tuple()
 
-class Replace(object):
-    """
-    Change a block to another block when dug out.
-
-    You almost certainly want to enable this plugin.
-    """
-
-    implements(IDigHook)
-
-    def dig_hook(self, factory, chunk, x, y, z, block):
-        if block.breakable:
-            chunk.destroy((x, y, z))
-
-    name = "replace"
-
-    before = tuple()
-    after = tuple()
-
 class Give(object):
     """
     Drop a pickup when a block is dug out.
@@ -129,6 +111,5 @@ class Torch(object):
     after = ("replace",)
 
 alpha_snow = AlphaSnow()
-replace = Replace()
 give = Give()
 torch = Torch()

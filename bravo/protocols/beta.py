@@ -8,7 +8,7 @@ from twisted.internet import reactor
 from twisted.internet.defer import (DeferredList, inlineCallbacks,
     maybeDeferred, succeed)
 from twisted.internet.protocol import Protocol
-from twisted.internet.task import cooperate, LoopingCall
+from twisted.internet.task import cooperate, deferLater, LoopingCall
 from twisted.internet.task import TaskDone, TaskFailed
 from twisted.python import log
 from twisted.web.client import getPage
@@ -16,13 +16,14 @@ from twisted.web.client import getPage
 from bravo.blocks import blocks, items
 from bravo.config import configuration
 from bravo.entity import Sign
-from bravo.motd import get_motd
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import IChatCommand, IBuildHook, IDigHook, ISignHook, IUseHook
 from bravo.inventory import Workbench, sync_inventories
 from bravo.location import Location
+from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins, retrieve_sorted_plugins, retrieve_named_plugins
+from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import split_coords
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
@@ -149,7 +150,7 @@ class BetaServerProtocol(Protocol):
 
         old_position = self.location.x, self.location.y, self.location.z
 
-	# Location represents the block the player is within
+        # Location represents the block the player is within
         self.location.x = int(container.position.x) if container.position.x > 0 else int(container.position.x) - 1
         self.location.y = int(container.position.y)
         self.location.z = int(container.position.z) if container.position.z > 0 else int(container.position.z) - 1
@@ -420,6 +421,8 @@ class BravoProtocol(BetaServerProtocol):
 
     eid = 0
 
+    last_dig = None
+
     def __init__(self, name):
         BetaServerProtocol.__init__(self)
 
@@ -443,10 +446,11 @@ class BravoProtocol(BetaServerProtocol):
             for target in plugin.targets:
                 self.use_hooks[target].append(plugin)
 
+        log.msg("Registering policies...")
+        self.dig_policy = dig_policies["notchy"]
+
         # Retrieve the MOTD. Only needs to be done once.
         self.motd = configuration.getdefault(self.config_name, "motd", None)
-
-        self.last_dig_build_timer = time()
 
     @inlineCallbacks
     def authenticated(self):
@@ -633,9 +637,6 @@ class BravoProtocol(BetaServerProtocol):
                 break
 
     def digging(self, container):
-        # XXX several improvements should happen here
-        # ~ We should time started and stopped pairs to force clients to
-        # slow-break their blocks
         if container.x == -1 and container.z == -1 and container.y == 255:
             # Lala-land dig packet. Discard it for now.
             return
@@ -670,16 +671,8 @@ class BravoProtocol(BetaServerProtocol):
                         self.factory.broadcast_for_others(packet, self)
             return
 
-        if container.state != "stopped":
-            # We only care about digs which break blocks.
-            return
-
-        if time() - self.last_dig_build_timer < 0.1:
-            self.error("You are digging too fast.")
-
-        self.last_dig_build_timer = time()
-
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
+        coords = smallx, container.y, smallz
 
         try:
             chunk = self.chunks[bigx, bigz]
@@ -687,12 +680,48 @@ class BravoProtocol(BetaServerProtocol):
             self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        oldblock = blocks[chunk.get_block((smallx, container.y, smallz))]
+        block = chunk.get_block((smallx, container.y, smallz))
+
+        if container.state == "started":
+            # Check to see whether we should break this block.
+            if self.dig_policy.is_1ko(block):
+                self.run_dig_hooks(chunk, coords, blocks[block])
+            else:
+                # Set up a timer for breaking the block later.
+                dtime = time() + self.dig_policy.dig_time(block)
+                self.last_dig = coords, block, dtime
+        elif container.state == "stopped":
+            # The client thinks it has broken a block. We shall see.
+            if not self.last_dig:
+                return
+
+            oldcoords, oldblock, dtime = self.last_dig
+            if oldcoords != coords or oldblock != block:
+                # Nope!
+                self.last_dig = None
+                return
+
+            dtime -= time()
+
+            # When enough time has elapsed, run the dig hooks.
+            d = deferLater(reactor, max(dtime, 0), self.run_dig_hooks, chunk,
+                           coords, blocks[block])
+            d.addCallback(lambda none: setattr(self, "last_dig", None))
+
+    def run_dig_hooks(self, chunk, coords, block):
+        """
+        Destroy a block and run the post-destroy dig hooks.
+        """
+
+        if block.breakable:
+            chunk.destroy(coords)
+
+        x, y, z = coords
 
         l = []
         for hook in self.dig_hooks:
             l.append(maybeDeferred(hook.dig_hook,
-                self.factory, chunk, smallx, container.y, smallz, oldblock))
+                                   self.factory, chunk, x, y, z, block))
 
         dl = DeferredList(l)
         dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
@@ -739,11 +768,6 @@ class BravoProtocol(BetaServerProtocol):
             log.err("Ignoring request to place unknown block %d" %
                 container.primary)
             return
-
-        if time() - self.last_dig_build_timer < 0.05:
-            self.error("You are building too fast.")
-
-        self.last_dig_build_timer = time()
 
         # it's the top of the world, you can't build here
         if container.y == 127 and container.face == '+y':
