@@ -131,6 +131,32 @@ class TestWater(unittest.TestCase):
         self.assertEqual(block, bravo.blocks.blocks["water"].slot)
 
     @inlineCallbacks
+    def test_spring_fall_dig_offset(self):
+        """
+        Destroying ground next to a spring should cause a waterfall effect.
+        """
+
+        self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 0, 0), bravo.blocks.blocks["dirt"].slot)
+        self.w.set_block((0, 0, 1), bravo.blocks.blocks["dirt"].slot)
+        self.hook.pending[self.f].add((0, 1, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.pending:
+            self.hook.process()
+
+        # Dig away the dirt next to the dirt under the spring, and simulate
+        # the dig hook by adding the block above it.
+        self.w.destroy((0, 0, 1))
+        self.hook.pending[self.f].add((0, 1, 1))
+
+        while self.hook.pending:
+            self.hook.process()
+
+        block = yield self.w.get_block((0, 0, 1))
+        self.assertEqual(block, bravo.blocks.blocks["water"].slot)
+
+    @inlineCallbacks
     def test_obstacle(self):
         """
         Test that obstacles are flowed around correctly.
