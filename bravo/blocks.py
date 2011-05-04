@@ -152,7 +152,7 @@ class Item(object):
         self.key = (self.slot, 0)
 
 block_names = [
-    "air",
+    "air", # 0x0
     "stone",
     "grass",
     "dirt",
@@ -168,7 +168,7 @@ block_names = [
     "gravel",
     "gold-ore",
     "iron-ore",
-    "coal-ore",
+    "coal-ore", # 0x10
     "log",
     "leaves",
     "sponge",
@@ -178,16 +178,16 @@ block_names = [
     "dispenser",
     "sandstone",
     "note-block",
-    "aqua-cloth",
-    "cyan-cloth",
-    "blue-cloth",
-    "purple-cloth",
-    "indigo-cloth",
-    "violet-cloth",
-    "magenta-cloth",
-    "pink-cloth",
-    "black-cloth",
-    "grey-cloth",
+    "bed",
+    "powered-rail",
+    "detector-rail",
+    "",
+    "spider-web",
+    "",
+    "", # 0x20
+    "",
+    "",
+    "",
     "wool",
     "flower",
     "rose",
@@ -200,7 +200,7 @@ block_names = [
     "brick",
     "tnt",
     "bookshelf",
-    "mossy-cobblestone",
+    "mossy-cobblestone", # 0x30
     "obsidian",
     "torch",
     "fire",
@@ -216,7 +216,7 @@ block_names = [
     "furnace",
     "burning-furnace",
     "signpost",
-    "wooden-door",
+    "wooden-door", # 0x40
     "ladder",
     "tracks",
     "stone-stairs",
@@ -232,7 +232,7 @@ block_names = [
     "stone-button",
     "snow",
     "ice",
-    "snow-block",
+    "snow-block", # 0x50
     "cactus",
     "clay",
     "sugar-cane",
@@ -483,7 +483,7 @@ This dictionary can be indexed by slot number or block name.
 """
 
 for i, name in enumerate(block_names):
-    if name in blocks:
+    if not name or name in blocks:
         continue
 
     kwargs = {}
