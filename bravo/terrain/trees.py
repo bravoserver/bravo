@@ -372,48 +372,6 @@ class ProceduralTree(Tree):
             self.taperedcylinder(startcoord, coord, startsize, endsize, world,
                 blocks["log"].slot)
 
-    @inlineCallbacks
-    def make_roots(self, rootbases, world):
-        """generate the roots and enter them in world.
-
-        rootbases = [[x,z,base_radius], ...] and is the list of locations
-        the roots can originate from, and the size of that location.
-        """
-        treeposition = self.pos
-        height = self.height
-        for coord in self.foliage_cords:
-            # First, set the threshhold for randomly selecting this
-            # coordinate for root creation.
-            dist = (sqrt(float(coord[0]-treeposition[0])**2 +
-                            float(coord[2]-treeposition[2])**2))
-            ydist = coord[1]-treeposition[1]
-            value = (self.branchdensity * 220 * height)/((ydist + dist) ** 3)
-            # Randomly skip roots, based on the above threshold
-            if value < random():
-                continue
-            # initialize the internal variables from a selection of
-            # starting locations.
-            rootbase = choice(rootbases)
-            rootx = rootbase[0]
-            rootz = rootbase[1]
-            rootbaseradius = rootbase[2]
-            # Offset the root origin location by a random amount
-            # (radialy) from the starting location.
-            rndr = sqrt(random()) * rootbaseradius * PHI
-            rndang = random()*2*pi
-            rndx = int(rndr*sin(rndang) + 0.5)
-            rndz = int(rndr*cos(rndang) + 0.5)
-            rndy = int(random()*rootbaseradius*0.5)
-            startcoord = [rootx+rndx,treeposition[1]+rndy,rootz+rndz]
-            # offset is the distance from the root base to the root tip.
-            offset = [startcoord[i]-coord[i] for i in xrange(3)]
-            endcoord = [startcoord[i]+offset[i] for i in xrange(3)]
-            rootstartsize = (rootbaseradius * IPHI * abs(offset[1])/
-                             (height * IPHI))
-            if rootstartsize < 1.0:
-                rootstartsize = 1.0
-            endsize = 1.0
-
     def make_trunk(self, world):
         """
         Make the trunk, roots, buttresses, branches, etc.
@@ -450,7 +408,6 @@ class ProceduralTree(Tree):
         self.trunkheight = self.height
         yend = int(treeposition[1] + self.height)
         self.branchdensity = 1.0
-        topy = treeposition[1]+int(self.trunkheight + 0.5)
         foliage_coords = []
         ystart = treeposition[1]
         num_of_clusters_per_y = int(1.5 + (self.height / 19)**2)
@@ -614,12 +571,9 @@ class MangroveTree(RoundTree):
             offset = [startcoord[i]-coord[i] for i in xrange(3)]
             # If this is a mangrove tree, make the roots longer.
             offset = [int(val * IPHI - 1.5) for val in offset]
-            endcoord = [startcoord[i]+offset[i] for i in xrange(3)]
             rootstartsize = (rootbaseradius * IPHI * abs(offset[1])/
                              (height * IPHI))
-            if rootstartsize < 1.0:
-                rootstartsize = 1.0
-            endsize = 1.0
+            rootstartsize = max(rootstartsize, 1.0)
 
     def make_trunk(self, world):
         """
