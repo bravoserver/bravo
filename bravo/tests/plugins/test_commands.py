@@ -31,6 +31,9 @@ class CommandsMockFactory(object):
     def update_time(self):
         pass
 
+    def broadcast_time(self):
+        pass
+
     def update_season(self):
         pass
 
