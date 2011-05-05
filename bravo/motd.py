@@ -48,6 +48,8 @@ We are all made of stars!
 Out of beta and releasing on time!
 %
 Still alive!
+%
+"Pentasyllabic" is an autonym!
 """
 
 motds = [i.strip() for i in motds.split("%")]
