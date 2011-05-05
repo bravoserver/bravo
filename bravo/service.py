@@ -22,9 +22,11 @@ class BravoService(MultiService):
         MultiService.__init__(self)
 
         # Start up our AMP RPC.
-        self.amp = TCPServer(25600, ConsoleRPCFactory(self))
+        self.amp = TCPServer(25601, ConsoleRPCFactory(self))
         MultiService.addService(self, self.amp)
-
+        self.factorylist = list()
+        self.irc = False
+        self.ircbots = list()
         self.configure_services(configuration)
 
     def addService(self, service):
@@ -43,6 +45,7 @@ class BravoService(MultiService):
                     interface=factory.interface)
                 server.setName(factory.name)
                 self.addService(server)
+                self.factorylist.append(factory)
             elif section == "web":
                 try:
                     from bravo.web import bravo_site
@@ -60,10 +63,8 @@ class BravoService(MultiService):
                 except ImportError:
                     log.msg("Couldn't import IRC stuff!")
                 else:
-                    factory = BravoIRC(self.namedServices, section[4:])
-                    client = TCPClient(factory.host, factory.port, factory)
-                    client.setName(factory.name)
-                    self.addService(client)
+                    self.irc = True
+                    self.ircbots.append(section)
             elif section.startswith("infiniproxy "):
                 factory = BetaProxyFactory(section[12:])
                 server = TCPServer(factory.port, factory)
@@ -74,7 +75,12 @@ class BravoService(MultiService):
                 server = TCPServer(factory.port, factory)
                 server.setName(factory.name)
                 self.addService(server)
-
+        if self.irc:
+            for section in self.ircbots:
+                factory = BravoIRC(self.factorylist, section[4:])
+                client = TCPClient(factory.host, factory.port, factory)
+                client.setName(factory.config)
+                self.addService(client)
 service = BravoService()
 
 application = Application("Bravo")
