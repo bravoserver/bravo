@@ -202,6 +202,10 @@ class BravoFactory(Factory):
 
             self.update_season()
 
+    def broadcast_time(self):
+        packet = make_packet("time", timestamp=int(self.time))
+        self.broadcast(packet)
+
     def update_season(self):
         """
         Update the world's season.
