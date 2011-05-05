@@ -143,13 +143,13 @@ class Item(object):
         "slot",
     )
 
-    def __init__(self, slot, name):
+    def __init__(self, slot, name, secondary=0):
 
         self.slot = slot
         self.name = name
 
         # XXX
-        self.key = (self.slot, 0)
+        self.key = (self.slot, secondary)
 
 block_names = [
     "air", # 0x0
@@ -346,7 +346,7 @@ item_names = [
     "glowstone-dust",
     "raw-fish",
     "cooked-fish",
-    "ink-sack",
+    "dye",
     "bone",
     "sugar",
     "cake",
@@ -358,6 +358,25 @@ item_names = [
 special_item_names = [
     "gold-music-disc",
     "green-music-disc",
+]
+
+dye_names = [
+    "ink-sac",
+    "red-dye",
+    "green-dye",
+    "cocoa-beans",
+    "lapis-lazuli",
+    "purple-dye",
+    "cyan-dye",
+    "light-gray-dye",
+    "gray-dye",
+    "pink-dye",
+    "lime-dye",
+    "yellow-dye",
+    "light-blue-dye",
+    "magenta-dye",
+    "orange-dye",
+    "bone-meal",
 ]
 
 drops = {}
@@ -509,6 +528,11 @@ for i, name in enumerate(special_item_names):
     i += 0x8D0
     item = Item(i, name, **kwargs)
     items[i] = item
+    items[name] = item
+
+for i, name in enumerate(dye_names):
+    kwargs = {}
+    item = Item(items["dye"].slot, name, i, **kwargs)
     items[name] = item
 
 glowing_blocks = {
