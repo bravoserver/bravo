@@ -379,6 +379,55 @@ dye_names = [
     "bone-meal",
 ]
 
+wool_names = [
+    "white-wool",
+    "orange-wool",
+    "magenta-wool",
+    "light-blue-wool",
+    "yellow-wool",
+    "light-green-wool",
+    "pink-wool",
+    "gray-wool",
+    "light-gray-wool",
+    "cyan-wool",
+    "purple-wool",
+    "blue-wool",
+    "brown-wool",
+    "dark-green-wool",
+    "red-wool",
+    "black-wool",
+]
+
+sapling_names = [
+    "normal-sapling",
+    "pine-sapling",
+    "birch-sapling",
+]
+
+log_names = [
+    "normal-log",
+    "pine-log",
+    "birch-log",
+]
+
+leave_names = [
+    "normal-leave",
+    "pine-leave",
+    "birch-leave",
+]
+
+coal_names = [
+    "normal-coal",
+    "charcoal",
+]
+
+step_names = [
+    "stone-step",
+    "sandstone-step",
+    "wooden-step",
+    "cobblestone-step",
+]
+
 drops = {}
 
 # Block -> block drops.
@@ -530,10 +579,34 @@ for i, name in enumerate(special_item_names):
     items[i] = item
     items[name] = item
 
-for i, name in enumerate(dye_names):
-    kwargs = {}
-    item = Item(items["dye"].slot, name, i, **kwargs)
-    items[name] = item
+_secondary_items = {
+    items["coal"]: coal_names,
+    items["dye"]: dye_names,
+}
+
+for base_item, names in _secondary_items.iteritems():
+    for i, name in enumerate(names):
+        kwargs = {}
+        item = Item(base_item.slot, name, i, **kwargs)
+        items[name] = item
+
+_secondary_blocks = {
+    blocks["leaves"]: leave_names,
+    blocks["log"]: log_names,
+    blocks["sapling"]: sapling_names,
+    blocks["step"]: step_names,
+    blocks["wool"]: wool_names,
+}
+
+for base_block, names in _secondary_blocks.iteritems():
+    for i, name in enumerate(names):
+        kwargs = {}
+        kwargs["drop"] = base_block.drop
+        kwargs["breakable"] = base_block.breakable
+        kwargs["dim"] = base_block.dim
+
+        block = Block(base_block.slot, name, i, **kwargs)
+        _add_block(block)
 
 glowing_blocks = {
     blocks["torch"].slot: 14,
