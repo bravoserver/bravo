@@ -15,7 +15,7 @@ from bravo.ibravo import IWorldResource
 block_colors = {
     blocks["clay"].slot: "rosybrown",
     blocks["cobblestone"].slot: 'dimgray',
-    blocks["dirt"].slot: 'brown',
+    blocks["dirt"].slot: 'saddlebrown',
     blocks["grass"].slot: ('green', 'darkgreen'),
     blocks["lava"].slot: 'red',
     blocks["lava-spring"].slot: 'red',
@@ -30,18 +30,19 @@ default_color = 'black'
 
 # http://en.wikipedia.org/wiki/Web_colors X11 color names
 names_to_colors = {
-    "black":     (0, 0, 0),
-    "blue":      (0, 0, 255),
-    "brown":     (165, 42, 42),
-    "burlywood": (22, 184, 135),
-    "darkgreen": (0, 100, 0),
-    "dimgray":   (105, 105, 105),
-    "gray":      (128, 128, 128),
-    "green":     (0, 128, 0),
-    "khaki":     (240, 230, 140),
-    "red":       (255, 0, 0),
-    "rosybrown": (188, 143, 143),
-    "snow":      (255, 250, 250),
+    "black":       (0, 0, 0),
+    "blue":        (0, 0, 255),
+    "brown":       (165, 42, 42),
+    "burlywood":   (22, 184, 135),
+    "darkgreen":   (0, 100, 0),
+    "dimgray":     (105, 105, 105),
+    "gray":        (128, 128, 128),
+    "green":       (0, 128, 0),
+    "khaki":       (240, 230, 140),
+    "red":         (255, 0, 0),
+    "rosybrown":   (188, 143, 143),
+    "saddlebrown": (139, 69, 19),
+    "snow":        (255, 250, 250),
 }
 
 class ChunkIllustrator(Resource):
