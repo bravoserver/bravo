@@ -169,8 +169,7 @@ class Time(object):
             factory.update_time()
             factory.update_season()
             # Update the time for the clients
-            for player in factory.protocols.itervalues():
-                player.update_time()
+            factory.broadcast_time()
 
         # Tell the user the current time.
         return self.dispatch(factory)
