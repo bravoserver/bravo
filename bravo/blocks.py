@@ -187,8 +187,8 @@ block_names = [
     "", # 0x20
     "",
     "",
-    "",
     "wool",
+    "",
     "flower",
     "rose",
     "brown-mushroom",
