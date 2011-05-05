@@ -218,24 +218,6 @@ class World(object):
         self.chunk_cache = d
         self.saving = True
 
-    def populate_chunk(self, chunk):
-        """
-        Recreate data for a chunk.
-
-        This method does arbitrary terrain generation depending on the current
-        plugins, and then regenerates the chunk metadata so that the chunk can
-        be sent to clients.
-
-        A lot of maths may be done by this method, so do not call it unless
-        absolutely necessary, e.g. when the chunk is created for the first
-        time.
-        """
-
-        for stage in self.pipeline:
-            stage.populate(chunk, self.seed)
-
-        chunk.regenerate()
-
     def postprocess_chunk(self, chunk):
         """
         Do a series of final steps to bring a chunk into the world.
@@ -293,7 +275,6 @@ class World(object):
                 seed=self.seed,
                 generators=configuration.getlist(self.config_name, "generators")
             )
-            self._pending_chunks[x, z] = d
 
             # Get chunk data into our chunk object.
             def fill_chunk(kwargs):
@@ -311,9 +292,14 @@ class World(object):
                 return chunk
             d.addCallback(fill_chunk)
         else:
-            self.populate_chunk(chunk)
+            # Populate the chunk the slow way. :c
+            for stage in self.pipeline:
+                stage.populate(chunk, self.seed)
+
+            chunk.regenerate()
             d = succeed(chunk)
-            self._pending_chunks[x, z] = d
+
+        self._pending_chunks[x, z] = d
 
         def pp(chunk):
             chunk.populated = True
@@ -329,9 +315,13 @@ class World(object):
         # Set up callbacks.
         d.addCallback(pp)
 
-        # Multiple people might be subscribed to this pending callback. We're
-        # going to keep it for ourselves and fork off another Deferred for our
-        # caller.
+        # Because multiple people might be attached to this callback, we're
+        # going to do something magical here. We will yield a forked version
+        # of our Deferred. This means that we will wait right here, for a
+        # long, long time, before actually returning with the chunk, *but*,
+        # when we actually finish, we'll be ready to return the chunk
+        # immediately. Our caller cannot possibly care because they only see a
+        # Deferred either way.
         retval = yield fork_deferred(d)
         returnValue(retval)
 
