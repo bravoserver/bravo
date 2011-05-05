@@ -360,6 +360,25 @@ special_item_names = [
     "green-music-disc",
 ]
 
+dye_names = [
+    "ink-sac",
+    "red-dye",
+    "green-dye",
+    "cocoa-beans",
+    "lapis-lazuli",
+    "purple-dye",
+    "cyan-dye",
+    "light-gray-dye",
+    "gray-dye",
+    "pink-dye",
+    "lime-dye",
+    "yellow-dye",
+    "light-blue-dye",
+    "magenta-dye",
+    "orange-dye",
+    "bone-meal",
+]
+
 drops = {}
 
 # Block -> block drops.
