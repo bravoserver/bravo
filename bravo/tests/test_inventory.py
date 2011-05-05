@@ -172,7 +172,7 @@ class TestEquipmentInternals(unittest.TestCase):
         self.assertEqual(self.i.selected, (2, 0, 40))
         # second stack is untouched
         self.assertEqual(self.i.holdables[1], (2, 0, 30))
-        # select second stack with right click
+        # select second stack with left click
         self.i.select(37)
         # sums up to more than 64 items - fill up the second stack
         self.assertEqual(self.i.holdables[1], (2, 0, 64))
@@ -189,12 +189,12 @@ class TestEquipmentInternals(unittest.TestCase):
         self.assertEqual(self.i.selected, (2, 0, 40))
         # second stack is untouched
         self.assertEqual(self.i.holdables[1], (2, 0, 30))
-        # select second stack with left click
+        # select second stack with right click
         self.i.select(37, True)
-        # sums up to more than 64 items - fill up the second stack
-        self.assertEqual(self.i.holdables[1], (2, 0, 64))
+        # sums up to more than 64 items
+        self.assertEqual(self.i.holdables[1], (2, 0, 31))
         # still hold the left overs
-        self.assertEqual(self.i.selected, (2, 0, 6))
+        self.assertEqual(self.i.selected, (2, 0, 39))
 
     def test_encoder_ring(self):
         self.assertEqual(self.i.encode_slot(36), 0)

@@ -384,20 +384,21 @@ class Inventory(object):
             islot = l[index]
             if islot.holds(sslot):
                 # both contain the same item
-                if sslot.quantity + islot.quantity <= 64:
-                    # Sum of items fits in one slot, so this is easy.
-                    if alternate:
+                if alternate:
+                    if islot.quantity < 64:
                         l[index] = islot.increment()
                         self.selected = sslot.decrement()
-                    else:
+                else:
+                    if sslot.quantity + islot.quantity <= 64:
+                        # Sum of items fits in one slot, so this is easy.
                         l[index] = islot.increment(sslot.quantity)
                         self.selected = None
-                else:
-                    # fill up slot to 64, move left overs to selection
-                    # valid for left and right mouse click
-                    l[index] = islot.replace(quantity=64)
-                    self.selected = sslot.replace(
-                        quantity=sslot.quantity + islot.quantity - 64)
+                    else:
+                        # fill up slot to 64, move left overs to selection
+                        # valid for left and right mouse click
+                        l[index] = islot.replace(quantity=64)
+                        self.selected = sslot.replace(
+                            quantity=sslot.quantity + islot.quantity - 64)
             else:
                 # Default case: just swap
                 # valid for left and right mouse click
