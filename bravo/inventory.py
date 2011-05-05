@@ -275,7 +275,7 @@ class Inventory(object):
         return False
 
 
-    def select_armor(self, index, alternate):
+    def select_armor(self, index, alternate, shift):
         """
         Handle a slot selection on an armor slot.
         """
@@ -319,7 +319,7 @@ class Inventory(object):
         # Yeah, okay, success.
         return True
 
-    def select_crafted(self, index, alternate):
+    def select_crafted(self, index, alternate, shift):
         """
         Handle a slot selection on a crafted output.
         """
@@ -352,7 +352,7 @@ class Inventory(object):
             return False
 
 
-    def select(self, slot, alternate=False):
+    def select(self, slot, alternate=False, shift=False):
         """
         Handle a slot selection.
 
@@ -363,6 +363,7 @@ class Inventory(object):
         :param int slot: which slot was selected
         :param bool alternate: whether the selection is alternate; e.g., if it
                                was done with a right-click
+        :param bool shift: whether the shift key is toogled
         """
 
         # Look up the container and offset.
@@ -375,9 +376,9 @@ class Inventory(object):
             return False
 
         if l is self.armor:
-            return self.select_armor(index, alternate)
+            return self.select_armor(index, alternate, shift)
         elif l is self.crafted:
-            return self.select_crafted(index, alternate)
+            return self.select_crafted(index, alternate, shift)
         elif self.selected is not None and l[index] is not None:
             sslot = self.selected
             islot = l[index]

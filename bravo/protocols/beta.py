@@ -866,7 +866,8 @@ class BravoProtocol(BetaServerProtocol):
         else:
             self.error("Couldn't find window %d" % container.wid)
 
-        selected = i.select(container.slot, bool(container.button))
+        selected = i.select(container.slot, bool(container.button),
+            bool(container.shift))
 
         if selected:
             # XXX should be if there's any damage to the inventory
