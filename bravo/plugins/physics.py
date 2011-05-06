@@ -197,6 +197,10 @@ class Fluid(object):
                     if current_md < FALLING:
                         w.set_metadata((x, y, z), newmd)
 
+                    # If pending block is already above fluid, don't keep spreading
+                    if neighbor == self.fluid:
+                        continue
+
                     # Otherwise, just fill our neighbors with water, where
                     # applicable, and mark them.
                     if newmd < self.levels:
