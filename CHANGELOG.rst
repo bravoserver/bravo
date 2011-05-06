@@ -1,9 +1,42 @@
-master
-======
+1.5
+===
+
+Features
+--------
 
 * Added web plugin support
 
   * Added worldmap plugin for viewing the spawn area
+
+* Introduced automatons
+
+  * Ported fluids (water, lava) to the automaton interface
+  * Created a tree automaton to turn saplings into trees
+
+* Created policies for digging
+
+  * Notchy dig policy mimics Notchian server dig times
+  * Speedy dig policy allows instant digging of blocks
+
+* Removed "Replace" dig hook with builtin functionality
+* Added more block and item names, and created names for wool and dye types
+* Added support for wolves
+* Rewrote most of the /time command to support setting the day, time, season,
+  and time of day
+* Added /ascend and /descend commands
+* Allowed chat commands to be asynchronous if necessary
+
+Bugfixes
+--------
+
+* Fixed several crashes/hangs in Ampoule support
+* Made factory startup messages show up in log
+* Fixed several bugs in item saving and chunk saving which made
+  Bravo-generated worlds incompatible with Notchian worlds
+* Fixed bug in sapling generator causing too many saplings to be placed
+* Fixed bug in sapling generator where saplings could be spawned on beaches
+* Fixed a few edge-case bugs in water automaton where water would not spread
+* Fixed a few previously uncraftable recipes
 
 1.4
 ===
