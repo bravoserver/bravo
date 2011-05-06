@@ -19,7 +19,7 @@ from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import (retrieve_named_plugins, verify_plugin,
     PluginException)
 from bravo.utilities.coords import split_coords
-from bravo.utilities.temporal import fork_deferred
+from bravo.utilities.temporal import PendingEvent
 
 def coords_to_chunk(f):
     """
@@ -254,7 +254,7 @@ class World(object):
             returnValue(self.dirty_chunk_cache[x, z])
         elif (x, z) in self._pending_chunks:
             # Rig up another Deferred and wrap it up in a to-go box.
-            retval = yield fork_deferred(self._pending_chunks[x, z])
+            retval = yield self._pending_chunks[x, z].deferred()
             returnValue(retval)
 
         chunk = Chunk(x, z)
@@ -299,7 +299,8 @@ class World(object):
             chunk.regenerate()
             d = succeed(chunk)
 
-        self._pending_chunks[x, z] = d
+        pe = PendingEvent()
+        self._pending_chunks[x, z] = pe
 
         def pp(chunk):
             chunk.populated = True
@@ -314,6 +315,7 @@ class World(object):
 
         # Set up callbacks.
         d.addCallback(pp)
+        d.chainDeferred(pe)
 
         # Because multiple people might be attached to this callback, we're
         # going to do something magical here. We will yield a forked version
@@ -322,7 +324,7 @@ class World(object):
         # when we actually finish, we'll be ready to return the chunk
         # immediately. Our caller cannot possibly care because they only see a
         # Deferred either way.
-        retval = yield fork_deferred(d)
+        retval = yield pe.deferred()
         returnValue(retval)
 
     def save_chunk(self, chunk):

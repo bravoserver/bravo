@@ -1,20 +1,43 @@
 from twisted.internet.defer import Deferred
+from twisted.python.failure import Failure
 
 """
 Time-related utilities.
 """
 
-def fork_deferred(d):
+class PendingEvent(object):
     """
-    Fork a Deferred.
+    An event which will happen at some point.
 
-    Returns a Deferred which will fire when the reference Deferred fires, with
-    the same arguments, without disrupting or changing the reference Deferred.
+    Structurally, this could be thought of as a poor man's upside-down
+    DeferredList; it turns a single callback/errback into a broadcast which
+    fires many multiple Deferreds.
+
+    This code came from Epsilon and should go into Twisted at some point.
     """
 
-    forked = Deferred()
-    d.chainDeferred(forked)
-    return forked
+    def __init__(self):
+        self.listeners = []
+
+    def deferred(self):
+        d = Deferred()
+        self.listeners.append(d)
+        return d
+
+    def callback(self, result):
+        l = self.listeners
+        self.listeners = []
+        for d in l:
+            d.callback(result)
+
+    def errback(self, result=None):
+        if result is None:
+            result = Failure()
+        l = self.listeners
+        self.listeners = []
+        for d in l:
+            d.errback(result)
+
 
 def split_time(timestamp):
     """
