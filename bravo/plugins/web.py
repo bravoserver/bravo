@@ -15,11 +15,14 @@ from bravo.ibravo import IWorldResource
 block_colors = {
     blocks["clay"].slot: "rosybrown",
     blocks["cobblestone"].slot: 'dimgray',
-    blocks["dirt"].slot: 'saddlebrown',
-    blocks["grass"].slot: ('green', 'darkgreen'),
+    blocks["dirt"].slot: 'brown',
+    blocks["grass"].slot: ("forestgreen", 'green', 'darkgreen'),
     blocks["lava"].slot: 'red',
     blocks["lava-spring"].slot: 'red',
+    blocks["leaves"].slot: "limegreen",
+    blocks["log"].slot: "sienna",
     blocks["sand"].slot: 'khaki',
+    blocks["sapling"].slot: "lime",
     blocks["snow"].slot: 'snow',
     blocks["spring"].slot: 'blue',
     blocks["stone"].slot: 'gray',
@@ -36,12 +39,16 @@ names_to_colors = {
     "burlywood":   (22, 184, 135),
     "darkgreen":   (0, 100, 0),
     "dimgray":     (105, 105, 105),
+    "forestgreen": (34, 139, 34),
     "gray":        (128, 128, 128),
     "green":       (0, 128, 0),
     "khaki":       (240, 230, 140),
+    "lime":        (0, 255, 0),
+    "limegreen":   (50, 255, 50),
     "red":         (255, 0, 0),
     "rosybrown":   (188, 143, 143),
     "saddlebrown": (139, 69, 19),
+    "sienna":      (160, 82, 45),
     "snow":        (255, 250, 250),
 }
 
@@ -64,9 +71,9 @@ class ChunkIllustrator(Resource):
             block = chunk.blocks[x, z, y]
             if block in block_colors:
                 color = block_colors[block]
-                if isinstance(color, tuple) and len(color) == 2:
-                    # switch colors depending on height
-                    color = color[y / 5 % 2]
+                if isinstance(color, tuple):
+                    # Switch colors depending on height.
+                    color = color[y / 5 % len(color)]
             else:
                 color = default_color
             pbo[x, z] = names_to_colors[color]
