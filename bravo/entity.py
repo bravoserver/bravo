@@ -273,7 +273,7 @@ class Slime(Mob):
         This method calls super().
         """
 
-        super(Sheep, self).__init__(**kwargs)
+        super(Slime, self).__init__(**kwargs)
 
         self.size = size
 
