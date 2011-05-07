@@ -1,5 +1,3 @@
-from xml.sax import saxutils
-
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
 from twisted.web.template import flattenString, renderer, tags, Element, XMLString
