@@ -207,6 +207,14 @@ class Cow(Mob):
     name = "Cow"
     type = "cow"
 
+class Creeper(Mob):
+    """
+    A creeper.
+    """
+
+    name = "Creeper"
+    type = "creeper"
+
 class Pig(Mob):
     """
     A provider of bacon and piggyback rides.
@@ -283,6 +291,14 @@ class Sheep(Mob):
             metadata=metadata
         )
 
+class Skeleton(Mob):
+    """
+    An archer skeleton.
+    """
+
+    name = "Skeleton"
+    type = "skeleton"
+
 class Slime(Mob):
     """
     A gelatinous blob.
@@ -319,6 +335,14 @@ class Slime(Mob):
             metadata=metadata
         )
 
+class Spider(Mob):
+    """
+    A spider.
+    """
+
+    name = "Spider"
+    type = "spider"
+
 class Squid(Mob):
     """
     An aquatic source of ink.
@@ -327,16 +351,28 @@ class Squid(Mob):
     name = "Squid"
     type = "squid"
 
+class Zombie(Mob):
+    """
+    A zombie.
+    """
+
+    name = "Zombie"
+    type = "zombie"
+
 entities = dict((entity.name, entity)
     for entity in (
         Chuck,
         Cow,
+        Creeper,
         Painting,
         Pickup,
         Pig,
         Player,
         Sheep,
+        Skeleton,
+        Spider,
         Squid,
+        Zombie,
     )
 )
 
