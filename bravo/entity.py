@@ -215,6 +215,22 @@ class Creeper(Mob):
     name = "Creeper"
     type = "creeper"
 
+class Ghast(Mob):
+    """
+    A sad ghost
+    """
+
+    name = "Ghast"
+    type = "ghast"
+
+class GiantZombie(Mob):
+    """
+    A giant zombie
+    """
+
+    name = "GiantZombie"
+    type = "giant_zombie"
+
 class Pig(Mob):
     """
     A provider of bacon and piggyback rides.
@@ -250,6 +266,14 @@ class Pig(Mob):
             pitch=0,
             metadata=metadata
         )
+
+class PigZombie(Mob):
+    """
+    A zombie pigman.
+    """
+
+    name = "PigZombie"
+    type = "pigman"
 
 class Sheep(Mob):
     """
@@ -409,9 +433,12 @@ entities = dict((entity.name, entity)
         Chuck,
         Cow,
         Creeper,
+        Ghast,
+        GiantZombie,
         Painting,
         Pickup,
         Pig,
+        PigZombie,
         Player,
         Sheep,
         Skeleton,
