@@ -254,7 +254,7 @@ class Sheep(Mob):
             z=self.location.z * 32 + 16,
             yaw=0,
             pitch=0,
-            metadata=self.metadata
+            metadata=metadata
         )
 
 class Slime(Mob):
@@ -290,7 +290,7 @@ class Slime(Mob):
             z=self.location.z * 32 + 16,
             yaw=0,
             pitch=0,
-            metadata=self.metadata
+            metadata=metadata
         )
 
 class Squid(Mob):
