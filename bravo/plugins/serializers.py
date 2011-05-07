@@ -117,6 +117,7 @@ class Alpha(object):
             "Slime": self._load_slime_from_tag,
             "Spider": lambda entity, tag: None,
             "Squid": lambda entity, tag: None,
+            "Wolf": self._load_wolf_from_tag,
             "Zombie": lambda entity, tag: None,
         }
 
@@ -132,6 +133,7 @@ class Alpha(object):
             "Slime": self._save_slime_to_tag,
             "Spider": lambda entity, tag: None,
             "Squid": lambda entity, tag: None,
+            "Wolf": self._save_wolf_to_tag,
             "Zombie": lambda entity, tag: None,
         }
 
@@ -248,6 +250,16 @@ class Alpha(object):
 
     def _save_slime_to_tag(self, slime, tag):
         tag["Size"] = TAG_Byte(slime.size)
+
+    def _load_wolf_from_tag(self, wolf, tag):
+        wolf.owner = tag["Owner"].value
+        wolf.sitting = bool(tag["Sitting"].value)
+        wolf.angry = bool(tag["Angry"].value)
+
+    def _save_wolf_to_tag(self, wolf, tag):
+        tag["Owner"] = TAG_String(wolf.owner)
+        tag["Sitting"] = TAG_Byte(wolf.sitting)
+        tag["Angry"] = TAG_Byte(wolf.angry)
 
     # Tile serializers. Tiles are blocks and entities at the same time, in the
     # worst way. Each of these helpers will be called during chunk serialize

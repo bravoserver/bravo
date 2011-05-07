@@ -351,6 +351,51 @@ class Squid(Mob):
     name = "Squid"
     type = "squid"
 
+class Wolf(Mob):
+    """
+    A wolf.
+    """
+
+    name = "Wolf"
+
+    metadata = {0: ("byte", 0), 16: ("byte", 0)}
+
+    def __init__(self, owner=None, angry=False, sitting=False, **kwargs):
+        """
+        Create a wolf.
+
+        This method calls super().
+        """
+
+        super(Wolf, self).__init__(**kwargs)
+
+        self.owner = owner
+        self.angry = angry
+        self.sitting = sitting
+
+    def save_to_packet(self):
+        # Prepare metadata.
+        metadata = self.metadata.copy()
+        props = 0
+        if self.sitting:
+            props |= 0x1
+        if self.angry:
+            props |= 0x2
+        if self.owner:
+            props |= 0x4
+        metadata[16] = "byte", props
+
+        return make_packet("mob",
+            eid=self.eid,
+            type="wolf",
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=0,
+            pitch=0,
+            metadata=metadata
+        )
+
 class Zombie(Mob):
     """
     A zombie.
@@ -372,6 +417,7 @@ entities = dict((entity.name, entity)
         Skeleton,
         Spider,
         Squid,
+        Wolf,
         Zombie,
     )
 )
