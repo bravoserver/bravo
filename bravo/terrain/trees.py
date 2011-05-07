@@ -95,10 +95,10 @@ class Tree(object):
     def prepare(self, world):
         pass
 
-    def make_trunk(world):
+    def make_trunk(self, world):
         pass
 
-    def make_foliage(world):
+    def make_foliage(self, world):
         pass
 
 class StickTree(Tree):
