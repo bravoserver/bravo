@@ -213,9 +213,35 @@ class Pig(Mob):
     """
 
     name = "Pig"
-    type = "pig"
 
     metadata = {0: ("byte", 0), 16: ("byte", 0)}
+
+    def __init__(self, saddle=False, **kwargs):
+        """
+        Create a pig.
+
+        This method calls super()
+        """
+
+        super(Pig, self).__init__(**kwargs)
+
+        self.saddle = saddle
+
+    def save_to_packet(self):
+        # Prepare metadata.
+        metadata = self.metadata.copy()
+        metadata[16] = "byte", self.saddle
+
+        return make_packet("mob",
+            eid=self.eid,
+            type="pig",
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=0,
+            pitch=0,
+            metadata=metadata
+        )
 
 class Sheep(Mob):
     """

@@ -110,7 +110,7 @@ class Alpha(object):
             "Cow": lambda entity, tag: None,
             "Item": self._load_item_from_tag,
             "Painting": self._load_painting_from_tag,
-            "Pig": lambda entity, tag: None,
+            "Pig": self._load_pig_from_tag,
             "Sheep": self._load_sheep_from_tag,
             "Slime": self._load_slime_from_tag,
             "Squid": lambda entity, tag: None,
@@ -121,7 +121,7 @@ class Alpha(object):
             "Cow": lambda entity, tag: None,
             "Item": self._save_item_to_tag,
             "Painting": self._save_painting_to_tag,
-            "Pig": lambda entity, tag: None,
+            "Pig": self._save_pig_to_tag,
             "Sheep": self._save_sheep_to_tag,
             "Slime": self._save_slime_to_tag,
             "Squid": lambda entity, tag: None,
@@ -220,6 +220,12 @@ class Alpha(object):
         tag["TileX"] = TAG_Int(painting.location.x)
         tag["TileY"] = TAG_Int(painting.location.y)
         tag["TileZ"] = TAG_Int(painting.location.z)
+
+    def _load_pig_from_tag(self, pig, tag):
+        pig.saddle = bool(tag["Saddle"].value)
+
+    def _save_pig_to_tag(self, pig, tag):
+        tag["Saddle"] = TAG_Byte(pig.saddle)
 
     def _load_sheep_from_tag(self, sheep, tag):
         sheep.sheared = bool(tag["Sheared"].value)
