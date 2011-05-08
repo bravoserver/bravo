@@ -157,6 +157,35 @@ class TestWater(unittest.TestCase):
         self.assertEqual(block, bravo.blocks.blocks["water"].slot)
 
     @inlineCallbacks
+    def test_spring_waterfall(self):
+        """
+        Fluid should not spread across existing fluid.
+        """
+
+        self.w.set_block((0, 3, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 2, 0), bravo.blocks.blocks["dirt"].slot)
+        self.hook.pending[self.f].add((0, 1, 0))
+
+        # Tight-loop run the hook to equilibrium.
+        while self.hook.pending:
+            self.hook.process()
+
+        #dig away dirt and add known spring and fluid blocks
+        self.w.destroy((0, 2, 0))
+        self.hook.pending[self.f].add((0, 2, 1))
+        self.hook.pending[self.f].add((0, 2, -1))
+        self.hook.pending[self.f].add((0, 3, 0))
+        self.hook.pending[self.f].add((1, 2, 0))
+        self.hook.pending[self.f].add((-1, 2, 0))
+
+        while self.hook.pending:
+            self.hook.process()
+
+        block = yield self.w.get_block((0, 1, 2))
+        self.assertEqual(block, bravo.blocks.blocks["air"].slot)
+
+
+    @inlineCallbacks
     def test_obstacle(self):
         """
         Test that obstacles are flowed around correctly.
