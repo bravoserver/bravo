@@ -211,7 +211,7 @@ class Ascend(object):
         protocol = factory.protocols[username]
         x = protocol.player.location.x
         z = protocol.player.location.z
-        bigx, bigz, smallx, smallz = split_coords(x, z)
+        bigx, smallx, bigz, smallz = split_coords(x, z)
 
         chunk = yield factory.world.request_chunk(bigx, bigz)
         column = chunk.get_column(smallx, smallz)
@@ -245,7 +245,7 @@ class Descend(object):
         protocol = factory.protocols[username]
         x = protocol.player.location.x
         z = protocol.player.location.z
-        bigx, bigz, smallx, smallz = split_coords(x, z)
+        bigx, smallx, bigz, smallz = split_coords(x, z)
 
         chunk = yield factory.world.request_chunk(bigx, bigz)
         column = chunk.get_column(smallx, smallz)
