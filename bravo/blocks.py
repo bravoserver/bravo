@@ -100,7 +100,7 @@ class Block(object):
         else:
             attributes = ""
 
-        return "Block(%d %r%s)" % (self.slot, self.name, attributes)
+        return "Block(%r %r%s)" % (self.key, self.name, attributes)
 
     __repr__ = __str__
 
@@ -148,8 +148,12 @@ class Item(object):
         self.slot = slot
         self.name = name
 
-        # XXX
         self.key = (self.slot, secondary)
+
+    def __str__(self):
+        return "Item(%r %r)" % (self.key, self.name)
+
+    __repr__ = __str__
 
 block_names = [
     "air", # 0x0
