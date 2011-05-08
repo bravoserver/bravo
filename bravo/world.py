@@ -299,7 +299,11 @@ class World(object):
             chunk.regenerate()
             d = succeed(chunk)
 
+        # Set up our event and generate our return-value Deferred. It has to
+        # be done early becaues PendingEvents only fire exactly once and it
+        # might fire immediately in certain cases.
         pe = PendingEvent()
+        retval = pe.deferred()
         self._pending_chunks[x, z] = pe
 
         def pp(chunk):
@@ -324,7 +328,7 @@ class World(object):
         # when we actually finish, we'll be ready to return the chunk
         # immediately. Our caller cannot possibly care because they only see a
         # Deferred either way.
-        retval = yield pe.deferred()
+        retval = yield retval
         returnValue(retval)
 
     def save_chunk(self, chunk):

@@ -27,7 +27,7 @@ def pad_to_stride(recipe, rstride, cstride):
 
     pad = (None,) * (cstride - rstride)
     g = grouper(rstride, recipe)
-    padded = list(g.next())
+    padded = list(next(g))
     for row in g:
         padded.extend(pad)
         padded.extend(row)
@@ -38,6 +38,8 @@ class Slot(namedtuple("Slot", "primary, secondary, quantity")):
     """
     A slot in an inventory.
     """
+
+    __slots__ = tuple()
 
     def holds(self, other):
         """
@@ -107,6 +109,8 @@ class Inventory(object):
     armor = 0
     storage = 0
     holdables = 0
+
+    identifier = 0
 
     slot_table = tuple()
 
@@ -196,7 +200,12 @@ class Inventory(object):
         Load data from a packet container.
         """
 
-        items = [None] * len(self.i)
+        length = self.crafting + self.armor + self.storage + self.holdables
+        if self.crafting:
+            # +1 for crafting output slot
+            length += 1
+
+        items = [None] * length
 
         for i, item in enumerate(container.items):
             if item.id < 0:
