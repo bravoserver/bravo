@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content=
+  "HTML Tidy for Linux (vers 25 March 2009), see www.w3.org">
+
+  <link rel="stylesheet" type="text/css" href="styles.css">
+  <link rel="stylesheet" type="text/css" href="highlighting.css">
+  <link rel='stylesheet' type='text/css' href=
+  'http://fonts.googleapis.com/css?family=GFS+Neohellenic:bolditalic&amp;subset=greek'>
+  <link rel='stylesheet' type='text/css' href=
+  'http://fonts.googleapis.com/css?family=Candal'>
+
+
+  <title>
+    {% block title %}
+    {{ site.title }} ~ {{ page.title }}
+    {% endblock %}
+  </title>
+</head>
+
+<body>
+  <div id="body">
+    <div id="header">
+      <div id="header-left">
+        <h1 style="font-size: 60pt; font-family: 'Candal'">
+        <span style=
+        "font-size: 200%; font-family: 'GFS Neohellenic'">&beta;</span>ravo</h1>
+      </div><!--div id="header-right">
+
+    <script type="text/javascript"
+    src="http://www.ohloh.net/p/486884/widgets/project_users.js?style=rainbow">
+    </script>
+    </div-->
+    </div>
+
+    <div id="main">
+      <div id="content">
+          {% block main %}{{ page.content }}{% endblock %}
+      </div>
+    </div>
+
+    <div id="footer">
+      <p>All content is copyright Corbin Simpson and not to be used
+      without permission except where otherwise noted. Nobody makes
+      the jump the first time. Be excellent. Warning: Some experts
+      believe that reading footnotes may cause undesired side
+      effects.</p>
+
+      <p>This page was last generated on {{ site.datetime }}</p>
+    </div>
+  </div>
+
+  <div id="valid">
+    <a href=
+    "http://jigsaw.w3.org/css-validator/check/referer"><img style=
+    "border:0;width:88px;height:31px" src=
+    "http://jigsaw.w3.org/css-validator/images/vcss-blue" alt=
+    "Valid CSS!"></a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{% extends "default.html" %}
+{% block title %}
+    {{ site.title }}
+{% endblock %}
+{% block main %}
+{{ super() }}
+{% for page in self.subpages %}
+    {{ page.content }}
+{% else %}
+Huh, where'd the content go?
+{% endfor %}
+{% endblock %}
