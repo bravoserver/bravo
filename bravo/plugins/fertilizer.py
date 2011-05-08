@@ -30,8 +30,8 @@ class Fertilizer(object):
         # Now all dyes will work as a fertilizer.
         if item.slot == items["bone-meal"].slot:
             # Find the block we're aiming for.
-            sapling_block = yield factory.world.get_block((x,y,z))
-            if sapling_block == blocks["sapling"].slot:
+            block = yield factory.world.get_block((x,y,z))
+            if block == blocks["sapling"].slot:
                 # Make sure we can remove it from the inventory.
                 if not player.inventory.consume(items["bone-meal"].key, player.equipped):
                     returnValue((False, builddata))
@@ -45,7 +45,7 @@ class Fertilizer(object):
                 # to flush all of them.
                 factory.flush_all_chunks()
 
-        returnValue((True, builddata))
+        returnValue((False, builddata))
 
     name = "fertilizer"
 
