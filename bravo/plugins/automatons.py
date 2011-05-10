@@ -1,7 +1,11 @@
-from random import randint
+from __future__ import division
+
+from itertools import product
+from random import randint, random
 
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
+from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
 from bravo.blocks import blocks
@@ -54,4 +58,61 @@ class Trees(object):
 
     name = "trees"
 
+class Grass(object):
+
+    implements(IAutomaton)
+
+    blocks = (blocks["dirt"].slot,)
+
+    step = 2
+
+    def __init__(self):
+        self.tracked = set()
+        self.loop = LoopingCall(self.process)
+
+    @inlineCallbacks
+    def process(self):
+        if not self.tracked:
+            if self.loop.running:
+                self.loop.stop()
+            return
+
+        factory, coords = self.tracked.pop()
+
+        current = yield factory.world.get_block(coords)
+        if current == blocks["dirt"].slot:
+            # Yep, it's still dirt. Let's look around and see whether it
+            # should be grassy.
+            # Our general strategy is as follows: We look at the blocks
+            # nearby. If at least eight of them are grass, grassiness is
+            # guaranteed, but if none of them are grass, grassiness just won't
+            # happen.
+            x, y, z = coords
+            # Intentional shadow.
+            grasses = 0
+            for x, y, z in product(xrange(x - 1, x + 2), xrange(y - 3, y + 2),
+                xrange(z - 1, z + 2)):
+                # Early-exit to avoid block lookup if we finish early.
+                if grasses >= 8:
+                    break
+                block = yield factory.world.get_block((x, y, z))
+                if block == blocks["grass"].slot:
+                    grasses += 1
+
+            # Randomly determine whether we are finished.
+            if grasses / 8 >= random():
+                # Hey, let's make some grass.
+                factory.world.set_block(coords, blocks["grass"].slot)
+            else:
+                # Not yet; add it back to the list.
+                self.tracked.add(factory, coords)
+
+    def feed(self, factory, coords):
+        self.tracked.add((factory, coords))
+        if not self.loop.running:
+            self.loop.start(self.step)
+
+    name = "grass"
+
 trees = Trees()
+grass = Grass()
