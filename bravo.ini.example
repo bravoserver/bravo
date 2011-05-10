@@ -77,7 +77,7 @@ perm_cache = 3
 dig_hooks = give, bravo_snow, alpha_sand_gravel, torch, water, lava
 
 # Build hooks.
-build_hooks = build_snow, tile, build, bravo_snow, alpha_sand_gravel
+build_hooks = build_snow, tile, build, bravo_snow, alpha_sand_gravel, fertilizer
 
 # Automatons. These make grass grow, birds fly, sun shine, and, well...
 # You probably want all of these.
