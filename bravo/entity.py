@@ -213,7 +213,38 @@ class Creeper(Mob):
     """
 
     name = "Creeper"
-    type = "creeper"
+
+    metadata = {0: ("byte", 0), 17: ("byte", 0)}
+
+    def __init__(self, aura=False, **kwargs):
+        """
+        Create a creeper.
+
+        This method calls super()
+        """
+
+        super(Creeper, self).__init__(**kwargs)
+
+        self.aura = aura
+
+    def save_to_packet(self):
+        metadata = self.metadata.copy()
+
+        aura = 0
+        if self.aura:
+            aura |= 0x1
+        metadata[17] = "byte", aura
+
+        return make_packet("mob",
+            eid=self.eid,
+            type="creeper",
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=0,
+            pitch=0,
+            metadata=metadata
+        )
 
 class Ghast(Mob):
     """
