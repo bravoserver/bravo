@@ -1,11 +1,11 @@
-from bravo.blocks import blocks
+from bravo.blocks import blocks, items
 
 class SpeedyDigPolicy(object):
     """
     A digging policy which lets blocks be broken very fast.
     """
 
-    def is_1ko(self, block):
+    def is_1ko(self, block, tool):
         return True
 
     def dig_time(self, block, tool):
@@ -30,8 +30,8 @@ class NotchyDigPolicy(object):
     A digging policy modeled after the Notchian server dig times.
     """
 
-    def is_1ko(self, block):
-        return block in (
+    def is_1ko(self, block, tool):
+        if block in (
             blocks["brown-mushroom"].slot,
             blocks["crops"].slot,
             blocks["flower"].slot,
@@ -43,11 +43,21 @@ class NotchyDigPolicy(object):
             blocks["redstone-wire"].slot,
             blocks["rose"].slot,
             blocks["sapling"].slot,
-            blocks["snow"].slot,
             blocks["sugar-cane"].slot,
             blocks["tnt"].slot,
             blocks["torch"].slot,
-        )
+            ):
+            return True
+        elif block == blocks["snow"].slot and tool and tool.primary in (
+            items["diamond-shovel"].slot,
+            items["gold-shovel"].slot,
+            items["iron-shovel"].slot,
+            items["stone-shovel"].slot,
+            items["wooden-shovel"].slot,
+            ):
+            return True
+
+        return False
 
     def dig_time(self, block, tool):
         if block in hardness:
