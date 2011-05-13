@@ -108,23 +108,39 @@ class Alpha(object):
         self._entity_loaders = {
             "Chicken": lambda entity, tag: None,
             "Cow": lambda entity, tag: None,
+            "Creeper": lambda entity, tag: None,
+            "Ghast": lambda entity, tag: None,
+            "GiantZombie": lambda entity, tag: None,
             "Item": self._load_item_from_tag,
             "Painting": self._load_painting_from_tag,
-            "Pig": lambda entity, tag: None,
+            "Pig": self._load_pig_from_tag,
+            "PigZombie": lambda entity, tag: None,
             "Sheep": self._load_sheep_from_tag,
+            "Skeleton": lambda entity, tag: None,
             "Slime": self._load_slime_from_tag,
+            "Spider": lambda entity, tag: None,
             "Squid": lambda entity, tag: None,
+            "Wolf": self._load_wolf_from_tag,
+            "Zombie": lambda entity, tag: None,
         }
 
         self._entity_savers = {
             "Chicken": lambda entity, tag: None,
             "Cow": lambda entity, tag: None,
+            "Creeper": lambda entity, tag: None,
+            "Ghast": lambda entity, tag: None,
+            "GiantZombie": lambda entity, tag: None,
             "Item": self._save_item_to_tag,
             "Painting": self._save_painting_to_tag,
-            "Pig": lambda entity, tag: None,
+            "Pig": self._save_pig_to_tag,
+            "PigZombie": lambda entity, tag: None,
             "Sheep": self._save_sheep_to_tag,
+            "Skeleton": lambda entity, tag: None,
             "Slime": self._save_slime_to_tag,
+            "Spider": lambda entity, tag: None,
             "Squid": lambda entity, tag: None,
+            "Wolf": self._save_wolf_to_tag,
+            "Zombie": lambda entity, tag: None,
         }
 
         self._tile_loaders = {
@@ -221,6 +237,12 @@ class Alpha(object):
         tag["TileY"] = TAG_Int(painting.location.y)
         tag["TileZ"] = TAG_Int(painting.location.z)
 
+    def _load_pig_from_tag(self, pig, tag):
+        pig.saddle = bool(tag["Saddle"].value)
+
+    def _save_pig_to_tag(self, pig, tag):
+        tag["Saddle"] = TAG_Byte(pig.saddle)
+
     def _load_sheep_from_tag(self, sheep, tag):
         sheep.sheared = bool(tag["Sheared"].value)
         sheep.color = tag["Color"].value
@@ -234,6 +256,16 @@ class Alpha(object):
 
     def _save_slime_to_tag(self, slime, tag):
         tag["Size"] = TAG_Byte(slime.size)
+
+    def _load_wolf_from_tag(self, wolf, tag):
+        wolf.owner = tag["Owner"].value
+        wolf.sitting = bool(tag["Sitting"].value)
+        wolf.angry = bool(tag["Angry"].value)
+
+    def _save_wolf_to_tag(self, wolf, tag):
+        tag["Owner"] = TAG_String(wolf.owner)
+        tag["Sitting"] = TAG_Byte(wolf.sitting)
+        tag["Angry"] = TAG_Byte(wolf.angry)
 
     # Tile serializers. Tiles are blocks and entities at the same time, in the
     # worst way. Each of these helpers will be called during chunk serialize

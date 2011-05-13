@@ -207,15 +207,104 @@ class Cow(Mob):
     name = "Cow"
     type = "cow"
 
+class Creeper(Mob):
+    """
+    A creeper.
+    """
+
+    name = "Creeper"
+
+    metadata = {0: ("byte", 0), 17: ("byte", 0)}
+
+    def __init__(self, aura=False, **kwargs):
+        """
+        Create a creeper.
+
+        This method calls super()
+        """
+
+        super(Creeper, self).__init__(**kwargs)
+
+        self.aura = aura
+
+    def save_to_packet(self):
+        metadata = self.metadata.copy()
+
+        aura = 0
+        if self.aura:
+            aura |= 0x1
+        metadata[17] = "byte", aura
+
+        return make_packet("mob",
+            eid=self.eid,
+            type="creeper",
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=0,
+            pitch=0,
+            metadata=metadata
+        )
+
+class Ghast(Mob):
+    """
+    A sad ghost
+    """
+
+    name = "Ghast"
+    type = "ghast"
+
+class GiantZombie(Mob):
+    """
+    A giant zombie
+    """
+
+    name = "GiantZombie"
+    type = "giant_zombie"
+
 class Pig(Mob):
     """
     A provider of bacon and piggyback rides.
     """
 
     name = "Pig"
-    type = "pig"
 
     metadata = {0: ("byte", 0), 16: ("byte", 0)}
+
+    def __init__(self, saddle=False, **kwargs):
+        """
+        Create a pig.
+
+        This method calls super()
+        """
+
+        super(Pig, self).__init__(**kwargs)
+
+        self.saddle = saddle
+
+    def save_to_packet(self):
+        # Prepare metadata.
+        metadata = self.metadata.copy()
+        metadata[16] = "byte", self.saddle
+
+        return make_packet("mob",
+            eid=self.eid,
+            type="pig",
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=0,
+            pitch=0,
+            metadata=metadata
+        )
+
+class PigZombie(Mob):
+    """
+    A zombie pigman.
+    """
+
+    name = "PigZombie"
+    type = "pigman"
 
 class Sheep(Mob):
     """
@@ -257,6 +346,14 @@ class Sheep(Mob):
             metadata=metadata
         )
 
+class Skeleton(Mob):
+    """
+    An archer skeleton.
+    """
+
+    name = "Skeleton"
+    type = "skeleton"
+
 class Slime(Mob):
     """
     A gelatinous blob.
@@ -293,6 +390,14 @@ class Slime(Mob):
             metadata=metadata
         )
 
+class Spider(Mob):
+    """
+    A spider.
+    """
+
+    name = "Spider"
+    type = "spider"
+
 class Squid(Mob):
     """
     An aquatic source of ink.
@@ -301,16 +406,77 @@ class Squid(Mob):
     name = "Squid"
     type = "squid"
 
+class Wolf(Mob):
+    """
+    A wolf.
+    """
+
+    name = "Wolf"
+
+    metadata = {0: ("byte", 0), 16: ("byte", 0)}
+
+    def __init__(self, owner=None, angry=False, sitting=False, **kwargs):
+        """
+        Create a wolf.
+
+        This method calls super().
+        """
+
+        super(Wolf, self).__init__(**kwargs)
+
+        self.owner = owner
+        self.angry = angry
+        self.sitting = sitting
+
+    def save_to_packet(self):
+        # Prepare metadata.
+        metadata = self.metadata.copy()
+        props = 0
+        if self.sitting:
+            props |= 0x1
+        if self.angry:
+            props |= 0x2
+        if self.owner:
+            props |= 0x4
+        metadata[16] = "byte", props
+
+        return make_packet("mob",
+            eid=self.eid,
+            type="wolf",
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=0,
+            pitch=0,
+            metadata=metadata
+        )
+
+class Zombie(Mob):
+    """
+    A zombie.
+    """
+
+    name = "Zombie"
+    type = "zombie"
+
 entities = dict((entity.name, entity)
     for entity in (
         Chuck,
         Cow,
+        Creeper,
+        Ghast,
+        GiantZombie,
         Painting,
         Pickup,
         Pig,
+        PigZombie,
         Player,
         Sheep,
+        Skeleton,
+        Spider,
         Squid,
+        Wolf,
+        Zombie,
     )
 )
 
