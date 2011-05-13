@@ -111,6 +111,8 @@ class Grass(object):
             if grasses / 8 >= random():
                 # Hey, let's make some grass.
                 factory.world.set_block(coords, blocks["grass"].slot)
+                # XXX goddammit
+                factory.flush_all_chunks()
             else:
                 # Not yet; add it back to the list.
                 self.tracked.add(factory, coords)
@@ -118,7 +120,7 @@ class Grass(object):
     def feed(self, factory, coords):
         self.tracked.add((factory, coords))
         if not self.loop.running:
-            self.loop.start(self.step)
+            self.loop.start(self.step, False)
 
     def dig_hook(self, factory, chunk, x, y, z, block):
         if y > 0:
@@ -129,7 +131,7 @@ class Grass(object):
 
                 self.tracked.add((factory, coords))
                 if not self.loop.running:
-                    self.loop.start(self.step)
+                    self.loop.start(self.step, False)
 
     name = "grass"
 
