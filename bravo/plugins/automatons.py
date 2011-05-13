@@ -9,7 +9,7 @@ from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
 from bravo.blocks import blocks
-from bravo.ibravo import IAutomaton
+from bravo.ibravo import IAutomaton, IDigHook
 from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
 
 class Trees(object):
@@ -60,7 +60,7 @@ class Trees(object):
 
 class Grass(object):
 
-    implements(IAutomaton)
+    implements(IAutomaton, IDigHook)
 
     blocks = (blocks["dirt"].slot,)
 
@@ -88,8 +88,16 @@ class Grass(object):
             # guaranteed, but if none of them are grass, grassiness just won't
             # happen.
             x, y, z = coords
-            # Intentional shadow.
+
+            # First things first: Grass can't grow if there's things on top of
+            # it, so check that first.
+            above = yield factory.world.get_block((x, y + 1, z))
+            if above:
+                return
+
+            # The number of grassy neighbors.
             grasses = 0
+            # Intentional shadow.
             for x, y, z in product(xrange(x - 1, x + 2), xrange(y - 3, y + 2),
                 xrange(z - 1, z + 2)):
                 # Early-exit to avoid block lookup if we finish early.
@@ -111,6 +119,17 @@ class Grass(object):
         self.tracked.add((factory, coords))
         if not self.loop.running:
             self.loop.start(self.step)
+
+    def dig_hook(self, factory, chunk, x, y, z, block):
+        if y > 0:
+            block = chunk.get_block((x, y - 1, z))
+            if block in self.blocks:
+                # Track it now.
+                coords = (chunk.x * 16 + x, y - 1, chunk.z * 16 + z)
+
+                self.tracked.add((factory, coords))
+                if not self.loop.running:
+                    self.loop.start(self.step)
 
     name = "grass"
 

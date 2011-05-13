@@ -1,5 +1,4 @@
 from itertools import product
-import os
 import shutil
 import tempfile
 
@@ -87,3 +86,28 @@ class TestGrass(unittest.TestCase):
 
         self.assertFalse(self.hook.tracked)
         self.assertEqual(chunk.get_block((1, 0, 1)), blocks["grass"].slot)
+
+    @inlineCallbacks
+    def test_surrounding_obstructed(self):
+        """
+        Grass can't grow on blocks which have other blocks on top of them.
+        """
+
+        chunk = yield self.w.request_chunk(0, 0)
+
+        # Set up grassy surroundings.
+        for x, z in product(xrange(0, 3), repeat=2):
+            chunk.set_block((x, 0, z), blocks["grass"].slot)
+
+        # Put an obstruction on top.
+        chunk.set_block((1, 1, 1), blocks["stone"].slot)
+
+        # Our lone Cinderella.
+        chunk.set_block((1, 0, 1), blocks["dirt"].slot)
+
+        # Do the actual hook run. This should take exactly one run.
+        self.hook.feed(self.f, (1, 0, 1))
+        self.hook.process()
+
+        self.assertFalse(self.hook.tracked)
+        self.assertEqual(chunk.get_block((1, 0, 1)), blocks["dirt"].slot)
