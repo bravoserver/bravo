@@ -17,7 +17,8 @@ from bravo.blocks import blocks, items
 from bravo.config import configuration
 from bravo.entity import Sign
 from bravo.factories.infini import InfiniClientFactory
-from bravo.ibravo import IChatCommand, IBuildHook, IDigHook, ISignHook, IUseHook
+from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
+    IDigHook, ISignHook, IUseHook)
 from bravo.inventory import Workbench, sync_inventories
 from bravo.location import Location
 from bravo.motd import get_motd
@@ -39,6 +40,11 @@ A list of points in a filled circle of radius 10.
 """
 
 BuildData = namedtuple("BuildData", "block, metadata, x, y, z, face")
+
+class BuildError(Exception):
+    """
+    Something went wrong with the build.
+    """
 
 class BetaServerProtocol(Protocol):
     """
@@ -429,9 +435,12 @@ class BravoProtocol(BetaServerProtocol):
         self.config_name = "world %s" % name
 
         log.msg("Registering client hooks...")
-        names = configuration.getlistdefault(self.config_name, "build_hooks",
+        names = configuration.getlistdefault(self.config_name, "pre_build_hooks",
             [])
-        self.build_hooks = retrieve_sorted_plugins(IBuildHook, names)
+        self.pre_build_hooks = retrieve_sorted_plugins(IPreBuildHook, names)
+        names = configuration.getlistdefault(self.config_name, "post_build_hooks",
+            [])
+        self.post_build_hooks = retrieve_sorted_plugins(IPostBuildHook, names)
         names = configuration.getlistdefault(self.config_name, "dig_hooks",
             [])
         self.dig_hooks = retrieve_sorted_plugins(IDigHook, names)
@@ -778,16 +787,32 @@ class BravoProtocol(BetaServerProtocol):
         if container.y == 127 and container.face == '+y':
             return
 
+        # Run pre-build hooks. These hooks are able to interrupt the build
+        # process.
         builddata = BuildData(block, 0x0, container.x, container.y,
             container.z, container.face)
 
-        for hook in self.build_hooks:
-            cont, builddata = yield maybeDeferred(hook.build_hook,
+        for hook in self.pre_build_hooks:
+            cont, builddata = yield maybeDeferred(hook.pre_build_hook,
                 self.factory, self.player, builddata)
             if not cont:
                 break
 
+        # Run the build.
+        try:
+            yield maybeDeferred(self.run_build, builddata)
+        except BuildError:
+            return
+
         newblock = builddata.block.slot
+        coords = builddata.x, builddata.y, builddata.z
+
+        # Run post-build hooks. These are merely callbacks which cannot
+        # interfere with the build process, largely because the build process
+        # already happened.
+        for hook in self.post_build_hooks:
+            yield maybeDeferred(hook.post_build_hook, self.factory,
+                self.player, coords, builddata.block)
 
         # Feed automatons.
         for automaton in self.factory.automatons:
@@ -803,6 +828,51 @@ class BravoProtocol(BetaServerProtocol):
         # Flush damaged chunks.
         for chunk in self.chunks.itervalues():
             self.factory.flush_chunk(chunk)
+
+    def run_build(self, builddata):
+        block, metadata, x, y, z, face = builddata
+
+        # Don't place items as blocks.
+        if block.slot not in blocks:
+            raise BuildError("Couldn't build item %r as block" % block)
+
+        # Check for orientable blocks.
+        if not metadata and block.orientable():
+            metadata = block.orientation(face)
+            if metadata is None:
+                # Oh, I guess we can't even place the block on this face.
+                raise BuildError("Couldn't orient block %r on face %s" %
+                    (block, face))
+
+        # Make sure we can remove it from the inventory first.
+        if not self.player.inventory.consume((block.slot, 0),
+            self.player.equipped):
+            # Okay, first one was a bust; maybe we can consume the related
+            # block for dropping instead?
+            if not self.player.inventory.consume((block.drop, 0),
+                self.player.equipped):
+                raise BuildError("Couldn't consume %r from inventory" % block)
+
+        # Offset coords according to face.
+        if face == "-x":
+            x -= 1
+        elif face == "+x":
+            x += 1
+        elif face == "-y":
+            y -= 1
+        elif face == "+y":
+            y += 1
+        elif face == "-z":
+            z -= 1
+        elif face == "+z":
+            z += 1
+
+        # Set the block and data.
+        dl = [self.factory.world.set_block((x, y, z), block.slot)]
+        if metadata:
+            dl.append(self.factory.world.set_metadata((x, y, z), metadata))
+
+        return DeferredList(dl)
 
     def equip(self, container):
         self.player.equipped = container.item

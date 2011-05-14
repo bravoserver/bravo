@@ -4,7 +4,7 @@ import random
 from zope.interface import implements
 
 from bravo.blocks import items
-from bravo.ibravo import IBuildHook, IUseHook
+from bravo.ibravo import IPreBuildHook, IUseHook
 from bravo.packets.beta import make_packet
 
 available_paintings = {
@@ -38,7 +38,7 @@ class Paintings(object):
     pay attention to the available space.
     """
 
-    implements(IBuildHook, IUseHook)
+    implements(IPreBuildHook, IUseHook)
 
     name = "painting"
 

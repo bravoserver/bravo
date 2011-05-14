@@ -3,7 +3,7 @@ from zope.interface import implements
 
 from bravo.blocks import blocks, items
 from bravo.entity import Chest, Sign
-from bravo.ibravo import IBuildHook
+from bravo.ibravo import IPreBuildHook
 from bravo.utilities.coords import split_coords
 
 class Tile(object):
@@ -13,10 +13,10 @@ class Tile(object):
     You almost certainly want to enable this plugin.
     """
 
-    implements(IBuildHook)
+    implements(IPreBuildHook)
 
     @inlineCallbacks
-    def build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, factory, player, builddata):
         item, metadata, x, y, z, face = builddata
 
         if item.slot == items["sign"].slot:
@@ -73,7 +73,7 @@ class Tile(object):
 
             bigx, smallx, bigz, smallz = split_coords(x, z)
 
-            # Not much to do, just tell the chunk about this chest.
+           # Not much to do, just tell the chunk about this chest.
             chunk = yield factory.world.request_chunk(bigx, bigz)
             c = Chest(smallx, y, smallz)
             chunk.tiles[smallx, y, smallz] = c
@@ -85,64 +85,6 @@ class Tile(object):
     before = tuple()
     after = ("build",)
 
-class Build(object):
-    """
-    Place a block in a given location.
-
-    You almost certainly want to enable this plugin.
-    """
-
-    implements(IBuildHook)
-
-    def build_hook(self, factory, player, builddata):
-        block, metadata, x, y, z, face = builddata
-
-        # Don't place items as blocks.
-        if block.slot not in blocks:
-            return True, builddata
-
-        # Check for orientable blocks.
-        if not metadata and block.orientable():
-            metadata = block.orientation(face)
-            if metadata is None:
-                # Oh, I guess we can't even place the block on this face.
-                return True, builddata
-
-        # Make sure we can remove it from the inventory first.
-        if not player.inventory.consume((block.slot, 0), player.equipped):
-            # Okay, first one was a bust; maybe we can consume the related
-            # block for dropping instead?
-            if not player.inventory.consume((block.drop, 0), player.equipped):
-                return True, builddata
-
-        # Offset coords according to face.
-        if face == "-x":
-            x -= 1
-        elif face == "+x":
-            x += 1
-        elif face == "-y":
-            y -= 1
-        elif face == "+y":
-            y += 1
-        elif face == "-z":
-            z -= 1
-        elif face == "+z":
-            z += 1
-
-        builddata = builddata._replace(x=x, y=y, z=z, face="noop")
-
-        # Set the block and data. Don't bother collecting the Deferreds.
-        factory.world.set_block((x, y, z), block.slot)
-        if metadata:
-            factory.world.set_metadata((x, y, z), metadata)
-
-        return True, builddata
-
-    name = "build"
-
-    before = tuple()
-    after = tuple()
-
 class BuildSnow(object):
     """
     Makes building on snow behave correctly.
@@ -150,10 +92,10 @@ class BuildSnow(object):
     You almost certainly want to enable this plugin.
     """
 
-    implements(IBuildHook)
+    implements(IPreBuildHook)
 
     @inlineCallbacks
-    def build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, factory, player, builddata):
         block = yield factory.world.get_block((builddata.x, builddata.y, builddata.z))
 
         if block == blocks["snow"].slot:
@@ -168,5 +110,4 @@ class BuildSnow(object):
     after = ("build",)
 
 tile = Tile()
-build = Build()
 build_snow = BuildSnow()

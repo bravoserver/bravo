@@ -2,7 +2,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
-from bravo.ibravo import IBuildHook
+from bravo.ibravo import IPreBuildHook
 from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
 
 class Fertilizer(object):
@@ -11,7 +11,7 @@ class Fertilizer(object):
     and make them grow up instantly.
     """
 
-    implements(IBuildHook)
+    implements(IPreBuildHook)
 
     def __init__(self):
         self.trees = [
@@ -22,7 +22,7 @@ class Fertilizer(object):
         ]
 
     @inlineCallbacks
-    def build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, factory, player, builddata):
         item, metadata, x, y, z, face = builddata
 
         # Make sure we're using a bone meal.
@@ -34,6 +34,7 @@ class Fertilizer(object):
             if block == blocks["sapling"].slot:
                 # Make sure we can remove it from the inventory.
                 if not player.inventory.consume(items["bone-meal"].key, player.equipped):
+                    # If not, don't let bone meal get placed.
                     returnValue((False, builddata))
 
                 # Select correct treee and coordinates, then build tree.
@@ -45,6 +46,7 @@ class Fertilizer(object):
                 # to flush all of them.
                 factory.flush_all_chunks()
 
+        # Interrupt the processing here.
         returnValue((False, builddata))
 
     name = "fertilizer"

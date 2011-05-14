@@ -282,12 +282,12 @@ class ISerializerFactory(IBravoPlugin):
 
 # Hooks
 
-class IBuildHook(ISortedPlugin):
+class IPreBuildHook(ISortedPlugin):
     """
-    Hook for actions to be taken after a block is placed.
+    Hook for actions to be taken before a block is placed.
     """
 
-    def build_hook(factory, player, builddata):
+    def pre_build_hook(factory, player, builddata):
         """
         Do things.
 
@@ -312,14 +312,14 @@ class IBuildHook(ISortedPlugin):
 
         A trivial do-nothing build hook looks like the following:
 
-        >>> def build_hook(self, factory, player, builddata):
+        >>> def pre_build_hook(self, factory, player, builddata):
         ...     return True, builddata
 
         To make life more pleasant when returning deferred values, use
         ``inlineCallbacks``, which many of the standard build hooks use:
 
         >>> @inlineCallbacks
-        ... def build_hook(self, factory, player, builddata):
+        ... def pre_build_hook(self, factory, player, builddata):
         ...     returnValue((True, builddata))
 
         This form makes it much easier to deal with asynchronous operations on
@@ -331,6 +331,16 @@ class IBuildHook(ISortedPlugin):
 
         :returns: ``Deferred`` with tuple of build data and whether subsequent
                   hooks will run
+        """
+
+class IPostBuildHook(ISortedPlugin):
+    """
+    Hook for actions to be taken after a block is placed.
+    """
+
+    def post_build_hook(factory, player, builddata):
+        """
+        Do things.
         """
 
 class IDigHook(ISortedPlugin):

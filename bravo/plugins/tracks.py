@@ -1,7 +1,7 @@
 from zope.interface import implements
 
 from bravo.blocks import blocks
-from bravo.ibravo import IBuildHook, IDigHook
+from bravo.ibravo import IPreBuildHook, IDigHook
 
 tracks_allowed_on = set([
     blocks["bedrock"].slot,
@@ -58,11 +58,11 @@ class Tracks(object):
     Build and dig hooks for mine cart tracks.
     """
 
-    implements(IBuildHook, IDigHook)
+    implements(IPreBuildHook, IDigHook)
 
     name = "tracks"
 
-    def build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, factory, player, builddata):
         """
         Uses the players location yaw relative to the building position to
         place the tracks. This allows building straight tracks as well as

@@ -3,7 +3,7 @@ from zope.interface import implements
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from bravo.blocks import blocks
-from bravo.ibravo import IBuildHook, IDigHook
+from bravo.ibravo import IPostBuildHook, IDigHook
 from bravo.utilities.coords import split_coords
 
 class Fallables(object):
@@ -11,7 +11,7 @@ class Fallables(object):
     Sometimes things should fall.
     """
 
-    implements(IBuildHook, IDigHook)
+    implements(IPostBuildHook, IDigHook)
 
     fallables = tuple()
     whitespace = (blocks["air"].slot,)
@@ -43,7 +43,7 @@ class Fallables(object):
         chunk.set_column(x, z, column)
 
     @inlineCallbacks
-    def build_hook(self, factory, player, builddata):
+    def post_build_hook(self, factory, player, builddata):
         bigx, smallx, bigz, smallz = split_coords(builddata.x, builddata.z)
         chunk = yield factory.world.request_chunk(bigx, bigz)
         self.dig_hook(factory, chunk, smallx, builddata.y, smallz,

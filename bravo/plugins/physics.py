@@ -6,7 +6,7 @@ from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
 from bravo.blocks import blocks
-from bravo.ibravo import IAutomaton, IBuildHook, IDigHook
+from bravo.ibravo import IAutomaton, IPostBuildHook, IDigHook
 from bravo.utilities.spatial import Block2DSpatialDict, Block3DSpatialDict
 
 FALLING = 0x8
@@ -326,7 +326,7 @@ class Lava(Fluid):
 
 class Redstone(object):
 
-    implements(IBuildHook, IDigHook)
+    implements(IPostBuildHook, IDigHook)
 
     step = 0.2
 
@@ -418,7 +418,7 @@ class Redstone(object):
                         new_level -= 1
                     world.set_metadata((x, y, z), new_level)
 
-    def build_hook(self, factory, player, builddata):
+    def post_build_hook(self, factory, player, builddata):
         block, metadata, x, y, z, face = builddata
 
         if factory.world.get_block((x, y, z)) in self.trackables:
