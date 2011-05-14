@@ -135,5 +135,8 @@ class Grass(object):
 
     name = "grass"
 
+    before = tuple()
+    after = tuple()
+
 trees = Trees()
 grass = Grass()

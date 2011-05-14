@@ -338,7 +338,7 @@ class IPostBuildHook(ISortedPlugin):
     Hook for actions to be taken after a block is placed.
     """
 
-    def post_build_hook(factory, player, builddata):
+    def post_build_hook(factory, player, coords, block):
         """
         Do things.
         """

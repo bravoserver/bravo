@@ -42,7 +42,7 @@ class Paintings(object):
 
     name = "painting"
 
-    def build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, factory, player, builddata):
         item, metadata, x, y, z, face = builddata
 
         if item.slot != items["paintings"].slot:
@@ -98,6 +98,6 @@ class Paintings(object):
     targets = ("Painting",)
 
     before = tuple()
-    after = ("build", )
+    after = tuple()
 
 painting = Paintings()

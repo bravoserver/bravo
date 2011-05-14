@@ -418,8 +418,8 @@ class Redstone(object):
                         new_level -= 1
                     world.set_metadata((x, y, z), new_level)
 
-    def post_build_hook(self, factory, player, builddata):
-        block, metadata, x, y, z, face = builddata
+    def post_build_hook(self, factory, player, coords, block):
+        x, y, z = coords
 
         if factory.world.get_block((x, y, z)) in self.trackables:
             self.tracked.add(factory, x, y, z)
@@ -431,8 +431,6 @@ class Redstone(object):
 
         if self.tracked and not self.loop.running:
             self.loop.start(self.step)
-
-        return True, builddata
 
     def dig_hook(self, factory, chunk, x, y, z, block):
         pass

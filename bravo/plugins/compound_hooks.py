@@ -43,12 +43,10 @@ class Fallables(object):
         chunk.set_column(x, z, column)
 
     @inlineCallbacks
-    def post_build_hook(self, factory, player, builddata):
-        bigx, smallx, bigz, smallz = split_coords(builddata.x, builddata.z)
+    def post_build_hook(self, factory, player, coords, block):
+        bigx, smallx, bigz, smallz = split_coords(coords[0], coords[2])
         chunk = yield factory.world.request_chunk(bigx, bigz)
-        self.dig_hook(factory, chunk, smallx, builddata.y, smallz,
-            builddata.block)
-        returnValue((True, builddata))
+        self.dig_hook(factory, chunk, smallx, coords[1], smallz, block)
 
     name = "fallables"
 
