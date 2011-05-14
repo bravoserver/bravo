@@ -9,7 +9,7 @@ from twisted.internet.defer import inlineCallbacks
 
 import bravo.blocks
 import bravo.config
-import bravo.ibravo
+from bravo.ibravo import IDigHook
 import bravo.plugin
 import bravo.world
 
@@ -23,7 +23,7 @@ class TestWater(unittest.TestCase):
     def setUp(self):
         # Using dig hook to grab the plugin since the build hook was nuked in
         # favor of the automaton interface.
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IDigHook)
+        self.p = bravo.plugin.retrieve_plugins(IDigHook)
 
         if "water" not in self.p:
             raise unittest.SkipTest("Plugin not present")
@@ -343,9 +343,7 @@ class TestWater(unittest.TestCase):
 class TestRedstone(unittest.TestCase):
 
     def setUp(self):
-        # Using build hook to grab the plugin, but dig hook should work as
-        # well.
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IBuildHook)
+        self.p = bravo.plugin.retrieve_plugins(IDigHook)
 
         if "redstone" not in self.p:
             raise unittest.SkipTest("Plugin not present")
