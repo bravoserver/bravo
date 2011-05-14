@@ -12,7 +12,7 @@ class TestNotchyDigPolicy(unittest.TestCase):
         pass
 
     def test_snow_1ko(self):
-        self.assertTrue(self.p.is_1ko(blocks["snow"].slot))
+        self.assertTrue(self.p.is_1ko(blocks["snow"].slot), None)
 
     def test_dirt_bare(self):
         self.assertAlmostEqual(self.p.dig_time(blocks["dirt"].slot, None),

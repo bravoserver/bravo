@@ -12,7 +12,9 @@ from bravo.plugin import retrieve_plugins
 from bravo.world import World
 
 class GrassMockFactory(object):
-    pass
+
+    def flush_all_chunks(self):
+        pass
 
 class TestGrass(unittest.TestCase):
 

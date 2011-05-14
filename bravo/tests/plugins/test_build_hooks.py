@@ -4,7 +4,7 @@ from twisted.trial import unittest
 from twisted.internet.defer import inlineCallbacks, succeed
 
 import bravo.blocks
-import bravo.ibravo
+from bravo.ibravo import IPreBuildHook
 import bravo.plugin
 import bravo.protocols.beta
 
@@ -20,43 +20,6 @@ class BuildMockFactory(object):
                 pass
 
         self.world = BuildMockWorld()
-
-class BuildMockPlayer(object):
-
-    def __init__(self):
-
-        self.equipped = 0
-        self.inventory = bravo.inventory.Equipment()
-        self.inventory.add(bravo.blocks.blocks["dirt"].key, 1)
-
-class TestBuild(unittest.TestCase):
-
-    def setUp(self):
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IBuildHook)
-
-        if "build" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
-        self.hook = self.p["build"]
-
-    def test_trivial(self):
-        pass
-
-    def test_coord_face_offsets(self):
-        """
-        The coordinates and face should be transformed after build to point to
-        the newly created block with no offsets.
-        """
-
-        builddata = bravo.protocols.beta.BuildData(
-            bravo.blocks.blocks["dirt"],
-            0, 0, 0, 0, "+x"
-        )
-        success, newdata = self.hook.build_hook(BuildMockFactory(),
-            BuildMockPlayer(), builddata)
-        self.assertTrue(success)
-        builddata = builddata._replace(x=1, face="noop")
-        self.assertEqual(builddata, newdata)
 
 class TileMockFactory(object):
 
@@ -76,7 +39,7 @@ class TileMockFactory(object):
 class TestTile(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IBuildHook)
+        self.p = bravo.plugin.retrieve_plugins(IPreBuildHook)
 
         if "tile" not in self.p:
             raise unittest.SkipTest("Plugin not present")
@@ -92,8 +55,8 @@ class TestTile(unittest.TestCase):
             bravo.blocks.items["sign"],
             0, 0, 0, 0, "+x"
         )
-        success, newdata = yield self.hook.build_hook(TileMockFactory(), None,
-                                                      builddata)
+        success, newdata = yield self.hook.pre_build_hook(TileMockFactory(),
+            None, builddata)
         self.assertTrue(success)
         builddata = builddata._replace(block=bravo.blocks.blocks["wall-sign"],
             metadata=0x5)
@@ -107,8 +70,8 @@ class TestTile(unittest.TestCase):
             bravo.blocks.items["sign"],
             0, 0, 0, 0, "+y"
         )
-        success, newdata = yield self.hook.build_hook(TileMockFactory(),
-                                                      player, builddata)
+        success, newdata = yield self.hook.pre_build_hook(TileMockFactory(),
+            player, builddata)
         self.assertTrue(success)
         builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
             metadata=0x8)
@@ -123,8 +86,8 @@ class TestTile(unittest.TestCase):
             bravo.blocks.items["sign"],
             0, 0, 0, 0, "+y"
         )
-        success, newdata = yield self.hook.build_hook(TileMockFactory(),
-                                                      player, builddata)
+        success, newdata = yield self.hook.pre_build_hook(TileMockFactory(),
+            player, builddata)
         self.assertTrue(success)
         builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
             metadata=0x9)
@@ -142,7 +105,7 @@ class TestTile(unittest.TestCase):
             bravo.blocks.blocks["ladder"],
             0, 0, 0, 0, "+x"
         )
-        success, newdata = yield self.hook.build_hook(TileMockFactory(), None,
-                                                      builddata)
+        success, newdata = yield self.hook.pre_build_hook(TileMockFactory(),
+            None, builddata)
         self.assertTrue(success)
         self.assertEqual(builddata, newdata)
