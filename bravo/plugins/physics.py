@@ -36,6 +36,16 @@ class Fluid(object):
 
         self.loop = LoopingCall(self.process)
 
+    def schedule(self):
+        if any(self.pending.itervalues()):
+            # We *should* be running.
+            if not self.loop.running:
+                self.loop.start(self.step)
+        else:
+            # We should *not* be running.
+            if self.loop.running:
+                self.loop.stop()
+
     @property
     def blocks(self):
         retval = [self.spring, self.fluid]
@@ -49,9 +59,7 @@ class Fluid(object):
         """
 
         self.pending[factory].add(coordinates)
-
-        if any(self.pending.itervalues()) and not self.loop.running:
-            self.loop.start(self.step)
+        self.schedule()
 
     def scan(self, chunk):
         """
@@ -247,13 +255,12 @@ class Fluid(object):
 
             self.pending[factory] = new
 
-        # Prune and turn off the loop if appropriate.
+        # Prune, and reschedule.
         for dd in (self.pending, self.springs, self.sponges):
             for factory in dd.keys():
                 if not dd[factory]:
                     del dd[factory]
-        if not self.pending and self.loop.running:
-            self.loop.stop()
+        self.schedule()
 
     @inlineCallbacks
     def dig_hook(self, factory, chunk, x, y, z, block):
@@ -290,8 +297,7 @@ class Fluid(object):
                 if test_block in (self.spring, self.fluid):
                     self.pending[factory].add(coords)
 
-        if any(self.pending.itervalues()) and not self.loop.running:
-            self.loop.start(self.step)
+        self.schedule()
 
     before = ("build",)
     after = tuple()

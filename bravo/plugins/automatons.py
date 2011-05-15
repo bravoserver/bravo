@@ -73,16 +73,22 @@ class Grass(object):
         if not self.tracked:
             return 5
         else:
-            return 5 / len(self.tracked)
+            return max(1 / 20, 5 / len(self.tracked))
 
     def __init__(self):
         self.tracked = set()
         self.loop = LoopingCall(self.process)
-        self.loop.start(self.step)
+        self.schedule()
+
+    def schedule(self):
+        if self.loop.running:
+            self.loop.stop()
+        self.loop.start(self.step, now=False)
 
     @inlineCallbacks
     def process(self):
         if not self.tracked:
+            self.schedule()
             return
 
         # Effectively stop tracking this block. We'll add it back in if we're
@@ -128,8 +134,7 @@ class Grass(object):
                 self.tracked.add((factory, coords))
 
         # And call ourselves later.
-        self.loop.stop()
-        self.loop.start(self.step)
+        self.schedule()
 
     def feed(self, factory, coords):
         self.tracked.add((factory, coords))
