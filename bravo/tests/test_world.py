@@ -25,11 +25,12 @@ class TestWorldChunks(unittest.TestCase):
 
         self.w = bravo.world.World(self.name)
         self.w.pipeline = []
+        self.w.start()
 
     def tearDown(self):
-        if self.w.chunk_management_loop.running:
-            self.w.chunk_management_loop.stop()
+        self.w.stop()
         del self.w
+
         shutil.rmtree(self.d)
         bravo.config.configuration.remove_section("world unittest")
 
@@ -45,7 +46,7 @@ class TestWorldChunks(unittest.TestCase):
             dtype=numpy.uint8)
         chunk.blocks.shape = (16, 16, 128)
 
-        for x, y, z in product(xrange(2), xrange(2), xrange(2)):
+        for x, y, z in product(xrange(2), repeat=3):
             # This works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
             block = yield self.w.get_block((x, y, z))
@@ -181,12 +182,16 @@ class TestWorldInit(unittest.TestCase):
         pass
 
     def test_load_level_exception(self):
+        """
+        Exceptions raised during serializer reads should be handled during the
+        world startup.
+        """
+
+        from bravo.plugins.serializers import Alpha
         def raiser(self, level):
             raise bravo.errors.SerializerReadException("testing")
-        self.patch(bravo.plugins.serializers.Alpha, "load_level", raiser)
+        self.patch(Alpha, "load_level", raiser)
 
         w = bravo.world.World(self.name)
-
-        if w.chunk_management_loop.running:
-            w.chunk_management_loop.stop()
-        del w
+        w.start()
+        w.stop()

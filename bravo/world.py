@@ -80,14 +80,18 @@ class World(object):
 
     def __init__(self, name):
         """
-        Load a world from disk.
-
         :Parameters:
             name : str
                 The configuration key to use to look up configuration data.
         """
 
         self.config_name = "world %s" % name
+
+    def start(self):
+        """
+        Load a world from disk.
+        """
+
         world_url = configuration.get(self.config_name, "url")
         world_sf_name = configuration.get(self.config_name, "serializer")
 
@@ -137,6 +141,18 @@ class World(object):
         log.msg("World started on %s, using serializer %s" %
             (world_url, self.serializer.name))
         log.msg("Using Ampoule: %s" % self.async)
+
+    def stop(self):
+        """
+        Stop managing the world.
+
+        This can be a time-consuming, blocking operation, while the world's
+        data is serialized.
+        """
+
+        self.chunk_management_loop.stop()
+
+        # XXX save the world to disk
 
     def enable_cache(self, size):
         """
