@@ -148,4 +148,67 @@ class WorldMap(Resource):
         d.addCallback(complete_request)
         return NOT_DONE_YET
 
+automaton_stats_template = """
+<html xmlns:t="http://twistedmatrix.com/ns/twisted.web.template/0.1">
+    <head>
+        <title>Automaton Stats</title>
+    </head>
+    <body>
+        <h1>Automatons</h1>
+        <div nowrap="nowrap" t:render="main" />
+    </body>
+</html>
+"""
+
+class AutomatonStatsElement(Element):
+    """
+    Render some information about automatons.
+    """
+
+    loader = XMLString(automaton_stats_template)
+
+    def __init__(self, factory):
+        Element.__init__(self)
+        self.factory = factory
+
+    @renderer
+    def main(self, request, tag):
+        retval = []
+        for automaton in self.factory.automatons:
+            title = tags.h2(automaton.name)
+            stats = []
+
+            # Discover tracked information.
+            if hasattr(automaton, "tracked"):
+                t = automaton.tracked
+                if isinstance(t, dict):
+                    l = sum(len(i) for i in t.values())
+                else:
+                    l = len(t)
+                stats.append(tags.li("Currently tracking %d blocks" % l))
+
+            if hasattr(automaton, "step"):
+                stats.append(tags.li("Currently processing every %f seconds" %
+                    automaton.step))
+
+            retval.append(tags.div(title, tags.ul(stats)))
+        return tags.div(*retval)
+
+class AutomatonStats(Resource):
+
+    implements(IWorldResource)
+
+    name = "automatonstats"
+
+    isLeaf = True
+
+    def render_GET(self, request):
+        d = flattenString(request, AutomatonStatsElement(self.factory))
+        def complete_request(html):
+            request.write(html)
+            request.finish()
+        d.addCallback(complete_request)
+        return NOT_DONE_YET
+
+automatonstats = AutomatonStats()
 worldmap = WorldMap()
