@@ -64,7 +64,7 @@ class Fluid(object):
             w = factory.world
             new = set()
 
-            for x, y, z in self.pending[factory]:
+            for x, y, z in self.pending[factory].copy():
                 # Neighbors on the xz-level.
                 neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
                         (x, y, z + 1))
