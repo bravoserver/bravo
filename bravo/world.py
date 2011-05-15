@@ -221,6 +221,9 @@ class World(object):
     def postprocess_chunk(self, chunk):
         """
         Do a series of final steps to bring a chunk into the world.
+
+        This method might be called multiple times on a chunk, but it should
+        not be harmful to do so.
         """
 
         # Apply the current season to the chunk.
@@ -236,9 +239,6 @@ class World(object):
         # Register the chunk's entities with our parent factory.
         for entity in chunk.entities:
             self.factory.register_entity(entity)
-
-        # Tell our parent factory to scan this chunk, for automatons.
-        self.factory.scan_chunk(chunk)
 
         # Return the chunk, in case we are in a Deferred chain.
         return chunk
@@ -264,8 +264,9 @@ class World(object):
         yield maybeDeferred(self.serializer.load_chunk, chunk)
 
         if chunk.populated:
-            self.chunk_cache[x, z] = chunk
+            self.dirty_chunk_cache[x, z] = chunk
             self.postprocess_chunk(chunk)
+            #self.factory.scan_chunk(chunk)
             returnValue(chunk)
 
         if self.async:
@@ -306,7 +307,10 @@ class World(object):
         # be done early becaues PendingEvents only fire exactly once and it
         # might fire immediately in certain cases.
         pe = PendingEvent()
+        # This one is for our return value.
         retval = pe.deferred()
+        # This one is for scanning the chunk for automatons.
+        #pe.deferred().addCallback(self.factory.scan_chunk)
         self._pending_chunks[x, z] = pe
 
         def pp(chunk):
