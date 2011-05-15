@@ -77,7 +77,8 @@ class Grass(object):
 
     def __init__(self):
         self.tracked = set()
-        reactor.callLater(self.step, self.process)
+        self.loop = LoopingCall(self.process)
+        self.loop.start(self.step)
 
     @inlineCallbacks
     def process(self):
@@ -107,7 +108,7 @@ class Grass(object):
             # The number of grassy neighbors.
             grasses = 0
             # Intentional shadow.
-            for x, y, z in product(xrange(x - 1, x + 2), xrange(y - 3, y + 2),
+            for x, y, z in product(xrange(x - 1, x + 2), xrange(y - 1, y + 4),
                 xrange(z - 1, z + 2)):
                 # Early-exit to avoid block lookup if we finish early.
                 if grasses >= 8:
@@ -127,7 +128,8 @@ class Grass(object):
                 self.tracked.add((factory, coords))
 
         # And call ourselves later.
-        reactor.callLater(self.step, self.process)
+        self.loop.stop()
+        self.loop.start(self.step)
 
     def feed(self, factory, coords):
         self.tracked.add((factory, coords))

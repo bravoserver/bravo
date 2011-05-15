@@ -2,6 +2,7 @@ from itertools import product
 import shutil
 import tempfile
 
+from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 from twisted.trial import unittest
 
@@ -16,6 +17,9 @@ class GrassMockFactory(object):
     def flush_all_chunks(self):
         pass
 
+    def scan_chunk(self, chunk):
+        pass
+
 class TestGrass(unittest.TestCase):
 
     def setUp(self):
@@ -25,6 +29,9 @@ class TestGrass(unittest.TestCase):
             raise unittest.SkipTest("Plugin not present")
 
         self.hook = plugins["grass"]
+        self.hook.tracked.clear()
+        if not self.hook.loop.running:
+            self.hook.loop.start(self.hook.step)
 
         self.d = tempfile.mkdtemp()
 
@@ -37,8 +44,12 @@ class TestGrass(unittest.TestCase):
 
         self.f = GrassMockFactory()
         self.f.world = self.w
+        self.w.factory = self.f
 
     def tearDown(self):
+        if self.hook.loop.running:
+            self.hook.loop.stop()
+
         if self.w.chunk_management_loop.running:
             self.w.chunk_management_loop.stop()
         del self.w
@@ -61,7 +72,7 @@ class TestGrass(unittest.TestCase):
 
         # Run the loop once.
         self.hook.feed(self.f, (0, 0, 0))
-        self.hook.process()
+        yield self.hook.process()
 
         # We shouldn't have any pending blocks now.
         self.assertFalse(self.hook.tracked)
@@ -84,7 +95,7 @@ class TestGrass(unittest.TestCase):
 
         # Do the actual hook run. This should take exactly one run.
         self.hook.feed(self.f, (1, 0, 1))
-        self.hook.process()
+        yield self.hook.process()
 
         self.assertFalse(self.hook.tracked)
         self.assertEqual(chunk.get_block((1, 0, 1)), blocks["grass"].slot)
@@ -109,7 +120,31 @@ class TestGrass(unittest.TestCase):
 
         # Do the actual hook run. This should take exactly one run.
         self.hook.feed(self.f, (1, 0, 1))
-        self.hook.process()
+        yield self.hook.process()
 
         self.assertFalse(self.hook.tracked)
         self.assertEqual(chunk.get_block((1, 0, 1)), blocks["dirt"].slot)
+
+    @inlineCallbacks
+    def test_above(self):
+        """
+        Grass spreads downwards.
+        """
+
+        chunk = yield self.w.request_chunk(0, 0)
+
+        # Set up grassy surroundings.
+        for x, z in product(xrange(0, 3), repeat=2):
+            chunk.set_block((x, 1, z), blocks["grass"].slot)
+
+        chunk.destroy((1, 1, 1))
+
+        # Our lone Cinderella.
+        chunk.set_block((1, 0, 1), blocks["dirt"].slot)
+
+        # Do the actual hook run. This should take exactly one run.
+        self.hook.feed(self.f, (1, 0, 1))
+        yield self.hook.process()
+
+        self.assertFalse(self.hook.tracked)
+        self.assertEqual(chunk.get_block((1, 0, 1)), blocks["grass"].slot)
