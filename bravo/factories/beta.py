@@ -1,6 +1,8 @@
 from itertools import chain
 from time import time
 
+from numpy import transpose
+
 from twisted.internet.interfaces import IPushProducer
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
@@ -279,6 +281,18 @@ class BravoFactory(Factory):
         for player in self.protocols.itervalues():
             if (x, z) in player.chunks:
                 player.transport.write(packet)
+
+    def scan_chunk(self, chunk):
+        """
+        Tell automatons about this chunk.
+        """
+
+        for automaton in self.automatons:
+            for block in automaton.blocks:
+                for coords in transpose((chunk.blocks == block).nonzero()):
+                    # Swizzle and discard numpy-ness.
+                    coords = coords[0], coords[2], coords[1]
+                    automaton.feed(self, coords)
 
     def flush_chunk(self, chunk):
         """

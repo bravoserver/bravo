@@ -237,6 +237,9 @@ class World(object):
         for entity in chunk.entities:
             self.factory.register_entity(entity)
 
+        # Tell our parent factory to scan this chunk, for automatons.
+        self.factory.scan_chunk(chunk)
+
         # Return the chunk, in case we are in a Deferred chain.
         return chunk
 
