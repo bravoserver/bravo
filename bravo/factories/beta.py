@@ -59,11 +59,14 @@ class BravoFactory(Factory):
         self.interface = configuration.getdefault(self.config_name, "host",
             "")
 
+        self.world = World(self.name)
+        self.world.factory = self
+
     def startFactory(self):
         log.msg("Initializing factory for world '%s'..." % self.name)
 
-        self.world = World(self.name)
-        self.world.factory = self
+        self.world.start()
+
         if configuration.has_option(self.config_name, "perm_cache"):
             cache_level = configuration.getint(self.config_name, "perm_cache")
             self.world.enable_cache(cache_level)
@@ -99,6 +102,25 @@ class BravoFactory(Factory):
         self.chat_consumers = set()
 
         log.msg("Factory successfully initialized for world '%s'!" % self.name)
+
+    def stopFactory(self):
+        """
+        Called before factory stops listening on ports. Used to perform
+        shutdown tasks.
+        """
+
+        log.msg("Shutting down world...")
+
+        self.time_loop.stop()
+
+        # Write back current world time. This must be done before stopping the
+        # world.
+        self.world.time = self.time
+
+        # And now stop the world.
+        self.world.stop()
+
+        log.msg("World data saved!")
 
     def buildProtocol(self, addr):
         """
@@ -357,27 +379,6 @@ class BravoFactory(Factory):
             if player.location.distance(p.location) <= radius and
             p.player != player):
             yield i.player
-
-    def stopFactory(self):
-        """
-        Called before factory stops listening on ports. Used to perform
-        shutdown tasks.
-        """
-
-        if not self.world.saving:
-            return
-
-        log.msg("Shutting down; flushing world data...")
-
-        # Flush all dirty chunks to disk.
-        for chunk in self.world.dirty_chunk_cache.itervalues():
-            self.world.save_chunk(chunk)
-
-        # Write back current world time.
-        self.world.time = self.time
-        self.world.serializer.save_level(self.world)
-
-        log.msg("World data saved!")
 
     def pauseProducing(self):
         pass

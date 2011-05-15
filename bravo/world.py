@@ -148,11 +148,23 @@ class World(object):
 
         This can be a time-consuming, blocking operation, while the world's
         data is serialized.
+
+        Note to callers: If you want the world time to be accurate, don't
+        forget to write it back before calling this method!
         """
 
         self.chunk_management_loop.stop()
 
-        # XXX save the world to disk
+        # Flush all dirty chunks to disk.
+        for chunk in self.dirty_chunk_cache.itervalues():
+            self.save_chunk(chunk)
+
+        # Evict all chunks.
+        self.chunk_cache.clear()
+        self.dirty_chunk_cache.clear()
+
+        # Save the level data.
+        self.serializer.save_level(self)
 
     def enable_cache(self, size):
         """

@@ -19,11 +19,7 @@ class TestBravoFactory(unittest.TestCase):
         self.name = "unittest"
 
         bravo.config.configuration.add_section("world unittest")
-        d = {
-            "port"          : "0",
-        }
-        for k, v in d.items():
-            bravo.config.configuration.set("world unittest", k, v)
+        bravo.config.configuration.set("world unittest", "port", "0")
 
         self.f = bravo.factories.beta.BravoFactory(self.name)
 
@@ -75,8 +71,7 @@ class TestBravoFactoryStarted(unittest.TestCase):
     def tearDown(self):
         bravo.config.configuration.remove_section("world unittest")
 
-        self.f.world.chunk_management_loop.stop()
-        self.f.time_loop.stop()
+        self.f.stopFactory()
 
         shutil.rmtree(self.d)
 
