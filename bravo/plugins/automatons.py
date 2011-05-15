@@ -64,19 +64,28 @@ class Grass(object):
 
     blocks = (blocks["dirt"].slot,)
 
-    step = 2
+    @property
+    def step(self):
+        """
+        Get the step.
+        """
+
+        if not self.tracked:
+            return 5
+        else:
+            return 5 / len(self.tracked)
 
     def __init__(self):
         self.tracked = set()
-        self.loop = LoopingCall(self.process)
+        reactor.callLater(self.step, self.process)
 
     @inlineCallbacks
     def process(self):
         if not self.tracked:
-            if self.loop.running:
-                self.loop.stop()
             return
 
+        # Effectively stop tracking this block. We'll add it back in if we're
+        # not finished with it.
         factory, coords = self.tracked.pop()
 
         current = yield factory.world.get_block(coords)
@@ -115,12 +124,13 @@ class Grass(object):
                 factory.flush_all_chunks()
             else:
                 # Not yet; add it back to the list.
-                self.tracked.add(factory, coords)
+                self.tracked.add((factory, coords))
+
+        # And call ourselves later.
+        reactor.callLater(self.step, self.process)
 
     def feed(self, factory, coords):
         self.tracked.add((factory, coords))
-        if not self.loop.running:
-            self.loop.start(self.step, False)
 
     def dig_hook(self, factory, chunk, x, y, z, block):
         if y > 0:
@@ -130,8 +140,6 @@ class Grass(object):
                 coords = (chunk.x * 16 + x, y - 1, chunk.z * 16 + z)
 
                 self.tracked.add((factory, coords))
-                if not self.loop.running:
-                    self.loop.start(self.step, False)
 
     name = "grass"
 
