@@ -8,6 +8,6 @@ Bravo, and will get updated whenever the code is updated. Rejoice as
 appropriate.
 
 There are a couple important things in the documentation that have been
-recently added. In particular, there is now an <a
-href="http://docs.bravoserver.org/administration.html">administration guide
-for new server administrators</a> which hopefully will be useful to people.
+recently added. In particular, there is now an `administration guide for new
+server administrators <http://docs.bravoserver.org/administration.html>`_ which
+hopefully will be useful to people.

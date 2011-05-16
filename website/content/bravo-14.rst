@@ -19,9 +19,10 @@ some highlights:
  * Several broken recipes, including ladders, shovels, TNT, and fishing rods,
    were fixed.
 
-That's not all, of course. The complete changelog is on <a
-href="http://github.com>Github</a>, at
-https://github.com/MostAwesomeDude/bravo/blob/1.4/CHANGELOG.rst for your
+
+That's not all, of course. The complete changelog is on `Github
+<http://github.com/>`_, at
+https://github.com/MostAwesomeDude/bravo/blob/1.4/CHANGELOG.rst, for your
 viewing pleasure. It looks like 1.4 ended up being a much bigger change than I
 had expected.
 
