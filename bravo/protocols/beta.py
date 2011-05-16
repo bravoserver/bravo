@@ -599,8 +599,9 @@ class BravoProtocol(BetaServerProtocol):
 
     def chat(self, container):
         if container.message.startswith("/"):
+            pp = {"factory": self.factory}
 
-            commands = retrieve_plugins(IChatCommand)
+            commands = retrieve_plugins(IChatCommand, parameters=pp)
             # Register aliases.
             for plugin in commands.values():
                 for alias in plugin.aliases:
@@ -621,7 +622,7 @@ class BravoProtocol(BetaServerProtocol):
                                     error.getErrorMessage())
                     )
                 d = maybeDeferred(commands[command].chat_command,
-                                  self.factory, self.username, params)
+                                  self.username, params)
                 d.addCallback(cb)
                 d.addErrback(eb)
             else:
