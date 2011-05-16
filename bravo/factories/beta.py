@@ -1,3 +1,4 @@
+from collections import defaultdict
 from itertools import chain
 from time import time
 
@@ -12,7 +13,8 @@ from zope.interface import implements
 from bravo.config import configuration
 from bravo.entity import entities
 from bravo.ibravo import (IAutomaton, IAuthenticator, ISeason,
-    ITerrainGenerator)
+    ITerrainGenerator, IUseHook, ISignHook, IDigHook, IPreBuildHook,
+    IPostBuildHook)
 from bravo.location import Location
 from bravo.packets.beta import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
@@ -87,17 +89,7 @@ class BravoFactory(Factory):
         self.handshake_hook = selected.handshake
         self.login_hook = selected.login
 
-        generators = configuration.getlist(self.config_name, "generators")
-        generators = retrieve_sorted_plugins(ITerrainGenerator, generators)
-
-        log.msg("Using generators %s" % ", ".join(i.name for i in generators))
-        self.world.pipeline = generators
-
-        automatons = configuration.getlist(self.config_name, "automatons")
-        automatons = retrieve_named_plugins(IAutomaton, automatons)
-
-        log.msg("Using automatons %s" % ", ".join(i.name for i in automatons))
-        self.automatons = automatons
+        self.register_plugins()
 
         self.chat_consumers = set()
 
@@ -147,6 +139,42 @@ class BravoFactory(Factory):
         self.register_entity(p)
 
         return p
+
+    def register_plugins(self):
+        """
+        Setup plugin hooks.
+        """
+
+        log.msg("Registering client plugin hooks...")
+
+        plugin_types = {
+            "automatons": IAutomaton,
+            "generators": ITerrainGenerator,
+            "pre_build_hooks": IPreBuildHook,
+            "post_build_hooks": IPostBuildHook,
+            "dig_hooks": IDigHook,
+            "sign_hooks": ISignHook,
+            "use_hooks": IUseHook,
+        }
+
+        pp = {"factory": self}
+
+        for t, interface in plugin_types.iteritems():
+            l = configuration.getlistdefault(self.config_name, t, [])
+            plugins = retrieve_sorted_plugins(interface, l, parameters=pp)
+            log.msg("Using %s %s" %
+                (l, ", ".join(plugin.name for plugin in plugins)))
+            setattr(self, t, plugins)
+
+        # Assign generators to the world pipeline.
+        self.world.pipeline = self.generators
+
+        # Use hooks have special funkiness.
+        uh = self.use_hooks
+        self.use_hooks = defaultdict(list)
+        for plugin in uh:
+            for target in plugin.targets:
+                self.use_hooks[target].append(plugin)
 
     def create_entity(self, x, y, z, name, **kwargs):
         """

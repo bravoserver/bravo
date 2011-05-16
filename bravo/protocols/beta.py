@@ -444,36 +444,16 @@ class BravoProtocol(BetaServerProtocol):
 
     def register_hooks(self):
 
-        pp = {"factory": self.factory}
+        plugin_types = {
+            "pre_build_hooks": IPreBuildHook,
+            "post_build_hooks": IPostBuildHook,
+            "dig_hooks": IDigHook,
+            "sign_hooks": ISignHook,
+            "use_hooks": IUseHook,
+        }
 
-        log.msg("Registering client plugin hooks...")
-
-        names = configuration.getlistdefault(self.config_name,
-            "pre_build_hooks", [])
-        self.pre_build_hooks = retrieve_sorted_plugins(IPreBuildHook, names,
-            parameters=pp)
-
-        names = configuration.getlistdefault(self.config_name,
-            "post_build_hooks", [])
-        self.post_build_hooks = retrieve_sorted_plugins(IPostBuildHook, names,
-            parameters=pp)
-
-        names = configuration.getlistdefault(self.config_name, "dig_hooks",
-            [])
-        self.dig_hooks = retrieve_sorted_plugins(IDigHook, names,
-            parameters=pp)
-
-        names = configuration.getlistdefault(self.config_name, "sign_hooks",
-            [])
-        self.sign_hooks = retrieve_sorted_plugins(ISignHook, names,
-            parameters=pp)
-
-        names = configuration.getlistdefault(self.config_name, "use_hooks",
-            [])
-        self.use_hooks = defaultdict(list)
-        for plugin in retrieve_named_plugins(IUseHook, names, parameters=pp):
-            for target in plugin.targets:
-                self.use_hooks[target].append(plugin)
+        for t in plugin_types:
+            setattr(self, t, getattr(self.factory, t))
 
         log.msg("Registering policies...")
         self.dig_policy = dig_policies["notchy"]
