@@ -96,17 +96,19 @@ class BuildSnow(object):
 
     implements(IPreBuildHook)
 
-    # XXX come back and fix me plz
-
-    @inlineCallbacks
     def pre_build_hook(self, player, builddata):
-        block = yield factory.world.get_block((builddata.x, builddata.y, builddata.z))
+        d = factory.world.get_block((builddata.x, builddata.y, builddata.z))
 
-        if block == blocks["snow"].slot:
-            # Building any block on snow causes snow to get replaced.
-            builddata = builddata._replace(face="+y", y=builddata.y - 1)
+        @d.addCallback
+        def adjust_block(block):
+            if block == blocks["snow"].slot:
+                # Building any block on snow causes snow to get replaced.
+                bd = builddata._replace(face="+y", y=builddata.y - 1)
+            else:
+                bd = builddata
+            return True, bd
 
-        returnValue((True, builddata))
+        return d
 
     name = "build_snow"
 
