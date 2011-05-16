@@ -435,7 +435,7 @@ class Redstone(object):
         if self.tracked and not self.loop.running:
             self.loop.start(self.step)
 
-    def dig_hook(self, factory, chunk, x, y, z, block):
+    def dig_hook(self, chunk, x, y, z, block):
         pass
 
     name = "redstone"

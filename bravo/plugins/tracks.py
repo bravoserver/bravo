@@ -133,7 +133,7 @@ class Tracks(object):
         builddata = builddata._replace(metadata=metadata)
         return True, builddata
 
-    def dig_hook(self, factory, chunk, x, y, z, block):
+    def dig_hook(self, chunk, x, y, z, block):
         """
         Whenever a block is dug out, destroy descending tracks next to the block
         or tracks on top of the block.
