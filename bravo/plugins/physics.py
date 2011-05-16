@@ -61,11 +61,6 @@ class Fluid(object):
         self.pending[factory].add(coordinates)
         self.schedule()
 
-    def scan(self, chunk):
-        """
-        Load all of the important blocks in the chunk into memory.
-        """
-
     @inlineCallbacks
     def process(self):
         for factory in self.pending:
