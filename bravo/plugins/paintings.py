@@ -7,6 +7,8 @@ from bravo.blocks import items
 from bravo.ibravo import IPreBuildHook, IUseHook
 from bravo.packets.beta import make_packet
 
+from bravo.parameters import factory
+
 available_paintings = {
     (1, 1): ("Kebab", "Aztec", "Alban", "Aztec2", "Bomb", "Plant",
              "Wasteland", ),
@@ -42,7 +44,7 @@ class Paintings(object):
 
     name = "painting"
 
-    def pre_build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, player, builddata):
         item, metadata, x, y, z, face = builddata
 
         if item.slot != items["paintings"].slot:

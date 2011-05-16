@@ -3,6 +3,8 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IPreBuildHook, IDigHook
 
+from bravo.parameters import factory
+
 tracks_allowed_on = set([
     blocks["bedrock"].slot,
     blocks["brick"].slot,
@@ -62,7 +64,7 @@ class Tracks(object):
 
     name = "tracks"
 
-    def pre_build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, player, builddata):
         """
         Uses the players location yaw relative to the building position to
         place the tracks. This allows building straight tracks as well as
@@ -72,6 +74,10 @@ class Tracks(object):
         This plugin runs after build, so the coordinates have already been
         adjusted for placement and the face has no meaning.
         """
+
+        # XXX I need to be a post hook
+        # XXX I don't handle my Deferreds correctly
+        # XXX I need tests so that the above doesn't happen again
 
         block, metadata, x, y, z, face = builddata
         world = factory.world
