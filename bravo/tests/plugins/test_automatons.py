@@ -2,7 +2,6 @@ from itertools import product
 import shutil
 import tempfile
 
-from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 from twisted.trial import unittest
 
@@ -23,16 +22,6 @@ class GrassMockFactory(object):
 class TestGrass(unittest.TestCase):
 
     def setUp(self):
-        plugins = retrieve_plugins(IAutomaton)
-
-        if "grass" not in plugins:
-            raise unittest.SkipTest("Plugin not present")
-
-        self.hook = plugins["grass"]
-        self.hook.tracked.clear()
-        if not self.hook.loop.running:
-            self.hook.loop.start(self.hook.step)
-
         self.d = tempfile.mkdtemp()
 
         configuration.add_section("world unittest")
@@ -41,18 +30,24 @@ class TestGrass(unittest.TestCase):
 
         self.w = World("unittest")
         self.w.pipeline = []
+        self.w.start()
 
         self.f = GrassMockFactory()
         self.f.world = self.w
         self.w.factory = self.f
 
-    def tearDown(self):
-        if self.hook.loop.running:
-            self.hook.loop.stop()
+        pp = {"factory": self.f}
 
-        if self.w.chunk_management_loop.running:
-            self.w.chunk_management_loop.stop()
-        del self.w
+        plugins = retrieve_plugins(IAutomaton, parameters=pp)
+
+        if "grass" not in plugins:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.hook = plugins["grass"]
+
+    def tearDown(self):
+        self.w.stop()
+
         shutil.rmtree(self.d)
         configuration.remove_section("world unittest")
 
@@ -71,7 +66,7 @@ class TestGrass(unittest.TestCase):
         chunk.set_block((0, 0, 0), blocks["bedrock"].slot)
 
         # Run the loop once.
-        self.hook.feed(self.f, (0, 0, 0))
+        self.hook.feed((0, 0, 0))
         yield self.hook.process()
 
         # We shouldn't have any pending blocks now.
@@ -94,7 +89,7 @@ class TestGrass(unittest.TestCase):
         chunk.set_block((1, 0, 1), blocks["dirt"].slot)
 
         # Do the actual hook run. This should take exactly one run.
-        self.hook.feed(self.f, (1, 0, 1))
+        self.hook.feed((1, 0, 1))
         yield self.hook.process()
 
         self.assertFalse(self.hook.tracked)
@@ -119,7 +114,7 @@ class TestGrass(unittest.TestCase):
         chunk.set_block((1, 0, 1), blocks["dirt"].slot)
 
         # Do the actual hook run. This should take exactly one run.
-        self.hook.feed(self.f, (1, 0, 1))
+        self.hook.feed((1, 0, 1))
         yield self.hook.process()
 
         self.assertFalse(self.hook.tracked)
@@ -143,7 +138,7 @@ class TestGrass(unittest.TestCase):
         chunk.set_block((1, 0, 1), blocks["dirt"].slot)
 
         # Do the actual hook run. This should take exactly one run.
-        self.hook.feed(self.f, (1, 0, 1))
+        self.hook.feed((1, 0, 1))
         yield self.hook.process()
 
         self.assertFalse(self.hook.tracked)

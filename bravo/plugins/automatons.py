@@ -103,14 +103,14 @@ class Grass(object):
         if self.loop.running:
             self.loop.stop()
 
-    def schedule(self):
-        self.stop()
-        self.start()
+    def reschedule(self):
+        if self.loop.running:
+            self.stop()
+            self.start()
 
     @inlineCallbacks
     def process(self):
         if not self.tracked:
-            self.schedule()
             return
 
         # Effectively stop tracking this block. We'll add it back in if we're
@@ -155,8 +155,7 @@ class Grass(object):
                 # Not yet; add it back to the list.
                 self.tracked.add(coords)
 
-        # And call ourselves later.
-        self.schedule()
+        self.reschedule()
 
     def feed(self, coords):
         self.tracked.add(coords)
