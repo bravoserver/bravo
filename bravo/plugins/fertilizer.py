@@ -5,6 +5,8 @@ from bravo.blocks import blocks, items
 from bravo.ibravo import IPreBuildHook
 from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
 
+from bravo.parameters import factory
+
 class Fertilizer(object):
     """
     Allows you to use bone meal to fertilize trees,
@@ -22,7 +24,7 @@ class Fertilizer(object):
         ]
 
     @inlineCallbacks
-    def pre_build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, player, builddata):
         item, metadata, x, y, z, face = builddata
 
         # Make sure we're using a bone meal.

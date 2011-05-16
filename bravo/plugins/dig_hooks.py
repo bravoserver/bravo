@@ -6,6 +6,8 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IDigHook
 
+from bravo.parameters import factory
+
 class AlphaSnow(object):
     """
     Notch-style snow handling.
@@ -15,7 +17,7 @@ class AlphaSnow(object):
 
     implements(IDigHook)
 
-    def dig_hook(self, factory, chunk, x, y, z, block):
+    def dig_hook(self, chunk, x, y, z, block):
         if y == 127:
             # Can't possibly have snow above the highest Y-level...
             return
@@ -38,7 +40,7 @@ class Give(object):
 
     implements(IDigHook)
 
-    def dig_hook(self, factory, chunk, x, y, z, block):
+    def dig_hook(self, chunk, x, y, z, block):
         if block.drop == blocks["air"].slot:
             return
 
@@ -70,7 +72,7 @@ class Torch(object):
     implements(IDigHook)
 
     @inlineCallbacks
-    def dig_hook(self, factory, chunk, x, y, z, block):
+    def dig_hook(self, chunk, x, y, z, block):
         """
         Whenever a block is dug out, destroy any torches attached to the
         block, and drop pickups for them.

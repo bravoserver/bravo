@@ -103,11 +103,10 @@ class IChatCommand(ICommand):
     with `IConsoleCommand`.
     """
 
-    def chat_command(factory, username, parameters):
+    def chat_command(username, parameters):
         """
         Handle a command from the chat interface.
 
-        :param `BravoFactory` factory: factory for this world
         :param str username: username of player
         :param list parameters: additional parameters passed to the command
 
@@ -124,11 +123,10 @@ class IConsoleCommand(ICommand):
     they must be given usernames to operate on explicitly.
     """
 
-    def console_command(factory, parameters):
+    def console_command(parameters):
         """
         Handle a command.
 
-        :param `BravoFactory` factory: factory for this world
         :param list parameters: additional parameters passed to the command
 
         :returns: a generator object or other iterable yielding lines
@@ -151,13 +149,12 @@ class ChatToConsole(object):
         self.name = self.chatcommand.name
         self.usage = "<username> %s" % self.chatcommand.usage
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         if IConsoleCommand.providedBy(self.chatcommand):
-            return self.chatcommand.console_command(factory, parameters)
+            return self.chatcommand.console_command(parameters)
         else:
             username = parameters.pop(0) if parameters else ""
-            return self.chatcommand.chat_command(factory, username,
-                parameters)
+            return self.chatcommand.chat_command(username, parameters)
 
 registerAdapter(ChatToConsole, IChatCommand, IConsoleCommand)
 
@@ -328,7 +325,6 @@ class IPreBuildHook(ISortedPlugin):
         This form makes it much easier to deal with asynchronous operations on
         the factory and world.
 
-        :param ``Factory`` factory: factory
         :param ``Player`` player: player entity doing the building
         :param namedtuple builddata: permanent building location and data
 
@@ -341,7 +337,7 @@ class IPostBuildHook(ISortedPlugin):
     Hook for actions to be taken after a block is placed.
     """
 
-    def post_build_hook(factory, player, coords, block):
+    def post_build_hook(player, coords, block):
         """
         Do things.
         """
@@ -351,11 +347,10 @@ class IDigHook(ISortedPlugin):
     Hook for actions to be taken after a block is dug up.
     """
 
-    def dig_hook(factory, chunk, x, y, z, block):
+    def dig_hook(chunk, x, y, z, block):
         """
         Do things.
 
-        :param `Factory` factory: factory
         :param `Chunk` chunk: digging location
         :param int x: X coordinate
         :param int y: Y coordinate
@@ -370,11 +365,10 @@ class ISignHook(ISortedPlugin):
     This hook fires both on sign creation and sign editing.
     """
 
-    def sign_hook(factory, chunk, x, y, z, text, new):
+    def sign_hook(chunk, x, y, z, text, new):
         """
         Do things.
 
-        :param `Factory` factory: factory
         :param `Chunk` chunk: digging location
         :param int x: X coordinate
         :param int y: Y coordinate
@@ -391,11 +385,10 @@ class IUseHook(ISortedPlugin):
     in advance, and it will only be called for those.
     """
 
-    def use_hook(factory, player, target, alternate):
+    def use_hook(player, target, alternate):
         """
         Do things.
 
-        :param `Factory` factory: factory
         :param `Player` player: player
         :param `Entity` target: target of the interaction
         :param bool alternate: whether the player right-clicked the target
@@ -417,7 +410,7 @@ class IAutomaton(IBravoPlugin):
         List of blocks which this automaton is interested in.
         """)
 
-    def feed(factory, coordinates):
+    def feed(coordinates):
         """
         Provide this automaton with block coordinates to handle later.
         """

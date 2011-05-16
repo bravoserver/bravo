@@ -7,6 +7,8 @@ from zope.interface import implements
 from bravo.ibravo import IChatCommand, IConsoleCommand
 from bravo.utilities.coords import split_coords
 
+from bravo.parameters import factory
+
 csv.register_dialect("hey0", delimiter=":")
 
 def get_locations(data):
@@ -32,7 +34,7 @@ class Home(object):
 
     implements(IChatCommand, IConsoleCommand)
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         data = factory.world.serializer.load_plugin_data("homes")
         homes = get_locations(data)
 
@@ -48,8 +50,8 @@ class Home(object):
         protocol.send_initial_chunk_and_location()
         yield "Teleportation successful!"
 
-    def console_command(self, factory, parameters):
-        for i in self.chat_command(factory, parameters[0], parameters[1:]):
+    def console_command(self, parameters):
+        for i in self.chat_command(parameters[0], parameters[1:]):
             yield i
 
     name = "home"
@@ -61,7 +63,7 @@ class SetHome(object):
 
     implements(IChatCommand)
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         yield "Saving %s's home..." % username
 
         protocol = factory.protocols[username]
@@ -88,7 +90,7 @@ class Warp(object):
 
     implements(IChatCommand, IConsoleCommand)
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         data = factory.world.serializer.load_plugin_data("warps")
         warps = get_locations(data)
 
@@ -111,8 +113,8 @@ class Warp(object):
         else:
             yield "No warp location %s available" % parameters
 
-    def console_command(self, factory, parameters):
-        for i in self.chat_command(factory, parameters[0], parameters[1:]):
+    def console_command(self, parameters):
+        for i in self.chat_command(parameters[0], parameters[1:]):
             yield i
 
     name = "warp"
@@ -135,11 +137,11 @@ class ListWarps(object):
         else:
             yield "No warps are set!"
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         for i in self.dispatch(factory):
             yield i
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         for i in self.dispatch(factory):
             yield i
 
@@ -152,7 +154,7 @@ class SetWarp(object):
 
     implements(IChatCommand)
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         name = "".join(parameters)
 
         yield "Saving warp %s..." % name
@@ -181,7 +183,7 @@ class RemoveWarp(object):
 
     implements(IChatCommand)
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         name = "".join(parameters)
 
         yield "Removing warp %s..." % name
@@ -207,7 +209,7 @@ class Ascend(object):
     implements(IChatCommand)
 
     @inlineCallbacks
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         protocol = factory.protocols[username]
         x = protocol.player.location.x
         z = protocol.player.location.z
@@ -241,7 +243,7 @@ class Descend(object):
     implements(IChatCommand)
 
     @inlineCallbacks
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         protocol = factory.protocols[username]
         x = protocol.player.location.x
         z = protocol.player.location.z

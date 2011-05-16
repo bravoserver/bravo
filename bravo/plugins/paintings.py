@@ -68,7 +68,7 @@ class Paintings(object):
 
         return False, builddata
 
-    def use_hook(self, factory, player, target, button):
+    def use_hook(self, player, target, button):
         # Block coordinates.
         x, y, z = target.location.x, target.location.y, target.location.z
 

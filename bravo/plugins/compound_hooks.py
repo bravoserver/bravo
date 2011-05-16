@@ -1,10 +1,12 @@
 from zope.interface import implements
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 
 from bravo.blocks import blocks
 from bravo.ibravo import IPostBuildHook, IDigHook
 from bravo.utilities.coords import split_coords
+
+from bravo.parameters import factory
 
 class Fallables(object):
     """
@@ -16,7 +18,7 @@ class Fallables(object):
     fallables = tuple()
     whitespace = (blocks["air"].slot,)
 
-    def dig_hook(self, factory, chunk, x, y, z, block):
+    def dig_hook(self, chunk, x, y, z, block):
         column = chunk.get_column(x, z)
         y = min(y - 1, 0)
 
@@ -43,10 +45,10 @@ class Fallables(object):
         chunk.set_column(x, z, column)
 
     @inlineCallbacks
-    def post_build_hook(self, factory, player, coords, block):
+    def post_build_hook(self, player, coords, block):
         bigx, smallx, bigz, smallz = split_coords(coords[0], coords[2])
         chunk = yield factory.world.request_chunk(bigx, bigz)
-        self.dig_hook(factory, chunk, smallx, coords[1], smallz, block)
+        self.dig_hook(chunk, smallx, coords[1], smallz, block)
 
     name = "fallables"
 

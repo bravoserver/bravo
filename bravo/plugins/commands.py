@@ -11,6 +11,8 @@ from bravo.plugin import PluginException
 from bravo.packets.beta import make_packet
 from bravo.utilities.temporal import split_time
 
+from bravo.parameters import factory
+
 def parse_player(factory, name):
     if name in factory.protocols:
         return factory.protocols[name]
@@ -86,14 +88,14 @@ class Help(object):
 
         return help_text
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         if parameters:
             return self.specific_help(retrieve_plugins(IChatCommand),
                 "".join(parameters))
         else:
             return self.general_help(retrieve_plugins(IChatCommand))
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         if parameters:
             return self.specific_help(retrieve_plugins(IConsoleCommand),
                 "".join(parameters))
@@ -113,11 +115,11 @@ class List(object):
         yield "Connected players: %s" % (", ".join(
                 player for player in factory.protocols))
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         for i in self.dispatch(factory):
             yield i
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         for i in self.dispatch(factory):
             yield i
 
@@ -129,6 +131,8 @@ class List(object):
 class Time(object):
 
     implements(IChatCommand, IConsoleCommand)
+
+    # XXX my code is all over the place; clean me up
 
     def dispatch(self, factory):
         hours, minutes = split_time(factory.time)
@@ -146,7 +150,7 @@ class Time(object):
             date = "%d" % factory.day
         yield "%02d:%02d, %s" % (hours, minutes, date)
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         if len(parameters) >= 1:
             # Set the time
             time = parameters[0]
@@ -174,7 +178,7 @@ class Time(object):
         # Tell the user the current time.
         return self.dispatch(factory)
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         return self.dispatch(factory)
 
     name = "time"
@@ -186,7 +190,7 @@ class Say(object):
 
     implements(IConsoleCommand)
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         message = "[Server] %s" % " ".join(parameters)
         yield message
         packet = make_packet("chat", message=message)
@@ -201,7 +205,7 @@ class Give(object):
 
     implements(IChatCommand)
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         if len(parameters) == 0:
             return ("Usage: /{0} {1}".format(self.name, self.usage),)
         elif len(parameters) == 1:
@@ -237,7 +241,7 @@ class Give(object):
 class Quit(object):
     implements(IConsoleCommand)
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         # Let's shutdown!
         message = "Server shutting down."
         yield message
@@ -262,7 +266,7 @@ class SaveAll(object):
 
     implements(IConsoleCommand)
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         yield "Flushing all chunks..."
 
         for chunk in factory.world.chunk_cache.itervalues():
@@ -279,7 +283,7 @@ class SaveOff(object):
 
     implements(IConsoleCommand)
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         yield "Disabling saving..."
 
         factory.world.save_off()
@@ -295,7 +299,7 @@ class SaveOn(object):
 
     implements(IConsoleCommand)
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         yield "Enabling saving (this could take a bit)..."
 
         factory.world.save_on()
@@ -311,7 +315,7 @@ class WriteConfig(object):
 
     implements(IConsoleCommand)
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         f = open("".join(parameters), "w")
         configuration.write(f)
         f.close()
@@ -326,7 +330,7 @@ class Season(object):
 
     implements(IConsoleCommand)
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         wanted = " ".join(parameters)
         try:
             season = retrieve_named_plugins(ISeason, [wanted])[0]
@@ -349,7 +353,7 @@ class Me(object):
 
     implements(IChatCommand)
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         say = " ".join(parameters)
         msg = "* %s %s" % (username, say)
         return (msg,)
@@ -379,7 +383,7 @@ class Kick(object):
         player.transport.write(packet)
         yield msg
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         for i in self.dispatch(factory, parameters):
             yield i
 
@@ -392,7 +396,7 @@ class GetPos(object):
 
     implements(IChatCommand)
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         player = parse_player(factory, username)
         l = player.player.location
         locMsg = "Your location is <%d, %d, %d>" % (l.x, l.y, l.z)

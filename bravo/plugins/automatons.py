@@ -12,6 +12,8 @@ from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
 
+from bravo.parameters import factory
+
 class Trees(object):
     """
     Turn saplings into trees.
@@ -32,7 +34,7 @@ class Trees(object):
         ]
 
     @inlineCallbacks
-    def process(self, factory, coords):
+    def process(self, coords):
         metadata = yield factory.world.get_metadata(coords)
         # Is this sapling ready to grow into a big tree? We use a bit-trick to
         # check.
@@ -50,11 +52,11 @@ class Trees(object):
             metadata += 4
             factory.world.set_metadata(coords, metadata)
             reactor.callLater(randint(self.grow_step_min, self.grow_step_max),
-                self.process, factory, coords)
+                self.process, coords)
 
-    def feed(self, factory, coords):
+    def feed(self, coords):
         reactor.callLater(randint(self.grow_step_min, self.grow_step_max),
-            self.process, factory, coords)
+            self.process, coords)
 
     name = "trees"
 
@@ -93,7 +95,7 @@ class Grass(object):
 
         # Effectively stop tracking this block. We'll add it back in if we're
         # not finished with it.
-        factory, coords = self.tracked.pop()
+        coords = self.tracked.pop()
 
         current = yield factory.world.get_block(coords)
         if current == blocks["dirt"].slot:
@@ -131,22 +133,22 @@ class Grass(object):
                 factory.flush_all_chunks()
             else:
                 # Not yet; add it back to the list.
-                self.tracked.add((factory, coords))
+                self.tracked.add(coords)
 
         # And call ourselves later.
         self.schedule()
 
-    def feed(self, factory, coords):
-        self.tracked.add((factory, coords))
+    def feed(self, coords):
+        self.tracked.add(coords)
 
-    def dig_hook(self, factory, chunk, x, y, z, block):
+    def dig_hook(self, chunk, x, y, z, block):
         if y > 0:
             block = chunk.get_block((x, y - 1, z))
             if block in self.blocks:
                 # Track it now.
                 coords = (chunk.x * 16 + x, y - 1, chunk.z * 16 + z)
 
-                self.tracked.add((factory, coords))
+                self.tracked.add(coords)
 
     name = "grass"
 

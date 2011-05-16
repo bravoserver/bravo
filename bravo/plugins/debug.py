@@ -2,11 +2,13 @@ from zope.interface import implements
 
 from bravo.ibravo import IConsoleCommand
 
+from bravo.parameters import factory
+
 class Meliae(object):
 
     implements(IConsoleCommand)
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         out = "".join(parameters)
         try:
             import meliae.scanner
@@ -27,7 +29,7 @@ class Status(object):
 
     implements(IConsoleCommand)
 
-    def console_command(self, factory, parameters):
+    def console_command(self, parameters):
         protocol_count = len(factory.protocols)
         yield "%d protocols connected" % protocol_count
 

@@ -9,6 +9,8 @@ from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IPostBuildHook, IDigHook
 from bravo.utilities.spatial import Block2DSpatialDict, Block3DSpatialDict
 
+from bravo.parameters import factory
+
 FALLING = 0x8
 """
 Flag indicating whether fluid is in freefall.
@@ -53,7 +55,7 @@ class Fluid(object):
             retval.append(self.sponge)
         return retval
 
-    def feed(self, factory, coordinates):
+    def feed(self, coordinates):
         """
         Accept the coordinates and stash them for later processing.
         """
@@ -258,7 +260,7 @@ class Fluid(object):
         self.schedule()
 
     @inlineCallbacks
-    def dig_hook(self, factory, chunk, x, y, z, block):
+    def dig_hook(self, chunk, x, y, z, block):
         """
         Check for neighboring water that might want to spread.
 
@@ -419,7 +421,7 @@ class Redstone(object):
                         new_level -= 1
                     world.set_metadata((x, y, z), new_level)
 
-    def post_build_hook(self, factory, player, coords, block):
+    def post_build_hook(self, player, coords, block):
         x, y, z = coords
 
         if factory.world.get_block((x, y, z)) in self.trackables:
