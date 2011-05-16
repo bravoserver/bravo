@@ -326,21 +326,33 @@ class Lava(Fluid):
 
 class Redstone(object):
 
-    implements(IPostBuildHook, IDigHook)
+    implements(IAutomaton, IDigHook)
 
     step = 0.2
 
-    trackables = set([
-        blocks["redstone-wire"].slot,
-    ])
+    blocks = (blocks["redstone-wire"].slot,)
 
     def __init__(self):
         self.tracked = set()
 
         self.loop = LoopingCall(self.process)
 
+    def start(self):
+        if not self.loop.running:
+            self.loop.start(self.step)
+
+    def stop(self):
+        if self.loop.running:
+            self.loop.stop()
+
+    def schedule(self):
+        if self.tracked:
+            self.start()
+        else:
+            self.stop()
+
     @inlineCallbacks
-    def update_wires(self, factory, x, y, z, enabled):
+    def update_wires(self, x, y, z, enabled):
         """
         Trace the wires starting at a certain point, and either enable or
         disable them.
@@ -418,19 +430,17 @@ class Redstone(object):
                         new_level -= 1
                     world.set_metadata((x, y, z), new_level)
 
-    def post_build_hook(self, player, coords, block):
-        x, y, z = coords
+    @inlineCallbacks
+    def feed(self, coords):
 
-        if factory.world.get_block((x, y, z)) in self.trackables:
-            self.tracked.add(factory, x, y, z)
+        self.tracked.add(coords)
 
         # Wire wants state updates from its neighbors.
-        if factory.world.get_block((x, y, z)) == blocks["redstone-wire"].slot:
+        block = yield factory.world.get_block(coords)
+        if block == blocks["redstone-wire"].slot:
+            x, y, z = coords
             self.tracked.update(((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
                 (x, y, z + 1)))
-
-        if self.tracked and not self.loop.running:
-            self.loop.start(self.step)
 
     def dig_hook(self, chunk, x, y, z, block):
         pass

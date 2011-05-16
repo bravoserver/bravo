@@ -344,13 +344,6 @@ class TestWater(unittest.TestCase):
 class TestRedstone(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.plugin.retrieve_plugins(IDigHook)
-
-        if "redstone" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
-        self.hook = self.p["redstone"]
-
         # Set up world.
         self.name = "unittest"
         self.d = tempfile.mkdtemp()
@@ -363,15 +356,22 @@ class TestRedstone(unittest.TestCase):
 
         self.w = bravo.world.World(self.name)
         self.w.pipeline = []
+        self.w.start()
 
         # And finally the mock factory.
         self.f = PhysicsMockFactory()
         self.f.world = self.w
 
+        pp = {"factory": self.f}
+        self.p = bravo.plugin.retrieve_plugins(IDigHook, parameters=pp)
+
+        if "redstone" not in self.p:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.hook = self.p["redstone"]
+
     def tearDown(self):
-        if self.w.chunk_management_loop.running:
-            self.w.chunk_management_loop.stop()
-        del self.w
+        self.w.stop()
 
         shutil.rmtree(self.d)
         bravo.config.configuration.remove_section("world unittest")
@@ -387,7 +387,7 @@ class TestRedstone(unittest.TestCase):
             self.w.set_metadata((i, 0, 0), 0x0)
 
         # Enable wires.
-        self.hook.update_wires(self.f, 0, 0, 0, True)
+        self.hook.update_wires(0, 0, 0, True)
 
         for i in range(16):
             metadata = yield self.w.get_metadata((i, 0, 0))
@@ -401,7 +401,7 @@ class TestRedstone(unittest.TestCase):
             self.w.set_metadata((i, 0, 0), i)
 
         # Disable wires.
-        self.hook.update_wires(self.f, 0, 0, 0, False)
+        self.hook.update_wires(0, 0, 0, False)
 
         for i in range(16):
             metadata = yield self.w.get_metadata((i, 0, 0))
