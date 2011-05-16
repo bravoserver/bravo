@@ -32,6 +32,16 @@ class Trees(object):
             RoundTree,
             NormalTree,
         ]
+        self.tracked = set()
+
+    def start(self):
+        # Noop for now -- this is wrong for several reasons.
+        pass
+
+    def stop(self):
+        for call in self.tracked:
+            if call.active():
+                call.cancel()
 
     @inlineCallbacks
     def process(self, coords):
@@ -51,12 +61,16 @@ class Trees(object):
             # Increment metadata.
             metadata += 4
             factory.world.set_metadata(coords, metadata)
-            reactor.callLater(randint(self.grow_step_min, self.grow_step_max),
-                self.process, coords)
+            call = reactor.callLater(
+                randint(self.grow_step_min, self.grow_step_max), self.process,
+                coords)
+            self.tracked.add(call)
 
     def feed(self, coords):
-        reactor.callLater(randint(self.grow_step_min, self.grow_step_max),
-            self.process, coords)
+        call = reactor.callLater(
+            randint(self.grow_step_min, self.grow_step_max), self.process,
+            coords)
+        self.tracked.add(call)
 
     name = "trees"
 
@@ -80,12 +94,18 @@ class Grass(object):
     def __init__(self):
         self.tracked = set()
         self.loop = LoopingCall(self.process)
-        self.schedule()
 
-    def schedule(self):
+    def start(self):
+        if not self.loop.running:
+            self.loop.start(self.step, now=False)
+
+    def stop(self):
         if self.loop.running:
             self.loop.stop()
-        self.loop.start(self.step, now=False)
+
+    def schedule(self):
+        self.stop()
+        self.start()
 
     @inlineCallbacks
     def process(self):

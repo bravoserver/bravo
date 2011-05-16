@@ -38,15 +38,21 @@ class Fluid(object):
 
         self.loop = LoopingCall(self.process)
 
+    def start(self):
+        if not self.loop.running:
+            self.loop.start(self.step)
+
+    def stop(self):
+        if self.loop.running:
+            self.loop.stop()
+
     def schedule(self):
         if any(self.pending.itervalues()):
             # We *should* be running.
-            if not self.loop.running:
-                self.loop.start(self.step)
+            self.start()
         else:
             # We should *not* be running.
-            if self.loop.running:
-                self.loop.stop()
+            self.stop()
 
     @property
     def blocks(self):

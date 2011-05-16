@@ -415,6 +415,19 @@ class IAutomaton(IBravoPlugin):
         Provide this automaton with block coordinates to handle later.
         """
 
+    def start():
+        """
+        Run the automaton.
+        """
+
+    def stop():
+        """
+        Stop the automaton.
+
+        After this method is called, the automaton should not continue
+        processing data; it needs to stop immediately.
+        """
+
 class IWorldResource(IBravoPlugin, IResource):
     """
     Interface for a world specific web resource.

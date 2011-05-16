@@ -89,7 +89,12 @@ class BravoFactory(Factory):
         self.handshake_hook = selected.handshake
         self.login_hook = selected.login
 
+        # Get our plugins set up.
         self.register_plugins()
+
+        # Start automatons.
+        for automaton in self.automatons:
+            automaton.start()
 
         self.chat_consumers = set()
 
@@ -102,6 +107,13 @@ class BravoFactory(Factory):
         """
 
         log.msg("Shutting down world...")
+
+        # Stop automatons. Technically, they may not actually halt until their
+        # next iteration, but that is close enough for us, probably.
+        # Automatons are contracted to not access the world after stop() is
+        # called.
+        for automaton in self.automatons:
+            automaton.stop()
 
         self.time_loop.stop()
 
