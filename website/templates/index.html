@@ -4,8 +4,9 @@
 {% endblock %}
 {% block main %}
 {{ super() }}
-{% for page in self.subpages %}
-    {{ page.content }}
+{% for subpage in page.subpages|sort(reverse=True, attribute="datetime") %}
+    <h2>{{ subpage.title }}</h2>
+    {{ subpage.content }}
 {% else %}
 Huh, where'd the content go?
 {% endfor %}
