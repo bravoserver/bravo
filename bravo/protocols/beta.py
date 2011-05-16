@@ -1,4 +1,4 @@
-from collections import namedtuple, defaultdict
+from collections import namedtuple
 from itertools import product, chain
 from time import time
 from urlparse import urlunparse
@@ -23,7 +23,7 @@ from bravo.inventory import Workbench, sync_inventories
 from bravo.location import Location
 from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
-from bravo.plugin import retrieve_plugins, retrieve_sorted_plugins, retrieve_named_plugins
+from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import split_coords
 
@@ -733,8 +733,7 @@ class BravoProtocol(BetaServerProtocol):
 
         l = []
         for hook in self.dig_hooks:
-            l.append(maybeDeferred(hook.dig_hook,
-                                   self.factory, chunk, x, y, z, block))
+            l.append(maybeDeferred(hook.dig_hook, chunk, x, y, z, block))
 
         dl = DeferredList(l)
         dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
@@ -793,7 +792,7 @@ class BravoProtocol(BetaServerProtocol):
 
         for hook in self.pre_build_hooks:
             cont, builddata = yield maybeDeferred(hook.pre_build_hook,
-                self.factory, self.player, builddata)
+                self.player, builddata)
             if not cont:
                 break
 
@@ -810,14 +809,13 @@ class BravoProtocol(BetaServerProtocol):
         # interfere with the build process, largely because the build process
         # already happened.
         for hook in self.post_build_hooks:
-            yield maybeDeferred(hook.post_build_hook, self.factory,
-                self.player, coords, builddata.block)
+            yield maybeDeferred(hook.post_build_hook, self.player, coords,
+                builddata.block)
 
         # Feed automatons.
         for automaton in self.factory.automatons:
             if newblock in automaton.blocks:
-                automaton.feed(self.factory,
-                    (builddata.x, builddata.y, builddata.z))
+                automaton.feed((builddata.x, builddata.y, builddata.z))
 
         # Re-send inventory.
         # XXX this could be optimized if/when inventories track damage.
