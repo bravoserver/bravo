@@ -135,11 +135,11 @@ class World(object):
         # which we can use. If not, don't worry about it.
         d = maybeDeferred(self.serializer.load_level, self)
         d.addCallback(lambda chaff: log.msg("Loaded level data!"))
+        @d.addErrback
         def sre(failure):
             failure.trap(SerializerReadException)
             log.msg("Had issues loading level data...")
             log.msg(failure)
-        d.addErrback(sre)
 
         # And now save our level.
         if self.saving:
@@ -302,7 +302,7 @@ class World(object):
         yield maybeDeferred(self.serializer.load_chunk, chunk)
 
         if chunk.populated:
-            self.dirty_chunk_cache[x, z] = chunk
+            self.chunk_cache[x, z] = chunk
             self.postprocess_chunk(chunk)
             #self.factory.scan_chunk(chunk)
             returnValue(chunk)
