@@ -78,6 +78,19 @@ class World(object):
     This cache is used to speed up logins near the spawn point.
     """
 
+    spawn = (0, 0, 0)
+    """
+    The spawn point.
+    """
+
+    time = 0
+    """
+    The current time.
+
+    This does not reflect the actual in-game time, just the time currently
+    saved in the level data.
+    """
+
     def __init__(self, name):
         """
         :Parameters:
@@ -86,6 +99,11 @@ class World(object):
         """
 
         self.config_name = "world %s" % name
+
+        self.chunk_cache = weakref.WeakValueDictionary()
+        self.dirty_chunk_cache = dict()
+
+        self._pending_chunks = dict()
 
     def start(self):
         """
@@ -102,14 +120,7 @@ class World(object):
             log.msg(pe)
             raise RuntimeError("Fatal error: Couldn't set up serializer!")
 
-        self.chunk_cache = weakref.WeakValueDictionary()
-        self.dirty_chunk_cache = dict()
-
-        self._pending_chunks = dict()
-
-        self.spawn = (0, 0, 0)
         self.seed = random.randint(0, sys.maxint)
-        self.time = 0
 
         # Check if we should offload chunk requests to ampoule.
         if configuration.getbooleandefault("bravo", "ampoule", False):
@@ -119,7 +130,6 @@ class World(object):
                 pass
             else:
                 self.async = True
-
 
         # First, try loading the level, to see if there's any data out there
         # which we can use. If not, don't worry about it.
