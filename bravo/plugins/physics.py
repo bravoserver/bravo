@@ -5,7 +5,7 @@ from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
 from bravo.blocks import blocks
-from bravo.ibravo import IAutomaton, IPostBuildHook, IDigHook
+from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.spatial import Block2DSpatialDict, Block3DSpatialDict
 
 from bravo.parameters import factory
