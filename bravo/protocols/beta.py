@@ -439,9 +439,6 @@ class BravoProtocol(BetaServerProtocol):
         # Retrieve the MOTD. Only needs to be done once.
         self.motd = configuration.getdefault(self.config_name, "motd", None)
 
-        # XXX this would be a good starting point for 1KO
-        self.last_dig_build_timer = time()
-
         # Register hooks, *after* __init__.
         reactor.callLater(0, self.register_hooks)
 
@@ -453,7 +450,9 @@ class BravoProtocol(BetaServerProtocol):
 
         names = configuration.getlistdefault(self.config_name, "pre_build_hooks",
             [])
-        self.pre_build_hooks = retrieve_sorted_plugins(IPreBuildHook, names)
+        self.pre_build_hooks = retrieve_sorted_plugins(IPreBuildHook, names,
+            parameters=pp)
+
         names = configuration.getlistdefault(self.config_name, "post_build_hooks",
             [])
         self.post_build_hooks = retrieve_sorted_plugins(IPostBuildHook, names)
@@ -475,9 +474,6 @@ class BravoProtocol(BetaServerProtocol):
 
         log.msg("Registering policies...")
         self.dig_policy = dig_policies["notchy"]
-
-        # Retrieve the MOTD. Only needs to be done once.
-        self.motd = configuration.getdefault(self.config_name, "motd", None)
 
         log.msg("Registered client plugin hooks!")
 

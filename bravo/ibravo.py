@@ -287,7 +287,7 @@ class IPreBuildHook(ISortedPlugin):
     Hook for actions to be taken before a block is placed.
     """
 
-    def pre_build_hook(factory, player, builddata):
+    def pre_build_hook(player, builddata):
         """
         Do things.
 
@@ -301,7 +301,10 @@ class IPreBuildHook(ISortedPlugin):
         can be modified in passing in order to modify the way blocks are
         placed.
 
-        Any access to chunks must be done through the factory.
+        Any access to chunks must be done through the factory. To get the
+        current factory, import it from ``bravo.parameters``:
+
+        >>> from bravo.parameters import factory
 
         The second variable in the return value indicates whether processing
         of building should continue after this hook runs. Use it to halt build
@@ -312,14 +315,14 @@ class IPreBuildHook(ISortedPlugin):
 
         A trivial do-nothing build hook looks like the following:
 
-        >>> def pre_build_hook(self, factory, player, builddata):
+        >>> def pre_build_hook(self, player, builddata):
         ...     return True, builddata
 
         To make life more pleasant when returning deferred values, use
         ``inlineCallbacks``, which many of the standard build hooks use:
 
         >>> @inlineCallbacks
-        ... def pre_build_hook(self, factory, player, builddata):
+        ... def pre_build_hook(self, player, builddata):
         ...     returnValue((True, builddata))
 
         This form makes it much easier to deal with asynchronous operations on

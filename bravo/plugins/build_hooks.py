@@ -6,7 +6,7 @@ from bravo.entity import Chest, Sign
 from bravo.ibravo import IPreBuildHook
 from bravo.utilities.coords import split_coords
 
-from parameters import factory
+from bravo.parameters import factory
 
 class Tile(object):
     """
@@ -18,7 +18,7 @@ class Tile(object):
     implements(IPreBuildHook)
 
     @inlineCallbacks
-    def pre_build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, player, builddata):
         item, metadata, x, y, z, face = builddata
 
         if item.slot == items["sign"].slot:
@@ -96,8 +96,10 @@ class BuildSnow(object):
 
     implements(IPreBuildHook)
 
+    # XXX come back and fix me plz
+
     @inlineCallbacks
-    def pre_build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, player, builddata):
         block = yield factory.world.get_block((builddata.x, builddata.y, builddata.z))
 
         if block == blocks["snow"].slot:

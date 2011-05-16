@@ -161,10 +161,15 @@ def get_plugins(interface, package, parameters=None):
     The objects must also implement ``twisted.plugin.IPlugin``.
 
     If the optional dictionary of parameters is provided, it will be passed
-    into each plugin module as the "parameters" module. An example access from
-    inside the plugin:
+    into each plugin module as the "bravo.parameters" module. An example
+    access from inside the plugin:
 
-    >>> from parameters import foo, bar
+    >>> from bravo.parameters import foo, bar
+
+    Since the parameters are available as a real module, the parameters may be
+    imported and used like any other module:
+
+    >>> from bravo import parameters as params
 
     This is a rewrite of Twisted's ``twisted.plugin.getPlugins`` which uses
     Exocet instead of Twisted to find the plugins.
@@ -178,7 +183,7 @@ def get_plugins(interface, package, parameters=None):
 
     if parameters:
         mapper = mapper.withOverrides(
-            {"parameters": synthesize_parameters(parameters)})
+            {"bravo.parameters": synthesize_parameters(parameters)})
 
     p = getModule(package)
     for pm in p.iterModules():
