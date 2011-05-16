@@ -12,7 +12,7 @@ from zope.interface import implements
 
 from bravo.config import configuration
 from bravo.entity import entities
-from bravo.ibravo import (IAutomaton, IAuthenticator, ISeason,
+from bravo.ibravo import (ISortedPlugin, IAutomaton, IAuthenticator, ISeason,
     ITerrainGenerator, IUseHook, ISignHook, IDigHook, IPreBuildHook,
     IPostBuildHook)
 from bravo.location import Location
@@ -161,9 +161,12 @@ class BravoFactory(Factory):
 
         for t, interface in plugin_types.iteritems():
             l = configuration.getlistdefault(self.config_name, t, [])
-            plugins = retrieve_sorted_plugins(interface, l, parameters=pp)
-            log.msg("Using %s %s" %
-                (l, ", ".join(plugin.name for plugin in plugins)))
+            if issubclass(interface, ISortedPlugin):
+                plugins = retrieve_sorted_plugins(interface, l, parameters=pp)
+            else:
+                plugins = retrieve_named_plugins(interface, l, parameters=pp)
+            log.msg("Using %s: %s" % (t.replace("_", " "),
+                ", ".join(plugin.name for plugin in plugins)))
             setattr(self, t, plugins)
 
         # Assign generators to the world pipeline.
