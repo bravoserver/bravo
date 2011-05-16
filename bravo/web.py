@@ -142,17 +142,15 @@ def bravo_site(services):
     root = Resource()
     root.putChild('', BravoResource(BravoRootElement(worlds, other_services)))
     # add world sub pages and related plugins
-    plugins = retrieve_plugins(IWorldResource)
     for world, factory in worlds.iteritems():
+        # Discover parameterized plugins.
+        plugins = retrieve_plugins(IWorldResource,
+                                   parameters={"factory": factory})
         # add sub page
         child = BravoResource(BravoWorldElement(factory, plugins), False)
         root.putChild(world, child)
         # add plugins
         for name, resource in plugins.iteritems():
-            # set factory because they are initialized without factory for
-            # plugin discovery
-            # XXX parameterize me plz
-            resource.factory = factory
             # add plugin page
             child.putChild(name, resource)
     # create site

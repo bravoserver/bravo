@@ -12,6 +12,8 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IWorldResource
 
+from bravo.parameters import factory
+
 block_colors = {
     blocks["clay"].slot: "rosybrown",
     blocks["cobblestone"].slot: 'dimgray',
@@ -57,8 +59,7 @@ class ChunkIllustrator(Resource):
     A helper resource which returns image data for a given chunk.
     """
 
-    def __init__(self, factory, x, z):
-        self.factory = factory
+    def __init__(self, x, z):
         self.x = x
         self.z = z
 
@@ -85,7 +86,7 @@ class ChunkIllustrator(Resource):
         request.finish()
 
     def render_GET(self, request):
-        d = self.factory.world.request_chunk(self.x, self.z)
+        d = factory.world.request_chunk(self.x, self.z)
         d.addCallback(self._cb_render_GET, request)
         return NOT_DONE_YET
 
@@ -127,9 +128,8 @@ class WorldMap(Resource):
 
     isLeaf = False
 
-    def __init__(self, factory=None):
+    def __init__(self):
         Resource.__init__(self)
-        self.factory = factory
         self.element = WorldMapElement()
 
     def getChild(self, name, request):
@@ -138,7 +138,7 @@ class WorldMap(Resource):
         """
 
         x, z = [int(i) for i in name.split(",")]
-        return ChunkIllustrator(self.factory, x, z)
+        return ChunkIllustrator(x, z)
 
     def render_GET(self, request):
         d = flattenString(request, self.element)
@@ -167,14 +167,10 @@ class AutomatonStatsElement(Element):
 
     loader = XMLString(automaton_stats_template)
 
-    def __init__(self, factory):
-        Element.__init__(self)
-        self.factory = factory
-
     @renderer
     def main(self, request, tag):
         retval = []
-        for automaton in self.factory.automatons:
+        for automaton in factory.automatons:
             title = tags.h2(automaton.name)
             stats = []
 
@@ -203,7 +199,7 @@ class AutomatonStats(Resource):
     isLeaf = True
 
     def render_GET(self, request):
-        d = flattenString(request, AutomatonStatsElement(self.factory))
+        d = flattenString(request, AutomatonStatsElement())
         def complete_request(html):
             request.write(html)
             request.finish()
