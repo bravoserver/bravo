@@ -21,15 +21,6 @@ class PhysicsMockFactory(object):
 class TestWater(unittest.TestCase):
 
     def setUp(self):
-        # Using dig hook to grab the plugin since the build hook was nuked in
-        # favor of the automaton interface.
-        self.p = bravo.plugin.retrieve_plugins(IDigHook)
-
-        if "water" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
-        self.hook = self.p["water"]
-
         # Set up world.
         self.name = "unittest"
         self.d = tempfile.mkdtemp()
@@ -42,15 +33,25 @@ class TestWater(unittest.TestCase):
 
         self.w = bravo.world.World(self.name)
         self.w.pipeline = []
+        self.w.start()
 
         # And finally the mock factory.
         self.f = PhysicsMockFactory()
         self.f.world = self.w
 
+        # Using dig hook to grab the plugin since the build hook was nuked in
+        # favor of the automaton interface.
+        pp = {"factory": self.f}
+        self.p = bravo.plugin.retrieve_plugins(IDigHook, parameters=pp)
+
+        if "water" not in self.p:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.hook = self.p["water"]
+
     def tearDown(self):
-        if self.w.chunk_management_loop.running:
-            self.w.chunk_management_loop.stop()
-        del self.w
+        self.w.stop()
+        self.hook.stop()
 
         shutil.rmtree(self.d)
         bravo.config.configuration.remove_section("world unittest")
@@ -65,20 +66,20 @@ class TestWater(unittest.TestCase):
         """
 
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.hook.pending[self.f].add((0, 0, 0))
+        self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium; if any exceptions happen,
         # they will bubble up.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
     @inlineCallbacks
     def test_spring_spread(self):
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.hook.pending[self.f].add((0, 0, 0))
+        self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
@@ -94,10 +95,10 @@ class TestWater(unittest.TestCase):
         """
 
         self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
-        self.hook.pending[self.f].add((0, 1, 0))
+        self.hook.tracked.add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         block = yield self.w.get_block((0, 0, 0))
@@ -114,17 +115,17 @@ class TestWater(unittest.TestCase):
 
         self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["dirt"].slot)
-        self.hook.pending[self.f].add((0, 1, 0))
+        self.hook.tracked.add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         #dig away dirt under spring
         self.w.destroy((0, 0, 0))
-        self.hook.pending[self.f].add((0, 1, 0))
+        self.hook.tracked.add((0, 1, 0))
 
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         block = yield self.w.get_block((0, 0, 0))
@@ -139,18 +140,18 @@ class TestWater(unittest.TestCase):
         self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["dirt"].slot)
         self.w.set_block((0, 0, 1), bravo.blocks.blocks["dirt"].slot)
-        self.hook.pending[self.f].add((0, 1, 0))
+        self.hook.tracked.add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         # Dig away the dirt next to the dirt under the spring, and simulate
         # the dig hook by adding the block above it.
         self.w.destroy((0, 0, 1))
-        self.hook.pending[self.f].add((0, 1, 1))
+        self.hook.tracked.add((0, 1, 1))
 
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         block = yield self.w.get_block((0, 0, 1))
@@ -164,21 +165,21 @@ class TestWater(unittest.TestCase):
 
         self.w.set_block((0, 3, 0), bravo.blocks.blocks["spring"].slot)
         self.w.set_block((0, 2, 0), bravo.blocks.blocks["dirt"].slot)
-        self.hook.pending[self.f].add((0, 1, 0))
+        self.hook.tracked.add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         #dig away dirt and add known spring and fluid blocks
         self.w.destroy((0, 2, 0))
-        self.hook.pending[self.f].add((0, 2, 1))
-        self.hook.pending[self.f].add((0, 2, -1))
-        self.hook.pending[self.f].add((0, 3, 0))
-        self.hook.pending[self.f].add((1, 2, 0))
-        self.hook.pending[self.f].add((-1, 2, 0))
+        self.hook.tracked.add((0, 2, 1))
+        self.hook.tracked.add((0, 2, -1))
+        self.hook.tracked.add((0, 3, 0))
+        self.hook.tracked.add((1, 2, 0))
+        self.hook.tracked.add((-1, 2, 0))
 
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         block = yield self.w.get_block((0, 1, 2))
@@ -193,10 +194,10 @@ class TestWater(unittest.TestCase):
 
         yield self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
         yield self.w.set_block((1, 0, 0), bravo.blocks.blocks["stone"].slot)
-        self.hook.pending[self.f].add((0, 0, 0))
+        self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         # Make sure that the water level behind the stone is 0x3, not 0x0.
@@ -211,11 +212,11 @@ class TestWater(unittest.TestCase):
 
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
         self.w.set_block((3, 0, 0), bravo.blocks.blocks["sponge"].slot)
-        self.hook.pending[self.f].add((0, 0, 0))
-        self.hook.pending[self.f].add((3, 0, 0))
+        self.hook.tracked.add((0, 0, 0))
+        self.hook.tracked.add((3, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         # Make sure that water did not spread near the sponge.
@@ -230,16 +231,16 @@ class TestWater(unittest.TestCase):
         """
 
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.hook.pending[self.f].add((0, 0, 0))
+        self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         self.w.set_block((1, 0, 0), bravo.blocks.blocks["sponge"].slot)
-        self.hook.pending[self.f].add((1, 0, 0))
+        self.hook.tracked.add((1, 0, 0))
 
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         for coords in ((0, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
@@ -258,10 +259,10 @@ class TestWater(unittest.TestCase):
         """
 
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.hook.pending[self.f].add((0, 0, 0))
+        self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         # Take a snapshot.
@@ -269,15 +270,15 @@ class TestWater(unittest.TestCase):
         before = chunk.blocks[:, :, 0], chunk.metadata[:, :, 0]
 
         self.w.set_block((3, 0, 0), bravo.blocks.blocks["sponge"].slot)
-        self.hook.pending[self.f].add((3, 0, 0))
+        self.hook.tracked.add((3, 0, 0))
 
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         self.w.destroy((3, 0, 0))
-        self.hook.pending[self.f].add((3, 0, 0))
+        self.hook.tracked.add((3, 0, 0))
 
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         after = chunk.blocks[:, :, 0], chunk.metadata[:, :, 0]
@@ -292,18 +293,18 @@ class TestWater(unittest.TestCase):
         """
 
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.hook.pending[self.f].add((0, 0, 0))
+        self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         # Remove the spring.
         self.w.destroy((0, 0, 0))
-        self.hook.pending[self.f].add((0, 0, 0))
+        self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
@@ -319,19 +320,19 @@ class TestWater(unittest.TestCase):
 
         self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
         self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
-        self.hook.pending[self.f].add((0, 0, 0))
-        self.hook.pending[self.f].add((0, 1, 0))
+        self.hook.tracked.add((0, 0, 0))
+        self.hook.tracked.add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         # Remove the upper spring.
         self.w.destroy((0, 1, 0))
-        self.hook.pending[self.f].add((0, 1, 0))
+        self.hook.tracked.add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
-        while self.hook.pending:
+        while self.hook.tracked:
             self.hook.process()
 
         # Check that the upper water blocks dried out. Don't care about the
