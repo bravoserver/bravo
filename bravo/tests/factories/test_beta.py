@@ -41,6 +41,53 @@ class TestBravoFactory(unittest.TestCase):
 
         self.assertEqual(self.f.eid, 1)
 
+    def test_update_season_empty(self):
+        """
+        If no seasons are enabled, things should proceed as normal.
+        """
+
+        bravo.config.configuration.set("world unittest", "seasons", "")
+
+        self.f.day = 0
+        self.f.update_season()
+        self.assertTrue(self.f.world.season is None)
+
+        self.f.day = 90
+        self.f.update_season()
+        self.assertTrue(self.f.world.season is None)
+
+    def test_update_season_winter(self):
+        """
+        If winter is the only season available, then only winter should be
+        selected, regardless of day.
+        """
+
+        bravo.config.configuration.set("world unittest", "seasons", "winter")
+
+        self.f.day = 0
+        self.f.update_season()
+        self.assertEqual(self.f.world.season.name, "winter")
+
+        self.f.day = 90
+        self.f.update_season()
+        self.assertEqual(self.f.world.season.name, "winter")
+
+    def test_update_season_switch(self):
+        """
+        The season should change from spring to winter when both are enabled.
+        """
+
+        bravo.config.configuration.set("world unittest", "seasons",
+            "winter, spring")
+
+        self.f.day = 0
+        self.f.update_season()
+        self.assertEqual(self.f.world.season.name, "winter")
+
+        self.f.day = 90
+        self.f.update_season()
+        self.assertEqual(self.f.world.season.name, "spring")
+
 class TestBravoFactoryStarted(unittest.TestCase):
     """
     Tests which require ``startFactory()`` to be called.
@@ -133,21 +180,3 @@ class TestBravoFactoryStarted(unittest.TestCase):
         for player, radius, result in expected_results:
             found = [p.eid for p in self.f.players_near(player, radius)]
             self.assertEqual(set(found), set(result))
-
-    def test_update_season_simple(self):
-        self.f.day = 90
-        self.f.update_season()
-        self.assertEqual(self.f.world.season.name, "spring")
-
-        self.f.day = 0
-        self.f.update_season()
-        self.assertEqual(self.f.world.season.name, "winter")
-
-    def test_update_season_advanced(self):
-        self.f.day = 0
-        self.f.update_season()
-        self.assertEqual(self.f.world.season.name, "winter")
-
-        self.f.day = 92
-        self.f.update_season()
-        self.assertEqual(self.f.world.season.name, "spring")

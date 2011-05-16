@@ -249,10 +249,13 @@ class BravoFactory(Factory):
         if past_seasons:
             # The most recent one is the one we are in
             self.world.season = past_seasons[-1]
-        else:
+        elif all_seasons:
             # We haven't past any seasons yet this year, so grab the last one
             # from 'last year'
             self.world.season = all_seasons[-1]
+        else:
+            # No seasons enabled.
+            self.world.season = None
 
     def chat(self, message):
         """
