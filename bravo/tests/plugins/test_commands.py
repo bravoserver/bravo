@@ -39,7 +39,8 @@ class CommandsMockFactory(object):
 class TestGetpos(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand)
+        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand,
+            parameters={"factory": CommandsMockFactory()})
 
         if "getpos" not in self.p:
             raise unittest.SkipTest("Plugin not present")
@@ -50,8 +51,7 @@ class TestGetpos(unittest.TestCase):
         pass
 
     def test_return_value(self):
-        factory = CommandsMockFactory()
-        retval = self.hook.chat_command(factory, "unittest", [])
+        retval = self.hook.chat_command("unittest", [])
         self.assertTrue(retval)
         l = list(retval)
         self.assertEqual(len(l), 1)
@@ -59,7 +59,9 @@ class TestGetpos(unittest.TestCase):
 class TestGive(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand)
+        self.f = CommandsMockFactory()
+        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand,
+            parameters={"factory": self.f})
 
         if "give" not in self.p:
             raise unittest.SkipTest("Plugin not present")
@@ -74,20 +76,21 @@ class TestGive(unittest.TestCase):
         With no parameters, the command shouldn't call factory.give().
         """
 
-        factory = CommandsMockFactory()
         called = [False]
         def cb(a, b, c):
             called[0] = True
-        self.patch(factory, "give", cb)
+        self.patch(self.f, "give", cb)
 
-        self.hook.chat_command(factory, "unittest", [])
+        self.hook.chat_command("unittest", [])
 
         self.assertFalse(called[0])
 
 class TestTime(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand)
+        self.f = CommandsMockFactory()
+        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand,
+            parameters={"factory": self.f})
 
         if "time" not in self.p:
             raise unittest.SkipTest("Plugin not present")
@@ -102,19 +105,15 @@ class TestTime(unittest.TestCase):
         Set the time directly.
         """
 
-        factory = CommandsMockFactory()
+        self.hook.chat_command("unittest", ["sunset"])
 
-        self.hook.chat_command(factory, "unittest", ["sunset"])
-
-        self.assertEqual(factory.time, 12000)
+        self.assertEqual(self.f.time, 12000)
 
     def test_set_day(self):
         """
         Set the day.
         """
 
-        factory = CommandsMockFactory()
+        self.hook.chat_command("unittest", ["0", "1"])
 
-        self.hook.chat_command(factory, "unittest", ["0", "1"])
-
-        self.assertEqual(factory.day, 1)
+        self.assertEqual(self.f.day, 1)

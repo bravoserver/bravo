@@ -49,17 +49,28 @@ class TestBlockQuirks(unittest.TestCase):
 class TestParseBlock(unittest.TestCase):
 
     def test_parse_block(self):
-        # parse blocks
         self.assertEqual(parse_block("16"), (16, 0))
+
+    def test_parse_block_hex(self):
         self.assertEqual(parse_block("0x10"), (16, 0))
+
+    def test_parse_block_named(self):
         self.assertEqual(parse_block("coal-ore"), (16, 0))
 
-        # parse items
+    def test_parse_block_item(self):
         self.assertEqual(parse_block("300"), (300, 0))
+
+    def test_parse_block_item_hex(self):
         self.assertEqual(parse_block("0x12C"), (300, 0))
+
+    def test_parse_block_item_named(self):
         self.assertEqual(parse_block("leather-leggings"), (300, 0))
 
-        # test errors
+    def test_parse_block_unknown(self):
         self.assertRaises(Exception, parse_block, "1000")
+
+    def test_parse_block_unknown_hex(self):
         self.assertRaises(Exception, parse_block, "0x1000")
+
+    def test_parse_block_unknown_named(self):
         self.assertRaises(Exception, parse_block, "helloworld")
