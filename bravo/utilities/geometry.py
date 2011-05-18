@@ -1,14 +1,14 @@
-
-
-def gen_line_simple (point1, point2):
-    """ Generalization of Bresenham's line algorithm in 3d.
-
-        It yields blocks coordinates along a line that is at all times only
-        one block in width.
-
-        It is a simplified version that does nothing fancy with integers or such : all
-        computation is done on float (maybe it should be changed?)
+def gen_line_simple(point1, point2):
     """
+    Generalization of Bresenham's line algorithm in 3d.
+
+    It yields blocks coordinates along a line that is at all times only one
+    block in width.
+
+    It is a simplified version that does nothing fancy with integers or such:
+    all computation is done on float (maybe it should be changed?)
+    """
+
     tx, ty, tz = point1.x, point1.y, point1.z # t is for temporary
     rx, ry, rz = int (tx), int (ty), int (tz) # r is for rounded
     ox, oy, oz = point2.x, point2.y, point2.z # o is for objective
@@ -29,10 +29,12 @@ def gen_line_simple (point1, point2):
         rx, ry, rz = int (tx), int (ty), int (tz)
         yield rx, ry, rz
 
-def gen_line_covered (point1, point2):
-    """ This is Bresenham's algorithm with a little twist : *all* the blocks that
-        intersect with the line are yielded.
+def gen_line_covered(point1, point2):
     """
+    This is Bresenham's algorithm with a little twist: *all* the blocks that
+    intersect with the line are yielded.
+    """
+
     tx, ty, tz = point1.x, point1.y, point1.z # t is for temporary
     rx, ry, rz = int (tx), int (ty), int (tz) # r is for rounded
     ox, oy, oz = point2.x, point2.y, point2.z # o is for objective
