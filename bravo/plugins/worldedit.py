@@ -1,16 +1,15 @@
-from math import pi, cos, sin
-
-from StringIO import StringIO
+from math import cos, sin
 
 from zope.interface import implements
 
-from bravo.ibravo import IChatCommand, IConsoleCommand
 from bravo.blocks import blocks
-
+from bravo.ibravo import IChatCommand, IConsoleCommand
 from bravo.utilities.geometry import gen_line_covered
 
+from bravo.parameters import factory
+
 """
-    This plugin shall mimick the worldedit plugin for the original minecraft_server.jar.
+This plugin shall mimic the worldedit plugin for the original minecraft_server.jar.
 """
 
 empty_blocks_names = (
@@ -24,21 +23,24 @@ empty_blocks_names = (
 
 empty_blocks = []
 for name in empty_blocks_names:
-    empty_blocks.append (blocks[name].slot)
+    empty_blocks.append(blocks[name].slot)
 
-class _Point (object):
-    """ Small temporary class to hold a 3d point.
+class _Point(object):
     """
-    def __init__ (self, vec): self.x, self.y, self.z = vec
+    Small temporary class to hold a 3d point.
+    """
+
+    def __init__ (self, vec):
+        self.x, self.y, self.z = vec
 
 class Jumpto(object):
     """
-        Teleport the player to the block he's looking at.
+    Teleport the player to the block he's looking at.
     """
 
     implements(IChatCommand, IConsoleCommand)
 
-    def chat_command(self, factory, username, parameters):
+    def chat_command(self, username, parameters):
         yield "Trying to Jump..."
 
         protocol = factory.protocols[username] # Our player object
@@ -47,18 +49,19 @@ class Jumpto(object):
         # Viewport and player location are not very adapted to the coordinate system :
         # Blocks are not aligned on their centers. To be standing in the middle of a block,
         # you have to be at +0.5 +0.5 on x and z positions.
-        o = _Point ( (l.x, l.y + 1.6, l.z) )
+        o = _Point((l.x, l.y + 1.6, l.z))
 
         # x = r sinq cosf,     y = r sinq sinf,     z = r cosq,
-        distant_point = _Point ( (-1 * 220 * cos (l.phi) * sin (l.theta), -1 * 220 * sin (l.phi), 220 * cos (l.theta) * cos (l.phi) ) )
+        distant_point = _Point((-1 * 220 * cos(l.phi) * sin(l.theta),
+            -1 * 220 * sin(l.phi), 220 * cos(l.theta) * cos(l.phi)))
         distant_point.x += o.x
         distant_point.y += o.y
         distant_point.z += o.z
 
         world = factory.world
         dest = None
-        for point in gen_line_covered (o, distant_point):
-            block = world.get_block ( point )
+        for point in gen_line_covered(o, distant_point):
+            block = world.get_block(point)
             if block.result not in empty_blocks: # it's not air !!
                 dest = [point[0], point[1], point[2]]
                 break
@@ -76,7 +79,7 @@ class Jumpto(object):
             if dest[1] >= 127:
                 dest[1] += 1
                 break
-            current_block = world.get_block (dest).result
+            current_block = world.get_block(dest).result
             if current_block in empty_blocks and prev_block in empty_blocks:
                 break
 
@@ -84,13 +87,9 @@ class Jumpto(object):
         protocol.send_initial_chunk_and_location()
         yield "*Poof*"
 
-    def console_command(self, factory, parameters):
-        for i in self.chat_command(factory, parameters[0], parameters[1:]):
-            yield i
-
     name = "jumpto"
     aliases = tuple()
     usage = "<name>"
     info = "Teleports you where you're looking at."
 
-jumpto = Jumpto ()
+jumpto = Jumpto()
