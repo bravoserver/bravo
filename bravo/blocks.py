@@ -539,7 +539,7 @@ _add_block(Block(76, "redstone-torch", orientation=(None, 5, 4, 3, 2, 1), dim=0)
 # Stone buttons are orientable.
 _add_block(Block(77, "stone-button", orientation=(None, None, 1, 2, 3, 4), dim=0))
 # Ice drops nothing, is replaced by springs, and dims by 3.
-_add_block(Block(79, "ice", drop=0, replace=8, dim=3))
+_add_block(Block(79, "ice", drop=0, replace=9, dim=3))
 # Clay drops 4 clay balls.
 _add_block(Block(82, "clay", drop=337, quantity=4))
 
