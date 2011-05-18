@@ -439,9 +439,6 @@ class BravoProtocol(BetaServerProtocol):
         # Retrieve the MOTD. Only needs to be done once.
         self.motd = configuration.getdefault(self.config_name, "motd", None)
 
-        # Register hooks, *after* __init__.
-        reactor.callLater(0, self.register_hooks)
-
     def register_hooks(self):
 
         plugin_types = {

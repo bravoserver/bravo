@@ -150,6 +150,9 @@ class BravoFactory(Factory):
 
         self.register_entity(p)
 
+        # Copy our hooks to the protocol.
+        p.register_hooks()
+
         return p
 
     def register_plugins(self):
