@@ -652,3 +652,24 @@ armor_boots = (301, 305, 309, 313, 317)
 """
 List of slots of boots.
 """
+
+def parse_block(block):
+    """
+    Get the key for a given block/item.
+    """
+
+    try:
+        if block.startswith("0x") and (
+            (int(block, 16) in blocks) or (int(block, 16) in items)):
+            return (int(block, 16), 0)
+        elif (int(block) in blocks) or (int(block) in items):
+            return (int(block), 0)
+        else:
+            raise Exception("Couldn't find block id %s!" % block)
+    except ValueError:
+        if block in blocks:
+            return blocks[block].key
+        elif block in items:
+            return items[block].key
+        else:
+            raise Exception("Couldn't parse block %s!" % block)

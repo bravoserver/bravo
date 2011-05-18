@@ -5,7 +5,6 @@ import bravo.blocks
 import bravo.ibravo
 import bravo.plugin
 import bravo.protocols.beta
-from bravo.plugins.commands import parse_block
 
 class CommandsMockFactory(object):
 
@@ -119,20 +118,3 @@ class TestTime(unittest.TestCase):
         self.hook.chat_command(factory, "unittest", ["0", "1"])
 
         self.assertEqual(factory.day, 1)
-
-class TestParser(unittest.TestCase):
-    def test_block_parser(self):
-        # parse blocks
-        self.assertEqual(parse_block("16"), (16, 0))
-        self.assertEqual(parse_block("0x10"), (16, 0))
-        self.assertEqual(parse_block("coal-ore"), (16, 0))
-
-        # parse items
-        self.assertEqual(parse_block("300"), (300, 0))
-        self.assertEqual(parse_block("0x12C"), (300, 0))
-        self.assertEqual(parse_block("leather-leggings"), (300, 0))
-
-        # test errors
-        self.assertRaises(Exception, parse_block, "1000")
-        self.assertRaises(Exception, parse_block, "0x1000")
-        self.assertRaises(Exception, parse_block, "helloworld")

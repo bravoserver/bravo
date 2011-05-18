@@ -1,6 +1,7 @@
 from twisted.trial import unittest
 
 import bravo.blocks
+from bravo.blocks import parse_block
 
 class TestBlockNames(unittest.TestCase):
 
@@ -23,7 +24,6 @@ class TestBlockNames(unittest.TestCase):
     def test_unique_items_and_special_items(self):
         self.assertTrue(self.ins.isdisjoint(self.sin), repr(self.ins & self.sin))
 
-
 class TestBlockQuirks(unittest.TestCase):
 
     def test_ice_no_drops(self):
@@ -45,3 +45,21 @@ class TestBlockQuirks(unittest.TestCase):
 
     def test_no_block_0x20(self):
         self.assertTrue(0x20 not in bravo.blocks.blocks)
+
+class TestParseBlock(unittest.TestCase):
+
+    def test_parse_block(self):
+        # parse blocks
+        self.assertEqual(parse_block("16"), (16, 0))
+        self.assertEqual(parse_block("0x10"), (16, 0))
+        self.assertEqual(parse_block("coal-ore"), (16, 0))
+
+        # parse items
+        self.assertEqual(parse_block("300"), (300, 0))
+        self.assertEqual(parse_block("0x12C"), (300, 0))
+        self.assertEqual(parse_block("leather-leggings"), (300, 0))
+
+        # test errors
+        self.assertRaises(Exception, parse_block, "1000")
+        self.assertRaises(Exception, parse_block, "0x1000")
+        self.assertRaises(Exception, parse_block, "helloworld")
