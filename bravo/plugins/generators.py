@@ -471,10 +471,12 @@ class SaplingGenerator(object):
             morton = morton2(chunk.x * 16 + x, chunk.z * 16 + z)
 
             if not all(morton % factor for factor in factors):
+                species = morton % 3
                 # Plant a sapling.
                 y = chunk.height_at(x, z)
                 if chunk.get_block((x, y, z)) in self.ground:
                     chunk.set_block((x, y + 1, z), blocks["sapling"].slot)
+                    chunk.set_metadata((x, y + 1, z), species)
 
     name = "saplings"
 
