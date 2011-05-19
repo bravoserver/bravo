@@ -126,10 +126,10 @@ class World(object):
         if configuration.getbooleandefault("bravo", "ampoule", False):
             try:
                 import ampoule
+                if ampoule:
+                    self.async = True
             except ImportError:
                 pass
-            else:
-                self.async = True
 
         # First, try loading the level, to see if there's any data out there
         # which we can use. If not, don't worry about it.
