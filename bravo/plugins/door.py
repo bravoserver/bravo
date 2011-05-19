@@ -3,7 +3,9 @@ from math import pi
 from zope.interface import implements
 
 from bravo.blocks import items, blocks
-from bravo.ibravo import IBuildHook, IDigHook
+from bravo.ibravo import IPreBuildHook, IDigHook
+
+from bravo.parameters import factory
 
 DOOR_TOP_BLOCK = 0x8
 DOOR_IS_SWUNG = 0x4
@@ -25,12 +27,12 @@ class Door (object):
             able to be toggled by calling Door.open_or_close (world, (x, y, z) )
     """
 
-    implements(IBuildHook, IDigHook)
+    implements(IPreBuildHook, IDigHook)
 
     name = "door"
 
     @staticmethod
-    def open_or_close (world, point):
+    def open_or_close(world, point):
         """
             Toggle the state of the door : open it if it was closed, close it if it was open.
         """
@@ -53,7 +55,7 @@ class Door (object):
         world.set_metadata ( (x, y, z), metadata)
         world.set_metadata ( (x, other_y, z), other_metadata)
 
-    def build_hook(self, factory, player, builddata):
+    def pre_build_hook(self, player, builddata):
         item, metadata, x, y, z, face = builddata
 
         world = factory.world
@@ -154,7 +156,7 @@ class Door (object):
         world.set_metadata((x, y + 1, z), DOOR_TOP_BLOCK | orientation)
         return False, builddata
 
-    def dig_hook(self, factory, chunk, x, y, z, block):
+    def dig_hook(self, chunk, x, y, z, block):
 
         if block.slot != blocks["wooden-door"].slot and block.slot != blocks["iron-door"].slot:
             return
@@ -179,4 +181,3 @@ class Door (object):
     after = ("build", )
 
 door = Door()
-
