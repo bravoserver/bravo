@@ -13,6 +13,7 @@ Contents:
 
    features
    plugins
+   extending
    differences
    administration
    web
