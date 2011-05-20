@@ -21,6 +21,12 @@ from bravo.plugin import (retrieve_named_plugins, verify_plugin,
 from bravo.utilities.coords import split_coords
 from bravo.utilities.temporal import PendingEvent
 
+class ChunkNotLoaded(Exception):
+    """
+    The requested chunk is not currently loaded. If you need it, you will need
+    to request it yourself.
+    """
+
 def coords_to_chunk(f):
     """
     Automatically look up the chunk for the coordinates, and convert world
@@ -34,10 +40,32 @@ def coords_to_chunk(f):
         bigx, smallx, bigz, smallz = split_coords(x, z)
         d = self.request_chunk(bigx, bigz)
 
+        @d.addCallback
         def cb(chunk):
             return f(self, chunk, (smallx, y, smallz), *args, **kwargs)
-        d.addCallback(cb)
+
         return d
+
+    return decorated
+
+def sync_coords_to_chunk(f):
+    """
+    Either get a chunk for the coordinates, or raise an exception.
+    """
+
+    @wraps(f)
+    def decorated(self, coords, *args, **kwargs):
+        x, y, z = coords
+
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+        if (bigx, bigz) in self.chunk_cache:
+            chunk = self.chunk_cache[bigx, bigz]
+        elif (bigx, bigz) in self.dirty_chunk_cache:
+            chunk = self.dirty_chunk_cache[bigx, bigz]
+        else:
+            raise ChunkNotLoaded("Chunk (%d, %d) isn't loaded")
+
+        return f(self, chunk, (smallx, y, smallz), *args, **kwargs)
 
     return decorated
 
@@ -462,6 +490,66 @@ class World(object):
 
     @coords_to_chunk
     def mark_dirty(self, chunk, coords):
+        """
+        Mark an unknown chunk dirty.
+
+        :returns: a ``Deferred`` that will fire on completion
+        """
+
+        chunk.dirty = True
+
+    @sync_coords_to_chunk
+    def sync_get_block(self, chunk, coords):
+        """
+        Get a block from an unknown chunk.
+
+        :returns: a ``Deferred`` with the requested value
+        """
+
+        return chunk.get_block(coords)
+
+    @sync_coords_to_chunk
+    def sync_set_block(self, chunk, coords, value):
+        """
+        Set a block in an unknown chunk.
+
+        :returns: a ``Deferred`` that will fire on completion
+        """
+
+        chunk.set_block(coords, value)
+
+    @sync_coords_to_chunk
+    def sync_get_metadata(self, chunk, coords):
+        """
+        Get a block's metadata from an unknown chunk.
+
+        :returns: a ``Deferred`` with the requested value
+        """
+
+        return chunk.get_metadata(coords)
+
+    @sync_coords_to_chunk
+    def sync_set_metadata(self, chunk, coords, value):
+        """
+        Set a block's metadata in an unknown chunk.
+
+        :returns: a ``Deferred`` that will fire on completion
+        """
+
+        chunk.set_metadata(coords, value)
+
+    @sync_coords_to_chunk
+    def sync_destroy(self, chunk, coords):
+        """
+        Destroy a block in an unknown chunk.
+
+        :returns: a ``Deferred`` that will fire on completion
+        """
+
+        chunk.destroy(coords)
+
+    @sync_coords_to_chunk
+    def sync_mark_dirty(self, chunk, coords):
         """
         Mark an unknown chunk dirty.
 

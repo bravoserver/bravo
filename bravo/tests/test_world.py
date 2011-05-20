@@ -10,7 +10,7 @@ from itertools import product
 
 import bravo.config
 import bravo.errors
-import bravo.world
+from bravo.world import ChunkNotLoaded, World
 
 class TestWorldChunks(unittest.TestCase):
 
@@ -23,7 +23,7 @@ class TestWorldChunks(unittest.TestCase):
         bravo.config.configuration.set("world unittest", "serializer",
             "alpha")
 
-        self.w = bravo.world.World(self.name)
+        self.w = World(self.name)
         self.w.pipeline = []
         self.w.start()
 
@@ -162,6 +162,41 @@ class TestWorldChunks(unittest.TestCase):
         self.w.mark_dirty((29, 64, 43))
         chunk = yield self.w.request_chunk(1, 2)
         self.assertTrue(chunk.dirty)
+
+    @inlineCallbacks
+    def test_sync_get_block(self):
+        chunk = yield self.w.request_chunk(0, 0)
+
+        # Fill the chunk with random stuff.
+        chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
+            dtype=numpy.uint8)
+        chunk.blocks.shape = (16, 16, 128)
+
+        for x, y, z in product(xrange(2), repeat=3):
+            # This works because the chunk is at (0, 0) so the coords don't
+            # need to be adjusted.
+            block = self.w.sync_get_block((x, y, z))
+            self.assertEqual(block, chunk.get_block((x, y, z)))
+
+    def test_sync_get_block_unloaded(self):
+        self.assertRaises(ChunkNotLoaded, self.w.sync_get_block, (0, 0, 0))
+
+    def test_sync_get_metadata_neighboring(self):
+        """
+        Even if a neighboring chunk is loaded, the target chunk could still be
+        unloaded.
+
+        Test with sync_get_metadata() to increase test coverage.
+        """
+
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            self.assertRaises(ChunkNotLoaded,
+                              self.w.sync_get_metadata, (16, 0, 0))
+
+        return d
 
 class TestWorldInit(unittest.TestCase):
 
