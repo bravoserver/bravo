@@ -70,7 +70,7 @@ class TestGrass(unittest.TestCase):
 
         # Run the loop once.
         self.hook.feed((0, 0, 0))
-        yield self.hook.process()
+        self.hook.process()
 
         # We shouldn't have any pending blocks now.
         self.assertFalse(self.hook.tracked)
@@ -88,7 +88,7 @@ class TestGrass(unittest.TestCase):
 
         # Run the loop once.
         self.hook.feed((0, 0, 0))
-        yield self.hook.process()
+        self.hook.process()
 
         # We shouldn't have any pending blocks now.
         self.assertFalse(self.hook.tracked)
@@ -111,7 +111,7 @@ class TestGrass(unittest.TestCase):
 
         # Do the actual hook run. This should take exactly one run.
         self.hook.feed((1, 0, 1))
-        yield self.hook.process()
+        self.hook.process()
 
         self.assertFalse(self.hook.tracked)
         self.assertEqual(chunk.get_block((1, 0, 1)), blocks["grass"].slot)
@@ -136,7 +136,7 @@ class TestGrass(unittest.TestCase):
 
         # Do the actual hook run. This should take exactly one run.
         self.hook.feed((1, 0, 1))
-        yield self.hook.process()
+        self.hook.process()
 
         self.assertFalse(self.hook.tracked)
         self.assertEqual(chunk.get_block((1, 0, 1)), blocks["dirt"].slot)
@@ -160,7 +160,41 @@ class TestGrass(unittest.TestCase):
 
         # Do the actual hook run. This should take exactly one run.
         self.hook.feed((1, 0, 1))
-        yield self.hook.process()
+        self.hook.process()
 
         self.assertFalse(self.hook.tracked)
         self.assertEqual(chunk.get_block((1, 0, 1)), blocks["grass"].slot)
+
+    def test_two_of_four(self):
+        """
+        Grass should eventually spread to all filled-in plots on a 2x2 grid.
+
+        Discovered by TkTech.
+        """
+
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+
+            for x, y, z in product(xrange(0, 4), xrange(0, 2), xrange(0, 4)):
+                chunk.set_block((x, y, z), blocks["grass"].slot)
+
+            for x, z in product(xrange(1, 3), repeat=2):
+                chunk.set_block((x, 1, z), blocks["dirt"].slot)
+
+            self.hook.feed((1, 1, 1))
+            self.hook.feed((2, 1, 1))
+            self.hook.feed((1, 1, 2))
+            self.hook.feed((2, 1, 2))
+
+            # Run to completion. This can take varying amounts of time
+            # depending on the RNG, but it should be fairly speedy.
+            # XXX patch the RNG so we can do this deterministically
+            while self.hook.tracked:
+                self.hook.process()
+
+            self.assertEqual(chunk.get_block((1, 1, 1)), blocks["grass"].slot)
+            self.assertEqual(chunk.get_block((2, 1, 1)), blocks["grass"].slot)
+            self.assertEqual(chunk.get_block((1, 1, 2)), blocks["grass"].slot)
+            self.assertEqual(chunk.get_block((2, 1, 2)), blocks["grass"].slot)
