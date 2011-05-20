@@ -2,11 +2,8 @@ from collections import defaultdict
 from itertools import chain
 from time import time
 
-from numpy import transpose
-
 from twisted.internet.interfaces import IPushProducer
 from twisted.internet.protocol import Factory
-from twisted.internet.task import LoopingCall
 from twisted.python import log
 from zope.interface import implements
 
@@ -350,11 +347,7 @@ class BravoFactory(Factory):
         """
 
         for automaton in self.automatons:
-            for block in automaton.blocks:
-                for coords in transpose((chunk.blocks == block).nonzero()):
-                    # Swizzle and discard numpy-ness.
-                    coords = coords[0], coords[2], coords[1]
-                    automaton.feed(self, coords)
+            automaton.scan(chunk)
 
     def flush_chunk(self, chunk):
         """

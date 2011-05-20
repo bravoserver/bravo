@@ -6,6 +6,7 @@ from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
+from bravo.utilities.automatic import naive_scan
 from bravo.utilities.spatial import Block2DSpatialDict, Block3DSpatialDict
 from bravo.world import ChunkNotLoaded
 
@@ -67,6 +68,8 @@ class Fluid(object):
 
         self.tracked.add(coordinates)
         self.schedule()
+
+    scan = naive_scan
 
     def update_fluid(self, w, coords, falling, level=0):
 
@@ -481,6 +484,8 @@ class Redstone(object):
             x, y, z = coords
             self.tracked.update(((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
                 (x, y, z + 1)))
+
+    scan = naive_scan
 
     def dig_hook(self, chunk, x, y, z, block):
         pass

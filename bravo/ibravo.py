@@ -415,6 +415,15 @@ class IAutomaton(IBravoPlugin):
         Provide this automaton with block coordinates to handle later.
         """
 
+    def scan(chunk):
+        """
+        Provide this automaton with an entire chunk which this automaton may
+        handle as it pleases.
+
+        A utility scanner which will simply `feed()` this automaton is in
+        bravo.utilities.automatic.
+        """
+
     def start():
         """
         Run the automaton.

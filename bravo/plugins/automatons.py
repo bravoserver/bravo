@@ -4,13 +4,13 @@ from itertools import product
 from random import randint, random
 
 from twisted.internet import reactor
-from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
+from bravo.utilities.automatic import column_scan
 from bravo.world import ChunkNotLoaded
 
 from bravo.parameters import factory
@@ -77,6 +77,8 @@ class Trees(object):
             randint(self.grow_step_min, self.grow_step_max), self.process,
             coords)
         self.tracked.add(call)
+
+    scan = column_scan
 
     name = "trees"
 
@@ -171,6 +173,8 @@ class Grass(object):
 
     def feed(self, coords):
         self.tracked.add(coords)
+
+    scan = column_scan
 
     def dig_hook(self, chunk, x, y, z, block):
         if y > 0:
