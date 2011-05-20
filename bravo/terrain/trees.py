@@ -4,7 +4,6 @@ from itertools import product
 from math import cos, pi, sin, sqrt
 from random import choice, random, randint
 
-from twisted.internet.defer import inlineCallbacks, returnValue
 from zope.interface import Interface, implements
 
 from bravo.blocks import blocks
@@ -25,7 +24,6 @@ Phi and inverse phi constants.
 # 4 adds lights all around the base of each cluster for lots of light
 LIGHTTREE = 0
 
-@inlineCallbacks
 def dist_to_mat(cord, vec, matidxlist, world, invert=False, limit=None):
     """
     Find the distance from the given coordinates to any of a set of blocks
@@ -41,7 +39,7 @@ def dist_to_mat(cord, vec, matidxlist, world, invert=False, limit=None):
         z = int(curcord[2])
         if not 0 <= y < 128:
             break
-        block = yield world.get_block((x, y, z))
+        block = world.sync_get_block((x, y, z))
 
         if block in matidxlist and not invert:
             break
@@ -52,7 +50,7 @@ def dist_to_mat(cord, vec, matidxlist, world, invert=False, limit=None):
             iterations += 1
         if limit and iterations > limit:
             break
-    returnValue(iterations)
+    return iterations
 
 class ITree(Interface):
     """
@@ -111,7 +109,7 @@ class StickTree(Tree):
     def make_trunk(self, world):
         x, y, z = self.pos
         for i in xrange(self.height):
-            world.set_block((x, y, z), blocks["log"].slot)
+            world.sync_set_block((x, y, z), blocks["log"].slot)
             y += 1
 
 class NormalTree(StickTree):
@@ -139,7 +137,7 @@ class NormalTree(StickTree):
                 x = self.pos[0] + xoff
                 z = self.pos[2] + zoff
 
-                world.set_block((x, y, z), blocks["leaves"].slot)
+                world.sync_set_block((x, y, z), blocks["leaves"].slot)
 
 class BambooTree(StickTree):
     """
@@ -157,7 +155,7 @@ class BambooTree(StickTree):
                 zoff = choice([-1, 1])
                 x = self.pos[0] + xoff
                 z = self.pos[2] + zoff
-                world.set_block((x, y, z), blocks["leaves"].slot)
+                world.sync_set_block((x, y, z), blocks["leaves"].slot)
 
 class PalmTree(StickTree):
     """
@@ -173,7 +171,7 @@ class PalmTree(StickTree):
             if abs(xoff) == abs(zoff):
                 x = self.pos[0] + xoff
                 z = self.pos[2] + zoff
-                world.set_block((x, y, z), blocks["leaves"].slot)
+                world.sync_set_block((x, y, z), blocks["leaves"].slot)
 
 class ProceduralTree(Tree):
     """
@@ -217,7 +215,7 @@ class ProceduralTree(Tree):
             coord[diraxis] = pri
             coord[secidx1] = sec1
             coord[secidx2] = sec2
-            world.set_block(coord, matidx)
+            world.sync_set_block(coord, matidx)
 
     def shapefunc(self, y):
         """
@@ -312,15 +310,15 @@ class ProceduralTree(Tree):
         for coord in foliage_coords:
             self.foliage_cluster(coord,world)
         for x, y, z in foliage_coords:
-            world.set_block((x, y, z), blocks["log"].slot)
+            world.sync_set_block((x, y, z), blocks["log"].slot)
             if LIGHTTREE == 1:
-                world.set_block((x, y + 1, z), blocks["lightstone"].slot)
+                world.sync_set_block((x, y + 1, z), blocks["lightstone"].slot)
             elif LIGHTTREE in [2,4]:
-                world.set_block((x + 1, y, z), blocks["lightstone"].slot)
-                world.set_block((x - 1, y, z), blocks["lightstone"].slot)
+                world.sync_set_block((x + 1, y, z), blocks["lightstone"].slot)
+                world.sync_set_block((x - 1, y, z), blocks["lightstone"].slot)
                 if LIGHTTREE == 4:
-                    world.set_block((x, y, z + 1), blocks["lightstone"].slot)
-                    world.set_block((x, y, z - 1), blocks["lightstone"].slot)
+                    world.sync_set_block((x, y, z + 1), blocks["lightstone"].slot)
+                    world.sync_set_block((x, y, z - 1), blocks["lightstone"].slot)
 
     def make_branches(self, world):
         """Generate the branches and enter them in world.
@@ -534,7 +532,6 @@ class MangroveTree(RoundTree):
             val *= IPHI
         return val
 
-    @inlineCallbacks
     def make_roots(self, rootbases, world):
         """generate the roots and enter them in world.
 

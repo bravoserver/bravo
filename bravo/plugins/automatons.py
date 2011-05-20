@@ -44,28 +44,33 @@ class Trees(object):
             if call.active():
                 call.cancel()
 
-    @inlineCallbacks
     def process(self, coords):
-        metadata = yield factory.world.get_metadata(coords)
-        # Is this sapling ready to grow into a big tree? We use a bit-trick to
-        # check.
-        if metadata >= 12:
-            # Tree time!
-            tree = self.trees[metadata % 4](pos=coords)
-            tree.prepare(factory.world)
-            tree.make_trunk(factory.world)
-            tree.make_foliage(factory.world)
-            # We can't easily tell how many chunks were modified, so we have
-            # to flush all of them.
-            factory.flush_all_chunks()
-        else:
-            # Increment metadata.
-            metadata += 4
-            factory.world.set_metadata(coords, metadata)
-            call = reactor.callLater(
-                randint(self.grow_step_min, self.grow_step_max), self.process,
-                coords)
-            self.tracked.add(call)
+        try:
+            metadata = factory.world.sync_get_metadata(coords)
+            # Is this sapling ready to grow into a big tree? We use a bit-trick to
+            # check.
+            if metadata >= 12:
+                # Tree time!
+                tree = self.trees[metadata % 4](pos=coords)
+                tree.prepare(factory.world)
+                tree.make_trunk(factory.world)
+                tree.make_foliage(factory.world)
+                # We can't easily tell how many chunks were modified, so we have
+                # to flush all of them.
+                factory.flush_all_chunks()
+            else:
+                # Increment metadata.
+                metadata += 4
+                factory.world.sync_set_metadata(coords, metadata)
+                call = reactor.callLater(
+                    randint(self.grow_step_min, self.grow_step_max), self.process,
+                    coords)
+                self.tracked.add(call)
+
+            # Filter tracked set.
+            self.tracked = set(i for i in self.tracked if i.active())
+        except ChunkNotLoaded:
+            pass
 
     def feed(self, coords):
         call = reactor.callLater(
