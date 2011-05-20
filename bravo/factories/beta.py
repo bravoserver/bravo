@@ -67,21 +67,6 @@ class BravoFactory(Factory):
     def startFactory(self):
         log.msg("Initializing factory for world '%s'..." % self.name)
 
-        self.world.start()
-
-        if configuration.has_option(self.config_name, "perm_cache"):
-            cache_level = configuration.getint(self.config_name, "perm_cache")
-            self.world.enable_cache(cache_level)
-
-        self.protocols = dict()
-
-        log.msg("Starting timekeeping...")
-        self.timestamp = time()
-        self.time = self.world.time
-        self.update_season()
-        self.time_loop = LoopingCall(self.update_time)
-        self.time_loop.start(2)
-
         authenticator = configuration.get(self.config_name, "authenticator")
         selected = retrieve_named_plugins(IAuthenticator, [authenticator])[0]
 
@@ -91,6 +76,15 @@ class BravoFactory(Factory):
 
         # Get our plugins set up.
         self.register_plugins()
+
+        log.msg("Starting world...")
+        self.world.start()
+
+        if configuration.has_option(self.config_name, "perm_cache"):
+            cache_level = configuration.getint(self.config_name, "perm_cache")
+            self.world.enable_cache(cache_level)
+
+        self.protocols = dict()
 
         # Start automatons.
         for automaton in self.automatons:
@@ -165,6 +159,7 @@ class BravoFactory(Factory):
         plugin_types = {
             "automatons": IAutomaton,
             "generators": ITerrainGenerator,
+            "seasons": ISeason,
             "pre_build_hooks": IPreBuildHook,
             "post_build_hooks": IPostBuildHook,
             "dig_hooks": IDigHook,
@@ -281,11 +276,7 @@ class BravoFactory(Factory):
         Update the world's season.
         """
 
-        # Get a sorted list of all the seasons
-        plugins = configuration.getlistdefault(self.config_name,
-            "seasons", [])
-        all_seasons = list(retrieve_named_plugins(ISeason, plugins))
-        all_seasons.sort(key=lambda s: s.day)
+        all_seasons = sorted(self.seasons, key=lambda s: s.day)
 
         # Get all the seasons that we have past the start date of this year.
         # We are looking for the season which is closest to our current day,
