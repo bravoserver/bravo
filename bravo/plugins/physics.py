@@ -66,6 +66,11 @@ class Fluid(object):
         self.tracked.add(coordinates)
         self.schedule()
 
+    def update_falling(self, w, coords, level=0):
+        w.set_block(coords, self.fluid)
+        w.set_metadata(coords, level | FALLING)
+        self.new.add(coords)
+
     @inlineCallbacks
     def add_sponge(self, w, x, y, z):
         # Track this sponge.
@@ -126,9 +131,7 @@ class Fluid(object):
         neighbor = yield w.get_block(below)
         if (y > 0 and neighbor in self.whitespace and
             not any(self.sponges.iteritemsnear(below, 2))):
-            w.set_block(below, self.fluid)
-            w.set_metadata(below, FALLING)
-            self.new.add(below)
+            self.update_falling(w, below)
 
     @inlineCallbacks
     def add_fluid(self, w, x, y, z):
@@ -194,9 +197,7 @@ class Fluid(object):
         neighbor = yield w.get_block(below)
         if (y > 0 and neighbor in self.whitespace and
             not any(self.sponges.iteritemsnear(below, 2))):
-            w.set_block(below, self.fluid)
-            w.set_metadata(below, newmd | FALLING)
-            self.new.add(below)
+            self.update_falling(w, below, newmd)
             return
 
         # Clamp our newmd and assign. Also, set ourselves again; we changed
