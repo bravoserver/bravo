@@ -79,6 +79,28 @@ class TestWater(unittest.TestCase):
             self.assertTrue(self.hook.update_fluid(self.w, (0, 0, 0), False))
             self.assertEqual(self.w.sync_get_block((0, 0, 0)),
                 blocks["water"].slot)
+            self.assertEqual(self.w.sync_get_metadata((0, 0, 0)), 0)
+
+        return d
+
+    def test_update_fluid_metadata(self):
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            self.assertTrue(self.hook.update_fluid(self.w, (0, 0, 0), False,
+                1))
+            self.assertEqual(self.w.sync_get_metadata((0, 0, 0)), 1)
+
+        return d
+
+    def test_update_fluid_falling(self):
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            self.assertTrue(self.hook.update_fluid(self.w, (0, 0, 0), True))
+            self.assertEqual(self.w.sync_get_metadata((0, 0, 0)), 8)
 
         return d
 
@@ -96,20 +118,43 @@ class TestWater(unittest.TestCase):
         while self.hook.tracked:
             self.hook.process()
 
-    @inlineCallbacks
     def test_spring_spread(self):
-        self.w.set_block((0, 0, 0), blocks["spring"].slot)
-        self.hook.tracked.add((0, 0, 0))
+        d = self.w.request_chunk(0, 0)
 
-        # Tight-loop run the hook to equilibrium.
-        while self.hook.tracked:
-            self.hook.process()
+        @d.addCallback
+        def cb(chunk):
+            chunk.set_block((1, 0, 1), blocks["spring"].slot)
+            self.hook.tracked.add((1, 0, 1))
 
-        for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
-            block = yield self.w.get_block(coords)
-            metadata = yield self.w.get_metadata(coords)
-            self.assertEqual(block, blocks["water"].slot)
-            self.assertEqual(metadata, 0x0)
+            # Tight-loop run the hook to equilibrium.
+            while self.hook.tracked:
+                self.hook.process()
+
+            for coords in ((2, 0, 1), (1, 0, 2), (0, 0, 1), (1, 0, 0)):
+                self.assertEqual(chunk.get_block(coords),
+                    blocks["water"].slot)
+                self.assertEqual(chunk.get_metadata(coords), 0x0)
+
+        return d
+
+    def test_spring_spread_edge(self):
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            chunk.set_block((0, 0, 0), blocks["spring"].slot)
+            self.hook.tracked.add((0, 0, 0))
+
+            # Tight-loop run the hook to equilibrium.
+            while self.hook.tracked:
+                self.hook.process()
+
+            for coords in ((1, 0, 0), (0, 0, 1)):
+                self.assertEqual(chunk.get_block(coords),
+                    blocks["water"].slot)
+                self.assertEqual(chunk.get_metadata(coords), 0x0)
+
+        return d
 
     @inlineCallbacks
     def test_spring_fall(self):

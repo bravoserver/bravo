@@ -132,7 +132,10 @@ class Fluid(object):
 
         # Spawn water from springs.
         for coords in neighbors:
-            self.update_fluid(w, coords, False)
+            try:
+                self.update_fluid(w, coords, False)
+            except ChunkNotLoaded:
+                pass
 
         # Is this water falling down to the next y-level? We don't really
         # care, but we'll run the update nonetheless.
