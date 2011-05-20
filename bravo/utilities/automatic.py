@@ -29,4 +29,4 @@ def column_scan(automaton, chunk):
     for x, z in product(range(16), repeat=2):
         y = chunk.height_at(x, z)
         if chunk.get_block((x, y, z)) in automaton.blocks:
-            automaton.feed((x, y, z))
+            automaton.feed((x + chunk.x * 16, y, z + chunk.z * 16))
