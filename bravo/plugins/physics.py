@@ -67,7 +67,7 @@ class Fluid(object):
         self.tracked.add(coordinates)
         self.schedule()
 
-    def update_falling(self, w, coords, level=0):
+    def update_fluid(self, w, coords, falling, level=0):
 
         if not 0 <= coords[1] < 128:
             return succeed(False)
@@ -77,7 +77,9 @@ class Fluid(object):
         if (block in self.whitespace and not
             any(self.sponges.iteritemsnear(coords, 2))):
             w.sync_set_block(coords, self.fluid)
-            w.sync_set_metadata(coords, level | FALLING)
+            if falling:
+                level |= FALLING
+            w.sync_set_metadata(coords, level)
             self.new.add(coords)
             return True
         return False
@@ -129,16 +131,11 @@ class Fluid(object):
 
         # Spawn water from springs.
         for coords in neighbors:
-            neighbor = w.sync_get_block(coords)
-            if (neighbor in self.whitespace and
-                not any(self.sponges.iteritemsnear(coords, 2))):
-                w.sync_set_block(coords, self.fluid)
-                w.sync_set_metadata(coords, 0x0)
-                self.new.add(coords)
+            self.update_fluid(w, coords, False)
 
         # Is this water falling down to the next y-level? We don't really
         # care, but we'll run the update nonetheless.
-        self.update_falling(w, below)
+        self.update_fluid(w, below, True)
 
     def add_fluid(self, w, x, y, z):
         # Neighbors on the xz-level.
@@ -199,7 +196,7 @@ class Fluid(object):
         # but *not* both.
 
         # Fall down to the next y-level, if possible.
-        if self.update_falling(w, below, newmd):
+        if self.update_fluid(w, below, True, newmd):
             return
 
         # Clamp our newmd and assign. Also, set ourselves again; we changed
@@ -216,12 +213,7 @@ class Fluid(object):
         if newmd < self.levels:
             newmd += 1
             for coords in neighbors:
-                neighbor = w.sync_get_block(coords)
-                if (neighbor in self.whitespace and
-                    not any(self.sponges.iteritemsnear(coords, 2))):
-                    w.sync_set_block(coords, self.fluid)
-                    w.sync_set_metadata(coords, newmd)
-                    self.new.add(coords)
+                self.update_fluid(w, coords, False, newmd)
 
     def remove_sponge(self, x, y, z):
         # The evil sponge tyrant is gone. Flow, minions, flow!
