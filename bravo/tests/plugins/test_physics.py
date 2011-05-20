@@ -199,31 +199,36 @@ class TestWater(unittest.TestCase):
         block = yield self.w.get_block((0, 0, 0))
         self.assertEqual(block, blocks["water"].slot)
 
-    @inlineCallbacks
     def test_spring_fall_dig_offset(self):
         """
         Destroying ground next to a spring should cause a waterfall effect.
         """
 
-        self.w.set_block((0, 1, 0), blocks["spring"].slot)
-        self.w.set_block((0, 0, 0), blocks["dirt"].slot)
-        self.w.set_block((0, 0, 1), blocks["dirt"].slot)
-        self.hook.tracked.add((0, 1, 0))
+        d = self.w.request_chunk(0, 0)
 
-        # Tight-loop run the hook to equilibrium.
-        while self.hook.tracked:
-            self.hook.process()
+        @d.addCallback
+        def cb(chunk):
 
-        # Dig away the dirt next to the dirt under the spring, and simulate
-        # the dig hook by adding the block above it.
-        self.w.destroy((0, 0, 1))
-        self.hook.tracked.add((0, 1, 1))
+            chunk.set_block((1, 1, 0), blocks["spring"].slot)
+            chunk.set_block((1, 0, 0), blocks["dirt"].slot)
+            chunk.set_block((1, 0, 1), blocks["dirt"].slot)
+            self.hook.tracked.add((1, 1, 0))
 
-        while self.hook.tracked:
-            self.hook.process()
+            # Tight-loop run the hook to equilibrium.
+            while self.hook.tracked:
+                self.hook.process()
 
-        block = yield self.w.get_block((0, 0, 1))
-        self.assertEqual(block, blocks["water"].slot)
+            # Dig away the dirt next to the dirt under the spring, and simulate
+            # the dig hook by adding the block above it.
+            chunk.destroy((1, 0, 1))
+            self.hook.tracked.add((1, 1, 1))
+
+            while self.hook.tracked:
+                self.hook.process()
+
+            self.assertEqual(chunk.get_block((1, 0, 1)), blocks["water"].slot)
+
+        return d
 
     @inlineCallbacks
     def test_spring_waterfall(self):
