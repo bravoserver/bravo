@@ -3,6 +3,8 @@ from random import choice
 motds = """
 Open-source!
 %
+Distribute!
+%
 Reverse-engineered!
 %
 The work of MAD!
