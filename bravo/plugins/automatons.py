@@ -11,6 +11,7 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
+from bravo.world import ChunkNotLoaded
 
 from bravo.parameters import factory
 
@@ -108,7 +109,6 @@ class Grass(object):
             self.stop()
             self.start()
 
-    @inlineCallbacks
     def process(self):
         if not self.tracked:
             return
@@ -117,43 +117,50 @@ class Grass(object):
         # not finished with it.
         coords = self.tracked.pop()
 
-        current = yield factory.world.get_block(coords)
-        if current == blocks["dirt"].slot:
-            # Yep, it's still dirt. Let's look around and see whether it
-            # should be grassy.
-            # Our general strategy is as follows: We look at the blocks
-            # nearby. If at least eight of them are grass, grassiness is
-            # guaranteed, but if none of them are grass, grassiness just won't
-            # happen.
-            x, y, z = coords
+        # Try to do our neighbor lookups. If it can't happen, don't worry
+        # about it; we can get to it later. Grass isn't exactly a
+        # super-high-tension thing that must happen.
+        try:
+            current = factory.world.sync_get_block(coords)
+            if current == blocks["dirt"].slot:
+                # Yep, it's still dirt. Let's look around and see whether it
+                # should be grassy.  Our general strategy is as follows: We
+                # look at the blocks nearby. If at least eight of them are
+                # grass, grassiness is guaranteed, but if none of them are
+                # grass, grassiness just won't happen.
+                x, y, z = coords
 
-            # First things first: Grass can't grow if there's things on top of
-            # it, so check that first.
-            above = yield factory.world.get_block((x, y + 1, z))
-            if above:
-                return
+                # First things first: Grass can't grow if there's things on
+                # top of it, so check that first.
+                above = factory.world.sync_get_block((x, y + 1, z))
+                if above:
+                    return
 
-            # The number of grassy neighbors.
-            grasses = 0
-            # Intentional shadow.
-            for x, y, z in product(xrange(x - 1, x + 2), xrange(y - 1, y + 4),
-                xrange(z - 1, z + 2)):
-                # Early-exit to avoid block lookup if we finish early.
-                if grasses >= 8:
-                    break
-                block = yield factory.world.get_block((x, y, z))
-                if block == blocks["grass"].slot:
-                    grasses += 1
+                # The number of grassy neighbors.
+                grasses = 0
+                # Intentional shadow.
+                for x, y, z in product(xrange(x - 1, x + 2),
+                    xrange(y - 1, y + 4), xrange(z - 1, z + 2)):
+                    # Early-exit to avoid block lookup if we finish early.
+                    if grasses >= 8:
+                        break
+                    block = factory.world.sync_get_block((x, y, z))
+                    if block == blocks["grass"].slot:
+                        grasses += 1
 
-            # Randomly determine whether we are finished.
-            if grasses / 8 >= random():
-                # Hey, let's make some grass.
-                factory.world.set_block(coords, blocks["grass"].slot)
-                # XXX goddammit
-                factory.flush_all_chunks()
-            else:
-                # Not yet; add it back to the list.
-                self.tracked.add(coords)
+                # Randomly determine whether we are finished.
+                if grasses / 8 >= random():
+                    # Hey, let's make some grass.
+                    factory.world.set_block(coords, blocks["grass"].slot)
+                    # And schedule the chunk to be flushed.
+                    x, y, z = coords
+                    d = factory.world.request_chunk(x // 16, z // 16)
+                    d.addCallback(factory.flush_chunk)
+                else:
+                    # Not yet; add it back to the list.
+                    self.tracked.add(coords)
+        except ChunkNotLoaded:
+            pass
 
         self.reschedule()
 
@@ -166,7 +173,6 @@ class Grass(object):
             if block in self.blocks:
                 # Track it now.
                 coords = (chunk.x * 16 + x, y - 1, chunk.z * 16 + z)
-
                 self.tracked.add(coords)
 
     name = "grass"

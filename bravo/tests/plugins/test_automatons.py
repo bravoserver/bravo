@@ -13,6 +13,9 @@ from bravo.world import World
 
 class GrassMockFactory(object):
 
+    def flush_chunk(self, chunk):
+        pass
+
     def flush_all_chunks(self):
         pass
 
@@ -64,6 +67,24 @@ class TestGrass(unittest.TestCase):
         chunk = yield self.w.request_chunk(0, 0)
 
         chunk.set_block((0, 0, 0), blocks["bedrock"].slot)
+
+        # Run the loop once.
+        self.hook.feed((0, 0, 0))
+        yield self.hook.process()
+
+        # We shouldn't have any pending blocks now.
+        self.assertFalse(self.hook.tracked)
+
+    @inlineCallbacks
+    def test_unloaded_chunk(self):
+        """
+        The grass automaton can't load chunks, so it will stop tracking blocks
+        on the edge of the loaded world.
+        """
+
+        chunk = yield self.w.request_chunk(0, 0)
+
+        chunk.set_block((0, 0, 0), blocks["dirt"].slot)
 
         # Run the loop once.
         self.hook.feed((0, 0, 0))
