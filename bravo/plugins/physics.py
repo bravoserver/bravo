@@ -7,6 +7,7 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.spatial import Block2DSpatialDict, Block3DSpatialDict
+from bravo.world import ChunkNotLoaded
 
 from bravo.parameters import factory
 
@@ -71,21 +72,16 @@ class Fluid(object):
         if not 0 <= coords[1] < 128:
             return succeed(False)
 
-        d = w.get_block(coords)
+        block = w.sync_get_block(coords)
 
-        @d.addCallback
-        def cb(block):
-            if (block in self.whitespace and not
-                any(self.sponges.iteritemsnear(coords, 2))):
-                w.set_block(coords, self.fluid)
-                w.set_metadata(coords, level | FALLING)
-                self.new.add(coords)
-                return True
-            return False
+        if (block in self.whitespace and not
+            any(self.sponges.iteritemsnear(coords, 2))):
+            w.sync_set_block(coords, self.fluid)
+            w.sync_set_metadata(coords, level | FALLING)
+            self.new.add(coords)
+            return True
+        return False
 
-        return d
-
-    @inlineCallbacks
     def add_sponge(self, w, x, y, z):
         # Track this sponge.
         self.sponges[x, y, z] = True
@@ -96,14 +92,14 @@ class Fluid(object):
             xrange(max(y - 2, 0), min(y + 3, 128)),
             xrange(z - 2, z + 3),
             ):
-            target = yield w.get_block(coords)
+            target = w.sync_get_block(coords)
             if target == self.spring:
                 if (coords[0], coords[2]) in self.springs:
                     del self.springs[coords[0],
                         coords[2]]
-                w.destroy(coords)
+                w.sync_destroy(coords)
             elif target == self.fluid:
-                w.destroy(coords)
+                w.sync_destroy(coords)
 
         # And now mark our surroundings so that they can be
         # updated appropriately.
@@ -115,12 +111,11 @@ class Fluid(object):
             if coords != (x, y, z):
                 self.new.add(coords)
 
-    @inlineCallbacks
     def add_spring(self, w, x, y, z):
         # Double-check that we weren't placed inside a sponge. That's just
-        # wrong.
+        # not going to work out.
         if any(self.sponges.iteritemsnear((x, y, z), 2)):
-            w.destroy((x, y, z))
+            w.sync_destroy((x, y, z))
             return
 
         # Track this spring.
@@ -134,17 +129,17 @@ class Fluid(object):
 
         # Spawn water from springs.
         for coords in neighbors:
-            neighbor = yield w.get_block(coords)
+            neighbor = w.sync_get_block(coords)
             if (neighbor in self.whitespace and
                 not any(self.sponges.iteritemsnear(coords, 2))):
-                w.set_block(coords, self.fluid)
-                w.set_metadata(coords, 0x0)
+                w.sync_set_block(coords, self.fluid)
+                w.sync_set_metadata(coords, 0x0)
                 self.new.add(coords)
 
-        # Is this water falling down to the next y-level?
-        yield self.update_falling(w, below)
+        # Is this water falling down to the next y-level? We don't really
+        # care, but we'll run the update nonetheless.
+        self.update_falling(w, below)
 
-    @inlineCallbacks
     def add_fluid(self, w, x, y, z):
         # Neighbors on the xz-level.
         neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
@@ -154,7 +149,7 @@ class Fluid(object):
 
         # Double-check that we weren't placed inside a sponge.
         if any(self.sponges.iteritemsnear((x, y, z), 2)):
-            w.destroy((x, y, z))
+            w.sync_destroy((x, y, z))
             return
 
         # First, figure out whether or not we should be spreading.  Let's see
@@ -167,36 +162,35 @@ class Fluid(object):
             # ourselves up.
             self.new.update(neighbors)
             self.new.add(below)
-            w.destroy((x, y, z))
+            w.sync_destroy((x, y, z))
             return
 
         newmd = self.levels + 1
 
         for coords in neighbors:
-            jones = yield w.get_block(coords)
+            jones = w.sync_get_block(coords)
             if jones == self.spring:
                 newmd = 0
                 self.new.update(neighbors)
                 break
             elif jones == self.fluid:
-                jonesmd = yield w.get_metadata(coords)
-                jonesmd &= ~FALLING
+                jonesmd = w.sync_get_metadata(coords) & ~FALLING
                 if jonesmd + 1 < newmd:
                     newmd = jonesmd + 1
 
-        current_md = yield w.get_metadata((x,y,z))
+        current_md = w.sync_get_metadata((x,y,z))
         if newmd > self.levels and current_md < FALLING:
             # We should dry up.
             self.new.update(neighbors)
             self.new.add(below)
-            w.destroy((x, y, z))
+            w.sync_destroy((x, y, z))
             return
 
         # Mark any neighbors which should adjust themselves. This will only
         # mark lower water levels than ourselves, and only if they are
         # definitely too low.
         for coords in neighbors:
-            neighbor = yield w.get_metadata(coords)
+            neighbor = w.sync_get_metadata(coords)
             if neighbor & ~FALLING > newmd + 1:
                 self.new.add(coords)
 
@@ -205,14 +199,13 @@ class Fluid(object):
         # but *not* both.
 
         # Fall down to the next y-level, if possible.
-        rv = yield self.update_falling(w, below, newmd)
-        if rv:
+        if self.update_falling(w, below, newmd):
             return
 
         # Clamp our newmd and assign. Also, set ourselves again; we changed
         # this time and we might change again.
         if current_md < FALLING:
-            w.set_metadata((x, y, z), newmd)
+            w.sync_set_metadata((x, y, z), newmd)
 
         # If pending block is already above fluid, don't keep spreading.
         if neighbor == self.fluid:
@@ -223,11 +216,11 @@ class Fluid(object):
         if newmd < self.levels:
             newmd += 1
             for coords in neighbors:
-                neighbor = yield w.get_block(coords)
+                neighbor = w.sync_get_block(coords)
                 if (neighbor in self.whitespace and
                     not any(self.sponges.iteritemsnear(coords, 2))):
-                    w.set_block(coords, self.fluid)
-                    w.set_metadata(coords, newmd)
+                    w.sync_set_block(coords, self.fluid)
+                    w.sync_set_metadata(coords, newmd)
                     self.new.add(coords)
 
     def remove_sponge(self, x, y, z):
@@ -250,32 +243,37 @@ class Fluid(object):
         self.new.update(neighbors)
         self.new.add(below)
 
-    @inlineCallbacks
     def process(self):
         w = factory.world
         self.new = set()
 
-        for x, y, z in self.tracked.copy():
+        for x, y, z in self.tracked:
             # Neighbors on the xz-level.
             neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
                     (x, y, z + 1))
             # Our downstairs pal.
             below = (x, y - 1, z)
 
-            block = yield w.get_block((x, y, z))
-            if block == self.sponge:
-                self.add_sponge(w, x, y, z)
-            elif block == self.spring:
-                yield self.add_spring(w, x, y, z)
-            elif block == self.fluid:
-                yield self.add_fluid(w, x, y, z)
-            else:
-                # Hm, why would a pending block not be any of the things we
-                # care about? Maybe it used to be a spring or something?
-                if (x, z) in self.springs:
-                    self.remove_spring(x, y, z)
-                elif (x, y, z) in self.sponges:
-                    self.remove_sponge(x, y, z)
+            # Try each block separately. If it can't be done, it'll be
+            # discarded from the set simply by not being added to the new set
+            # for the next iteration.
+            try:
+                block = w.sync_get_block((x, y, z))
+                if block == self.sponge:
+                    self.add_sponge(w, x, y, z)
+                elif block == self.spring:
+                    self.add_spring(w, x, y, z)
+                elif block == self.fluid:
+                    self.add_fluid(w, x, y, z)
+                else:
+                    # Hm, why would a pending block not be any of the things we
+                    # care about? Maybe it used to be a spring or something?
+                    if (x, z) in self.springs:
+                        self.remove_spring(x, y, z)
+                    elif (x, y, z) in self.sponges:
+                        self.remove_sponge(x, y, z)
+            except ChunkNotLoaded:
+                pass
 
         # Flush affected chunks.
         to_flush = set()
