@@ -66,10 +66,18 @@ class Fluid(object):
         self.tracked.add(coordinates)
         self.schedule()
 
-    def update_falling(self, w, coords, level=0):
-        w.set_block(coords, self.fluid)
-        w.set_metadata(coords, level | FALLING)
-        self.new.add(coords)
+    def update_falling(self, w, block, coords, level=0):
+
+        if not 0 <= coords[1] < 128:
+            return False
+
+        if (block in self.whitespace and not
+            any(self.sponges.iteritemsnear(coords, 2))):
+            w.set_block(coords, self.fluid)
+            w.set_metadata(coords, level | FALLING)
+            self.new.add(coords)
+            return True
+        return False
 
     @inlineCallbacks
     def add_sponge(self, w, x, y, z):
@@ -129,9 +137,7 @@ class Fluid(object):
 
         # Is this water falling down to the next y-level?
         neighbor = yield w.get_block(below)
-        if (y > 0 and neighbor in self.whitespace and
-            not any(self.sponges.iteritemsnear(below, 2))):
-            self.update_falling(w, below)
+        self.update_falling(w, neighbor, below)
 
     @inlineCallbacks
     def add_fluid(self, w, x, y, z):
@@ -195,9 +201,7 @@ class Fluid(object):
 
         # Fall down to the next y-level, if possible.
         neighbor = yield w.get_block(below)
-        if (y > 0 and neighbor in self.whitespace and
-            not any(self.sponges.iteritemsnear(below, 2))):
-            self.update_falling(w, below, newmd)
+        if self.update_falling(w, neighbor, below, newmd):
             return
 
         # Clamp our newmd and assign. Also, set ourselves again; we changed
