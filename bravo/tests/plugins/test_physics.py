@@ -7,11 +7,11 @@ from numpy.testing import assert_array_equal
 
 from twisted.internet.defer import inlineCallbacks
 
-import bravo.blocks
+from bravo.blocks import blocks
 import bravo.config
 from bravo.ibravo import IDigHook
 import bravo.plugin
-import bravo.world
+from bravo.world import ChunkNotLoaded, World
 
 class PhysicsMockFactory(object):
 
@@ -31,7 +31,7 @@ class TestWater(unittest.TestCase):
         bravo.config.configuration.set("world unittest", "serializer",
             "alpha")
 
-        self.w = bravo.world.World(self.name)
+        self.w = World(self.name)
         self.w.pipeline = []
         self.w.start()
 
@@ -59,13 +59,36 @@ class TestWater(unittest.TestCase):
     def test_trivial(self):
         pass
 
+    def test_update_fluid_negative(self):
+        """
+        update_fluid() should always return False for Y at the bottom of the
+        world.
+        """
+
+        self.assertFalse(self.hook.update_fluid(self.w, (0, -1, 0), False))
+
+    def test_update_fluid_unloaded(self):
+        self.assertRaises(ChunkNotLoaded, self.hook.update_fluid, self.w,
+            (0, 0, 0), False)
+
+    def test_update_fluid(self):
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            self.assertTrue(self.hook.update_fluid(self.w, (0, 0, 0), False))
+            self.assertEqual(self.w.sync_get_block((0, 0, 0)),
+                blocks["water"].slot)
+
+        return d
+
     def test_zero_y(self):
         """
         Double-check that water placed on the very bottom of the world doesn't
         cause internal errors.
         """
 
-        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 0, 0), blocks["spring"].slot)
         self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium; if any exceptions happen,
@@ -75,7 +98,7 @@ class TestWater(unittest.TestCase):
 
     @inlineCallbacks
     def test_spring_spread(self):
-        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 0, 0), blocks["spring"].slot)
         self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
@@ -85,7 +108,7 @@ class TestWater(unittest.TestCase):
         for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
             block = yield self.w.get_block(coords)
             metadata = yield self.w.get_metadata(coords)
-            self.assertEqual(block, bravo.blocks.blocks["water"].slot)
+            self.assertEqual(block, blocks["water"].slot)
             self.assertEqual(metadata, 0x0)
 
     @inlineCallbacks
@@ -94,7 +117,7 @@ class TestWater(unittest.TestCase):
         Falling water should appear below springs.
         """
 
-        self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 1, 0), blocks["spring"].slot)
         self.hook.tracked.add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
@@ -103,7 +126,7 @@ class TestWater(unittest.TestCase):
 
         block = yield self.w.get_block((0, 0, 0))
         metadata = yield self.w.get_metadata((0, 0, 0))
-        self.assertEqual(block, bravo.blocks.blocks["water"].slot)
+        self.assertEqual(block, blocks["water"].slot)
         self.assertEqual(metadata, 0x8)
 
     @inlineCallbacks
@@ -113,8 +136,8 @@ class TestWater(unittest.TestCase):
         falling downwards.
         """
 
-        self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
-        self.w.set_block((0, 0, 0), bravo.blocks.blocks["dirt"].slot)
+        self.w.set_block((0, 1, 0), blocks["spring"].slot)
+        self.w.set_block((0, 0, 0), blocks["dirt"].slot)
         self.hook.tracked.add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
@@ -129,7 +152,7 @@ class TestWater(unittest.TestCase):
             self.hook.process()
 
         block = yield self.w.get_block((0, 0, 0))
-        self.assertEqual(block, bravo.blocks.blocks["water"].slot)
+        self.assertEqual(block, blocks["water"].slot)
 
     @inlineCallbacks
     def test_spring_fall_dig_offset(self):
@@ -137,9 +160,9 @@ class TestWater(unittest.TestCase):
         Destroying ground next to a spring should cause a waterfall effect.
         """
 
-        self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
-        self.w.set_block((0, 0, 0), bravo.blocks.blocks["dirt"].slot)
-        self.w.set_block((0, 0, 1), bravo.blocks.blocks["dirt"].slot)
+        self.w.set_block((0, 1, 0), blocks["spring"].slot)
+        self.w.set_block((0, 0, 0), blocks["dirt"].slot)
+        self.w.set_block((0, 0, 1), blocks["dirt"].slot)
         self.hook.tracked.add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
@@ -155,7 +178,7 @@ class TestWater(unittest.TestCase):
             self.hook.process()
 
         block = yield self.w.get_block((0, 0, 1))
-        self.assertEqual(block, bravo.blocks.blocks["water"].slot)
+        self.assertEqual(block, blocks["water"].slot)
 
     @inlineCallbacks
     def test_spring_waterfall(self):
@@ -163,8 +186,8 @@ class TestWater(unittest.TestCase):
         Fluid should not spread across existing fluid.
         """
 
-        self.w.set_block((0, 3, 0), bravo.blocks.blocks["spring"].slot)
-        self.w.set_block((0, 2, 0), bravo.blocks.blocks["dirt"].slot)
+        self.w.set_block((0, 3, 0), blocks["spring"].slot)
+        self.w.set_block((0, 2, 0), blocks["dirt"].slot)
         self.hook.tracked.add((0, 1, 0))
 
         # Tight-loop run the hook to equilibrium.
@@ -183,7 +206,7 @@ class TestWater(unittest.TestCase):
             self.hook.process()
 
         block = yield self.w.get_block((0, 1, 2))
-        self.assertEqual(block, bravo.blocks.blocks["air"].slot)
+        self.assertEqual(block, blocks["air"].slot)
 
 
     @inlineCallbacks
@@ -192,8 +215,8 @@ class TestWater(unittest.TestCase):
         Test that obstacles are flowed around correctly.
         """
 
-        yield self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        yield self.w.set_block((1, 0, 0), bravo.blocks.blocks["stone"].slot)
+        yield self.w.set_block((0, 0, 0), blocks["spring"].slot)
+        yield self.w.set_block((1, 0, 0), blocks["stone"].slot)
         self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
@@ -210,8 +233,8 @@ class TestWater(unittest.TestCase):
         Test that sponges prevent water from spreading near them.
         """
 
-        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.w.set_block((3, 0, 0), bravo.blocks.blocks["sponge"].slot)
+        self.w.set_block((0, 0, 0), blocks["spring"].slot)
+        self.w.set_block((3, 0, 0), blocks["sponge"].slot)
         self.hook.tracked.add((0, 0, 0))
         self.hook.tracked.add((3, 0, 0))
 
@@ -221,7 +244,7 @@ class TestWater(unittest.TestCase):
 
         # Make sure that water did not spread near the sponge.
         block = yield self.w.get_block((1, 0, 0))
-        self.assertNotEqual(block, bravo.blocks.blocks["water"].slot)
+        self.assertNotEqual(block, blocks["water"].slot)
 
     @inlineCallbacks
     def test_sponge_absorb_spring(self):
@@ -230,14 +253,14 @@ class TestWater(unittest.TestCase):
         surrounding water to dry up.
         """
 
-        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 0, 0), blocks["spring"].slot)
         self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
         while self.hook.tracked:
             self.hook.process()
 
-        self.w.set_block((1, 0, 0), bravo.blocks.blocks["sponge"].slot)
+        self.w.set_block((1, 0, 0), blocks["sponge"].slot)
         self.hook.tracked.add((1, 0, 0))
 
         while self.hook.tracked:
@@ -245,11 +268,11 @@ class TestWater(unittest.TestCase):
 
         for coords in ((0, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
             block = yield self.w.get_block(coords)
-            self.assertEqual(block, bravo.blocks.blocks["air"].slot)
+            self.assertEqual(block, blocks["air"].slot)
 
         # Make sure that water did not spread near the sponge.
         block = yield self.w.get_block((1, 0, 0))
-        self.assertNotEqual(block, bravo.blocks.blocks["water"].slot)
+        self.assertNotEqual(block, blocks["water"].slot)
 
     @inlineCallbacks
     def test_sponge_salt(self):
@@ -258,7 +281,7 @@ class TestWater(unittest.TestCase):
         effects after destruction.
         """
 
-        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 0, 0), blocks["spring"].slot)
         self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
@@ -269,7 +292,7 @@ class TestWater(unittest.TestCase):
         chunk = yield self.w.request_chunk(0, 0)
         before = chunk.blocks[:, :, 0], chunk.metadata[:, :, 0]
 
-        self.w.set_block((3, 0, 0), bravo.blocks.blocks["sponge"].slot)
+        self.w.set_block((3, 0, 0), blocks["sponge"].slot)
         self.hook.tracked.add((3, 0, 0))
 
         while self.hook.tracked:
@@ -292,7 +315,7 @@ class TestWater(unittest.TestCase):
         Test that water dries up if no spring is providing it.
         """
 
-        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 0, 0), blocks["spring"].slot)
         self.hook.tracked.add((0, 0, 0))
 
         # Tight-loop run the hook to equilibrium.
@@ -309,7 +332,7 @@ class TestWater(unittest.TestCase):
 
         for coords in ((1, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
             block = yield self.w.get_block(coords)
-            self.assertEqual(block, bravo.blocks.blocks["air"].slot)
+            self.assertEqual(block, blocks["air"].slot)
 
     @inlineCallbacks
     def test_spring_underneath_keepalive(self):
@@ -318,8 +341,8 @@ class TestWater(unittest.TestCase):
         keep that stray water alive.
         """
 
-        self.w.set_block((0, 0, 0), bravo.blocks.blocks["spring"].slot)
-        self.w.set_block((0, 1, 0), bravo.blocks.blocks["spring"].slot)
+        self.w.set_block((0, 0, 0), blocks["spring"].slot)
+        self.w.set_block((0, 1, 0), blocks["spring"].slot)
         self.hook.tracked.add((0, 0, 0))
         self.hook.tracked.add((0, 1, 0))
 
@@ -339,7 +362,7 @@ class TestWater(unittest.TestCase):
         # lower ones in this test.
         for coords in ((1, 1, 0), (-1, 1, 0), (0, 1, 1), (0, 1, -1)):
             block = yield self.w.get_block(coords)
-            self.assertEqual(block, bravo.blocks.blocks["air"].slot)
+            self.assertEqual(block, blocks["air"].slot)
 
 class TestRedstone(unittest.TestCase):
 
@@ -354,7 +377,7 @@ class TestRedstone(unittest.TestCase):
         bravo.config.configuration.set("world unittest", "serializer",
             "alpha")
 
-        self.w = bravo.world.World(self.name)
+        self.w = World(self.name)
         self.w.pipeline = []
         self.w.start()
 
@@ -383,7 +406,7 @@ class TestRedstone(unittest.TestCase):
     def test_update_wires_enable(self):
         for i in range(16):
             self.w.set_block((i, 0, 0),
-                bravo.blocks.blocks["redstone-wire"].slot)
+                blocks["redstone-wire"].slot)
             self.w.set_metadata((i, 0, 0), 0x0)
 
         # Enable wires.
@@ -397,7 +420,7 @@ class TestRedstone(unittest.TestCase):
     def test_update_wires_disable(self):
         for i in range(16):
             self.w.set_block((i, 0, 0),
-                bravo.blocks.blocks["redstone-wire"].slot)
+                blocks["redstone-wire"].slot)
             self.w.set_metadata((i, 0, 0), i)
 
         # Disable wires.

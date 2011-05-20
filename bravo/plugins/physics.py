@@ -1,6 +1,6 @@
 from itertools import chain, product
 
-from twisted.internet.defer import inlineCallbacks, succeed
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
@@ -35,6 +35,7 @@ class Fluid(object):
         self.springs = Block2DSpatialDict()
 
         self.tracked = set()
+        self.new = set()
 
         self.loop = LoopingCall(self.process)
 
@@ -70,7 +71,7 @@ class Fluid(object):
     def update_fluid(self, w, coords, falling, level=0):
 
         if not 0 <= coords[1] < 128:
-            return succeed(False)
+            return False
 
         block = w.sync_get_block(coords)
 
@@ -237,7 +238,6 @@ class Fluid(object):
 
     def process(self):
         w = factory.world
-        self.new = set()
 
         for x, y, z in self.tracked:
             # Neighbors on the xz-level.
@@ -276,6 +276,7 @@ class Fluid(object):
             d.addCallback(factory.flush_chunk)
 
         self.tracked = self.new
+        self.new = set()
 
         # Prune, and reschedule.
         self.schedule()
