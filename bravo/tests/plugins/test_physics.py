@@ -156,6 +156,25 @@ class TestWater(unittest.TestCase):
 
         return d
 
+    def test_fluid_spread_edge(self):
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            chunk.set_block((0, 0, 0), blocks["spring"].slot)
+            self.hook.tracked.add((0, 0, 0))
+
+            # Tight-loop run the hook to equilibrium.
+            while self.hook.tracked:
+                self.hook.process()
+
+            for coords in ((2, 0, 0), (1, 0, 1), (0, 0, 2)):
+                self.assertEqual(chunk.get_block(coords),
+                    blocks["water"].slot)
+                self.assertEqual(chunk.get_metadata(coords), 0x1)
+
+        return d
+
     @inlineCallbacks
     def test_spring_fall(self):
         """
@@ -230,34 +249,36 @@ class TestWater(unittest.TestCase):
 
         return d
 
-    @inlineCallbacks
-    def test_spring_waterfall(self):
+    def test_trench(self):
         """
-        Fluid should not spread across existing fluid.
+        Fluid should not spread across the top of existing fluid.
+
+        This test is for a specific kind of trench-digging pattern.
         """
 
-        self.w.set_block((0, 3, 0), blocks["spring"].slot)
-        self.w.set_block((0, 2, 0), blocks["dirt"].slot)
-        self.hook.tracked.add((0, 1, 0))
+        d = self.w.request_chunk(0, 0)
 
-        # Tight-loop run the hook to equilibrium.
-        while self.hook.tracked:
-            self.hook.process()
+        @d.addCallback
+        def cb(chunk):
+            chunk.set_block((0, 2, 0), blocks["spring"].slot)
+            chunk.set_block((0, 1, 0), blocks["dirt"].slot)
+            self.hook.tracked.add((0, 2, 0))
 
-        #dig away dirt and add known spring and fluid blocks
-        self.w.destroy((0, 2, 0))
-        self.hook.tracked.add((0, 2, 1))
-        self.hook.tracked.add((0, 2, -1))
-        self.hook.tracked.add((0, 3, 0))
-        self.hook.tracked.add((1, 2, 0))
-        self.hook.tracked.add((-1, 2, 0))
+            # Tight-loop run the hook to equilibrium.
+            while self.hook.tracked:
+                self.hook.process()
 
-        while self.hook.tracked:
-            self.hook.process()
+            # Dig the dirt.
+            self.w.destroy((0, 1, 0))
+            self.hook.tracked.add((0, 1, 1))
+            self.hook.tracked.add((0, 2, 0))
+            self.hook.tracked.add((1, 1, 0))
 
-        block = yield self.w.get_block((0, 1, 2))
-        self.assertEqual(block, blocks["air"].slot)
+            while self.hook.tracked:
+                self.hook.process()
 
+            block = chunk.get_block((0, 2, 2))
+            self.assertEqual(block, blocks["air"].slot)
 
     @inlineCallbacks
     def test_obstacle(self):
@@ -296,33 +317,38 @@ class TestWater(unittest.TestCase):
         block = yield self.w.get_block((1, 0, 0))
         self.assertNotEqual(block, blocks["water"].slot)
 
-    @inlineCallbacks
     def test_sponge_absorb_spring(self):
         """
         Test that sponges can absorb springs and will cause all of the
         surrounding water to dry up.
         """
 
-        self.w.set_block((0, 0, 0), blocks["spring"].slot)
-        self.hook.tracked.add((0, 0, 0))
+        d = self.w.request_chunk(0, 0)
 
-        # Tight-loop run the hook to equilibrium.
-        while self.hook.tracked:
-            self.hook.process()
+        @d.addCallback
+        def cb(chunk):
+            chunk.set_block((0, 0, 0), blocks["spring"].slot)
+            self.hook.tracked.add((0, 0, 0))
 
-        self.w.set_block((1, 0, 0), blocks["sponge"].slot)
-        self.hook.tracked.add((1, 0, 0))
+            # Tight-loop run the hook to equilibrium.
+            while self.hook.tracked:
+                self.hook.process()
 
-        while self.hook.tracked:
-            self.hook.process()
+            self.w.set_block((1, 0, 0), blocks["sponge"].slot)
+            self.hook.tracked.add((1, 0, 0))
 
-        for coords in ((0, 0, 0), (-1, 0, 0), (0, 0, 1), (0, 0, -1)):
-            block = yield self.w.get_block(coords)
-            self.assertEqual(block, blocks["air"].slot)
+            while self.hook.tracked:
+                self.hook.process()
 
-        # Make sure that water did not spread near the sponge.
-        block = yield self.w.get_block((1, 0, 0))
-        self.assertNotEqual(block, blocks["water"].slot)
+            for coords in ((0, 0, 0), (0, 0, 1)):
+                block = yield self.w.get_block(coords)
+                self.assertEqual(block, blocks["air"].slot)
+
+            # Make sure that water did not spread near the sponge.
+            block = yield self.w.get_block((1, 0, 0))
+            self.assertNotEqual(block, blocks["water"].slot)
+
+        return d
 
     @inlineCallbacks
     def test_sponge_salt(self):

@@ -95,14 +95,17 @@ class Fluid(object):
             xrange(max(y - 2, 0), min(y + 3, 128)),
             xrange(z - 2, z + 3),
             ):
-            target = w.sync_get_block(coords)
-            if target == self.spring:
-                if (coords[0], coords[2]) in self.springs:
-                    del self.springs[coords[0],
-                        coords[2]]
-                w.sync_destroy(coords)
-            elif target == self.fluid:
-                w.sync_destroy(coords)
+            try:
+                target = w.sync_get_block(coords)
+                if target == self.spring:
+                    if (coords[0], coords[2]) in self.springs:
+                        del self.springs[coords[0],
+                            coords[2]]
+                    w.sync_destroy(coords)
+                elif target == self.fluid:
+                    w.sync_destroy(coords)
+            except ChunkNotLoaded:
+                pass
 
         # And now mark our surroundings so that they can be
         # updated appropriately.
@@ -169,15 +172,18 @@ class Fluid(object):
         newmd = self.levels + 1
 
         for coords in neighbors:
-            jones = w.sync_get_block(coords)
-            if jones == self.spring:
-                newmd = 0
-                self.new.update(neighbors)
-                break
-            elif jones == self.fluid:
-                jonesmd = w.sync_get_metadata(coords) & ~FALLING
-                if jonesmd + 1 < newmd:
-                    newmd = jonesmd + 1
+            try:
+                jones = w.sync_get_block(coords)
+                if jones == self.spring:
+                    newmd = 0
+                    self.new.update(neighbors)
+                    break
+                elif jones == self.fluid:
+                    jonesmd = w.sync_get_metadata(coords) & ~FALLING
+                    if jonesmd + 1 < newmd:
+                        newmd = jonesmd + 1
+            except ChunkNotLoaded:
+                pass
 
         current_md = w.sync_get_metadata((x,y,z))
         if newmd > self.levels and current_md < FALLING:
@@ -191,9 +197,12 @@ class Fluid(object):
         # mark lower water levels than ourselves, and only if they are
         # definitely too low.
         for coords in neighbors:
-            neighbor = w.sync_get_metadata(coords)
-            if neighbor & ~FALLING > newmd + 1:
-                self.new.add(coords)
+            try:
+                neighbor = w.sync_get_metadata(coords)
+                if neighbor & ~FALLING > newmd + 1:
+                    self.new.add(coords)
+            except ChunkNotLoaded:
+                pass
 
         # Now, it's time to extend water. Remember, either the water flows
         # downward to the next y-level, or it flows out across the xz-level,
@@ -217,7 +226,10 @@ class Fluid(object):
         if newmd < self.levels:
             newmd += 1
             for coords in neighbors:
-                self.update_fluid(w, coords, False, newmd)
+                try:
+                    self.update_fluid(w, coords, False, newmd)
+                except ChunkNotLoaded:
+                    pass
 
     def remove_sponge(self, x, y, z):
         # The evil sponge tyrant is gone. Flow, minions, flow!
