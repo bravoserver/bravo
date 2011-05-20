@@ -1,6 +1,6 @@
 from itertools import chain, product
 
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, succeed
 from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
@@ -66,18 +66,24 @@ class Fluid(object):
         self.tracked.add(coordinates)
         self.schedule()
 
-    def update_falling(self, w, block, coords, level=0):
+    def update_falling(self, w, coords, level=0):
 
         if not 0 <= coords[1] < 128:
+            return succeed(False)
+
+        d = w.get_block(coords)
+
+        @d.addCallback
+        def cb(block):
+            if (block in self.whitespace and not
+                any(self.sponges.iteritemsnear(coords, 2))):
+                w.set_block(coords, self.fluid)
+                w.set_metadata(coords, level | FALLING)
+                self.new.add(coords)
+                return True
             return False
 
-        if (block in self.whitespace and not
-            any(self.sponges.iteritemsnear(coords, 2))):
-            w.set_block(coords, self.fluid)
-            w.set_metadata(coords, level | FALLING)
-            self.new.add(coords)
-            return True
-        return False
+        return d
 
     @inlineCallbacks
     def add_sponge(self, w, x, y, z):
@@ -136,8 +142,7 @@ class Fluid(object):
                 self.new.add(coords)
 
         # Is this water falling down to the next y-level?
-        neighbor = yield w.get_block(below)
-        self.update_falling(w, neighbor, below)
+        yield self.update_falling(w, below)
 
     @inlineCallbacks
     def add_fluid(self, w, x, y, z):
@@ -200,8 +205,8 @@ class Fluid(object):
         # but *not* both.
 
         # Fall down to the next y-level, if possible.
-        neighbor = yield w.get_block(below)
-        if self.update_falling(w, neighbor, below, newmd):
+        rv = yield self.update_falling(w, below, newmd)
+        if rv:
             return
 
         # Clamp our newmd and assign. Also, set ourselves again; we changed
