@@ -220,6 +220,26 @@ class Fluid(object):
                     w.set_metadata(coords, newmd)
                     self.new.add(coords)
 
+    def remove_sponge(self, x, y, z):
+        # The evil sponge tyrant is gone. Flow, minions, flow!
+        for coords in product(xrange(x - 3, x + 4),
+            xrange(max(y - 3, 0), min(y + 4, 128)), xrange(z - 3, z + 4)):
+            if coords != (x, y, z):
+                self.new.add(coords)
+
+    def remove_spring(self, x, y, z):
+        # Neighbors on the xz-level.
+        neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
+                (x, y, z + 1))
+        # Our downstairs pal.
+        below = (x, y - 1, z)
+
+        # Destroyed spring. Add neighbors and below to blocks to update.
+        del self.springs[x, z]
+
+        self.new.update(neighbors)
+        self.new.add(below)
+
     @inlineCallbacks
     def process(self):
         w = factory.world
@@ -243,22 +263,9 @@ class Fluid(object):
                 # Hm, why would a pending block not be any of the things we
                 # care about? Maybe it used to be a spring or something?
                 if (x, z) in self.springs:
-                    # Destroyed spring. Add neighbors and below to blocks to
-                    # update.
-                    del self.springs[x, z]
-
-                    self.new.update(neighbors)
-                    self.new.add(below)
-
+                    self.remove_spring(x, y, z)
                 elif (x, y, z) in self.sponges:
-                    # The evil sponge tyrant is gone. Flow, minions, flow!
-                    for coords in product(
-                        xrange(x - 3, x + 4),
-                        xrange(max(y - 3, 0), min(y + 4, 128)),
-                        xrange(z - 3, z + 4),
-                        ):
-                        if coords != (x, y, z):
-                            self.new.add(coords)
+                    self.remove_sponge(x, y, z)
 
         # Flush affected chunks.
         to_flush = set()
