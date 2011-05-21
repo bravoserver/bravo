@@ -29,14 +29,14 @@ p {
   color: #000000; }
 
 #header-left {
-  position: relative;
-  left: 0px;
-  top: 0px; }
+  text-align: left; }
 
 #header-right {
-  float: right;
-  width: 200px;
-  margin: 0px; }
+  text-align: right; }
+  #header-right li {
+    display: inline;
+    list-style-type: none;
+    padding-right: 20px; }
 
 #main {
   padding: 1em;
