@@ -5,17 +5,16 @@ body {
 a {
   color: inherit;
   text-decoration: none; }
-
-a:hover {
-  text-decoration: underline; }
+  a:hover {
+    text-decoration: underline; }
 
 h2 {
-  color: #000099; }
+  color: #554433; }
 
 p {
   text-indent: 2em; }
   p a {
-    color: #000099; }
+    color: #775544; }
 
 #body {
   width: 95%;
@@ -39,8 +38,11 @@ p {
 
 #main {
   padding: 1em;
-  background-color: #eeeeee;
-  clear: both; }
+  clear: both;
+  background-color: #eeffff;
+  border-color: #aaddbb;
+  border-width: 2px;
+  border-style: solid; }
 
 #footer {
   background-color: #ffffff;

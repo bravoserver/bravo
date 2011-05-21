@@ -1,3 +1,13 @@
+$dark-brown: #543;
+$light-brown: #754;
+$dark-blue: #4ce;
+$light-blue: #6ff;
+$dark-green: #7a5;
+$med-green: #9d7;
+$light-green: #adb;
+$pale-green: #eff;
+$white: #fff;
+
 body {
     background-color: #ffffff;
 
@@ -8,21 +18,21 @@ a {
     color: inherit;
 
     text-decoration: none;
-}
 
-a:hover {
-    text-decoration: underline;
+    &:hover {
+        text-decoration: underline;
+    }
 }
 
 h2 {
-    color: #000099;
+    color: $dark-brown;
 }
 
 p {
     text-indent: 2em;
 
     a {
-        color: #000099;
+        color: $light-brown;
     }
 }
 
@@ -53,10 +63,15 @@ p {
 
 #main {
     padding: 1em;
-
-    background-color: #eeeeee;
-
     clear: both;
+    background: {
+        color: $pale-green;
+    }
+    border: {
+        color: $light-green;
+        width: 2px;
+        style: solid;
+    }
 }
 
 #footer {
