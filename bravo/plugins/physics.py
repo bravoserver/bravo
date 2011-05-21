@@ -258,12 +258,6 @@ class Fluid(object):
         w = factory.world
 
         for x, y, z in self.tracked:
-            # Neighbors on the xz-level.
-            neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
-                    (x, y, z + 1))
-            # Our downstairs pal.
-            below = (x, y - 1, z)
-
             # Try each block separately. If it can't be done, it'll be
             # discarded from the set simply by not being added to the new set
             # for the next iteration.
