@@ -17,8 +17,10 @@ p {
     color: #775544; }
 
 #body {
-  width: 95%;
-  margin: 10px auto;
+  margin-top: 0px;
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-bottom: 10px;
   padding: 10px;
   background-color: #ffffff; }
 
