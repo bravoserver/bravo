@@ -33,10 +33,14 @@ p {
 
 #header-right {
   text-align: right; }
-  #header-right li {
+  #header-right #navigation li {
     display: inline;
     list-style-type: none;
-    padding-right: 20px; }
+    margin: 0; }
+    #header-right #navigation li:before {
+      content: "| "; }
+    #header-right #navigation li:first-child:before {
+      content: ""; }
 
 #main {
   padding: 1em;

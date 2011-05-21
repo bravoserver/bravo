@@ -1,4 +1,5 @@
 title: About
 author: Corbin Simpson <MostAwesomeDude@gmail.com>
 ---
-Hi! This is an about page.
+Bravo is, as originally stated in the README, a speedy, elegant, and
+customizable Minecraft server.

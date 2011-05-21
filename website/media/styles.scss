@@ -59,10 +59,18 @@ p {
 
 #header-right {
     text-align: right;
-    li {
-        display: inline;
-        list-style-type: none;
-        padding-right: 20px;
+    #navigation {
+        li {
+            display: inline;
+            list-style-type: none;
+            margin: 0;
+            &:before {
+                content: "| ";
+            }
+            &:first-child:before {
+                content: "";
+            }
+        }
     }
 }
 
