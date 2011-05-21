@@ -55,10 +55,12 @@ p {
 
 #header-left {
     text-align: left;
+    display: inline-block;
 }
 
 #header-right {
     text-align: right;
+    display: inline-block;
     #navigation {
         li {
             display: inline;

@@ -29,10 +29,12 @@ p {
   color: #000000; }
 
 #header-left {
-  text-align: left; }
+  text-align: left;
+  display: inline-block; }
 
 #header-right {
-  text-align: right; }
+  text-align: right;
+  display: inline-block; }
   #header-right #navigation li {
     display: inline;
     list-style-type: none;
