@@ -47,6 +47,7 @@ class TestBravoFactory(unittest.TestCase):
         """
 
         bravo.config.configuration.set("world unittest", "seasons", "")
+        self.f.register_plugins()
 
         self.f.day = 0
         self.f.update_season()
@@ -63,6 +64,7 @@ class TestBravoFactory(unittest.TestCase):
         """
 
         bravo.config.configuration.set("world unittest", "seasons", "winter")
+        self.f.register_plugins()
 
         self.f.day = 0
         self.f.update_season()
@@ -79,6 +81,7 @@ class TestBravoFactory(unittest.TestCase):
 
         bravo.config.configuration.set("world unittest", "seasons",
             "winter, spring")
+        self.f.register_plugins()
 
         self.f.day = 0
         self.f.update_season()

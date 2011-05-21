@@ -4,6 +4,7 @@ from time import time
 
 from twisted.internet.interfaces import IPushProducer
 from twisted.internet.protocol import Factory
+from twisted.internet.task import LoopingCall
 from twisted.python import log
 from zope.interface import implements
 
@@ -80,6 +81,13 @@ class BravoFactory(Factory):
         if configuration.has_option(self.config_name, "perm_cache"):
             cache_level = configuration.getint(self.config_name, "perm_cache")
             self.world.enable_cache(cache_level)
+
+        log.msg("Starting timekeeping...")
+        self.timestamp = time()
+        self.time = self.world.time
+        self.update_season()
+        self.time_loop = LoopingCall(self.update_time)
+        self.time_loop.start(2)
 
         self.protocols = dict()
 
