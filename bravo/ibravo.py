@@ -19,6 +19,12 @@ class IBravoPlugin(IPlugin):
         to uniquely index the plugin.
         """)
 
+def sorted_invariant(s):
+    intersection = set(s.before) & set(s.after)
+    if intersection:
+        raise InvariantException("Plugin wants to come before and after %r" %
+            intersection)
+
 class ISortedPlugin(IBravoPlugin):
     """
     Parent interface for sorted plugins.
@@ -26,6 +32,8 @@ class ISortedPlugin(IBravoPlugin):
     Sorted plugins have an innate and automatic ordering inside lists thanks
     to the ability to advertise their dependencies.
     """
+
+    invariant(sorted_invariant)
 
     before = Attribute("""
         Plugins which must come before this plugin in the pipeline.
