@@ -62,6 +62,8 @@ class BravoFactory(Factory):
         self.world = World(self.name)
         self.world.factory = self
 
+        self.protocols = dict()
+
     def startFactory(self):
         log.msg("Initializing factory for world '%s'..." % self.name)
 
@@ -88,8 +90,6 @@ class BravoFactory(Factory):
         self.update_season()
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
-
-        self.protocols = dict()
 
         # Start automatons.
         for automaton in self.automatons:
@@ -153,6 +153,27 @@ class BravoFactory(Factory):
         p.register_hooks()
 
         return p
+
+    def set_username(self, protocol, username):
+        """
+        Attempt to set a new username for a protocol.
+
+        :returns: whether the username was changed
+        """
+
+        # If the username's already taken, refuse it.
+        if username in self.protocols:
+            return False
+
+        if protocol.username in self.protocols:
+            # This protocol's known under another name, so remove it.
+            del self.protocols[protocol.username]
+
+        # Set the username.
+        self.protocols[username] = protocol
+        protocol.username = username
+
+        return True
 
     def register_plugins(self):
         """

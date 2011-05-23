@@ -8,9 +8,11 @@ import bravo.factories.beta
 
 class MockProtocol(object):
 
+    username = None
+
     def __init__(self, player):
         self.player = player
-        self.location = player.location
+        self.location = player.location if player else None
 
 class TestBravoFactory(unittest.TestCase):
 
@@ -90,6 +92,34 @@ class TestBravoFactory(unittest.TestCase):
         self.f.day = 90
         self.f.update_season()
         self.assertEqual(self.f.world.season.name, "spring")
+
+    def test_set_username(self):
+        p = MockProtocol(None)
+        p.username = "Hurp"
+        self.f.protocols["Hurp"] = p
+
+        self.assertTrue(self.f.set_username(p, "Derp"))
+
+        self.assertTrue("Derp" in self.f.protocols)
+        self.assertTrue("Hurp" not in self.f.protocols)
+        self.assertEqual(p.username, "Derp")
+
+    def test_set_username_taken(self):
+        p = MockProtocol(None)
+        p.username = "Hurp"
+        self.f.protocols["Hurp"] = p
+        self.f.protocols["Derp"] = None
+
+        self.assertFalse(self.f.set_username(p, "Derp"))
+
+        self.assertEqual(p.username, "Hurp")
+
+    def test_set_username_noop(self):
+        p = MockProtocol(None)
+        p.username = "Hurp"
+        self.f.protocols["Hurp"] = p
+
+        self.assertFalse(self.f.set_username(p, "Hurp"))
 
 class TestBravoFactoryStarted(unittest.TestCase):
     """
