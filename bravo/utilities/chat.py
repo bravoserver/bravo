@@ -63,3 +63,35 @@ def sanitize_chat(s):
         s = s[:-2]
 
     return s
+
+def username_alternatives(n):
+    """
+    Permute a username through several common alternative-finding algorithms.
+    """
+
+    # First up: The Woll Smoth. This is largely for comedy, and also to
+    # appease my Haskell/Erlang side.
+    w = reduce(lambda x, y: unicode.replace(x, y, "o"), "aeiu", n)
+    yield reduce(lambda x, y: unicode.replace(x, y, "O"), "AEIU", w)
+
+    # Try prefixes and suffixes of ~, which a reliable source (kingnerd on
+    # #mcdevs) tells me is not legal in registered nicks. *Somebody* will get
+    # filtered by this.
+
+    yield "~%s" % n
+    yield "%s~" % n
+
+    # And the IRC traditional underscore...
+
+    yield "_%s" % n
+    yield "%s_" % n
+
+    # Now for some more inventive things. Say you have hundreds of "Player"s
+    # running around; what do you do? Well, it's time for numbers.
+
+    for i in range(100):
+        yield "%s%d" % (n, i)
+
+    # And that's it for now. If you really have this many players with the
+    # same name, maybe you should announce "Stop logging on as
+    # 'Sephiroth'" and see if they listen. >:3

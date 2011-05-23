@@ -27,6 +27,7 @@ from bravo.packets.beta import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import split_coords
+from bravo.utilities.chat import username_alternatives
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
@@ -569,6 +570,21 @@ class BravoProtocol(BetaServerProtocol):
         ``Deferred``, which is chained to authenticate the user or disconnect
         them depending on the results of the authentication.
         """
+
+        # Check the username. If it's "Player", then the client is almost
+        # certainly cracked, so we'll need to give them a better username.
+        # Thankfully, there's a utility function for finding better usernames.
+        username = container.username
+
+        if username in self.factory.protocols:
+            for name in username_alternatives(username):
+                if name not in self.factory.protocols:
+                    container.username = name
+                    break
+            else:
+                self.error("Your username is already taken.")
+                return
+
 
         if container.protocol < SUPPORTED_PROTOCOL:
             # Kick old clients.
