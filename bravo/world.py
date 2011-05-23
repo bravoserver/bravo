@@ -14,18 +14,12 @@ from twisted.python import log
 from bravo.chunk import Chunk
 from bravo.config import configuration
 from bravo.entity import Player
-from bravo.errors import SerializerReadException
+from bravo.errors import ChunkNotLoaded, SerializerReadException
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import (retrieve_named_plugins, verify_plugin,
     PluginException)
 from bravo.utilities.coords import split_coords
 from bravo.utilities.temporal import PendingEvent
-
-class ChunkNotLoaded(Exception):
-    """
-    The requested chunk is not currently loaded. If you need it, you will need
-    to request it yourself.
-    """
 
 def coords_to_chunk(f):
     """

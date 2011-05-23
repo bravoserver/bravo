@@ -11,6 +11,7 @@ from zope.interface.exceptions import BrokenImplementation
 from zope.interface.exceptions import BrokenMethodImplementation
 from zope.interface.verify import verifyObject
 
+from bravo.errors import PluginException
 from bravo.ibravo import InvariantException, ISortedPlugin
 
 blacklisted = set([
@@ -31,11 +32,6 @@ overrides = {
 }
 bravoMapper = ExclusiveMapper(pep302Mapper,
                               blacklisted).withOverrides(overrides)
-
-class PluginException(Exception):
-    """
-    Signal an error encountered during plugin handling.
-    """
 
 def sort_plugins(plugins):
     """

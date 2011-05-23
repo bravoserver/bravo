@@ -9,8 +9,8 @@ import tempfile
 from itertools import product
 
 import bravo.config
-import bravo.errors
-from bravo.world import ChunkNotLoaded, World
+from bravo.errors import ChunkNotLoaded, SerializerReadException
+from bravo.world import World
 
 class TestWorldChunks(unittest.TestCase):
 
@@ -224,7 +224,7 @@ class TestWorldInit(unittest.TestCase):
 
         from bravo.plugins.serializers import Alpha
         def raiser(self, level):
-            raise bravo.errors.SerializerReadException("testing")
+            raise SerializerReadException("testing")
         self.patch(Alpha, "load_level", raiser)
 
         w = bravo.world.World(self.name)

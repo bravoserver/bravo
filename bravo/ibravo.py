@@ -3,10 +3,7 @@ from twisted.python.components import registerAdapter
 from twisted.web.resource import IResource
 from zope.interface import implements, invariant, Attribute
 
-class InvariantException(Exception):
-    """
-    Exception raised by failed invariant conditions.
-    """
+from bravo.errors import InvariantException
 
 class IBravoPlugin(IPlugin):
     """

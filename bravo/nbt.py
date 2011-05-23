@@ -2,6 +2,8 @@ from struct import Struct, error as StructError
 from gzip import GzipFile
 from UserDict import DictMixin
 
+from bravo.errors import MalformedFileError
+
 TAG_END = 0
 TAG_BYTE = 1
 TAG_SHORT = 2
@@ -13,10 +15,6 @@ TAG_BYTE_ARRAY = 7
 TAG_STRING = 8
 TAG_LIST = 9
 TAG_COMPOUND = 10
-
-class MalformedFileError(Exception):
-    """Exception raised on parse error."""
-    pass
 
 class TAG(object):
     """Each Tag needs to take a file-like object for reading and writing.
