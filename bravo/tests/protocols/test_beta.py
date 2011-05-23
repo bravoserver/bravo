@@ -57,38 +57,3 @@ class TestBetaServerProtocol(unittest.TestCase):
         self.p.login(container)
 
         self.assertTrue(error_called[0])
-
-class TestBravoProtocol(unittest.TestCase):
-
-    def setUp(self):
-        self.p = bravo.protocols.beta.BravoProtocol("unittest")
-
-    def test_trivial(self):
-        pass
-
-    def test_reject_ancient_and_newfangled_clients(self):
-        """
-        Directly test the login() method for client protocol checking.
-
-        This would not be necessary if BSP's login() were called instead, but
-        that is not practical at the moment.
-        """
-
-        error_called = [False]
-        def error(reason):
-            error_called[0] = True
-        self.patch(self.p, "error", error)
-
-        container = Container()
-        container.protocol = 1
-        self.p.login(container)
-
-        self.assertTrue(error_called[0])
-
-        error_called[0] = False
-
-        container = Container()
-        container.protocol = 42
-        self.p.login(container)
-
-        self.assertTrue(error_called[0])
