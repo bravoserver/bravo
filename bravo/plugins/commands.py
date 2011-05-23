@@ -399,10 +399,10 @@ class Nick(object):
     def chat_command(self, username, parameters):
         player = parse_player(factory, username)
         new = parameters[0]
-        player.username = new
-        player.factory.protocols[new] = player
-        del player.factory.protocols[username]
-        return ("Changed nickname from %s to %s" % (username, new),)
+        if factory.set_username(player, new):
+            return ("Changed nickname from %s to %s" % (username, new),)
+        else:
+            return ("Couldn't change nickname!",)
 
     name = "nick"
     aliases = tuple()
