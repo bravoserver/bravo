@@ -398,7 +398,10 @@ class Nick(object):
 
     def chat_command(self, username, parameters):
         player = parse_player(factory, username)
-        new = parameters[0]
+        if len(parameters) == 0:
+            return ("Usage: /nick <nickname>",)
+        else:
+            new = parameters[0]
         if factory.set_username(player, new):
             return ("Changed nickname from %s to %s" % (username, new),)
         else:
