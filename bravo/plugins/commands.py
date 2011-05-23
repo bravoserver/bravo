@@ -392,6 +392,23 @@ class GetPos(object):
     usage = ""
     info = "Hey0 /getpos"
 
+class Nick(object):
+
+    implements(IChatCommand)
+
+    def chat_command(self, username, parameters):
+        player = parse_player(factory, username)
+        new = parameters[0]
+        player.username = new
+        player.factory.protocols[new] = player
+        del player.factory.protocols[username]
+        return ("Changed nickname from %s to %s" % (username, new),)
+
+    name = "nick"
+    aliases = tuple()
+    usage = "<nickname>"
+    info = "Set a new nickname"
+
 help = Help()
 list = List()
 time = Time()
@@ -406,3 +423,4 @@ season = Season()
 me = Me()
 kick = Kick()
 getpos = GetPos()
+nick = Nick()
