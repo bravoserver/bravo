@@ -93,7 +93,9 @@ class Warp(object):
     def chat_command(self, username, parameters):
         data = factory.world.serializer.load_plugin_data("warps")
         warps = get_locations(data)
-
+		if len(parameters) == 0:
+			yield "Usage: /warp <warpname>"
+			return
         location = parameters[0]
         if location in warps:
             yield "Teleporting you to %s" % location
