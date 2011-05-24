@@ -1,6 +1,6 @@
 from zope.interface import implements
 
-from bravo.ibravo import IConsoleCommand
+from bravo.ibravo import IConsoleCommand, IChatCommand
 
 from bravo.parameters import factory
 
@@ -48,5 +48,22 @@ class Status(object):
     usage = ""
     info = "Print a quick summary of the server's status"
 
+class Colors(object):
+
+    implements(IChatCommand)
+
+    def chat_command(self, username, parameters):
+        from bravo.utilities.chat import chat_colors
+        names = """black dblue dgreen dcyan dred dmagenta dorange gray dgray
+        blue green cyan red magenta yellow""".split()
+        for pair in zip(chat_colors, names):
+            yield "%s%s" % pair
+
+    name = "colors"
+    aliases = tuple()
+    usage = ""
+    info = "Print the colors"
+
 meliae = Meliae()
 status = Status()
+colors = Colors()
