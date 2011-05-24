@@ -588,6 +588,22 @@ class Fence(Recipe):
     )
     provides = (blocks["fence"].key, 2)
 
+class Bed(Recipe):
+
+    name = "bed"
+
+    dimensions = (3, 2)
+
+    recipe =(
+        (blocks["wool"].key, 1),
+        (blocks["wool"].key, 1),
+        (blocks["wool"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+    )
+    provides = (blocks["bed"].key, 1)
+
 #--Recipies--
 
 #Basics
@@ -737,3 +753,4 @@ ladder = Ladder()
 papers = ThreeByOne(blocks["sugar-cane"], items["paper"], 3, "paper")
 book = Book()
 fence = Fence()
+bed = Bed()
