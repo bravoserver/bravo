@@ -249,7 +249,7 @@ def retrieve_named_plugins(interface, names, parameters=None):
         return [d[name] for name in names]
     except KeyError, e:
         raise PluginException("Couldn't find plugin %s for interface %s!" %
-            (e.args[0], interface))
+            (e.args[0], interface.__name__))
 
 def retrieve_sorted_plugins(interface, names, parameters=None):
     """
