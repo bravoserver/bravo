@@ -25,6 +25,84 @@ hardness = {
     0x58: 0.75, 0x59: 0.45, 0x5B: 1.5, 0x5C: 0.75,
 }
 
+effect = {
+    items["diamond-axe"].slot: 8,
+    items["diamond-pickaxe"].slot: 8,
+    items["diamond-shovel"].slot: 8,
+    items["gold-axe"].slot: 12,
+    items["gold-pickaxe"].slot: 12,
+    items["gold-shovel"].slot: 12,
+    items["iron-axe"].slot: 6,
+    items["iron-pickaxe"].slot: 6,
+    items["iron-shovel"].slot: 6,
+    items["stone-axe"].slot: 4,
+    items["stone-pickaxe"].slot: 4,
+    items["stone-shovel"].slot: 4,
+    items["wooden-axe"].slot: 2,
+    items["wooden-pickaxe"].slot: 2,
+    items["wooden-shovel"].slot: 2,
+}
+
+def effect_multiplier(slot):
+    """
+    The multiplier for effectiveness for a given tool.
+    """
+
+    if not slot:
+        return 1.0
+
+    primary = slot.primary
+
+    if primary not in effect:
+        return 1.0
+
+    return effect[primary]
+
+def is_effective_against(block, slot):
+    if not slot or slot.primary not in items:
+        return False
+
+    item = items[slot.primary]
+
+    if item.name.endswith("-shovel"):
+        return block in (
+            blocks["clay"].slot,
+            blocks["dirt"].slot,
+            blocks["grass"].slot,
+            blocks["gravel"].slot,
+            blocks["sand"].slot,
+            blocks["snow"].slot,
+            blocks["snow-block"].slot,
+        )
+    elif item.name.endswith("-axe"):
+        return block in (
+            blocks["bookshelf"].slot,
+            blocks["log"].slot,
+            blocks["wood"].slot,
+        )
+    elif item.name.endswith("-pickaxe"):
+        return block in (
+            blocks["brimstone"].slot,
+            blocks["coal-ore"].slot,
+            blocks["cobblestone"].slot,
+            blocks["diamond"].slot,
+            blocks["diamond-ore"].slot,
+            blocks["double-step"].slot,
+            blocks["gold"].slot,
+            blocks["gold-ore"].slot,
+            blocks["ice"].slot,
+            blocks["iron"].slot,
+            blocks["iron-ore"].slot,
+            blocks["lapis-lazuli"].slot,
+            blocks["lapis-lazuli-ore"].slot,
+            blocks["mossy-cobblestone"].slot,
+            blocks["sandstone"].slot,
+            blocks["step"].slot,
+            blocks["stone"].slot,
+        )
+
+    return False
+
 class NotchyDigPolicy(object):
     """
     A digging policy modeled after the Notchian server dig times.
@@ -48,7 +126,8 @@ class NotchyDigPolicy(object):
             blocks["torch"].slot,
             ):
             return True
-        elif block == blocks["snow"].slot and tool and tool.primary in (
+
+        if block == blocks["snow"].slot and tool and tool.primary in (
             items["diamond-shovel"].slot,
             items["gold-shovel"].slot,
             items["iron-shovel"].slot,
@@ -61,7 +140,10 @@ class NotchyDigPolicy(object):
 
     def dig_time(self, block, tool):
         if block in hardness:
-            return hardness[block]
+            time = hardness[block]
+            if is_effective_against(block, tool):
+                time /= effect_multiplier(tool)
+            return time
         else:
             return 0.0
 
