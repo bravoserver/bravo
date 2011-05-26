@@ -19,7 +19,9 @@ Exocet and You
 Bravo uses a library called Exocet to help it with plugin discovery. Exocet is
 a remarkably powerful library which customizes the way imports are done.
 Instead of importing plugins by name, or package, Exocet can be asked to
-*load* a plugin, completely transforming its imports.
+**load** a plugin. When Exocet loads plugins, all import statements in the
+plugin are transformed to go through Exocet, so Exocet (and by extension,
+Bravo) can modify what your plugins import.
 
 So, what does this mean for you, the plugin author? Well, there are a few
 things to keep in mind...
@@ -28,11 +30,13 @@ Blacklisting
 ------------
 
 Exocet can blacklist imports, preventing them from actually happening and
-keeping your plugin from loading. Some of these blacklisted modules are chosen
-for security reasons, while others are chosen because they will cause slow or
-buggy behavior. If you think you absolutely need one of these modules,
-consider carefully whether the listed reason for it being on the blacklist is
-relevant and reasonable.
+keeping your plugin from loading. Bravo uses this ability to blacklist a
+smattering of standard library modules from plugins.
+
+Some of these blacklisted modules are chosen for security reasons, while
+others are chosen because they will cause slow or buggy behavior. If you think
+you absolutely need one of these modules, consider carefully whether the
+listed reason for it being on the blacklist is relevant and reasonable.
 
 The following modules are blacklisted becuse they can be used to crash the
 server:
@@ -55,3 +59,35 @@ compared to, Twisted's own systems:
  * subprocess
  * thread
  * threading
+
+Parameters
+----------
+
+Exocet supports parameterization of imports. Specifically, imports of modules
+which don't actually exist can be rewritten to provide faked, or
+**synthetic**, modules. For an example, consider the following snippet of
+code::
+
+>>> from bravo.parameters import example
+
+This snippet brings the ``example`` name into the global namespace for the
+module, obviously, but what might not be obvious is that bravo.parameters
+doesn't actually exist! It is a synthetic module created by the plugin loader.
+
+A word of warning: If the plugin loader decides not to offer any parameters to
+plugins, then your plugin will not load at that time. This is important
+because it means that you probably should not try to do things like ``from
+bravo import parameters``. Import exactly the names you need to import; don't
+have imports which do nothing.
+
+Of course, if you want to have a name available, but it is ultimately
+optional, the following is legal and works fine:
+
+>>> try:
+...  from bravo.parameters import example
+... except ImportError:
+...  example = None
+
+The following parameters might be available:
+
+ * ``factory``: The factory owning this instance of the plugin.
