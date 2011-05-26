@@ -332,8 +332,8 @@ class BravoFactory(Factory):
             consumer.write((self, message))
 
         # Prepare the message for chat packeting.
-        #for user in self.protocols:
-        #    message = message.replace(user, chat_name(user))
+        for user in self.protocols:
+            message = message.replace(user, chat_name(user))
         message = sanitize_chat(message)
 
         log.msg("Chat: %s" % message.encode("utf8"))
