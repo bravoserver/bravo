@@ -1,3 +1,36 @@
+1.6
+===
+
+Compatibility
+-------------
+
+* All plugin methods which took a factory parameter have been parameterized
+* Automatons now have scan() methods which allow them to optimize chunk
+  scanning
+* Automatons have start() and stop() methods which restrict their operation
+* Build hooks have been split into pre-build and post-build hooks
+* The "Build" build hook has been removed
+
+Features
+--------
+
+* Added mob data for hostile mobs
+* Added parameters to the plugin loader
+* Added /nick to change nickname
+* Added door plugin
+* Added fertilizer plugin
+* Added all tree species to the sapling generator
+* Added bed recipe
+* Added automaton status web plugin
+
+Bugfixes
+--------
+
+* Fixed the installation process for the Twisted plugin
+* Fixed crash when no seasons are enabled
+* Fixed username collisions
+* Fixed dig times when using Notchy dig policy
+
 1.5
 ===
 
