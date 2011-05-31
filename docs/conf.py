@@ -65,7 +65,7 @@ copyright = u'2010, Corbin Simpson & Derrick Dymock'
 # built documents.
 #
 # The short X.Y version.
-version = '1.6'
+version = '1.6.1'
 # The full version, including alpha/bravo/rc tags.
 release = version
 

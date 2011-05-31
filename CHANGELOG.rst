@@ -1,3 +1,8 @@
+1.6.1
+=====
+
+* Bumped to Beta 1.6 protocol 13
+
 1.6
 ===
 
