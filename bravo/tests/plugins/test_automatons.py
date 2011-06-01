@@ -116,6 +116,31 @@ class TestGrass(unittest.TestCase):
         self.assertFalse(self.hook.tracked)
         self.assertEqual(chunk.get_block((1, 0, 1)), blocks["grass"].slot)
 
+    def test_surrounding_not_dirt(self):
+        """
+        Blocks which aren't dirt by the time they're processed will be
+        ignored, even when surrounded by grass.
+        """
+
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            # Set up grassy surroundings.
+            for x, z in product(xrange(0, 3), repeat=2):
+                chunk.set_block((x, 0, z), blocks["grass"].slot)
+
+            chunk.set_block((1, 0, 1), blocks["bedrock"].slot)
+
+            # Run the loop once.
+            self.hook.feed((1, 0, 1))
+            self.hook.process()
+
+            # We shouldn't have any pending blocks now.
+            self.assertFalse(self.hook.tracked)
+
+        return d
+
     @inlineCallbacks
     def test_surrounding_obstructed(self):
         """
