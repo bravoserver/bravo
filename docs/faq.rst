@@ -2,6 +2,9 @@
 FAQ
 ===
 
+Basics
+======
+
 Why are you doing this? What's wrong with the official Alpha server?
  Plenty. The biggest architectural mistake is the choice of dozens of threads
  instead of NIO and an asynchronous event-driven model, but there are other
@@ -48,6 +51,18 @@ I have an error involving JSON!
 
 I have an error involving IRC/AMP/ListOf/endpoints!
  Your Twisted is too old. You really do need Twisted 10.1 or newer.
+
+Configuring
+===========
+
+My world is snowy. I didn't want this.
+ In bravo.ini, change your ``seasons`` list to exclude winter. A possible
+ incantation might be the following::
+
+     seasons = *, -winter
+
+Credits
+=======
 
 Who are you guys, anyway?
  Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
