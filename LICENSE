@@ -1,3 +1,8 @@
+Bravo is made available under the following terms, commonly known as the
+MIT/X11 license. Contributions from third parties are also under this license.
+
+Copyright (c) 2010-2011 Corbin Simpson et al.
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -15,3 +20,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+The NBT handling code (bravo/nbt.py) is from Thomas Woolford's fantastic NBT
+library, located at http://github.com/twoolie/NBT, and is used here under the
+terms of the MIT/X11 license.
+
+Exocet is provided verbatim from W. Allen Short, hosted at
+https://launchpad.net/exocet, and is used here under the terms of the MIT/X11
+license.
