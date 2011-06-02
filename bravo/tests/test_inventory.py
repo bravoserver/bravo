@@ -2,7 +2,9 @@ from twisted.trial import unittest
 
 import bravo.blocks
 
+from bravo.ibravo import IRecipe
 from bravo.inventory import Equipment, Inventory, Slot, Workbench
+from bravo.plugin import retrieve_plugins
 
 class TestSlot(unittest.TestCase):
     """
@@ -212,12 +214,16 @@ class TestCraftingWood(unittest.TestCase):
     """
     Test basic crafting functionality.
 
-    Assumes that the basic log->wood recipe is present and enabled. This
+    These tests require a "wood" recipe, which turns logs into wood. This
     recipe was chosen because it is the simplest and most essential recipe
     from which all crafting is derived.
     """
 
     def setUp(self):
+        recipes = retrieve_plugins(IRecipe)
+        if "wood" not in recipes:
+            raise unittest.SkipTest("Plugin not present")
+
         self.i = Equipment()
 
     def test_trivial(self):
@@ -300,6 +306,10 @@ class TestCraftingTorches(unittest.TestCase):
     """
 
     def setUp(self):
+        recipes = retrieve_plugins(IRecipe)
+        if "torches" not in recipes:
+            raise unittest.SkipTest("Plugin not present")
+
         self.i = Equipment()
 
     def test_trivial(self):
@@ -343,6 +353,10 @@ class TestCraftingFurnace(unittest.TestCase):
     """
 
     def setUp(self):
+        recipes = retrieve_plugins(IRecipe)
+        if "furnace" not in recipes:
+            raise unittest.SkipTest("Plugin not present")
+
         self.i = Workbench()
 
     def test_trivial(self):
