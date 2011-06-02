@@ -86,11 +86,9 @@ class World(object):
     Whether this world is using multiprocessing methods to generate geometry.
     """
 
-    dimension = 0
+    dimension = "earth"
     """
-    The world dimension.
-
-    XXX Currently pegged to 0; change this when Nether work gets underway.
+    The world dimension. Valid values are earth, sky, and nether.
     """
 
     permanent_cache = None

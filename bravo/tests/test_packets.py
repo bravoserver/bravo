@@ -39,7 +39,7 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.protocol, 9)
         self.assertEqual(parsed.username, "Corbin")
         self.assertEqual(parsed.seed, -1646555943028388268)
-        self.assertEqual(parsed.dimension, 0)
+        self.assertEqual(parsed.dimension, "earth")
 
     def test_handshake(self):
         packet = "\x00\x01\x00a"
@@ -144,10 +144,17 @@ class TestPacketAssembly(unittest.TestCase):
 
     def test_login(self):
         container = Container(protocol=0, username="", seed=0,
-            dimension=0)
+            dimension="earth")
         assembled = bravo.packets.beta.packets[1].build(container)
         self.assertEqual(assembled,
             "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+
+    def test_login_nether(self):
+        container = Container(protocol=0, username="", seed=0,
+            dimension="nether")
+        assembled = bravo.packets.beta.packets[1].build(container)
+        self.assertEqual(assembled,
+            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff")
 
     def test_time(self):
         container = Container(timestamp=42)

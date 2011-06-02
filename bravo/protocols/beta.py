@@ -372,7 +372,7 @@ class BetaProxyProtocol(BetaServerProtocol):
         self.username = container.username
 
         packet = make_packet("login", protocol=0, username="", seed=0,
-            dimension=0)
+            dimension="earth")
         self.transport.write(packet)
 
         url = urlunparse(("http", self.gateway, "/node/0/0/", None, None,
