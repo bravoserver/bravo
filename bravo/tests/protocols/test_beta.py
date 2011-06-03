@@ -57,3 +57,21 @@ class TestBetaServerProtocol(unittest.TestCase):
         self.p.login(container)
 
         self.assertTrue(error_called[0])
+
+class TestBravoProtocol(unittest.TestCase):
+
+    def setUp(self):
+        self.p = bravo.protocols.beta.BravoProtocol("unittest")
+
+    def test_trivial(self):
+        pass
+
+    def test_entities_near_unloaded_chunk(self):
+        """
+        entities_near() shouldn't raise a fatal KeyError when a nearby chunk
+        isn't loaded.
+
+        Reported by brachiel on IRC.
+        """
+
+        list(self.p.entities_near(2))

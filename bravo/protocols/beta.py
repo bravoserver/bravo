@@ -555,7 +555,10 @@ class BravoProtocol(BetaServerProtocol):
         maxz = chunkz + chunk_radius + 1
 
         for x, z in product(xrange(minx, maxx), xrange(minz, maxz)):
+            if (x, z) not in self.chunks:
+                continue
             chunk = self.chunks[x, z]
+
             yieldables = [entity for entity in chunk.entities
                 if self.location.distance(entity.location) <= radius]
             for i in yieldables:
