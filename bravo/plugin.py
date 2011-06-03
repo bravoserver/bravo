@@ -150,6 +150,8 @@ def synthesize_parameters(parameters):
     module.__dict__.update(parameters)
     return module
 
+__cache = {}
+
 def get_plugins(interface, package, parameters=None):
     """
     Lazily find objects in a package which implement a given interface.
@@ -211,6 +213,9 @@ def retrieve_plugins(interface, parameters=None):
     :raises PluginException: no plugins could be found for the given interface
     """
 
+    if not parameters and interface in __cache:
+        return __cache[interface]
+
     log.msg("Discovering %s..." % interface)
     d = {}
     for p in get_plugins(interface, "bravo.plugins", parameters):
@@ -223,6 +228,10 @@ def retrieve_plugins(interface, parameters=None):
     if issubclass(interface, ISortedPlugin):
         # Sortable plugins need their edges mirrored.
         d = add_plugin_edges(d)
+
+    # Cache non-parameterized plugins.
+    if not parameters:
+        __cache[interface] = d
 
     return d
 
