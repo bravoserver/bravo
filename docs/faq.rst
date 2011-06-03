@@ -43,15 +43,6 @@ It doesn't install? Okay, maybe it installed, but I'm having issues!
  the comments in bravo.ini.example. I did not type them out so that they could
  be ignored. :3
 
-I have an error involving construct!
- Install Construct.
-
-I have an error involving JSON!
- If you update to a newer Bravo, you won't need JSON support.
-
-I have an error involving IRC/AMP/ListOf/endpoints!
- Your Twisted is too old. You really do need Twisted 10.1 or newer.
-
 Configuring
 ===========
 
@@ -60,6 +51,27 @@ My world is snowy. I didn't want this.
  incantation might be the following::
 
      seasons = *, -winter
+
+Errors
+======
+
+I get lots of RuntimeErrors from Exocet while loading things like
+``bravo.parameters``, ``xml.sax``, and ``twisted.internet``.
+ Those are harmless.
+
+ Exocet is very, very strict about imports, and in fact, it is stricter than
+ the standard importer. This means that Exocet will warn about modules which
+ try to do weird or tricky things during imports. The warnings might be
+ annoying, but they aren't indicative of anything going wrong.
+
+I have an error involving construct!
+ Install Construct.
+
+I have an error involving JSON!
+ If you update to a newer Bravo, you won't need JSON support.
+
+I have an error involving IRC/AMP/ListOf/endpoints!
+ Your Twisted is too old. You really do need Twisted 10.1 or newer.
 
 Credits
 =======
