@@ -343,6 +343,56 @@ class TestCraftingTorches(unittest.TestCase):
         self.assertTrue(self.i.recipe)
         self.assertEqual(self.i.recipe_offset, 1)
 
+class TestCraftingShovel(unittest.TestCase):
+    """
+    Test basic crafting functionality.
+
+    Assumes that the basic shovel recipe is present and enabled. This recipe
+    was chosen because shovels broke at one point and we couldn't figure out
+    why.
+    """
+
+    def setUp(self):
+        recipes = retrieve_plugins(IRecipe)
+        if "stone-shovel" not in recipes:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.i = Workbench()
+
+    def test_trivial(self):
+        pass
+
+    def test_check_crafting(self):
+        self.i.crafting[0] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 1)
+        self.i.crafting[3] = Slot(bravo.blocks.items["stick"].slot, 0, 1)
+        self.i.crafting[6] = Slot(bravo.blocks.items["stick"].slot, 0, 1)
+        # Force crafting table to be rechecked.
+        self.i.select(2)
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.recipe_offset, 0)
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.items["stone-shovel"].slot, 0, 1))
+
+    def test_check_crafting_multiple(self):
+        self.i.crafting[0] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        self.i.crafting[3] = Slot(bravo.blocks.items["stick"].slot, 0, 2)
+        self.i.crafting[6] = Slot(bravo.blocks.items["stick"].slot, 0, 2)
+        # Force crafting table to be rechecked.
+        self.i.select(2)
+        # Only checking count of crafted table; the previous test assured that
+        # the recipe was selected.
+        self.assertEqual(self.i.crafted[0],
+            (bravo.blocks.items["stone-shovel"].slot, 0, 1))
+
+    def test_check_crafting_offset(self):
+        self.i.crafting[1] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        self.i.crafting[4] = Slot(bravo.blocks.items["stick"].slot, 0, 2)
+        self.i.crafting[7] = Slot(bravo.blocks.items["stick"].slot, 0, 2)
+        # Force crafting table to be rechecked.
+        self.i.select(1)
+        self.assertTrue(self.i.recipe)
+        self.assertEqual(self.i.recipe_offset, 1)
+
 class TestCraftingFurnace(unittest.TestCase):
     """
     Test basic crafting functionality.
