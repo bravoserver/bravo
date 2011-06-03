@@ -272,7 +272,7 @@ class Pickaxe(Recipe):
 
 class Shovel(Recipe):
 
-    dimensions = (3, 1)
+    dimensions = (1, 3)
 
     def __init__(self, material, provides, name=None):
         self.name = "%s-shovel" % name
