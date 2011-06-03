@@ -43,9 +43,6 @@ class TestBlockQuirks(unittest.TestCase):
     def test_grass_secondary(self):
         self.assertEqual(bravo.blocks.blocks["grass"].key[1], 0)
 
-    def test_no_block_0x20(self):
-        self.assertTrue(0x20 not in bravo.blocks.blocks)
-
 class TestParseBlock(unittest.TestCase):
 
     def test_parse_block(self):
