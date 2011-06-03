@@ -187,8 +187,8 @@ block_names = [
     "detector-rail",
     "",
     "spider-web",
-    "",
-    "", # 0x20
+    "tall-grass",
+    "shrub", # 0x20
     "",
     "",
     "wool",
@@ -252,6 +252,7 @@ block_names = [
     "redstone-repeater-off",
     "redstone-repeater-on",
     "locked-chest",
+    "trapdoor", #0x60
 ]
 
 item_names = [
