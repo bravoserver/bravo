@@ -255,7 +255,7 @@ class _PEP302Mapper(CallableMapper):
             prevImport = __import__
             prevMetaPath = list(sys.meta_path)
             prevSysModules = sys.modules.copy()
-            __builtins__['__import__'] = prevImport
+            __builtin__.__import__ = prevImport
             sys.meta_path[:] = self._metaPath
             sys.modules.clear()
             sys.modules.update(self._oldSysModules)
@@ -274,7 +274,7 @@ class _PEP302Mapper(CallableMapper):
             sys.meta_path[:] = prevMetaPath
             sys.modules.clear()
             sys.modules.update(prevSysModules)
-            __builtins__['__import__'] = prevImport
+            __builtin__.__import__ = prevImport
 
 
 emptyMapper = CallableMapper(_noLookup)
@@ -434,7 +434,7 @@ def _isolateImports(mf, f, *a, **kw):
     sys.path_hooks = []
     sys.modules.clear()
     sys.meta_path = [mf]
-    __builtins__['__import__'] = mf.xocImport
+    __builtins__.__import__ = mf.xocImport
 
 
 
@@ -449,7 +449,7 @@ def _isolateImports(mf, f, *a, **kw):
         sys.path_hooks = oldPathHooks
         sys.modules.clear()
         sys.modules.update(_PEP302Mapper._oldSysModules)
-        __builtins__['__import__'] = oldImport
+        __builtin__.__import__ = oldImport
 
 def loadPackageNamed(fqn, mapper):
     """
