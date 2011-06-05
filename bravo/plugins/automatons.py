@@ -9,6 +9,7 @@ from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
+from bravo.packets.beta import make_packet
 from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
 from bravo.utilities.automatic import column_scan
 from bravo.world import ChunkNotLoaded
@@ -189,5 +190,40 @@ class Grass(object):
     before = tuple()
     after = tuple()
 
+class Rain(object):
+    """
+    Make it rain.
+
+    Rain only occurs during spring.
+    """
+
+    implements(IAutomaton)
+
+    blocks = tuple()
+
+    def __init__(self):
+        self.season_loop = LoopingCall(self.check_season)
+
+    def scan(self, chunk):
+        pass
+
+    def feed(self, coords):
+        pass
+
+    def start(self):
+        self.season_loop.start(5 * 60)
+
+    def stop(self):
+        self.season_loop.stop()
+
+    def check_season(self):
+        if factory.world.season.name == "spring":
+            factory.broadcast(make_packet("state", state="start_rain"))
+            reactor.callLater(1 * 60, factory.broadcast,
+                make_packet("state", state="stop_rain"))
+
+    name = "rain"
+
 trees = Trees()
 grass = Grass()
+rain = Rain()
