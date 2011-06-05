@@ -434,7 +434,7 @@ def _isolateImports(mf, f, *a, **kw):
     sys.path_hooks = []
     sys.modules.clear()
     sys.meta_path = [mf]
-    __builtins__.__import__ = mf.xocImport
+    __builtin__.__import__ = mf.xocImport
 
 
 
