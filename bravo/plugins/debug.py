@@ -64,6 +64,27 @@ class Colors(object):
     usage = ""
     info = "Print the colors"
 
+class Rain(object):
+
+    implements(IChatCommand)
+
+    def chat_command(self, username, parameters):
+        from bravo.packets.beta import make_packet
+        arg = "".join(parameters)
+        if arg == "start":
+            factory.broadcast(make_packet("state", state="start_rain"))
+        elif arg == "stop":
+            factory.broadcast(make_packet("state", state="stop_rain"))
+        else:
+            return ("Couldn't understand you!",)
+        return ("*%s did the rain dance*" % (username),)
+
+    name = "rain"
+    aliases = tuple()
+    usage = "<state>"
+    info = "Do a rain dance"
+
 meliae = Meliae()
 status = Status()
 colors = Colors()
+rain = Rain()

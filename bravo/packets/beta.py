@@ -618,6 +618,7 @@ packets_by_name = {
     "block"              : 53,
     "note"               : 54,
     "explosion"          : 60,
+    "state"              : 70,
     "window-open"        : 100,
     "window-close"       : 101,
     "window-action"      : 102,
