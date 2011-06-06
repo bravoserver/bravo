@@ -491,6 +491,9 @@ class BravoProtocol(BetaServerProtocol):
         packet += self.player.inventory.save_to_packet()
         self.transport.write(packet)
 
+        # Send weather.
+        self.transport.write(self.factory.vane.make_packet())
+
         self.send_initial_chunk_and_location()
 
         self.time_loop = LoopingCall(self.update_time)

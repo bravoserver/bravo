@@ -18,6 +18,7 @@ from bravo.packets.beta import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
 from bravo.protocols.beta import BannedProtocol, BravoProtocol
 from bravo.utilities.chat import chat_name, sanitize_chat
+from bravo.weather import WeatherVane
 from bravo.world import World
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
@@ -63,6 +64,8 @@ class BravoFactory(Factory):
         self.world.factory = self
 
         self.protocols = dict()
+
+        self.vane = WeatherVane(self)
 
     def startFactory(self):
         log.msg("Initializing factory for world '%s'..." % self.name)

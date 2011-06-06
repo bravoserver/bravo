@@ -218,9 +218,9 @@ class Rain(object):
 
     def check_season(self):
         if factory.world.season.name == "spring":
-            factory.broadcast(make_packet("state", state="start_rain"))
-            reactor.callLater(1 * 60, factory.broadcast,
-                make_packet("state", state="stop_rain"))
+            factory.vane.weather = "rainy"
+            reactor.callLater(1 * 60, setattr, factory.vane, "weather",
+                "sunny")
 
     name = "rain"
 
