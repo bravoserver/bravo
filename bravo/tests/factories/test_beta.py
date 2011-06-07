@@ -1,6 +1,9 @@
 import shutil
 import tempfile
+import time
 
+from twisted.internet import reactor
+from twisted.internet.task import Clock
 from twisted.trial import unittest
 
 import bravo.config
@@ -42,6 +45,43 @@ class TestBravoFactory(unittest.TestCase):
         self.assertEqual(self.f.config_name, "world unittest")
 
         self.assertEqual(self.f.eid, 1)
+
+    def test_update_time(self):
+        """
+        Timekeeping should work.
+        """
+
+        clock = Clock()
+        clock.advance(20)
+
+        self.patch(reactor, "seconds", clock.seconds)
+        self.patch(self.f, "update_season", lambda: None)
+
+        self.f.timestamp = 0
+        self.f.time = 0
+
+        self.f.update_time()
+        self.assertEqual(self.f.timestamp, 20)
+        self.assertEqual(self.f.time, 400)
+
+    def test_update_time_by_day(self):
+        """
+        Timekeeping should be alright with more than a day passing at once.
+        """
+
+        clock = Clock()
+        clock.advance(1201)
+
+        self.patch(reactor, "seconds", clock.seconds)
+        self.patch(self.f, "update_season", lambda: None)
+
+        self.f.timestamp = 0
+        self.f.time = 0
+        self.f.day = 0
+
+        self.f.update_time()
+        self.assertEqual(self.f.time, 20)
+        self.assertEqual(self.f.day, 1)
 
     def test_update_season_empty(self):
         """

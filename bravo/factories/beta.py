@@ -2,6 +2,7 @@ from collections import defaultdict
 from itertools import chain
 from time import time
 
+from twisted.internet import reactor
 from twisted.internet.interfaces import IPushProducer
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
@@ -88,7 +89,7 @@ class BravoFactory(Factory):
             self.world.enable_cache(cache_level)
 
         log.msg("Starting timekeeping...")
-        self.timestamp = time()
+        self.timestamp = reactor.seconds()
         self.time = self.world.time
         self.update_season()
         self.time_loop = LoopingCall(self.update_time)
@@ -283,15 +284,15 @@ class BravoFactory(Factory):
         once every 5 days. This is a Babylonian in-game year.
         """
 
-        t = time()
+        t = reactor.seconds()
         self.time += 20 * (t - self.timestamp)
         self.timestamp = t
 
         days, self.time = divmod(self.time, 24000)
 
         if days:
-            self.days += days
-            days %= 360
+            self.day += days
+            self.day %= 360
             self.update_season()
 
     def broadcast_time(self):
