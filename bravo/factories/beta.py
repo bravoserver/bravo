@@ -287,13 +287,11 @@ class BravoFactory(Factory):
         self.time += 20 * (t - self.timestamp)
         self.timestamp = t
 
-        while self.time > 24000:
-            self.time -= 24000
+        days, self.time = divmod(self.time, 24000)
 
-            self.day += 1
-            while self.day > 360:
-                self.day -= 360
-
+        if days:
+            self.days += days
+            days %= 360
             self.update_season()
 
     def broadcast_time(self):
