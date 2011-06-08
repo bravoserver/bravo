@@ -47,10 +47,17 @@ class BravoService(MultiService):
                     except ValueError:
                         log.msg("Port '{0}' defined in configuration unusable: not an integer.")
                     else:
-                        server = TCPServer(port, factory,
-                            interface=factory.interface)
-                        server.setName("{0} ({1})".format(factory.name, port))
-                        self.addService(server)
+                        if factory.interfaces:
+                            for interface in factory.interfaces:
+                                server = TCPServer(port, factory,
+                                    interface=interface)
+                                server.setName("{0} ({1}:{2})".format(factory.name, interface, port))
+                                self.addService(server)
+                        else:
+                            server = TCPServer(port, factory,
+                                interface="")
+                            server.setName("{0} ({1})".format(factory.name, port))
+                            self.addService(server)
 
                 self.factorylist.append(factory)
             elif section == "web":

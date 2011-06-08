@@ -20,6 +20,11 @@ fancy_console = true
 # You may specify several ports by seperating them with a comma.
 port = 25565
 
+# The host interface to listen on. Optional. If not provided, the server
+# will listen on all available interfaces.
+# You may specify several hosts by seperating them with a comma.
+# host = localhost
+
 # The folder to use for storing the world. Make sure you have write
 # permissions to this folder. If it does not exist, it will be created.
 # Relative paths are allowed but discouraged.

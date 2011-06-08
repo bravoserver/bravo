@@ -58,8 +58,7 @@ class BravoFactory(Factory):
         self.config_name = "world %s" % name
 
         self.ports = configuration.getlist(self.config_name, "port")
-        self.interface = configuration.getdefault(self.config_name, "host",
-            "")
+        self.interfaces = configuration.getlist(self.config_name, "host")
 
         self.world = World(self.name)
         self.world.factory = self
