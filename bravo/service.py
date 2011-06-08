@@ -45,7 +45,7 @@ class BravoService(MultiService):
                     try:
                         port = int(port)
                     except ValueError:
-                        log.msg("Port '{0}' defined in configuration unusable: not an integer.")
+                        log.msg("Port '{0}' defined in configuration unusable: not an integer.".format(port))
                     else:
                         if factory.interfaces:
                             for interface in factory.interfaces:
