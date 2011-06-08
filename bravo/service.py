@@ -41,10 +41,17 @@ class BravoService(MultiService):
         for section in configuration.sections():
             if section.startswith("world "):
                 factory = BravoFactory(section[6:])
-                server = TCPServer(factory.port, factory,
-                    interface=factory.interface)
-                server.setName(factory.name)
-                self.addService(server)
+                for port in factory.ports:
+                    try:
+                        port = int(port)
+                    except ValueError:
+                        log.msg("Port '{0}' defined in configuration unusable: not an integer.")
+                    else:
+                        server = TCPServer(port, factory,
+                            interface=factory.interface)
+                        server.setName("{0} ({1})".format(factory.name, port))
+                        self.addService(server)
+
                 self.factorylist.append(factory)
             elif section == "web":
                 try:

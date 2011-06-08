@@ -17,6 +17,7 @@ fancy_console = true
 
 # The port to listen on. All of the normal port rules apply; you probably
 # cannot use ports below 1024 without root permissions.
+# You may specify several ports by seperating them with a comma.
 port = 25565
 
 # The folder to use for storing the world. Make sure you have write
