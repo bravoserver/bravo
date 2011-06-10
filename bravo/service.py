@@ -1,4 +1,5 @@
 from twisted.application.internet import TCPClient, TCPServer
+from twisted.application.strports import service
 from twisted.application.service import Application, MultiService
 from twisted.internet.protocol import Factory
 from twisted.python import log
@@ -41,23 +42,18 @@ class BravoService(MultiService):
         for section in configuration.sections():
             if section.startswith("world "):
                 factory = BravoFactory(section[6:])
-                for port in factory.ports:
-                    try:
-                        port = int(port)
-                    except ValueError:
-                        log.msg("Port '{0}' defined in configuration unusable: not an integer.".format(port))
-                    else:
-                        if factory.interfaces:
-                            for interface in factory.interfaces:
-                                server = TCPServer(port, factory,
-                                    interface=interface)
-                                server.setName("{0} ({1}:{2})".format(factory.name, interface, port))
-                                self.addService(server)
-                        else:
-                            server = TCPServer(port, factory,
-                                interface="")
-                            server.setName("{0} ({1})".format(factory.name, port))
-                            self.addService(server)
+
+                if factory.interfaces:
+                    for interface in factory.interfaces:
+                        server = service(interface, factory)
+                        server.args = [None, factory] # Hack for bravo/web.py, line 135
+                        server.setName("{0} ({1})".format(factory.name, interface))
+                        self.addService(server)
+                else:
+                    # Fallback
+                    server = TCPServer(25565, factory,interface="")
+                    server.setName("{0} ({1})".format(factory.name, 25565))
+                    self.addService(server)
 
                 self.factorylist.append(factory)
             elif section == "web":
