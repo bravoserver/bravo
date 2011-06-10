@@ -1,6 +1,5 @@
 from collections import defaultdict
 from itertools import chain
-from time import time
 
 from twisted.internet import reactor
 from twisted.internet.interfaces import IPushProducer

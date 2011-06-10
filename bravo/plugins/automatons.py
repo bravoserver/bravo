@@ -9,7 +9,6 @@ from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
-from bravo.packets.beta import make_packet
 from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
 from bravo.utilities.automatic import column_scan
 from bravo.world import ChunkNotLoaded

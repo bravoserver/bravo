@@ -1,6 +1,5 @@
 import shutil
 import tempfile
-import time
 
 from twisted.internet import reactor
 from twisted.internet.task import Clock
