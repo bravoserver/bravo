@@ -1,3 +1,25 @@
+next
+===
+
+Compatibility
+-------------
+
+* Configuration for factories now uses endpoints
+
+Features
+--------
+
+* Added weather controls
+
+  * Added /rain
+  * Added rain to spring season
+
+Bugfixes
+--------
+
+* Fixed unreasonable delay when loading certain Beta worlds
+* Fixed iffy timekeeping
+
 1.6.1
 =====
 
