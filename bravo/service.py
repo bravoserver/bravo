@@ -1,6 +1,6 @@
 from twisted.application.internet import TCPClient, TCPServer
-from twisted.application.strports import service
 from twisted.application.service import Application, MultiService
+from twisted.application.strports import service
 from twisted.internet.protocol import Factory
 from twisted.python import log
 
@@ -16,6 +16,16 @@ class BetaProxyFactory(Factory):
     def __init__(self, name):
         self.name = name
         self.port = configuration.getint("infiniproxy %s" % name, "port")
+
+def services_for_endpoints(endpoints, factory):
+    l = []
+    for endpoint in endpoints:
+        server = service(endpoint, factory)
+        # XXX hack for bravo.web:135, which wants this. :c
+        server.args = [None, factory]
+        server.setName("%s (%s)" % (factory.name, endpoint))
+        l.append(server)
+    return l
 
 class BravoService(MultiService):
 
@@ -45,11 +55,8 @@ class BravoService(MultiService):
                 factory = BravoFactory(section[6:])
                 interfaces = configuration.getlist(section, "interfaces")
 
-                for endpoint in interfaces:
-                    server = service(endpoint, factory)
-                    server.args = [None, factory] # XXX Hack for bravo/web.py, line 135
-                    server.setName("{0} ({1})".format(factory.name, endpoint))
-                    self.addService(server)
+                for service in services_for_endpoints(interfaces, factory):
+                    self.addService(service)
 
                 self.factorylist.append(factory)
             elif section == "web":
@@ -59,10 +66,11 @@ class BravoService(MultiService):
                     log.msg("Couldn't import web stuff!")
                 else:
                     factory = bravo_site(self.namedServices)
-                    port = configuration.getint("web", "port")
-                    server = TCPServer(port, factory)
-                    server.setName("web")
-                    self.addService(server)
+                    factory.name = "web"
+                    interfaces = configuration.getlist("web", "interfaces")
+
+                    for service in services_for_endpoints(interfaces, factory):
+                        self.addService(service)
             elif section.startswith("irc "):
                 try:
                     from bravo.irc import BravoIRC
@@ -73,14 +81,16 @@ class BravoService(MultiService):
                     self.ircbots.append(section)
             elif section.startswith("infiniproxy "):
                 factory = BetaProxyFactory(section[12:])
-                server = TCPServer(factory.port, factory)
-                server.setName(factory.name)
-                self.addService(server)
+                interfaces = configuration.getlist(section, "interfaces")
+
+                for service in services_for_endpoints(interfaces, factory):
+                    self.addService(service)
             elif section.startswith("infininode "):
                 factory = InfiniNodeFactory(section[11:])
-                server = TCPServer(factory.port, factory)
-                server.setName(factory.name)
-                self.addService(server)
+                interfaces = configuration.getlist(section, "interfaces")
+
+                for service in services_for_endpoints(interfaces, factory):
+                    self.addService(service)
         if self.irc:
             for section in self.ircbots:
                 factory = BravoIRC(self.factorylist, section[4:])

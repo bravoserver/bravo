@@ -99,5 +99,5 @@ generators = simplex, erosion, watertable, beaches, grass, saplings, safety
 
 # The web service. Comment out to disable.
 [web]
-# Port to listen on.
-port = 8080
+# Interfaces to listen on.
+interfaces = tcp:8080
