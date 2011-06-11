@@ -475,7 +475,7 @@ packets = {
         Embed(items),
     ),
     104: Struct("inventory",
-        UBInt8("name"),
+        UBInt8("wid"),
         UBInt16("length"),
         MetaArray(lambda context: context["length"], items),
     ),

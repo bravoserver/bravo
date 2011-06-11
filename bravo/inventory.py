@@ -225,8 +225,7 @@ class Inventory(object):
                 lc.append(Container(primary=item.primary,
                     secondary=item.secondary, count=item.quantity))
 
-        packet = make_packet("inventory", name=self.identifier,
-            length=len(lc), items=lc)
+        packet = make_packet("inventory", wid=0, length=len(lc), items=lc)
 
         return packet
 
@@ -527,7 +526,7 @@ class Equipment(Inventory):
         (43, 7), (44, 8), (1, 80), (2, 81), (3, 82), (4, 83), (8, 100),
         (7, 101), (6, 102), (5, 103))
 
-    identifier = 0
+    identifier = "inventory"
 
 class Workbench(Inventory):
 
@@ -536,17 +535,17 @@ class Workbench(Inventory):
     storage = 27
     holdables = 9
 
-    identifier = 1
+    identifier = "workbench"
 
 class Furnace(Inventory):
 
-    identifier = 2
+    identifier = "furnace"
 
 class ChestStorage(Inventory):
 
     storage = 27
 
-    identifier = 0
+    identifier = "inventory"
 
 def sync_inventories(src, dst):
     """
