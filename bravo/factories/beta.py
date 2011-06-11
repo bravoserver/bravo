@@ -42,7 +42,7 @@ class BravoFactory(Factory):
     handshake_hook = None
     login_hook = None
 
-    interface = ""
+    interfaces = []
 
     def __init__(self, name):
         """
@@ -57,9 +57,7 @@ class BravoFactory(Factory):
         self.name = name
         self.config_name = "world %s" % name
 
-        self.port = configuration.getint(self.config_name, "port")
-        self.interface = configuration.getdefault(self.config_name, "host",
-            "")
+        self.interfaces = configuration.getlist(self.config_name, "interfaces")
 
         self.world = World(self.name)
         self.world.factory = self

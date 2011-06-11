@@ -15,9 +15,11 @@ fancy_console = true
 # This is just an example world. World names come from the name of the
 # section; this section describes a world called "example".
 
-# The port to listen on. All of the normal port rules apply; you probably
+# The interfaces to listen on. All of the normal port rules apply; you probably
 # cannot use ports below 1024 without root permissions.
-port = 25565
+# You may specify several interfaces by seperating them with a comma.
+#interfaces = tcp:25565, tcp:25566:interface=localhost
+interfaces = tcp:25565
 
 # The folder to use for storing the world. Make sure you have write
 # permissions to this folder. If it does not exist, it will be created.

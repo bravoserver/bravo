@@ -1,4 +1,5 @@
 from twisted.application.internet import TCPClient, TCPServer
+from twisted.application.strports import service
 from twisted.application.service import Application, MultiService
 from twisted.internet.protocol import Factory
 from twisted.python import log
@@ -41,10 +42,19 @@ class BravoService(MultiService):
         for section in configuration.sections():
             if section.startswith("world "):
                 factory = BravoFactory(section[6:])
-                server = TCPServer(factory.port, factory,
-                    interface=factory.interface)
-                server.setName(factory.name)
-                self.addService(server)
+
+                if factory.interfaces:
+                    for interface in factory.interfaces:
+                        server = service(interface, factory)
+                        server.args = [None, factory] # Hack for bravo/web.py, line 135
+                        server.setName("{0} ({1})".format(factory.name, interface))
+                        self.addService(server)
+                else:
+                    # Fallback
+                    server = TCPServer(25565, factory,interface="")
+                    server.setName("{0} ({1})".format(factory.name, 25565))
+                    self.addService(server)
+
                 self.factorylist.append(factory)
             elif section == "web":
                 try:
