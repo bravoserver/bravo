@@ -4,7 +4,6 @@ from xml.sax import saxutils
 from exocet import ExclusiveMapper, getModule, load, pep302Mapper
 
 from twisted.internet import reactor
-from twisted.plugin import IPlugin
 from twisted.python import log
 
 from zope.interface.exceptions import BrokenImplementation
@@ -156,8 +155,6 @@ def get_plugins(interface, package, parameters=None):
     """
     Lazily find objects in a package which implement a given interface.
 
-    The objects must also implement ``twisted.plugin.IPlugin``.
-
     If the optional dictionary of parameters is provided, it will be passed
     into each plugin module as the "bravo.parameters" module. An example
     access from inside the plugin:
@@ -189,8 +186,7 @@ def get_plugins(interface, package, parameters=None):
             m = load(pm, mapper)
             for obj in vars(m).itervalues():
                 try:
-                    adapted = IPlugin(obj, None)
-                    adapted = interface(adapted, None)
+                    adapted = interface(obj, None)
                 except:
                     log.err()
                 else:

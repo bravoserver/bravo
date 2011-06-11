@@ -26,10 +26,11 @@ from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 # Due to technical limitations in the way Twisted discovers plugins, here is
 # how this file works:
 # Define classes implementing ISerializer, as usual. Also make the class
-# provide IPlugin and ISerializerFactory directly. Do not instantiate the
-# class at the end of the file.
+# provide ISerializerFactory directly. Do not instantiate the class at the end
+# of the file.
 # Twisted discovers ISerializerFactories for us, and Bravo produces
 # ISerializer instances as needed, internally.
+# XXX we might be able to fix this now that Exocet is the loader.
 
 def base36(i):
     """

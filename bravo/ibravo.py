@@ -1,11 +1,10 @@
-from twisted.plugin import IPlugin
 from twisted.python.components import registerAdapter
 from twisted.web.resource import IResource
-from zope.interface import implements, invariant, Attribute
+from zope.interface import implements, invariant, Attribute, Interface
 
 from bravo.errors import InvariantException
 
-class IBravoPlugin(IPlugin):
+class IBravoPlugin(Interface):
     """
     Interface for plugins.
 
