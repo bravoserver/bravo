@@ -41,18 +41,14 @@ class BravoService(MultiService):
 
         for section in configuration.sections():
             if section.startswith("world "):
+                # Bravo worlds. Grab a list of endpoints and load them.
                 factory = BravoFactory(section[6:])
+                interfaces = configuration.getlist(section, "interfaces")
 
-                if factory.interfaces:
-                    for interface in factory.interfaces:
-                        server = service(interface, factory)
-                        server.args = [None, factory] # Hack for bravo/web.py, line 135
-                        server.setName("{0} ({1})".format(factory.name, interface))
-                        self.addService(server)
-                else:
-                    # Fallback
-                    server = TCPServer(25565, factory,interface="")
-                    server.setName("{0} ({1})".format(factory.name, 25565))
+                for endpoint in interfaces:
+                    server = service(endpoint, factory)
+                    server.args = [None, factory] # XXX Hack for bravo/web.py, line 135
+                    server.setName("{0} ({1})".format(factory.name, endpoint))
                     self.addService(server)
 
                 self.factorylist.append(factory)

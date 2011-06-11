@@ -56,8 +56,6 @@ class BravoFactory(Factory):
         self.name = name
         self.config_name = "world %s" % name
 
-        self.interfaces = configuration.getlist(self.config_name, "interfaces")
-
         self.world = World(self.name)
         self.world.factory = self
 
