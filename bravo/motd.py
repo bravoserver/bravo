@@ -7,6 +7,8 @@ Distribute!
 %
 Reverse-engineered!
 %
+Don't look directly at the features!
+%
 The work of MAD!
 %
 Made in the USA!
