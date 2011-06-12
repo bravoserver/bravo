@@ -501,11 +501,13 @@ class Chunk(object):
         :param int replace: block to use as a replacement
         """
 
-        if (self.blocks == search).any():
+        results = self.blocks == search
+
+        if results.any():
             self.all_damaged = True
             self.dirty = True
 
-            self.blocks = where(self.blocks == search, replace, self.blocks)
+            self.blocks = where(results, replace, self.blocks)
 
     def get_column(self, x, z):
         """
