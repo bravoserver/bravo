@@ -94,7 +94,7 @@ external libraries from PyPI:
 
  * construct, version 2.03 or later
  * numpy
- * Twisted, version 10.1 or later
+ * Twisted, version 10.2 or later (11.0 recommended)
 
 For IRC support, Twisted Words is required; it is usually called
 python-twisted-words or twisted-words in package managers.
@@ -123,8 +123,9 @@ If you are tight on space, you can install only part of Twisted.
 A Note about Ubuntu
 ^^^^^^^^^^^^^^^^^^^
 
-You will need Ubuntu 10.10, for Twisted 10.1. Ubuntu 10.04 LTS is not
-suitable, unless the Twisted 10.1 package from Ubuntu 10.10 is installed.
+You will need Ubuntu 11.04, for Twisted 10.2. Ubuntu 10.04 LTS is not
+suitable, unless the Twisted 10.2 package from Ubuntu 11.04 is installed. In
+other words, that cheap VPS you own will require some upgrades. :3
 
 Fedora
 ------

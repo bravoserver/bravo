@@ -70,8 +70,12 @@ I have an error involving construct!
 I have an error involving JSON!
  If you update to a newer Bravo, you won't need JSON support.
 
-I have an error involving IRC/AMP/ListOf/endpoints!
+I have an error involving IRC/AMP/ListOf!
  Your Twisted is too old. You really do need Twisted 10.1 or newer.
+
+I have an error ``TypeError: an integer is required`` when starting Bravo!
+ Is your Twisted 10.1 or older? This error could be caused by your Twisted not
+ being 10.2 or newer.
 
 Credits
 =======

@@ -13,7 +13,7 @@ setup(
     install_requires=[
         "numpy",
         "construct>=2.03",
-        "Twisted>=10.1",
+        "Twisted>=11.0",
     ],
     author="Corbin Simpson",
     author_email="MostAwesomeDude@gmail.com",
