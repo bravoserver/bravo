@@ -14,6 +14,8 @@ Plugins
 
 * All plugins no longer need to implement ``twisted.plugin.IPlugin``
 * Plugins may live in subpackages of ``bravo.plugins``
+* Command plugins are documented in docstrings instead of the ``info``
+  attribute
 
 Features
 --------

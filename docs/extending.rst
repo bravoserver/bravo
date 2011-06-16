@@ -68,7 +68,7 @@ which don't actually exist can be rewritten to provide faked, or
 **synthetic**, modules. For an example, consider the following snippet of
 code::
 
->>> from bravo.parameters import example
+    from bravo.parameters import example
 
 This snippet brings the ``example`` name into the global namespace for the
 module, obviously, but what might not be obvious is that bravo.parameters
@@ -81,13 +81,58 @@ bravo import parameters``. Import exactly the names you need to import; don't
 have imports which do nothing.
 
 Of course, if you want to have a name available, but it is ultimately
-optional, the following is legal and works fine:
+optional, the following is legal and works fine::
 
->>> try:
-...  from bravo.parameters import example
-... except ImportError:
-...  example = None
+    try:
+        from bravo.parameters import example
+    except ImportError:
+        example = None
 
 The following parameters might be available:
 
  * ``factory``: The factory owning this instance of the plugin.
+
+The Flexibility of Commands
+===========================
+
+Bravo's command interface is designed to feel like a regular class instead of
+a specialized plugin, while still providing lots of flexibility to authors.
+Let's look at a simple plugin::
+
+    class Hello(object):
+        """
+        Say hello to the world.
+        """
+
+        implements(IChatCommand)
+
+        def chat_command(self, username, parameters):
+            greeting = "Hello, %s!" % username
+            yield greeting
+
+        name = "hello"
+        aliases = tuple()
+        usage = ""
+
+This command is a simple greeter which merely echoes a salutation to its
+caller. It is an ``IChatCommand``, so it only works in the in-game chat, but
+that should not be a problem, since there is an internal, invisible adaptation
+from ``IChatCommand`` to ``IConsoleCommand``. This means that chat commands
+are also valid console commands, without any action on your part! Pretty cool,
+huh?
+
+So, how does this plugin actually work? Well, nearly every line of this plugin
+is required. The first thing you'll notice is that this plugin has a class
+docstring. Docstrings on commands are required; the docstring is used to
+provide help text. As with all chat commands, this plugin
+``implements(IChatCommand)``, which lets it be discovered as a command.
+
+The plugin implements the required ``chat_command(username, parameters)``,
+which will be called when a player uses the command. An interesting thing to
+note is that this plugin yields its return value; commands may return any
+iterable of lines, including a generator!
+
+Finally, the plugin finishes with more required interface attributes: a name
+which will be used to call the command, a (possibly empty) list of aliases
+which can also be used to call the command, and a (possibly empty) usage
+string.

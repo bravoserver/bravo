@@ -4,6 +4,25 @@ from bravo.ibravo import IConsoleCommand, IChatCommand
 
 from bravo.parameters import factory
 
+# Trivial hello-world command.
+# If this is ever modified, please also update the documentation;
+# docs/extending.rst includes this verbatim in order to demonstrate authoring
+# commands.
+class Hello(object):
+    """
+    Say hello to the world.
+    """
+
+    implements(IChatCommand)
+
+    def chat_command(self, username, parameters):
+        greeting = "Hello, %s!" % username
+        yield greeting
+
+    name = "hello"
+    aliases = tuple()
+    usage = ""
+
 class Meliae(object):
     """
     Dump a Meliae snapshot to disk.
@@ -92,6 +111,7 @@ class Rain(object):
     aliases = tuple()
     usage = "<state>"
 
+hello = Hello()
 meliae = Meliae()
 status = Status()
 colors = Colors()
