@@ -1,6 +1,6 @@
 from twisted.application.internet import TCPClient, TCPServer
 from twisted.application.service import Application, MultiService
-from twisted.application.strports import service
+from twisted.application.strports import service as serviceFromString
 from twisted.internet.protocol import Factory
 from twisted.python import log
 
@@ -20,7 +20,7 @@ class BetaProxyFactory(Factory):
 def services_for_endpoints(endpoints, factory):
     l = []
     for endpoint in endpoints:
-        server = service(endpoint, factory)
+        server = serviceFromString(endpoint, factory)
         # XXX hack for bravo.web:135, which wants this. :c
         server.args = [None, factory]
         server.setName("%s (%s)" % (factory.name, endpoint))
@@ -97,6 +97,7 @@ class BravoService(MultiService):
                 client = TCPClient(factory.host, factory.port, factory)
                 client.setName(factory.config)
                 self.addService(client)
+
 service = BravoService()
 
 application = Application("Bravo")
