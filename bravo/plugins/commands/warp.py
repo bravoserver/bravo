@@ -31,6 +31,9 @@ def put_locations(d):
     return data.getvalue()
 
 class Home(object):
+    """
+    Warp a player to their home.
+    """
 
     implements(IChatCommand, IConsoleCommand)
 
@@ -57,9 +60,11 @@ class Home(object):
     name = "home"
     aliases = tuple()
     usage = ""
-    info = "Warps player home"
 
 class SetHome(object):
+    """
+    Set a player's home.
+    """
 
     implements(IChatCommand)
 
@@ -84,9 +89,11 @@ class SetHome(object):
     name = "sethome"
     aliases = tuple()
     usage = ""
-    info = "Set home"
 
 class Warp(object):
+    """
+    Warp a player to a preset location.
+    """
 
     implements(IChatCommand, IConsoleCommand)
 
@@ -122,9 +129,11 @@ class Warp(object):
     name = "warp"
     aliases = tuple()
     usage = "<location>"
-    info = "Warps player to a location"
 
 class ListWarps(object):
+    """
+    List preset warp locations.
+    """
 
     implements(IChatCommand, IConsoleCommand)
 
@@ -150,9 +159,11 @@ class ListWarps(object):
     name = "listwarps"
     aliases = tuple()
     usage = ""
-    info = "List warps"
 
 class SetWarp(object):
+    """
+    Set a warp location.
+    """
 
     implements(IChatCommand)
 
@@ -179,9 +190,11 @@ class SetWarp(object):
     name = "setwarp"
     aliases = tuple()
     usage = "<name>"
-    info = "Set warp"
 
 class RemoveWarp(object):
+    """
+    Remove a warp location.
+    """
 
     implements(IChatCommand)
 
@@ -204,9 +217,11 @@ class RemoveWarp(object):
     name = "removewarp"
     aliases = tuple()
     usage = "<name>"
-    info = "Remove warp"
 
 class Ascend(object):
+    """
+    Warp to a location above the current location.
+    """
 
     implements(IChatCommand)
 
@@ -238,9 +253,11 @@ class Ascend(object):
     name = "ascend"
     aliases = tuple()
     usage = ""
-    info = "Ascend to a higher Y-level"
 
 class Descend(object):
+    """
+    Warp to a location above the current location.
+    """
 
     implements(IChatCommand)
 
@@ -272,7 +289,6 @@ class Descend(object):
     name = "descend"
     aliases = tuple()
     usage = ""
-    info = "Descend to a lower Y-level"
 
 home = Home()
 sethome = SetHome()

@@ -5,6 +5,9 @@ from bravo.ibravo import IConsoleCommand, IChatCommand
 from bravo.parameters import factory
 
 class Meliae(object):
+    """
+    Dump a Meliae snapshot to disk.
+    """
 
     implements(IConsoleCommand)
 
@@ -23,9 +26,11 @@ class Meliae(object):
     name = "dump-memory"
     aliases = tuple()
     usage = "<filename>"
-    info = "Dump a JSON snapshot of memory usage using Meliae"
 
 class Status(object):
+    """
+    Print a short summary of the world's status.
+    """
 
     implements(IConsoleCommand)
 
@@ -46,9 +51,11 @@ class Status(object):
     name = "status"
     aliases = tuple()
     usage = ""
-    info = "Print a quick summary of the server's status"
 
 class Colors(object):
+    """
+    Paint with all the colors of the wind.
+    """
 
     implements(IChatCommand)
 
@@ -62,9 +69,11 @@ class Colors(object):
     name = "colors"
     aliases = tuple()
     usage = ""
-    info = "Print the colors"
 
 class Rain(object):
+    """
+    Perform a rain dance.
+    """
 
     implements(IChatCommand)
 
@@ -82,7 +91,6 @@ class Rain(object):
     name = "rain"
     aliases = tuple()
     usage = "<state>"
-    info = "Do a rain dance"
 
 meliae = Meliae()
 status = Status()
