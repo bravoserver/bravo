@@ -1,3 +1,8 @@
+"""
+The ``plugin`` module implements a sophisticated, featureful plugin loader
+based on Exocet, with interface-based discovery.
+"""
+
 from types import ModuleType
 from xml.sax import saxutils
 

@@ -1,8 +1,5 @@
-============================
-``plugin`` -- Plugin loaders
-============================
-
-The ``plugin`` module provides several helper functions that wrap
-``twisted.plugin``. ``plugin`` makes loading plugins simpler.
+===========================
+``plugin`` -- Plugin loader
+===========================
 
 .. automodule:: bravo.plugin
