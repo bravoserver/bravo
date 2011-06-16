@@ -176,24 +176,40 @@ def get_plugins(interface, package, parameters=None):
 
     mapper = bravoMapper
 
+    # If parameters are provided, add them to the mapper in a synthetic
+    # module.
     if parameters:
         mapper = mapper.withOverrides(
             {"bravo.parameters": synthesize_parameters(parameters)})
 
-    p = getModule(package)
-    for pm in p.iterModules():
-        try:
-            m = load(pm, mapper)
-            for obj in vars(m).itervalues():
-                try:
-                    adapted = interface(obj, None)
-                except:
-                    log.err()
-                else:
-                    if adapted is not None:
-                        yield adapted
-        except ImportError, ie:
-            log.msg(ie)
+    # This stack will let us iteratively recurse into packages during the
+    # module search.
+    stack = [getModule(package)]
+
+    # While there are packages left to search...
+    while stack:
+        # For each package/module in the package...
+        for pm in stack.pop().iterModules():
+            # If it's a package, append it to the list of packages to search.
+            if pm.isPackage():
+                stack.append(pm)
+
+            try:
+                # Load the module.
+                m = load(pm, mapper)
+
+                # Make a good attempt to iterate through the module's
+                # contents, and see what matches our interface.
+                for obj in vars(m).itervalues():
+                    try:
+                        adapted = interface(obj, None)
+                    except:
+                        log.err()
+                    else:
+                        if adapted is not None:
+                            yield adapted
+            except ImportError, ie:
+                log.msg(ie)
 
 def retrieve_plugins(interface, parameters=None):
     """
