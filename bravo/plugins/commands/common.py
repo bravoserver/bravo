@@ -6,8 +6,8 @@ from zope.interface import implements
 from bravo.blocks import parse_block
 from bravo.config import configuration
 from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
-from bravo.plugin import retrieve_plugins, retrieve_named_plugins
-from bravo.plugin import PluginException
+from bravo.plugin import (retrieve_plugins, retrieve_named_plugins,
+    PluginException)
 from bravo.packets.beta import make_packet
 from bravo.utilities.temporal import split_time
 
@@ -26,6 +26,9 @@ def parse_int(i):
         raise Exception("Couldn't parse quantity %s!" % i)
 
 class Help(object):
+    """
+    Provide helpful information about commands.
+    """
 
     implements(IChatCommand, IConsoleCommand)
 
@@ -65,7 +68,7 @@ class Help(object):
         if plugin.aliases:
             help_text.append("Aliases: %s" % ", ".join(plugin.aliases))
 
-        help_text.append(plugin.info)
+        help_text.append(plugin.__doc__)
 
         return help_text
 
@@ -90,7 +93,6 @@ class Help(object):
     name = "help"
     aliases = tuple()
     usage = ""
-    info = "Prints this message"
 
 class List(object):
 
