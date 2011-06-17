@@ -82,7 +82,20 @@ class ITerrainGenerator(ISortedPlugin):
         that the chunk may already be partially or totally populated.
         """
 
+def command_invariant(c):
+    if c.__doc__ is None:
+        raise InvariantException("Command has no documentation")
+
 class ICommand(IBravoPlugin):
+    """
+    A command.
+
+    Commands must be documented, as an invariant. The documentation for a
+    command will be displayed for clients upon request, via internal help
+    commands.
+    """
+
+    invariant(command_invariant)
 
     aliases = Attribute("""
         Additional keywords which may be used to alias this command.
@@ -90,10 +103,6 @@ class ICommand(IBravoPlugin):
 
     usage = Attribute("""
         String explaining how to use this command.
-        """)
-
-    info = Attribute("""
-        String explaining what this command does and returns.
         """)
 
 class IChatCommand(ICommand):

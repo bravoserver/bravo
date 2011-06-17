@@ -6,8 +6,8 @@ from zope.interface import implements
 from bravo.blocks import parse_block
 from bravo.config import configuration
 from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
-from bravo.plugin import retrieve_plugins, retrieve_named_plugins
-from bravo.plugin import PluginException
+from bravo.plugin import (retrieve_plugins, retrieve_named_plugins,
+    PluginException)
 from bravo.packets.beta import make_packet
 from bravo.utilities.temporal import split_time
 
@@ -26,6 +26,9 @@ def parse_int(i):
         raise Exception("Couldn't parse quantity %s!" % i)
 
 class Help(object):
+    """
+    Provide helpful information about commands.
+    """
 
     implements(IChatCommand, IConsoleCommand)
 
@@ -65,7 +68,7 @@ class Help(object):
         if plugin.aliases:
             help_text.append("Aliases: %s" % ", ".join(plugin.aliases))
 
-        help_text.append(plugin.info)
+        help_text.append(plugin.__doc__)
 
         return help_text
 
@@ -90,9 +93,11 @@ class Help(object):
     name = "help"
     aliases = tuple()
     usage = ""
-    info = "Prints this message"
 
 class List(object):
+    """
+    List the currently connected players.
+    """
 
     implements(IChatCommand, IConsoleCommand)
 
@@ -111,9 +116,11 @@ class List(object):
     name = "list"
     aliases = ("playerlist",)
     usage = ""
-    info = "Lists the currently connected players"
 
 class Time(object):
+    """
+    Obtain or change the current time and date.
+    """
 
     implements(IChatCommand, IConsoleCommand)
 
@@ -169,9 +176,11 @@ class Time(object):
     name = "time"
     aliases = ("date",)
     usage = "[time] [day]"
-    info = "Gives the current in-game time and date, or changes it."
 
 class Say(object):
+    """
+    Broadcast a message to everybody.
+    """
 
     implements(IConsoleCommand)
 
@@ -184,9 +193,11 @@ class Say(object):
     name = "say"
     aliases = tuple()
     usage = "<message>"
-    info = "Broadcasts a message to everybody"
 
 class Give(object):
+    """
+    Spawn block or item pickups near a player.
+    """
 
     implements(IChatCommand)
 
@@ -221,9 +232,12 @@ class Give(object):
     name = "give"
     aliases = tuple()
     usage = "<block> <quantity>"
-    info = "Gives a number of blocks or items to a certain player"
 
 class Quit(object):
+    """
+    Gracefully shutdown the server.
+    """
+
     implements(IConsoleCommand)
 
     def console_command(self, parameters):
@@ -245,9 +259,11 @@ class Quit(object):
     name = "quit"
     aliases = ("exit",)
     usage = ""
-    info = "Quits the server"
 
 class SaveAll(object):
+    """
+    Save all world data to disk.
+    """
 
     implements(IConsoleCommand)
 
@@ -262,9 +278,11 @@ class SaveAll(object):
     name = "save-all"
     aliases = tuple()
     usage = ""
-    info = "Saves all world data to disk"
 
 class SaveOff(object):
+    """
+    Disable saving world data to disk.
+    """
 
     implements(IConsoleCommand)
 
@@ -278,9 +296,11 @@ class SaveOff(object):
     name = "save-off"
     aliases = tuple()
     usage = ""
-    info = "Disables saving of world data to disk"
 
 class SaveOn(object):
+    """
+    Enable saving world data to disk.
+    """
 
     implements(IConsoleCommand)
 
@@ -294,9 +314,11 @@ class SaveOn(object):
     name = "save-on"
     aliases = tuple()
     usage = ""
-    info = "Enables saving of world data to disk"
 
 class WriteConfig(object):
+    """
+    Write configuration to disk.
+    """
 
     implements(IConsoleCommand)
 
@@ -309,9 +331,14 @@ class WriteConfig(object):
     name = "write-config"
     aliases = tuple()
     usage = ""
-    info = "Saves configuration to disk"
 
 class Season(object):
+    """
+    Change the season.
+
+    This command fast-forwards the calendar to the first day of the requested
+    season.
+    """
 
     implements(IConsoleCommand)
 
@@ -332,9 +359,11 @@ class Season(object):
     name = "season"
     aliases = tuple()
     usage = "<season>"
-    info = "Advance date to the beginning of the given season"
 
 class Me(object):
+    """
+    Emote.
+    """
 
     implements(IChatCommand)
 
@@ -346,13 +375,12 @@ class Me(object):
     name = "me"
     aliases = tuple()
     usage = "<message>"
-    info = "Emote"
 
 class Kick(object):
     """
-    /kick those players who should be kicked.
+    Kick a player from the world.
 
-    With great power comes greate responsibility, use this wisely.
+    With great power comes great responsibility; use this wisely.
     """
 
     implements(IConsoleCommand)
@@ -375,9 +403,13 @@ class Kick(object):
     name = "kick"
     aliases = tuple()
     usage = "<player> [<reason>]"
-    info = "Kicks <player> from the server"
 
 class GetPos(object):
+    """
+    Ascertain a player's location.
+
+    This command is identical to the command provided by Hey0.
+    """
 
     implements(IChatCommand)
 
@@ -390,9 +422,11 @@ class GetPos(object):
     name = "getpos"
     aliases = tuple()
     usage = ""
-    info = "Hey0 /getpos"
 
 class Nick(object):
+    """
+    Set a player's nickname.
+    """
 
     implements(IChatCommand)
 
@@ -410,7 +444,6 @@ class Nick(object):
     name = "nick"
     aliases = tuple()
     usage = "<nickname>"
-    info = "Set a new nickname"
 
 help = Help()
 list = List()
