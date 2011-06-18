@@ -134,7 +134,7 @@ def bravo_site(services):
     for name, service in services.iteritems():
         factory = service.args[1]
         if isinstance(factory, BravoFactory):
-            worlds[name] = factory
+            worlds[factory.name] = factory
         else:
             # XXX: do we really need those ?
             other_services[name] = factory
