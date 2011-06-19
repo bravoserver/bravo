@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <title>WorldMap</title>
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <script type="text/javascript">
+    <!--
+      var bravoOptions = {
+        getTileUrl: function(coord, zoom) {
+          var zcorr = Math.pow(2, zoom+1);
+          var x = coord.x - zcorr;
+          var y = coord.y - zcorr;
+          return document.URL + "/" + x + "," + y;
+        },
+        tileSize: new google.maps.Size(64, 64),
+        isPng: true
+      };
+
+      var bravoMapType = new google.maps.ImageMapType(bravoOptions);
+ 
+      var mapOptions = {
+        zoom: 17,
+        center: new google.maps.LatLng(0, 0),
+        disableDefaultUI: true,
+        panControl: true,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        scrollwheel: false
+      }
+ 
+ 
+      var map;
+      function initialize() {
+        map = new google.maps.Map(document.getElementById("map"), mapOptions);
+        map.overlayMapTypes.insertAt(0, bravoMapType);
+      }
+    //-->
+    </script>
+  </head>
+  <body onload="initialize()">
+    <h1>WorldMap</h1>
+    <div id="map" style="width: 640px; height: 480px;"></div>
+  </body>
+</html>
