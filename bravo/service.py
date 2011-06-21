@@ -97,6 +97,7 @@ class BravoService(MultiService):
                 client = TCPClient(factory.host, factory.port, factory)
                 client.setName(factory.config)
                 self.addService(client)
+
 service = BravoService()
 
 application = Application("Bravo")
