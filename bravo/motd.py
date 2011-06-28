@@ -13,6 +13,8 @@ The work of MAD!
 %
 Made in the USA!
 %
+Celestial!
+%
 Asynchronous!
 %
 Seasons!
