@@ -1,4 +1,12 @@
 next
+====
+
+Bugfixes
+--------
+
+* Fixed levers not orienting themselves onto surfaces correctly
+
+1.7
 ===
 
 Compatibility

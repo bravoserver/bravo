@@ -525,19 +525,21 @@ _add_block(Block(9, "spring", breakable=False, dim=3))
 _add_block(Block(13, "gravel", drop=318, ratio=1 / 10))
 # Leaves drop saplings, with 1 in 9 odds, and dims by 1.
 _add_block(Block(18, "leaves", drop=6, ratio=1 / 9, dim=1))
-# Torches are orientable.
+# Torches are orientable and don't dim.
 _add_block(Block(50, "torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Furnaces are orientable.
 _add_block(Block(61, "furnace", orientation=(0, 1, 2, 3, 4, 5)))
-# Ladders are orientable.
+# Ladders are orientable and don't dim.
 _add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5), dim=0))
+# Levers are orientable and don't dim.
+_add_block(Block(69, "lever", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Redstone ore drops 5 redstone dusts.
 _add_block(Block(73, "redstone-ore", drop=331, quantity=5))
 _add_block(Block(74, "glowing-redstone-ore", drop=331, quantity=5))
-# Redstone torches are orientable.
+# Redstone torches are orientable and don't dim.
 _add_block(Block(75, "redstone-torch-off", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 _add_block(Block(76, "redstone-torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
-# Stone buttons are orientable.
+# Stone buttons are orientable and don't dim.
 _add_block(Block(77, "stone-button", orientation=(None, None, 1, 2, 3, 4), dim=0))
 # Ice drops nothing, is replaced by springs, and dims by 3.
 _add_block(Block(79, "ice", drop=0, replace=9, dim=3))
