@@ -35,6 +35,8 @@ Fluid simulations!
 %
 Whoo, Bukkit!
 %
+Whoo, Charged Miners!
+%
 Whoo, Mineflayer!
 %
 Whoo, Mineserver!
@@ -56,8 +58,6 @@ Out of beta and releasing on time!
 Still alive!
 %
 "Pentasyllabic" is an autonym!
-%
-Whoo, Charged Miners!
 """
 
 motds = [i.strip() for i in motds.split("%")]
