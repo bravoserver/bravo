@@ -52,12 +52,13 @@ def sync_coords_to_chunk(f):
         x, y, z = coords
 
         bigx, smallx, bigz, smallz = split_coords(x, z)
-        if (bigx, bigz) in self.chunk_cache:
-            chunk = self.chunk_cache[bigx, bigz]
-        elif (bigx, bigz) in self.dirty_chunk_cache:
-            chunk = self.dirty_chunk_cache[bigx, bigz]
+        bigcoords = bigx, bigz
+        if bigcoords in self.chunk_cache:
+            chunk = self.chunk_cache[bigcoords]
+        elif bigcoords in self.dirty_chunk_cache:
+            chunk = self.dirty_chunk_cache[bigcoords]
         else:
-            raise ChunkNotLoaded("Chunk (%d, %d) isn't loaded")
+            raise ChunkNotLoaded("Chunk (%d, %d) isn't loaded" % bigcoords)
 
         return f(self, chunk, (smallx, y, smallz), *args, **kwargs)
 
