@@ -4,7 +4,7 @@ from zope.interface import implements
 from bravo.blocks import blocks, items
 from bravo.entity import Chest, Sign
 from bravo.ibravo import IPreBuildHook
-from bravo.utilities.coords import split_coords
+from bravo.utilities.coords import adjust_coords_for_face, split_coords
 
 from bravo.parameters import factory
 
@@ -60,18 +60,7 @@ class Tile(object):
             chunk.tiles[smallx, y, smallz] = s
 
         elif item.slot == blocks["chest"].slot:
-            if face == "-x":
-                x -= 1
-            elif face == "+x":
-                x += 1
-            elif face == "-y":
-                y -= 1
-            elif face == "+y":
-                y += 1
-            elif face == "-z":
-                z -= 1
-            elif face == "+z":
-                z += 1
+            x, y, z = adjust_coords_for_face((x, y, z), face)
 
             bigx, smallx, bigz, smallz = split_coords(x, z)
 

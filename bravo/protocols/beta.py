@@ -26,7 +26,7 @@ from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
-from bravo.utilities.coords import split_coords
+from bravo.utilities.coords import adjust_coords_for_face, split_coords
 from bravo.utilities.chat import username_alternatives
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
@@ -867,18 +867,7 @@ class BravoProtocol(BetaServerProtocol):
                 raise BuildError("Couldn't consume %r from inventory" % block)
 
         # Offset coords according to face.
-        if face == "-x":
-            x -= 1
-        elif face == "+x":
-            x += 1
-        elif face == "-y":
-            y -= 1
-        elif face == "+y":
-            y += 1
-        elif face == "-z":
-            z -= 1
-        elif face == "+z":
-            z += 1
+        adjust_coords_for_face((x, y, z), face)
 
         # Set the block and data.
         dl = [self.factory.world.set_block((x, y, z), block.slot)]

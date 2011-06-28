@@ -6,6 +6,7 @@ from zope.interface import implements
 from bravo.blocks import items
 from bravo.ibravo import IPreBuildHook, IUseHook
 from bravo.packets.beta import make_packet
+from bravo.utilities.coords import adjust_coords_for_face
 
 from bravo.parameters import factory
 
@@ -76,14 +77,7 @@ class Paintings(object):
         # occupy a block, therefore we drop the pickup right in front of the
         # block it is attached to.
         face = direction_to_face[target.direction]
-        if face == "-x":
-            x -= 1
-        elif face == "+x":
-            x += 1
-        elif face == "-z":
-            z -= 1
-        elif face == "+z":
-            z += 1
+        x, y, z = adjust_coords_for_face((x, y, z), face)
 
         # Pixel coordinates.
         coords = (x * 32 + 16, y * 32, z * 32 + 16)
