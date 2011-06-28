@@ -40,6 +40,9 @@ class TestBlockQuirks(unittest.TestCase):
         self.assertTrue(bravo.blocks.blocks["ladder"].orientable())
         self.assertEqual(bravo.blocks.blocks["ladder"].orientation("+x"), 0x5)
 
+    def test_ladder_face(self):
+        self.assertEqual(bravo.blocks.blocks["ladder"].face(0x5), "+x")
+
     def test_grass_secondary(self):
         self.assertEqual(bravo.blocks.blocks["grass"].key[1], 0)
 

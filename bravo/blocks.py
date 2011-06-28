@@ -18,6 +18,7 @@ class Block(object):
     """
 
     __slots__ = (
+        "_f_dict",
         "_o_dict",
         "breakable",
         "dim",
@@ -75,8 +76,9 @@ class Block(object):
 
         if orientation:
             self._o_dict = dict(zip(faces, orientation))
+            self._f_dict = dict(zip(orientation, faces))
         else:
-            self._o_dict = {}
+            self._o_dict = self._f_dict = {}
 
     def __str__(self):
         """
@@ -119,7 +121,18 @@ class Block(object):
         :returns: True if this block can be oriented, False if not.
         """
 
-        return any(self._o_dict)
+        return bool(self._o_dict)
+
+    def face(self, metadata):
+        """
+        Retrieve the face for given metadata corresponding to an orientation,
+        or None if the metadata is invalid for this block.
+
+        This method only returns valid data for orientable blocks; check
+        :meth:`orientable` first.
+        """
+
+        return self._f_dict.get(metadata)
 
     def orientation(self, face):
         """
