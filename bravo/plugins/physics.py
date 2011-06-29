@@ -372,6 +372,7 @@ class Redstone(object):
 
     def __init__(self):
         self.tracked = set()
+        self.powered = set()
 
         self.loop = LoopingCall(self.process)
 
@@ -427,6 +428,16 @@ class Redstone(object):
             if level:
                 level -= 1
 
+    def update_wires_around(self, x, y, z, enabled):
+        neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
+            (x, y, z + 1))
+
+        for neighbor in neighbors:
+            block = factory.world.sync_get_block(neighbor)
+            if block == blocks["redstone-wire"].slot:
+                args = neighbor + (enabled,)
+                self.update_wires(*args)
+
     def run_circuit(self, x, y, z):
         """
         Iterate through a circuit, starting at the given block, and return a
@@ -438,12 +449,25 @@ class Redstone(object):
         neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
             (x, y, z + 1))
 
+        affected = set()
+
         if block == blocks["lever"].slot:
             # Power/depower the block the lever is attached to.
             metadata = factory.world.sync_get_metadata((x, y, z))
             powered = metadata & 0x8
             face = blocks["lever"].face(metadata & ~0x8)
             target = adjust_coords_for_face((x, y, z), face)
+
+            if powered:
+                self.powered.add(target)
+            else:
+                self.powered.discard(target)
+
+            affected.add(target)
+
+        else:
+            # Let's update anything around us.
+            self.update_wires_around(x, y, z, (x, y, z) in self.powered)
 
         if block == blocks["redstone-torch"].slot:
             # Turn on neighboring wires, as appropriate.
@@ -478,7 +502,7 @@ class Redstone(object):
                     new_level -= 1
                 world.set_metadata((x, y, z), new_level)
 
-        return []
+        return affected
 
     def process(self):
         for factory, x, y, z in self.tracked:

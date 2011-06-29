@@ -118,7 +118,8 @@ class TestRedstone(unittest.TestCase):
             chunk.set_metadata((1, 1, 1), orientation | 0x8)
 
             # Run the circuit, starting at the switch.
-            self.hook.run_circuit(1, 1, 1)
+            circuit = list(self.hook.run_circuit(1, 1, 1))[0]
+            self.hook.run_circuit(*circuit)
 
             metadata = chunk.get_metadata((3, 1, 1))
             self.assertEqual(metadata, 0xf)
