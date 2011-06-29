@@ -7,6 +7,7 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
+from bravo.utilities.coords import adjust_coords_for_face
 from bravo.utilities.spatial import Block2DSpatialDict, Block3DSpatialDict
 from bravo.world import ChunkNotLoaded
 
@@ -388,7 +389,6 @@ class Redstone(object):
         else:
             self.stop()
 
-    @inlineCallbacks
     def update_wires(self, x, y, z, enabled):
         """
         Trace the wires starting at a certain point, and either enable or
@@ -402,7 +402,7 @@ class Redstone(object):
         while traveling:
             # Visit nodes.
             for coords in traveling:
-                metadata = yield factory.world.get_metadata(coords)
+                metadata = factory.world.sync_get_metadata(coords)
                 if metadata != level:
                     factory.world.set_metadata(coords, level)
                     traveled.add(coords)
@@ -419,13 +419,66 @@ class Redstone(object):
             traveling.clear()
             for l in nodes:
                 for coords in l:
-                    block = yield factory.world.get_block(coords)
+                    block = factory.world.sync_get_block(coords)
                     if block == blocks["redstone-wire"].slot:
                         traveling.add(coords)
             traveling.difference_update(traveled)
 
             if level:
                 level -= 1
+
+    def run_circuit(self, x, y, z):
+        """
+        Iterate through a circuit, starting at the given block, and return a
+        list of circuits which have been affected.
+        """
+
+        world = factory.world
+        block = factory.world.sync_get_block((x, y, z))
+        neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
+            (x, y, z + 1))
+
+        if block == blocks["lever"].slot:
+            # Power/depower the block the lever is attached to.
+            metadata = factory.world.sync_get_metadata((x, y, z))
+            powered = metadata & 0x8
+            face = blocks["lever"].face(metadata & ~0x8)
+            target = adjust_coords_for_face((x, y, z), face)
+
+        if block == blocks["redstone-torch"].slot:
+            # Turn on neighboring wires, as appropriate.
+            for coords in neighbors:
+                if (world.get_block(coords) ==
+                    blocks["redstone-wire"].slot):
+                    self.update_wires(factory, coords[0], coords[1],
+                        coords[2], True)
+
+        if block == blocks["redstone-torch-off"].slot:
+            # Turn off neighboring wires, as appropriate.
+            for coords in neighbors:
+                if (world.get_block(coords) ==
+                    blocks["redstone-wire"].slot):
+                    self.update_wires(factory, coords[0], coords[1],
+                        coords[2], False)
+
+        elif block == blocks["redstone-wire"].slot:
+            # Get wire status from neighbors.
+            if any(world.get_block(coords) ==
+                blocks["redstone-torch"].slot
+                for coords in neighbors):
+                # We should probably be lit.
+                self.update_wires(factory, x, y, z, True)
+            else:
+                # Find the strongest neighboring wire, and use that.
+                new_level = max(factory.world.get_metadata(coords)
+                    for coords in neighbors
+                    if factory.world.get_block(coords) ==
+                        blocks["redstone-wire"].slot)
+                if new_level > 0x0:
+                    new_level -= 1
+                world.set_metadata((x, y, z), new_level)
+
+        return []
 
     def process(self):
         for factory, x, y, z in self.tracked:
