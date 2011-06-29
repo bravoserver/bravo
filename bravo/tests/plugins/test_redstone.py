@@ -52,30 +52,75 @@ class TestRedstone(unittest.TestCase):
     def test_trivial(self):
         pass
 
-    @inlineCallbacks
     def test_update_wires_enable(self):
-        for i in range(16):
-            self.w.set_block((i, 0, 0),
-                blocks["redstone-wire"].slot)
-            self.w.set_metadata((i, 0, 0), 0x0)
+        """
+        update_wires() should correctly light up a wire.
+        """
 
-        # Enable wires.
-        self.hook.update_wires(0, 0, 0, True)
+        d = self.w.request_chunk(0, 0)
 
-        for i in range(16):
-            metadata = yield self.w.get_metadata((i, 0, 0))
-            self.assertEqual(metadata, 0xf - i)
+        @d.addCallback
+        def cb(chunk):
+            for i in range(1, 15):
+                chunk.set_block((i, 1, 1),
+                    blocks["redstone-wire"].slot)
+                chunk.set_metadata((i, 1, 1), 0x0)
 
-    @inlineCallbacks
+            # Enable wires.
+            self.hook.update_wires(1, 1, 1, True)
+
+            for i in range(1, 15):
+                metadata = chunk.get_metadata((i, 1, 1))
+                self.assertEqual(metadata, 0xf - i + 1)
+
+        return d
+
     def test_update_wires_disable(self):
-        for i in range(16):
-            self.w.set_block((i, 0, 0),
-                blocks["redstone-wire"].slot)
-            self.w.set_metadata((i, 0, 0), i)
+        """
+        update_wires() should correctly drain a wire.
+        """
 
-        # Disable wires.
-        self.hook.update_wires(0, 0, 0, False)
+        d = self.w.request_chunk(0, 0)
 
-        for i in range(16):
-            metadata = yield self.w.get_metadata((i, 0, 0))
-            self.assertEqual(metadata, 0x0)
+        @d.addCallback
+        def cb(chunk):
+            for i in range(1, 15):
+                chunk.set_block((i, 1, 1),
+                    blocks["redstone-wire"].slot)
+                chunk.set_metadata((i, 1, 1), i)
+
+            # Enable wires.
+            self.hook.update_wires(1, 1, 1, False)
+
+            for i in range(1, 15):
+                metadata = chunk.get_metadata((i, 1, 1))
+                self.assertEqual(metadata, 0x0)
+
+        return d
+
+    def test_switch(self):
+        """
+        Levers should work.
+        """
+
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            chunk.set_block((1, 1, 1), blocks["lever"].slot)
+            chunk.set_block((2, 1, 1), blocks["sand"].slot)
+            chunk.set_block((3, 1, 1), blocks["redstone-wire"].slot)
+
+            # Attach the lever to the sand block, and throw it. For sanity
+            # purposes, grab the orientation metadata from the block
+            # definition.
+            orientation = blocks["lever"].orientation("+x")
+            chunk.set_metadata((1, 1, 1), orientation | 0x8)
+
+            # Run the circuit, starting at the switch.
+            self.hook.run_circuit(1, 1, 1)
+
+            metadata = chunk.get_metadata((3, 1, 1))
+            self.assertEqual(metadata, 0xf)
+
+        return d
