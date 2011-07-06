@@ -428,15 +428,32 @@ class Redstone(object):
             if level:
                 level -= 1
 
-    def update_wires_around(self, x, y, z, enabled):
+    def update_powered_block(self, x, y, z, enabled):
+        """
+        Update a powered non-redstone block.
+        """
+
         neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
             (x, y, z + 1))
+
+        affected = []
 
         for neighbor in neighbors:
             block = factory.world.sync_get_block(neighbor)
             if block == blocks["redstone-wire"].slot:
                 args = neighbor + (enabled,)
                 self.update_wires(*args)
+            elif block == blocks["redstone-torch"].slot and enabled:
+                metadata = factory.world.sync_get_metadata(neighbor)
+                face = blocks["redstone-torch"].face(metadata)
+                target = adjust_coords_for_face(neighbor, face)
+                if target == (x, y, z):
+                    # We should turn off this torch.
+                    factory.world.sync_set_block(neighbor,
+                        blocks["redstone-torch-off"].slot)
+                    affected.append(neighbor)
+
+        return affected
 
     def run_circuit(self, x, y, z):
         """
@@ -467,7 +484,8 @@ class Redstone(object):
 
         else:
             # Let's update anything around us.
-            self.update_wires_around(x, y, z, (x, y, z) in self.powered)
+            l = self.update_powered_block(x, y, z, (x, y, z) in self.powered)
+            affected.update(l)
 
         if block == blocks["redstone-torch"].slot:
             # Turn on neighboring wires, as appropriate.

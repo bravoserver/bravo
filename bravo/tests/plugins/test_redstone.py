@@ -3,8 +3,6 @@ from twisted.trial import unittest
 import shutil
 import tempfile
 
-from twisted.internet.defer import inlineCallbacks
-
 from bravo.blocks import blocks
 import bravo.config
 from bravo.ibravo import IDigHook
@@ -123,5 +121,36 @@ class TestRedstone(unittest.TestCase):
 
             metadata = chunk.get_metadata((3, 1, 1))
             self.assertEqual(metadata, 0xf)
+
+        return d
+
+    def test_not_gate(self):
+        """
+        NOT gates should work.
+        """
+
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            chunk.set_block((1, 1, 1), blocks["lever"].slot)
+            chunk.set_block((2, 1, 1), blocks["sand"].slot)
+            chunk.set_block((3, 1, 1), blocks["redstone-torch"].slot)
+
+            # Attach the lever to the sand block, and throw it. For sanity
+            # purposes, grab the orientation metadata from the block
+            # definition.
+            orientation = blocks["lever"].orientation("+x")
+            chunk.set_metadata((1, 1, 1), orientation | 0x8)
+            # Attach the torch to the sand block too.
+            orientation = blocks["redstone-torch"].orientation("-x")
+            chunk.set_metadata((3, 1, 1), orientation)
+
+            # Run the circuit, starting at the switch.
+            circuit = list(self.hook.run_circuit(1, 1, 1))[0]
+            self.hook.run_circuit(*circuit)
+
+            block = chunk.get_block((3, 1, 1))
+            self.assertEqual(block, blocks["redstone-torch-off"].slot)
 
         return d
