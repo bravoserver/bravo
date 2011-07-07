@@ -191,6 +191,8 @@ class Chunk(object):
         # individually.
         max_height = amax(self.heightmap)
         lightable = vectorize(lambda block: blocks[block].dim < 15)(self.blocks)
+        # Protip: This is a bitwise AND because logical ANDs on arrays can't
+        # happen in Numpy.
         unlighted = logical_not(lightmap) & lightable
 
         # Create a mask to find all blocks that have an unlighted block
@@ -207,9 +209,10 @@ class Chunk(object):
 
         spread = [tuple(coords) for coords in transpose(edges)]
         visited = set()
-        glow = 14
 
-        while glow:
+        # Run the actual glow loop. For each glow level, go over unvisited air
+        # blocks and illuminate them.
+        for glow in range(14, 0, -1):
             for coords in spread:
                 if lightmap[coords] <= glow:
                     visited.add(coords)
@@ -238,7 +241,6 @@ class Chunk(object):
                     if lightable[x, z, y] and lightmap[x, z, y] < glow:
                         lightmap[x, z, y] = glow - blocks[self.blocks[x, z, y]].dim
                         visited.add((x, z, y))
-            glow -= 1
             spread = visited
             visited = set()
 
