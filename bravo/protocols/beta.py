@@ -867,7 +867,7 @@ class BravoProtocol(BetaServerProtocol):
                 raise BuildError("Couldn't consume %r from inventory" % block)
 
         # Offset coords according to face.
-        adjust_coords_for_face((x, y, z), face)
+        x, y, z = adjust_coords_for_face((x, y, z), face)
 
         # Set the block and data.
         dl = [self.factory.world.set_block((x, y, z), block.slot)]
