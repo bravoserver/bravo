@@ -77,6 +77,14 @@ I have an error ``TypeError: an integer is required`` when starting Bravo!
  Is your Twisted 10.1 or older? This error could be caused by your Twisted not
  being 10.2 or newer.
 
+I am running as root on a Unix system and twistd cannot find
+``bravo.service``. What's going on?
+ For security reasons, twistd doesn't look in non-system directories as root.
+ If you insist on running as root, try an incantation like the following,
+ setting ``PYTHONPATH``::
+
+     # PYTHONPATH=. twistd -n bravo
+
 Credits
 =======
 
