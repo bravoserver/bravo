@@ -41,9 +41,14 @@ class MalformedFileError(Exception):
 
 # Errors from bravo clients.
 
-class BuildError(Exception):
+class BetaClientError(Exception):
     """
-    Something went wrong with the build.
+    Something bad happened while dealing with a client.
+    """
+
+class BuildError(BetaClientError):
+    """
+    Something went wrong with a client's build step.
     """
 
 # Errors from the world.

@@ -16,7 +16,7 @@ from twisted.web.client import getPage
 from bravo.blocks import blocks, items
 from bravo.config import configuration
 from bravo.entity import Sign
-from bravo.errors import BuildError
+from bravo.errors import BetaClientError, BuildError
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
     IDigHook, ISignHook, IUseHook)
@@ -43,7 +43,7 @@ A list of points in a filled circle of radius 10.
 
 BuildData = namedtuple("BuildData", "block, metadata, x, y, z, face")
 
-class BetaServerProtocol(Protocol):
+class BetaServerProtocol(object, Protocol):
     """
     The Minecraft Alpha/Beta server protocol.
 
@@ -62,6 +62,8 @@ class BetaServerProtocol(Protocol):
 
     player = None
     username = None
+
+    _health = 20
 
     def __init__(self):
         self.chunks = dict()
@@ -343,6 +345,23 @@ class BetaServerProtocol(Protocol):
 
         self.transport.write(make_error_packet(message))
         self.transport.loseConnection()
+
+    # Automatic properties. Assigning to them causes the client to be notified
+    # of changes.
+
+    @property
+    def health(self):
+        return self._health
+
+    @health.setter
+    def health(self, value):
+        if not 0 <= value <= 20:
+            raise BetaClientError("Invalid health value %d" % value)
+
+        if self._health != value:
+            packet = make_packet("health", hp=value)
+            self.transport.write(packet)
+            self._health = value
 
 
 class BannedProtocol(BetaServerProtocol):
