@@ -136,17 +136,22 @@ faces = {
 }
 face = Enum(SBInt8("face"), **faces)
 
+# World dimension.
+dimensions = {
+    "earth": 0,
+    "sky": 1,
+    "nether": 255,
+}
+dimension = Enum(UBInt8("dimension"), **dimensions)
+
+# The actual packet list.
 packets = {
     0: Struct("ping"),
     1: Struct("login",
         UBInt32("protocol"),
         AlphaString("username"),
         SBInt64("seed"),
-        Enum(UBInt8("dimension"),
-             earth=0,
-             sky=1,
-             nether=255,
-        ),
+        dimension,
     ),
     2: Struct("handshake",
         AlphaString("username"),
@@ -177,7 +182,7 @@ packets = {
         UBInt16("hp"),
     ),
     9: Struct("respawn",
-        UBInt8("unknown"),
+        dimension,
     ),
     10: grounded,
     11: Struct("position", position, grounded),
