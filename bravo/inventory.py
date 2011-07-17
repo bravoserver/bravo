@@ -541,11 +541,33 @@ class Furnace(Inventory):
 
     identifier = "furnace"
 
-class ChestStorage(Inventory):
+class GenericWindow(Inventory):
+    """
+    A window which holds many slots in a very basic pattern, and can have a
+    customized titlebar.
+    """
+
+    identifier = "inventory"
+
+    def __init__(self, title):
+        """
+        Create a generic window.
+
+        :ivar str title: The window title.
+        """
+
+        self.title = title
+        super(GenericWindow, self).__init__()
+
+class ChestStorage(GenericWindow):
+    """
+    A window representing chest storage.
+    """
 
     storage = 27
 
-    identifier = "inventory"
+    def __init__(self):
+        GenericWindow.__init__("Chest")
 
 def sync_inventories(src, dst):
     """
