@@ -1,10 +1,24 @@
-next
-====
+1.7.1
+=====
+
+Features
+--------
+
+* Enabled some partial redstone physics
+
+  * Wire tracking
+  * Levers
+  * NOT gates
+
+* Support for Beta protocol 14
+* Health tracking (#311)
 
 Bugfixes
 --------
 
 * Fixed levers not orienting themselves onto surfaces correctly
+* Fixed missing enum for dimensions on respawn packet (#289)
+* Fixed web resources not using correct world names (#304)
 
 1.7
 ===
