@@ -325,15 +325,22 @@ class BetaServerProtocol(object, Protocol):
 
         pass
 
-    # Convenience methods
+    # Convenience methods for consolidating code and expressing intent. I
+    # hear that these are occasionally useful.
+
+    def write_packet(self, header, **payload):
+        """
+        Send a packet to the client.
+        """
+
+        self.transport.write(make_packet(header, **payload))
 
     def update_ping(self):
         """
         Send a keepalive to the client.
         """
 
-        packet = make_packet("ping")
-        self.transport.write(packet)
+        self.write_packet("ping")
 
     def error(self, message):
         """
@@ -359,8 +366,7 @@ class BetaServerProtocol(object, Protocol):
             raise BetaClientError("Invalid health value %d" % value)
 
         if self._health != value:
-            packet = make_packet("health", hp=value)
-            self.transport.write(packet)
+            self.write_packet("health", hp=value)
             self._health = value
 
 
@@ -384,15 +390,13 @@ class BetaProxyProtocol(BetaServerProtocol):
     gateway = "server.wiki.vg"
 
     def handshake(self, container):
-        packet = make_packet("handshake", username="-")
-        self.transport.write(packet)
+        self.write_packet("handshake", username="-")
 
     def login(self, container):
         self.username = container.username
 
-        packet = make_packet("login", protocol=0, username="", seed=0,
+        self.write_packet("login", protocol=0, username="", seed=0,
             dimension="earth")
-        self.transport.write(packet)
 
         url = urlunparse(("http", self.gateway, "/node/0/0/", None, None,
             None))
@@ -499,8 +503,8 @@ class BravoProtocol(BetaServerProtocol):
         for protocol in self.factory.protocols.itervalues():
             packet = protocol.player.save_to_packet()
             packet += protocol.player.save_equipment_to_packet()
-            packet += make_packet("create", eid=protocol.player.eid)
             self.transport.write(packet)
+            self.write_packet("create", eid=protocol.player.eid)
 
         self.factory.protocols[self.username] = self
 
@@ -647,23 +651,17 @@ class BravoProtocol(BetaServerProtocol):
             if command and command in commands:
                 def cb(iterable):
                     for line in iterable:
-                        self.transport.write(
-                            make_packet("chat", message=line)
-                        )
+                        self.write_packet("chat", message=line)
                 def eb(error):
-                    self.transport.write(
-                        make_packet("chat", message="Error: %s" %
-                                    error.getErrorMessage())
-                    )
+                    self.write_packet("chat", message="Error: %s" %
+                        error.getErrorMessage())
                 d = maybeDeferred(commands[command].chat_command,
                                   self.username, params)
                 d.addCallback(cb)
                 d.addErrback(eb)
             else:
-                self.transport.write(
-                    make_packet("chat",
-                        message="Unknown command: %s" % command)
-                )
+                self.write_packet("chat",
+                    message="Unknown command: %s" % command)
         else:
             # Send the message up to the factory to be chatified.
             message = "<%s> %s" % (self.username, container.message)
@@ -792,10 +790,9 @@ class BravoProtocol(BetaServerProtocol):
             i = Workbench()
             sync_inventories(self.player.inventory, i)
             self.windows[self.wid] = i
-            packet = make_packet("window-open", wid=self.wid, type="workbench",
+            self.write_packet("window-open", wid=self.wid, type="workbench",
                 title="Hurp", slots=2)
             self.wid += 1
-            self.transport.write(packet)
             return
 
         # Ignore clients that think -1 is placeable.
@@ -991,9 +988,8 @@ class BravoProtocol(BetaServerProtocol):
                 )
                 self.factory.broadcast_for_others(packet, self)
 
-        packet = make_packet("window-token", wid=0, token=container.token,
+        self.write_packet("window-token", wid=0, token=container.token,
             acknowledged=selected)
-        self.transport.write(packet)
 
     def sign(self, container):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
@@ -1034,11 +1030,9 @@ class BravoProtocol(BetaServerProtocol):
         chunk = self.chunks.pop(x, z)
 
         for entity in chunk.entities:
-            packet = make_packet("destroy", eid=entity.eid)
-            self.transport.write(packet)
+            self.write_packet("destroy", eid=entity.eid)
 
-        packet = make_packet("prechunk", x=x, z=z, enabled=0)
-        self.transport.write(packet)
+        self.write_packet("prechunk", x=x, z=z, enabled=0)
 
     def enable_chunk(self, x, z):
         """
@@ -1060,8 +1054,7 @@ class BravoProtocol(BetaServerProtocol):
         return d
 
     def send_chunk(self, chunk):
-        packet = make_packet("prechunk", x=chunk.x, z=chunk.z, enabled=1)
-        self.transport.write(packet)
+        self.write_packet("prechunk", x=chunk.x, z=chunk.z, enabled=1)
 
         packet = chunk.save_to_packet()
         self.transport.write(packet)
@@ -1099,9 +1092,10 @@ class BravoProtocol(BetaServerProtocol):
 
         # Send the MOTD.
         if self.motd:
-            packet = make_packet("chat",
-                message=self.motd.replace("<tagline>", get_motd()))
-            d.addCallback(lambda none: self.transport.write(packet))
+            @d.addCallback
+            def cb(none):
+                self.write_packet("chat",
+                    message=self.motd.replace("<tagline>", get_motd()))
 
         # Finally, start the secondary chunk loop.
         d.addCallback(lambda none: self.update_chunks())
@@ -1149,8 +1143,7 @@ class BravoProtocol(BetaServerProtocol):
         ]
 
     def update_time(self):
-        packet = make_packet("time", timestamp=int(self.factory.time))
-        self.transport.write(packet)
+        self.write_packet("time", timestamp=int(self.factory.time))
 
     def connectionLost(self, reason):
         if self.time_loop:
