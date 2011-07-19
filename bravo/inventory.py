@@ -567,7 +567,7 @@ class ChestStorage(GenericWindow):
     storage = 27
 
     def __init__(self):
-        GenericWindow.__init__("Chest")
+        GenericWindow.__init__(self, "Chest")
 
 def sync_inventories(src, dst):
     """
