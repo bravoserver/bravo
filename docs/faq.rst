@@ -46,6 +46,15 @@ It doesn't install? Okay, maybe it installed, but I'm having issues!
 Configuring
 ===========
 
+When I connect to the server, the client gets an "End of Stream" error and the
+server log says something about "ConsoleRPCProtocol".
+ You are connecting to the wrong port.
+
+ Bravo always runs an RPC console by default. This console isn't directly
+ accessible from clients. In order to connect a client, you must configure a
+ world and connect to that world. See the example bravo.ini configuration file
+ for an example of how to configure a world.
+
 My world is snowy. I didn't want this.
  In bravo.ini, change your ``seasons`` list to exclude winter. A possible
  incantation might be the following::
