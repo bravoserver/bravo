@@ -1,5 +1,5 @@
 from collections import defaultdict
-from itertools import chain
+from itertools import chain, product
 
 from twisted.internet import reactor
 from twisted.internet.interfaces import IPushProducer
@@ -18,11 +18,17 @@ from bravo.packets.beta import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
 from bravo.protocols.beta import BannedProtocol, BravoProtocol
 from bravo.utilities.chat import chat_name, sanitize_chat
+from bravo.utilities.coords import split_coords
 from bravo.weather import WeatherVane
 from bravo.world import World
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
+
+circle = [(i, j)
+    for i, j in product(xrange(-5, 5), xrange(-5, 5))
+    if i**2 + j**2 <= 25
+]
 
 class BravoFactory(Factory):
     """
@@ -89,6 +95,9 @@ class BravoFactory(Factory):
         self.update_season()
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
+        log.msg("Starting entities")
+        self.entity_loop = LoopingCall(self.update_entities)
+        self.entity_loop.start(.2)
 
         # Start automatons.
         for automaton in self.automatons:
@@ -266,6 +275,23 @@ class BravoFactory(Factory):
         d = self.world.request_chunk(bigx, bigz)
         d.addCallback(lambda chunk: chunk.entities.discard(entity))
         d.addCallback(lambda none: log.msg("Destroyed entity %s" % entity))
+
+
+    def update_entities(self):
+        """Updates the entities in the factories world."""
+        points = set()
+        for name in self.protocols:
+            player = self.protocols[name]
+            x = player.location.x
+            z = player.location.z
+            bigx, chaff, bigz,chaff = split_coords(x, z)
+            new = set((i + bigx, j + bigz) for i, j in circle)
+            points.update(new)
+
+        for x, y in points:
+            d = self.world.request_chunk(x, y)
+            d.addCallback(lambda chunk: chunk.update_entities(self))
+
 
     def update_time(self):
         """

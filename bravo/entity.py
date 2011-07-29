@@ -191,6 +191,11 @@ class Mob(Entity):
             metadata=self.metadata
         )
 
+    def update_location(self,factory):
+        """ Placeholder function for entity specific ai functions"""
+        pass
+
+
 class Chuck(Mob):
     """
     A cross between a duck and a chicken.
