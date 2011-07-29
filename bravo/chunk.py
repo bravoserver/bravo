@@ -543,6 +543,6 @@ class Chunk(object):
         if self.entities != None:
             for entity in self.entities:
                 if isinstance(entity, Mob):
-                    d = maybeDeferred(entity.update_location, factory)
+                    maybeDeferred(entity.update_location, factory)
 
 

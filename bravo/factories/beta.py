@@ -289,8 +289,8 @@ class BravoFactory(Factory):
             points.update(new)
 
         for x, y in points:
-            d = self.world.request_chunk(x, y)
-            d.addCallback(lambda chunk: chunk.update_entities(self))
+            chunk = self.world.request_chunk(x, y)
+            chunk.addCallback(lambda chunk: chunk.update_entities(self))
 
 
     def update_time(self):
