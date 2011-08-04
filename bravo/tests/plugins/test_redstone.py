@@ -181,3 +181,50 @@ class TestRedstone(unittest.TestCase):
                     truth_to_block(o, block, metadata))
 
         return d
+
+    def test_nor_gate(self):
+        """
+        NOR gates should work.
+        """
+
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            for i1, i2, o in (
+                (False, False, True),
+                (True, False, False),
+                (False, True, False),
+                (True, True, False),
+                ):
+                # The tableau.
+                chunk.set_block((1, 1, 2), blocks["sand"].slot)
+                chunk.set_block((2, 1, 2), blocks["redstone-torch"].slot)
+
+                # Attach the levers to the sand block.
+                orientation = blocks["lever"].orientation("+z")
+                iblock, imetadata = truth_to_block(i1, blocks["lever"].slot,
+                    orientation)
+                chunk.set_block((1, 1, 1), iblock)
+                chunk.set_metadata((1, 1, 1), imetadata)
+                orientation = blocks["lever"].orientation("-z")
+                iblock, imetadata = truth_to_block(i2, blocks["lever"].slot,
+                    orientation)
+                chunk.set_block((1, 1, 3), iblock)
+                chunk.set_metadata((1, 1, 3), imetadata)
+                # Attach the torch to the sand block too.
+                orientation = blocks["redstone-torch"].orientation("-x")
+                chunk.set_metadata((2, 1, 2), orientation)
+
+                # Run the circuit, starting at the switches.
+                circuit = list(self.hook.run_circuit(1, 1, 1))[0]
+                self.hook.run_circuit(*circuit)
+                circuit = list(self.hook.run_circuit(1, 1, 3))[0]
+                self.hook.run_circuit(*circuit)
+
+                block = chunk.get_block((2, 1, 2))
+                metadata = chunk.get_metadata((2, 1, 2))
+                self.assertEqual((block, metadata),
+                    truth_to_block(o, block, metadata))
+
+        return d
