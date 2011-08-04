@@ -12,6 +12,27 @@ from bravo.world import World
 class RedstoneMockFactory(object):
     pass
 
+def truth_to_block(truth, block, metadata):
+    """
+    Alter a block based on whether it should be true or false (on or off).
+
+    This function returns a tuple of the block and metadata, possibly
+    partially or fully unaltered.
+    """
+
+    # Redstone torches.
+    if block in (blocks["redstone-torch"].slot,
+        blocks["redstone-torch-off"].slot):
+        if truth:
+            return blocks["redstone-torch"].slot, metadata
+        else:
+            return blocks["redstone-torch-off"].slot, metadata
+    elif block == blocks["lever"].slot:
+        if truth:
+            return blocks["lever"].slot, metadata | 0x8
+        else:
+            return blocks["lever"].slot, metadata & ~0x8
+
 class TestRedstone(unittest.TestCase):
 
     def setUp(self):
@@ -133,24 +154,30 @@ class TestRedstone(unittest.TestCase):
 
         @d.addCallback
         def cb(chunk):
-            chunk.set_block((1, 1, 1), blocks["lever"].slot)
-            chunk.set_block((2, 1, 1), blocks["sand"].slot)
-            chunk.set_block((3, 1, 1), blocks["redstone-torch"].slot)
+            for i, o in ((True, False), (False, True)):
+                # The tableau.
+                chunk.set_block((2, 1, 1), blocks["sand"].slot)
+                chunk.set_block((3, 1, 1), blocks["redstone-torch"].slot)
 
-            # Attach the lever to the sand block, and throw it. For sanity
-            # purposes, grab the orientation metadata from the block
-            # definition.
-            orientation = blocks["lever"].orientation("+x")
-            chunk.set_metadata((1, 1, 1), orientation | 0x8)
-            # Attach the torch to the sand block too.
-            orientation = blocks["redstone-torch"].orientation("-x")
-            chunk.set_metadata((3, 1, 1), orientation)
+                # Attach the lever to the sand block, and throw it. For sanity
+                # purposes, grab the orientation metadata from the block
+                # definition.
+                orientation = blocks["lever"].orientation("+x")
+                iblock, imetadata = truth_to_block(i, blocks["lever"].slot,
+                    orientation)
+                chunk.set_block((1, 1, 1), iblock)
+                chunk.set_metadata((1, 1, 1), imetadata)
+                # Attach the torch to the sand block too.
+                orientation = blocks["redstone-torch"].orientation("-x")
+                chunk.set_metadata((3, 1, 1), orientation)
 
-            # Run the circuit, starting at the switch.
-            circuit = list(self.hook.run_circuit(1, 1, 1))[0]
-            self.hook.run_circuit(*circuit)
+                # Run the circuit, starting at the switch.
+                circuit = list(self.hook.run_circuit(1, 1, 1))[0]
+                self.hook.run_circuit(*circuit)
 
-            block = chunk.get_block((3, 1, 1))
-            self.assertEqual(block, blocks["redstone-torch-off"].slot)
+                block = chunk.get_block((3, 1, 1))
+                metadata = chunk.get_metadata((3, 1, 1))
+                self.assertEqual((block, metadata),
+                    truth_to_block(o, block, metadata))
 
         return d
