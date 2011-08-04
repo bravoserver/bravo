@@ -27,11 +27,19 @@ def truth_to_block(truth, block, metadata):
             return blocks["redstone-torch"].slot, metadata
         else:
             return blocks["redstone-torch-off"].slot, metadata
+    # Redstone wires.
+    elif block == blocks["redstone-wire"].slot:
+        if truth:
+            # Try to preserve the current wire value.
+            return block, metadata if metadata else 0xf
+        else:
+            return block, 0x0
+    # Levers.
     elif block == blocks["lever"].slot:
         if truth:
-            return blocks["lever"].slot, metadata | 0x8
+            return block, metadata | 0x8
         else:
-            return blocks["lever"].slot, metadata & ~0x8
+            return block, metadata & ~0x8
 
 class TestRedstone(unittest.TestCase):
 
@@ -144,6 +152,52 @@ class TestRedstone(unittest.TestCase):
             self.assertEqual(metadata, 0xf)
 
         return d
+
+    def test_or_gate(self):
+        """
+        OR gates should work.
+        """
+
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            for i1, i2, o in (
+                (False, False, False),
+                (True, False, True),
+                (False, True, True),
+                (True, True, True),
+                ):
+                # The tableau.
+                chunk.set_block((1, 1, 2), blocks["sand"].slot)
+                chunk.set_block((2, 1, 2), blocks["redstone-wire"].slot)
+
+                # Attach the levers to the sand block.
+                orientation = blocks["lever"].orientation("+z")
+                iblock, imetadata = truth_to_block(i1, blocks["lever"].slot,
+                    orientation)
+                chunk.set_block((1, 1, 1), iblock)
+                chunk.set_metadata((1, 1, 1), imetadata)
+                orientation = blocks["lever"].orientation("-z")
+                iblock, imetadata = truth_to_block(i2, blocks["lever"].slot,
+                    orientation)
+                chunk.set_block((1, 1, 3), iblock)
+                chunk.set_metadata((1, 1, 3), imetadata)
+
+                # Run the circuit, starting at the switches.
+                circuit = list(self.hook.run_circuit(1, 1, 1))[0]
+                self.hook.run_circuit(*circuit)
+                circuit = list(self.hook.run_circuit(1, 1, 3))[0]
+                self.hook.run_circuit(*circuit)
+
+                block = chunk.get_block((2, 1, 2))
+                metadata = chunk.get_metadata((2, 1, 2))
+                self.assertEqual((block, metadata),
+                    truth_to_block(o, block, metadata))
+
+        return d
+
+    test_or_gate.todo = "Doesn't work yet."
 
     def test_not_gate(self):
         """

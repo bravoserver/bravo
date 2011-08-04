@@ -523,44 +523,7 @@ class Redstone(object):
         return affected
 
     def process(self):
-        for factory, x, y, z in self.tracked:
-            world = factory.world
-            block = factory.world.get_block((x, y, z))
-            neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
-                (x, y, z + 1))
-
-            if block == blocks["redstone-torch"].slot:
-                # Turn on neighboring wires, as appropriate.
-                for coords in neighbors:
-                    if (world.get_block(coords) ==
-                        blocks["redstone-wire"].slot):
-                        self.update_wires(factory, coords[0], coords[1],
-                            coords[2], True)
-
-            if block == blocks["redstone-torch-off"].slot:
-                # Turn off neighboring wires, as appropriate.
-                for coords in neighbors:
-                    if (world.get_block(coords) ==
-                        blocks["redstone-wire"].slot):
-                        self.update_wires(factory, coords[0], coords[1],
-                            coords[2], False)
-
-            elif block == blocks["redstone-wire"].slot:
-                # Get wire status from neighbors.
-                if any(world.get_block(coords) ==
-                    blocks["redstone-torch"].slot
-                    for coords in neighbors):
-                    # We should probably be lit.
-                    self.update_wires(factory, x, y, z, True)
-                else:
-                    # Find the strongest neighboring wire, and use that.
-                    new_level = max(factory.world.get_metadata(coords)
-                        for coords in neighbors
-                        if factory.world.get_block(coords) ==
-                            blocks["redstone-wire"].slot)
-                    if new_level > 0x0:
-                        new_level -= 1
-                    world.set_metadata((x, y, z), new_level)
+        pass
 
     @inlineCallbacks
     def feed(self, coords):
