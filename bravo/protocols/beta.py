@@ -771,6 +771,24 @@ class BravoProtocol(BetaServerProtocol):
         dl = DeferredList(l)
         dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
 
+    def select_for_inventory(self, block):
+        """
+        Perform a custom block selection to open an inventory window.
+
+        Returns whether the selection was successful.
+        """
+
+        if block == blocks["workbench"].slot:
+            i = Workbench()
+            sync_inventories(self.player.inventory, i)
+            self.windows[self.wid] = i
+            self.write_packet("window-open", wid=self.wid, type="workbench",
+                title="Hurp", slots=2)
+            self.wid += 1
+            return True
+
+        return False
+
     @inlineCallbacks
     def build(self, container):
         if container.x == -1 and container.z == -1 and container.y == 255:
@@ -785,14 +803,8 @@ class BravoProtocol(BetaServerProtocol):
             self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        if (chunk.get_block((smallx, container.y, smallz)) ==
-            blocks["workbench"].slot):
-            i = Workbench()
-            sync_inventories(self.player.inventory, i)
-            self.windows[self.wid] = i
-            self.write_packet("window-open", wid=self.wid, type="workbench",
-                title="Hurp", slots=2)
-            self.wid += 1
+        if self.select_for_inventory(
+            chunk.get_block((smallx, container.y, smallz))):
             return
 
         # Ignore clients that think -1 is placeable.
