@@ -19,12 +19,6 @@ def parse_player(factory, name):
     else:
         raise Exception("Couldn't find player %s" % name)
 
-def parse_int(i):
-    try:
-        return int(i)
-    except ValueError:
-        raise Exception("Couldn't parse quantity %s!" % i)
-
 class Help(object):
     """
     Provide helpful information about commands.
@@ -216,7 +210,7 @@ class Give(object):
 
         player = parse_player(factory, username)
         block = parse_block(block)
-        count = parse_int(count)
+        count = int(count)
 
         # Get a location two blocks in front of the player.
         dest = player.player.location.in_front_of(2)
