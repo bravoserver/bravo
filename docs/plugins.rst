@@ -117,6 +117,24 @@ Watertable
 
 Creates a flat water table half-way up the map (Y = 64).
 
+.. _automatons:
+
+Automatons
+==========
+
+Automatons are simple tasks which examine and update the world as the world
+loads and displays data to players. They are able to do periodic or delayed
+work to keep the world properly. (The mental image of small robotic gardeners
+roving across the hills and valleys trimming grass and dusting trees is quite
+compelling and adorable!)
+
+Automatons marked with (Beta) provide Beta compatibility and should probably
+be enabled.
+
+ * **lava**: Enable physics for placed lava springs. (Beta)
+ * **trees**: Turn planted saplings into trees. (Beta)
+ * **water**: Enable physics for placed water springs. (Beta)
+
 .. _season_plugins:
 
 Seasons
@@ -137,3 +155,44 @@ Spring
 
 Thaws frozen water and removes snow as that was placed during Winter. Spring
 starts on the 90th day of the the year.
+
+Hooks
+=====
+
+Hooks are small pluggable pieces of code used to add event-driven
+functionality to Bravo.
+
+.. _build_hooks:
+
+Build hooks
+-----------
+
+Hooks marked with (Beta) provide Beta compatibility and should probably be
+enabled.
+
+ * **alpha_sand_gravel**: Make sand and gravel fall as if affected by gravity.
+   (Beta)
+ * **bravo_snow**: Make snow fall as if affected by gravity.
+ * **build**: Enable placement of blocks from inventory onto the terrain.
+   (Beta)
+ * **build_snow**: Adjust things built on top of snow to replace the snow.
+   (Beta)
+ * **redstone**: Enable physics for placed redstone. (Beta)
+ * **tile**: Register tiles. Required for signs, furnaces, chests, etc. (Beta)
+ * **tracks**: Align minecart tracks. (Beta)
+
+.. _dig_hooks:
+
+Dig hooks
+---------
+
+ * **alpha_sand_gravel**: Make sand and gravel fall as if affected by gravity.
+   (Beta)
+ * **alpha_snow**: Destroy snow when it is dug or otherwise disturbed. (Beta)
+ * **bravo_snow**: Make snow fall as if affected by gravity.
+ * **give**: Spawn pickups for blocks and items destroyed by digging. (Beta)
+ * **lava**: Enable physics for lava. (Beta)
+ * **redstone**: Enable physics for redstone. (Beta)
+ * **torch**: Destroy torches that are not attached to walls or floors. (Beta)
+ * **tracks**: Align minecart tracks. (Beta)
+ * **water**: Enable physics for water. (Beta)

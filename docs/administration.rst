@@ -102,60 +102,15 @@ serializer
     "beta" serializers are provided for MC Alpha and MC Beta compatibility,
     respectively.
 build_hooks
-    Which build hooks to enable. This is a list of plugins; see above.
+    Which :ref:`build_hooks` to enable. This is a list of plugins; see above.
 dig_hooks
-    Which dig hooks to enable. This is a list of plugins.
+    Which :ref:`dig_hooks` to enable. This is a list of plugins.
 generators
     Which :ref:`terrain_generator_plugins` to use. This is a list of plugins.
 seasons
     Which :ref:`season_plugins` to enable. This, too, is a list of plugins.
-
-Automatons
-^^^^^^^^^^
-
-Automatons marked with (Beta) provide Beta compatibility and should probably
-be enabled.
-
- * **lava**: Enable physics for placed lava springs. (Beta)
- * **trees**: Turn planted saplings into trees. (Beta)
- * **water**: Enable physics for placed water springs. (Beta)
-
-Build hooks
-^^^^^^^^^^^
-
-Hooks marked with (Beta) provide Beta compatibility and should probably be
-enabled.
-
- * **alpha_sand_gravel**: Make sand and gravel fall as if affected by gravity.
-   (Beta)
- * **bravo_snow**: Make snow fall as if affected by gravity.
- * **build**: Enable placement of blocks from inventory onto the terrain.
-   (Beta)
- * **build_snow**: Adjust things built on top of snow to replace the snow.
-   (Beta)
- * **redstone**: Enable physics for placed redstone. (Beta)
- * **tile**: Register tiles. Required for signs, furnaces, chests, etc. (Beta)
- * **tracks**: Align minecart tracks. (Beta)
-
-Dig hooks
-^^^^^^^^^
-
- * **alpha_sand_gravel**: Make sand and gravel fall as if affected by gravity.
-   (Beta)
- * **alpha_snow**: Destroy snow when it is dug or otherwise disturbed. (Beta)
- * **bravo_snow**: Make snow fall as if affected by gravity.
- * **give**: Spawn pickups for blocks and items destroyed by digging. (Beta)
- * **lava**: Enable physics for lava. (Beta)
- * **redstone**: Enable physics for redstone. (Beta)
- * **torch**: Destroy torches that are not attached to walls or floors. (Beta)
- * **tracks**: Align minecart tracks. (Beta)
- * **water**: Enable physics for water. (Beta)
-
-Seasons
-^^^^^^^
-
- * **winter**: Freeze ice and cover everything in snow.
- * **spring**: Thaw water and melt snow.
+automatons
+    Which :ref:`automatons` to enable. Another list of plugins.
 
 Plugin Data Files
 =================
