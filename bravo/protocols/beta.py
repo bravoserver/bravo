@@ -67,7 +67,7 @@ class BetaServerProtocol(object, Protocol):
 
     def __init__(self):
         self.chunks = dict()
-        self.windows = dict()
+        self.windows = []
         self.wid = 1
 
         self.location = Location()
@@ -780,11 +780,14 @@ class BravoProtocol(BetaServerProtocol):
 
         if block == blocks["workbench"].slot:
             i = Workbench()
-            sync_inventories(self.player.inventory, i)
-            self.windows[self.wid] = i
-            self.write_packet("window-open", wid=self.wid, type="workbench",
-                title="Hurp", slots=2)
+            i.wid = self.wid
             self.wid += 1
+
+            sync_inventories(self.player.inventory, i)
+            self.windows.append(i)
+
+            self.write_packet("window-open", wid=i.wid, type="workbench",
+                title="Hurp", slots=2)
             return True
 
         return False
@@ -937,32 +940,40 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_others(packet, self)
 
     def wclose(self, container):
-        if container.wid in self.windows:
-            i = self.windows[container.wid]
-            if i.identifier == 1:
+        top = self.windows.pop()
+
+        # If the requested WID is on top of the stack, go ahead and close the
+        # window. Otherwise, ignore it.
+        # XXX should/can we nak requests for closing windows?
+        if container.wid == top.wid:
+            if top.identifier == "workbench":
                 # Closing the workbench.
                 dest = self.location.in_front_of(1)
                 dest.y += 1
                 coords = (int(dest.x * 32) + 16, int(dest.y * 32) + 16,
                     int(dest.z * 32) + 16)
-                # loop over items left in workbench
-                for item in i.crafting:
+                # Loop over items left in workbench, and drop all of them
+                # in front of the player.
+                for item in top.crafting:
                     if item is None:
                         continue
                     self.factory.give(coords, (item[0], item[1]), item[2])
-            del self.windows[container.wid]
             sync_inventories(i, self.player.inventory)
+            # All done!
+            return
         elif container.wid == 0:
+            # XXX Why does this happen? What should we do?
             pass
         else:
-            self.error("Can't close non-existent window %d!" % container.wid)
+            log.msg("Ignoring request to close non-current window %d" %
+                container.wid)
 
     def waction(self, container):
         if container.wid == 0:
             # Inventory.
             i = self.player.inventory
-        elif container.wid in self.windows:
-            i = self.windows[container.wid]
+        elif self.windows and container.wid == self.windows[-1].wid:
+            i = self.windows[-1]
         else:
             self.error("Couldn't find window %d" % container.wid)
 
