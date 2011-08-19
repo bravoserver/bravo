@@ -9,6 +9,15 @@ subtle and obvious ways, from other servers.
 The "Notchian" server is the server authored by Notch and distributed by
 Mojang as a companion to the Mojang-sponsored client.
 
+Responsiveness
+==============
+
+Bravo is occasionally perceived to be "lighter" or "snappier" compared to the
+Notchian server. Reports of feeling like players are moving faster than normal
+are also common. The root cause is simple: Bravo is quicker to respond to
+clients than the Notchian server. This is normal, expected, and not currently
+planned to be fixed.
+
 Chunks
 ======
 
