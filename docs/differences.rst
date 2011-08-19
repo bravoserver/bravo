@@ -53,5 +53,4 @@ historically plagued the Notchian codebase.
 Minecarts
 =========
 
-Bravo unlike the Notchian server, permits minecraft tracks to be placed on
-glass.
+Bravo permits minecart tracks to be placed on glass.
