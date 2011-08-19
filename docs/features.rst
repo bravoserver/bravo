@@ -27,7 +27,7 @@ Geometry
 --------
 
 Bravo understands how to manipulate and transfer geometry. In addition, Bravo
-can read and write the NBT disk format.
+can read and write the Alpha NBT and Beta MCR disk formats.
 
 Time
 ----
@@ -41,9 +41,31 @@ Entities
 Bravo understands the concept of entities, and is able to track the following
 kinds of entities:
 
- * Players
+ * Mobs
+ * Paintings
  * Pickups
+ * Players
  * Tiles
+
+Mobs
+^^^^
+
+Bravo understands the following mobs:
+
+ * Chickens/ducks ("Chucks")
+ * Cows
+ * Creepers
+ * Ghasts
+ * Giant zombies
+ * Pigs
+ * Sheep
+ * Skeletons
+ * Slimes
+ * Spiders
+ * Squids
+ * Wolves
+ * Zombie pigmen
+ * Zombies
 
 Tiles
 ^^^^^
@@ -51,6 +73,9 @@ Tiles
 Bravo understands the following tiles:
 
  * Chests
+ * Furnaces
+ * Mob spawners
+ * Music blocks
  * Signs
 
 Inventory
@@ -61,8 +86,8 @@ Bravo provides server-side inventory handling.
 Physics
 -------
 
-Bravo simulates physics, including the behaviors of sand, gravel, water, and
-lava.
+Bravo simulates physics, including the behaviors of sand, gravel, water and
+lava, and redstone.
 
 Extended features
 =================
