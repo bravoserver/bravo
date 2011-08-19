@@ -30,7 +30,7 @@ Where did the docs go?
 
 Why did you make design decision <X>?
  There's an entire page dedicated to this in the documentation. Look at
- docs/philosophy.rst or http://www.docs.bravoserver.org/philosophy.html.
+ docs/philosophy.rst or :ref:`philosophy`.
 
 It doesn't install? Okay, maybe it installed, but I'm having issues!
  On Freenode IRC (irc.freenode.net), #bravo is dedicated to Bravo development

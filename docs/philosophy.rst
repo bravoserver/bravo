@@ -1,5 +1,7 @@
 .. include:: globals.txt
 
+.. _philosophy:
+
 ==========
 Philosophy
 ==========
