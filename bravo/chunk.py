@@ -1,11 +1,14 @@
 from itertools import product
 from warnings import warn
-from bravo.entity import Mob
+
 from numpy import int8, uint8, uint32, bool
 from numpy import cast, logical_not, logical_and, transpose, where, zeros, amax
 from numpy import vectorize
+
 from twisted.internet.defer import maybeDeferred
+
 from bravo.blocks import blocks, glowing_blocks
+from bravo.entity import Mob
 from bravo.packets.beta import make_packet
 from bravo.utilities.bits import pack_nibbles
 
@@ -538,11 +541,14 @@ class Chunk(object):
             self.damage((x, y, z))
 
     def update_entities(self, factory):
-        """ Updates the chunks entities, then adds a callback to update that
-        entities location"""
-        if self.entities != None:
-            for entity in self.entities:
-                if isinstance(entity, Mob):
-                    maybeDeferred(entity.update_location, factory)
+        """
+        Request that the provided factory update this chunk's entities.
+        """
 
+        # XXX this method is really bad inversion of control
 
+        for entity in self.entities:
+            # XXX bad polymorphism
+            if isinstance(entity, Mob):
+                # XXX um, WTF. Why is this here?
+                maybeDeferred(entity.update_location, factory)

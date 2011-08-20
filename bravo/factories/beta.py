@@ -95,7 +95,7 @@ class BravoFactory(Factory):
         self.update_season()
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
-        log.msg("Starting entities")
+        log.msg("Starting entity updates...")
         self.entity_loop = LoopingCall(self.update_entities)
         self.entity_loop.start(.2)
 
@@ -278,19 +278,24 @@ class BravoFactory(Factory):
 
 
     def update_entities(self):
-        """Updates the entities in the factories world."""
+        """
+        Update all entities covered by this factory.
+        """
+
+        # XXX this method could cause chunks to be generated :c
+
         points = set()
-        for name in self.protocols:
-            player = self.protocols[name]
+
+        for player in self.protocols.itervalues():
             x = player.location.x
             z = player.location.z
-            bigx, chaff, bigz,chaff = split_coords(x, z)
+            bigx, chaff, bigz, chaff = split_coords(x, z)
             new = set((i + bigx, j + bigz) for i, j in circle)
             points.update(new)
 
         for x, y in points:
-            chunk = self.world.request_chunk(x, y)
-            chunk.addCallback(lambda chunk: chunk.update_entities(self))
+            d = self.world.request_chunk(x, y)
+            d.addCallback(lambda chunk: chunk.update_entities(self))
 
 
     def update_time(self):

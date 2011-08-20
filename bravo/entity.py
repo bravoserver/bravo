@@ -59,7 +59,10 @@ class Player(Entity):
         self.equipped = 0
 
     def save_to_packet(self):
-        """ Creates a player packet ot let clients know about this player """
+        """
+        Create a "player" packet representing this entity.
+        """
+
         yaw = int(self.location.theta * 255 / (2 * pi)) % 256
         pitch = int(self.location.phi * 255 / (2 * pi)) % 256
 
@@ -124,7 +127,10 @@ class Painting(Entity):
         self.motive = motive
 
     def save_to_packet(self):
-        """ Makes a packet to let the client know about this painting """
+        """
+        Create a "painting" packet representing this entity.
+        """
+
         return make_packet("painting",
             eid=self.eid,
             title=self.motive,
@@ -157,7 +163,10 @@ class Pickup(Entity):
         self.quantity = quantity
 
     def save_to_packet(self):
-        """ Makes a packet to let the client know about this pickup"""
+        """
+        Create a "pickup" packet representing this entity.
+        """
+
         return make_packet("pickup",
             eid=self.eid,
             primary=self.item[0],
@@ -182,7 +191,10 @@ class Mob(Entity):
     metadata = {0: ("byte", 0)}
 
     def save_to_packet(self):
-        """ Makes a packet to let the client know about this mob """
+        """
+        Create a "mob" packet representing this entity.
+        """
+
         return make_packet("mob",
             eid=self.eid,
             type=self.type,
@@ -195,8 +207,11 @@ class Mob(Entity):
         )
 
     def update_location(self, factory):
-        """ Placeholder function for entity specific ai functions"""
-        pass
+        """
+        Update this mob's location with respect to a factory.
+        """
+
+        # XXX IoC violation, WTF
 
 
 class Chuck(Mob):
