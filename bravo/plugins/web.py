@@ -1,18 +1,26 @@
 from itertools import product
 from StringIO import StringIO
+import os
+import time
 
 from PIL import Image
 
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
-from twisted.web.template import flattenString, renderer, tags, Element, XMLString
+from twisted.web.template import flattenString, renderer, tags, Element
+from twisted.web.template import XMLString, XMLFile
+from twisted.web.http import datetimeToString
 
 from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import IWorldResource
+from bravo import __file__
 
 from bravo.parameters import factory
+
+worldmap_xml = os.path.join(os.path.dirname(__file__), 'plugins',
+                            'worldmap.html')
 
 block_colors = {
     blocks["clay"].slot: "rosybrown",
@@ -81,7 +89,9 @@ class ChunkIllustrator(Resource):
 
         data = StringIO()
         i.save(data, "PNG")
-
+        # cache image for 5 minutes
+        request.setHeader("Cache-Control", "public, max-age=360")
+        request.setHeader("Expires", datetimeToString(time.time() + 360))
         request.write(data.getvalue())
         request.finish()
 
@@ -90,35 +100,12 @@ class ChunkIllustrator(Resource):
         d.addCallback(self._cb_render_GET, request)
         return NOT_DONE_YET
 
-world_map_template = """
-<html xmlns:t="http://twistedmatrix.com/ns/twisted.web.template/0.1">
-    <head>
-        <title>WorldMap</title>
-    </head>
-    <body>
-        <h1>WorldMap</h1>
-        <div nowrap="nowrap" t:render="main" />
-    </body>
-</html>
-"""
-
 class WorldMapElement(Element):
     """
     Element for the WorldMap plugin.
     """
 
-    loader = XMLString(world_map_template)
-
-    @renderer
-    def main(self, request, tag):
-        path = request.URLPath()
-        l = []
-        for y in range(-5, 5):
-            for x in range(-5, 5):
-                child = path.child("%s,%s" % (x, y))
-                l.append(tags.img(src=str(child), height="64", width="64"))
-            l.append(tags.br())
-        return tag(*l)
+    loader = XMLFile(worldmap_xml)
 
 class WorldMap(Resource):
 
