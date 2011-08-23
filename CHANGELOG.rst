@@ -1,3 +1,12 @@
+1.7.2
+=====
+
+Features
+--------
+
+* Enabled redstone NOR gates
+* More documentation, including cleaned-up plugin lists (#301)
+
 1.7.1
 =====
 
