@@ -10,6 +10,7 @@ from twisted.internet.defer import (DeferredList, inlineCallbacks,
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import cooperate, deferLater, LoopingCall
 from twisted.internet.task import TaskDone, TaskFailed
+from twisted.protocols.policies import TimeoutMixin
 from twisted.python import log
 from twisted.web.client import getPage
 
@@ -43,7 +44,7 @@ A list of points in a filled circle of radius 10.
 
 BuildData = namedtuple("BuildData", "block, metadata, x, y, z, face")
 
-class BetaServerProtocol(object, Protocol):
+class BetaServerProtocol(object, Protocol, TimeoutMixin):
     """
     The Minecraft Alpha/Beta server protocol.
 
@@ -97,6 +98,8 @@ class BetaServerProtocol(object, Protocol):
         }
 
         self._ping_loop = LoopingCall(self.update_ping)
+
+        self.setTimeout(30)
 
     # Low-level packet handlers
     # Try not to hook these if possible, since they offer no convenient
@@ -274,6 +277,9 @@ class BetaServerProtocol(object, Protocol):
 
         packets, self.buf = parse_packets(self.buf)
 
+        if packets:
+            self.resetTimeout()
+
         for header, payload in packets:
             if header in self.handlers:
                 self.handlers[header](payload)
@@ -284,6 +290,9 @@ class BetaServerProtocol(object, Protocol):
     def connectionLost(self, reason):
         if self._ping_loop.running:
             self._ping_loop.stop()
+
+    def timeoutConnection(self):
+        self.error("Connection timed out")
 
     # State-change callbacks
     # Feel free to override these, but call them at some point.
