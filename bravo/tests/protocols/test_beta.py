@@ -1,5 +1,8 @@
 from twisted.trial import unittest
 
+from twisted.internet import reactor
+from twisted.internet.task import deferLater
+
 from construct import Container
 
 from bravo.errors import BetaClientError
@@ -8,15 +11,23 @@ import bravo.protocols.beta
 class FakeTransport(object):
 
     data = []
+    lost = False
 
     def write(self, data):
         self.data.append(data)
+
+    def loseConnection(self):
+        self.lost = True
 
 class TestBetaServerProtocol(unittest.TestCase):
 
     def setUp(self):
         self.p = bravo.protocols.beta.BetaServerProtocol()
         self.p.transport = FakeTransport()
+
+    def tearDown(self):
+        if self.p._TimeoutMixin__timeoutCall:
+            self.p._TimeoutMixin__timeoutCall.cancel()
 
     def test_trivial(self):
         pass
@@ -103,11 +114,26 @@ class TestBetaServerProtocol(unittest.TestCase):
         self.p.health = 20
         self.assertFalse(self.p.transport.data)
 
+    def test_connection_timeout(self):
+        """
+        Connections should time out after 30 seconds.
+        """
+
+        def cb():
+            self.assertTrue(self.p.transport.lost)
+
+        d = deferLater(reactor, 31, cb)
+        return d
+
 
 class TestBravoProtocol(unittest.TestCase):
 
     def setUp(self):
         self.p = bravo.protocols.beta.BravoProtocol("unittest")
+
+    def tearDown(self):
+        if self.p._TimeoutMixin__timeoutCall:
+            self.p._TimeoutMixin__timeoutCall.cancel()
 
     def test_trivial(self):
         pass
