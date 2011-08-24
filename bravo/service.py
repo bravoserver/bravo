@@ -55,6 +55,11 @@ class BravoService(MultiService):
                 factory = BravoFactory(section[6:])
                 interfaces = configuration.getlist(section, "interfaces")
 
+                # Connection limit.
+                mC = configuration.getlist(section, "maxConnections")
+                # Eventually this will enforce the rule
+                # factory.connectionLimit = mC
+
                 for service in services_for_endpoints(interfaces, factory):
                     self.addService(service)
 
