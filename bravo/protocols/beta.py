@@ -390,6 +390,16 @@ class BannedProtocol(BetaServerProtocol):
     def connectionMade(self):
         self.error("Sorry, but your IP address is banned.")
 
+class MaxedConnectionsProtocol(BetaServerProtocol):
+    """
+    A very simple Beta protocol that helps enforce total connection limits.
+
+    This protocol disconnects people as soon as they connect, with a helpful
+    message.
+    """
+
+    def connectionMade(self):
+        self.error("The player limit has already been reached. Please try again later.")
 
 class BetaProxyProtocol(BetaServerProtocol):
     """

@@ -21,11 +21,12 @@ fancy_console = true
 #interfaces = tcp:25565, tcp:25566:interface=localhost
 interfaces = tcp:25565
 
-# The maxConnections is the number of total connections you want allowed on
-# your server. Say you only want 30 players total, set maxConnections to 30.
-# If you do not want to limit the number of connections allowed leave at None.
-#maxConnections = 30
-maxConnections = None
+# The limitConnections is the number of total connections you want allowed on
+# your server. Say you only want 30 players total, set limitConnections to 30.
+# If you do not want to limit the number of connections allowed leave at 0.
+# Negative numbers are ignored.
+#limitConnections = 30
+limitConnections = 0
 
 # The folder to use for storing the world. Make sure you have write
 # permissions to this folder. If it does not exist, it will be created.

@@ -16,7 +16,7 @@ from bravo.ibravo import (ISortedPlugin, IAutomaton, IAuthenticator, ISeason,
 from bravo.location import Location
 from bravo.packets.beta import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
-from bravo.protocols.beta import BannedProtocol, BravoProtocol
+from bravo.protocols.beta import BannedProtocol, BravoProtocol, MaxedConnectionsProtocol
 from bravo.utilities.chat import chat_name, sanitize_chat
 from bravo.utilities.coords import split_coords
 from bravo.weather import WeatherVane
@@ -66,6 +66,8 @@ class BravoFactory(Factory):
         self.world.factory = self
 
         self.protocols = dict()
+
+        self.limitConnections = configuration.get(self.config_name, "limitConnections")
 
         self.vane = WeatherVane(self)
 
@@ -140,6 +142,12 @@ class BravoFactory(Factory):
         This overriden method provides early player entity registration, as a
         solution to the username/entity race that occurs on login.
         """
+
+        if len(self.protocols) >= self.limitConnections and self.limitConnections not <= 0:
+            log.msg("Reached maximum players, turning another away.")
+            p = MaxedConnectionsProtocol()
+            p.factory = self
+            return p
 
         banned = self.world.serializer.load_plugin_data("banned_ips")
 
