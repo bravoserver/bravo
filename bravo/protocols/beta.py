@@ -980,7 +980,7 @@ class BravoProtocol(BetaServerProtocol):
                     if item is None:
                         continue
                     self.factory.give(coords, (item[0], item[1]), item[2])
-            sync_inventories(i, self.player.inventory)
+            sync_inventories(top, self.player.inventory)
             # All done!
             return
         else:
