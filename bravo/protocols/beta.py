@@ -388,6 +388,14 @@ class KickedProtocol(BetaServerProtocol):
     message.
     """
 
+    def __init__(self, reason=None):
+        if reason:
+            self.reason = reason
+        else:
+            self.reason = (
+                "This server doesn't like you very much."
+                " I don't like you very much either.")
+
     def connectionMade(self):
         self.error("%s" % self.reason)
 
@@ -1199,9 +1207,8 @@ class BravoProtocol(BetaServerProtocol):
 
         if self.username in self.factory.protocols:
             del self.factory.protocols[self.username]
-       
-        if self.host in self.factory.connectedIPs.keys():      
-            if self.factory.connectedIPs[self.host] > 1:
-                self.factory.connectedIPs[self.host] -= 1
-            else:
-                del self.factory.connectedIPs[self.host]
+
+        self.factory.connectedIPs[self.host] -= 1
+
+        if self.factory.connectedIPs[self.host] <= 0:
+            del self.factory.connectedIPs[self.host]
