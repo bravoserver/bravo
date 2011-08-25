@@ -949,6 +949,11 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_others(packet, self)
 
     def wclose(self, container):
+        if container.wid == 0:
+            # notchian clients send a close window message with window id 0 to close
+            # their inventory even though there is never an Open Window message for inventory.
+            return
+
         top = self.windows.pop()
 
         # If the requested WID is on top of the stack, go ahead and close the
@@ -970,9 +975,6 @@ class BravoProtocol(BetaServerProtocol):
             sync_inventories(i, self.player.inventory)
             # All done!
             return
-        elif container.wid == 0:
-            # XXX Why does this happen? What should we do?
-            pass
         else:
             log.msg("Ignoring request to close non-current window %d" %
                 container.wid)
