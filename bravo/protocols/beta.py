@@ -379,27 +379,17 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             self._health = value
 
 
-class BannedProtocol(BetaServerProtocol):
+class KickedProtocol(BetaServerProtocol):
     """
-    A very simple Beta protocol that helps enforce IP bans.
+    A very simple Beta protocol that helps enforce IP bans, Max Connections,
+    and Max Connections Per IP.
 
     This protocol disconnects people as soon as they connect, with a helpful
     message.
     """
 
     def connectionMade(self):
-        self.error("Sorry, but your IP address is banned.")
-
-class MaxedConnectionsProtocol(BetaServerProtocol):
-    """
-    A very simple Beta protocol that helps enforce total connection limits.
-
-    This protocol disconnects people as soon as they connect, with a helpful
-    message.
-    """
-
-    def connectionMade(self):
-        self.error("The player limit has already been reached. Please try again later.")
+        self.error("%s" % self.reason)
 
 class BetaProxyProtocol(BetaServerProtocol):
     """
@@ -1207,3 +1197,9 @@ class BravoProtocol(BetaServerProtocol):
 
         if self.username in self.factory.protocols:
             del self.factory.protocols[self.username]
+       
+        if self.host in self.factory.connectedIPs.keys():      
+            if self.factory.connectedIPs[self.host] > 1:
+                self.factory.connectedIPs[self.host] -= 1
+            else:
+                del self.factory.connectedIPs[self.host]

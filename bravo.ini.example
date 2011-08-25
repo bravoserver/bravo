@@ -28,6 +28,14 @@ interfaces = tcp:25565
 #limitConnections = 30
 limitConnections = 0
 
+# limitPerIP is the number of connections you will allow from the same IP.
+# If you don't want multiple connections from the same IP on your world, set
+# it's value equal to 1. If you want to allow 3 people from the same IP to be
+# able to connect, set limitPerIP to 3. If you don't want to use this limit,
+# set it equal to 0. Negative numbers are ignored.
+#limitPerIP = 3
+limitPerIP = 0
+
 # The folder to use for storing the world. Make sure you have write
 # permissions to this folder. If it does not exist, it will be created.
 # Relative paths are allowed but discouraged.
