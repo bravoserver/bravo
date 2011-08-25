@@ -68,8 +68,11 @@ class BravoFactory(Factory):
         self.protocols = dict()
         self.connectedIPs = defaultdict(int)
 
-        self.limitConnections = int(configuration.get(self.config_name, "limitConnections"))
-        self.limitPerIP = int(configuration.get(self.config_name, "limitPerIP"))
+        self.limitConnections = configuration.getintdefault(self.config_name,
+                                                            "limitConnections",
+                                                            0)
+        self.limitPerIP = configuration.getintdefault(self.config_name,
+                                                      "limitPerIP", 0)
 
         self.vane = WeatherVane(self)
 
@@ -127,6 +130,7 @@ class BravoFactory(Factory):
             automaton.stop()
 
         self.time_loop.stop()
+        self.entity_loop.stop()
 
         # Write back current world time. This must be done before stopping the
         # world.
