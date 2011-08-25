@@ -16,7 +16,7 @@ from bravo.ibravo import (ISortedPlugin, IAutomaton, IAuthenticator, ISeason,
 from bravo.location import Location
 from bravo.packets.beta import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
-from bravo.protocols.beta import BannedProtocol, BravoProtocol
+from bravo.protocols.beta import BravoProtocol, KickedProtocol
 from bravo.utilities.chat import chat_name, sanitize_chat
 from bravo.utilities.coords import split_coords
 from bravo.weather import WeatherVane
@@ -66,6 +66,10 @@ class BravoFactory(Factory):
         self.world.factory = self
 
         self.protocols = dict()
+        self.connectedIPs = dict()
+
+        self.limitConnections = int(configuration.get(self.config_name, "limitConnections"))
+        self.limitPerIP = int(configuration.get(self.config_name, "limitPerIP"))
 
         self.vane = WeatherVane(self)
 
@@ -143,16 +147,43 @@ class BravoFactory(Factory):
 
         banned = self.world.serializer.load_plugin_data("banned_ips")
 
+        # Dropping banned players
         for ip in banned.split():
             if addr.host == ip:
-                # Use BannedProtocol with extreme prejudice.
-                log.msg("Kicking banned IP %s" % addr)
-                p = BannedProtocol()
+                # Use KickedProtocol with extreme prejudice.
+                log.msg("Kicking banned IP %s" % addr.host)
+                p = KickedProtocol()
+                p.reason = "Sorry, but your IP address is banned."
                 p.factory = self
                 return p
 
+        # We are ignoring values less that 1, but making sure not to go over
+        # the connection limit.
+        if len(self.protocols) >= self.limitConnections and self.limitConnections > 0:
+            log.msg("Reached maximum players, turning %s away." % addr.host)
+            p = KickedProtocol()
+            p.reason = "The player limit has already been reached. Please try again later."
+            p.factory = self
+            return p
+
+        # This probably a needs cleanup. We need to see if that IP has 
+        # connected already, check if +1 connections is ok, and ignore 
+        # values less than 1.
+        if addr.host in self.connectedIPs.keys() and self.connectedIPs[addr.host] + 1 >= self.limitPerIP and self.limitPerIP > 0:
+            log.msg("At maximum connections for %s already, dropping." % addr.host)
+            p = KickedProtocol()
+            p.reason = "There are too many players connected from this IP."
+            p.factory = self
+            return p
+        elif addr.host in self.connectedIPs.keys():
+            self.connectedIPs[addr.host] += 1
+        else:
+            self.connectedIPs[addr.host] = 1
+
+        # If the player wasn't kicked, let's continue!
         log.msg("Starting connection for %s" % addr)
         p = self.protocol(self.name)
+        p.host = addr.host
         p.factory = self
 
         self.register_entity(p)
