@@ -804,7 +804,7 @@ class BravoProtocol(BetaServerProtocol):
             self.windows.append(i)
 
             self.write_packet("window-open", wid=i.wid, type="workbench",
-                title="Hurp", slots=2)
+                title="Hurp", slots=9)
             return True
 
         return False
