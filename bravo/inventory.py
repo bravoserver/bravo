@@ -363,6 +363,47 @@ class Inventory(object):
             return False
 
 
+    def select_stack(self, container, index):
+        """
+        Handle stacking of items (Shift + RMB/LMB)
+        """
+        
+        item = container[index]
+        if item is None:
+            return False
+        
+        targets = ()
+        if container is self.crafting:
+            targets = ( self.storage, self.holdables )
+        elif container is self.storage:
+            targets = ( self.holdables, )
+        elif container is self.holdables:
+            targets = ( self.storage, )
+        else:
+            return False
+            
+        # find same item to stack
+        for stash in targets:
+            for i, slot in enumerate( stash ):
+                if slot is not None and slot.holds( item ) and slot.quantity < 64:
+                    count = slot.quantity + item.quantity
+                    if count > 64:
+                        stash[i] = slot.replace( quantity = 64 )
+                        container[index] = item.replace( quantity = count - 64 )
+                        self.select_stack( container, index ) # do the same with rest of the items
+                    else:
+                        stash[i] = slot.replace( quantity = count )
+                        container[index] = None
+                    return True
+        # find empty space to move
+        for stash in targets:
+            for i, slot in enumerate( stash ):
+                if slot is None:
+                    stash[i] = item
+                    container[index] = None
+                    return True
+        return False
+                
     def select(self, slot, alternate=False, shift=False):
         """
         Handle a slot selection.
@@ -390,6 +431,8 @@ class Inventory(object):
             return self.select_armor(index, alternate, shift)
         elif l is self.crafted:
             return self.select_crafted(index, alternate, shift)
+        elif shift:
+            return self.select_stack( l, index )
         elif self.selected is not None and l[index] is not None:
             sslot = self.selected
             islot = l[index]
