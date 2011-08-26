@@ -362,7 +362,6 @@ class Inventory(object):
             # Forbid placing things in the crafted slot.
             return False
 
-
     def select_stack(self, container, index):
         """
         Handle stacking of items (Shift + RMB/LMB)
