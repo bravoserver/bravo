@@ -362,6 +362,44 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         self.transport.write(make_error_packet(message))
         self.transport.loseConnection()
 
+    def play_notes(self, notes):
+        """
+        Play some music.
+
+        Send a sequence of notes to the player. ``notes`` is a finite iterable
+        of pairs of instruments and pitches.
+
+        There is no way to time notes; if staggered playback is desired (and
+        it usually is!), then ``play_notes()`` should be called repeatedly at
+        the appropriate times.
+
+        This method turns the block beneath the player into a note block,
+        plays the requested notes through it, then turns it back into the
+        original block, all without actually modifying the chunk.
+        """
+
+        x, y, z = self.location.x, self.location.y, self.location.z
+
+        if y:
+            y -= 1
+
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+
+        if (bigx, bigz) not in self.chunks:
+            return
+
+        block = self.chunks[bigx, bigz].get_block((smallx, y, smallz))
+
+        self.write_packet("block", x=x, y=y, z=z,
+                          type=blocks["note-block"].slot, meta=0)
+
+        for (instrument, pitch) in notes:
+            self.write_packet("note", x=self.location.x, y=y,
+                              z=self.location.z, pitch=pitch,
+                              instrument=instrument)
+
+        self.write_packet("block", x=x, y=y, z=z, type=block, meta=0)
+
     # Automatic properties. Assigning to them causes the client to be notified
     # of changes.
 
