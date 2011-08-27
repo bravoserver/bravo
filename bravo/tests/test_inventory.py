@@ -198,6 +198,36 @@ class TestEquipmentInternals(unittest.TestCase):
         # still hold the left overs
         self.assertEqual(self.i.selected, (2, 0, 39))
 
+    def test_stacking_items(self):
+        # setup initial items
+        self.i.crafting[0] = Slot(1, 0, 2)
+        self.i.storage[0] = Slot(2, 0, 1)
+        self.i.storage[2] = Slot(1, 0, 3)
+        self.i.holdables[0] = Slot(3, 0 ,1)
+        self.i.holdables[2] = Slot(1, 0, 62)
+        self.i.holdables[4] = Slot(1, 0, 4)
+        # shift-LMB on crafting area
+        self.i.select(1, False, True)
+        self.assertEqual(self.i.crafting[0], None)
+        self.assertEqual(self.i.storage[1], None)
+        self.assertEqual(self.i.storage[2], (1, 0, 5))
+        # shift-LMB on storage area
+        self.i.select(11, False, True)
+        self.assertEqual(self.i.storage[2], None)
+        self.assertEqual(self.i.holdables[2], (1, 0, 64))
+        self.assertEqual(self.i.holdables[4], (1, 0, 7))
+        # shift-RMB on holdables area
+        self.i.select(38, True, True)
+        self.assertEqual(self.i.holdables[2], None)
+        self.assertEqual(self.i.storage[1], (1, 0, 64))
+        # check if item goes from crafting area directly to
+        # holdables if possible
+        self.i.crafting[1] = Slot(1, 0, 60)
+        self.i.select(2, True, True)
+        self.assertEqual(self.i.crafting[1], None)
+        self.assertEqual(self.i.storage[2], (1, 0, 3))
+        self.assertEqual(self.i.holdables[4], (1, 0, 64))
+
     def test_encoder_ring(self):
         self.assertEqual(self.i.encode_slot(36), 0)
 
