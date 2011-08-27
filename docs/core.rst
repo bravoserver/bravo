@@ -11,6 +11,7 @@ These modules comprise the core functionality of Bravo.
    entity
    factory
    ibravo
+   inventory
    location
    packets
    plugin
