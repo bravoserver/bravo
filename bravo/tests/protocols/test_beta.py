@@ -26,6 +26,7 @@ class TestBetaServerProtocol(unittest.TestCase):
         self.p.transport = FakeTransport()
 
     def tearDown(self):
+        # Stop the connection timeout.
         if self.p._TimeoutMixin__timeoutCall:
             self.p._TimeoutMixin__timeoutCall.cancel()
 
@@ -101,6 +102,7 @@ class TestBetaServerProtocol(unittest.TestCase):
         # Health packet, 19 health
         expected = "\x08\x00\x13"
 
+        self.p.transport.data = []
         self.p.health = 19
         self.assertEqual(len(self.p.transport.data), 1)
         self.assertEqual(self.p.transport.data[0], expected)
@@ -111,6 +113,7 @@ class TestBetaServerProtocol(unittest.TestCase):
         issued.
         """
 
+        self.p.transport.data = []
         self.p.health = 20
         self.assertFalse(self.p.transport.data)
 
