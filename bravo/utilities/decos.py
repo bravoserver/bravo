@@ -8,6 +8,13 @@ Decorators.
 timers = {}
 
 def timed(f):
+    """
+    Print out timing statistics on a given callable.
+
+    Intended largely for debugging; keep this in the tree for profiling even
+    if it's not currently wired up.
+    """
+
     timers[f] = (0, 0)
     @wraps(f)
     def deco(*args, **kwargs):

@@ -33,7 +33,7 @@ Decorators
 
 General decorators for a variety of purposes.
 
-.. automodule:: bravo.utilities.deco
+.. automodule:: bravo.utilities.decos
 
 Geometry
 ========
