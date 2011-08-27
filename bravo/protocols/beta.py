@@ -842,7 +842,8 @@ class BravoProtocol(BetaServerProtocol):
             self.windows.append(i)
 
             self.write_packet("window-open", wid=i.wid, type="workbench",
-                title="Hurp", slots=2)
+                title="Hurp", slots=9)
+            self.transport.write( i.save_to_packet() )
             return True
 
         return False
@@ -998,6 +999,13 @@ class BravoProtocol(BetaServerProtocol):
         if container.wid == 0:
             # notchian clients send a close window message with window id 0 to close
             # their inventory even though there is never an Open Window message for inventory.
+            self.drop_items( self.player.inventory.crafting )
+            # empty crafting slots on client
+            for i in xrange( 0, 4 ):
+                if self.player.inventory.crafting[i] is not None:
+                    self.write_packet( "window-slot", wid = 0, slot = i+1, primary = -1 )
+                    self.player.inventory.crafting[i] = None
+            self.drop_selected( self.player.inventory )
             return
 
         top = self.windows.pop()
@@ -1008,17 +1016,9 @@ class BravoProtocol(BetaServerProtocol):
         if container.wid == top.wid:
             if top.identifier == "workbench":
                 # Closing the workbench.
-                dest = self.location.in_front_of(1)
-                dest.y += 1
-                coords = (int(dest.x * 32) + 16, int(dest.y * 32) + 16,
-                    int(dest.z * 32) + 16)
-                # Loop over items left in workbench, and drop all of them
-                # in front of the player.
-                for item in top.crafting:
-                    if item is None:
-                        continue
-                    self.factory.give(coords, (item[0], item[1]), item[2])
-            sync_inventories(i, self.player.inventory)
+                self.drop_items( top.crafting )
+            self.drop_selected( top )
+            sync_inventories(top, self.player.inventory)
             # All done!
             return
         else:
@@ -1034,6 +1034,13 @@ class BravoProtocol(BetaServerProtocol):
         else:
             self.error("Couldn't find window %d" % container.wid)
 
+        if container.slot == 64537:
+            # clicked out of the window ( 64537? wtf )
+            self.drop_selected( i )
+            self.write_packet( "window-token", wid = container.wid,
+                token = container.token, acknowledged = True )
+            return
+            
         selected = i.select(container.slot, bool(container.button),
             bool(container.shift))
 
@@ -1068,9 +1075,25 @@ class BravoProtocol(BetaServerProtocol):
                 )
                 self.factory.broadcast_for_others(packet, self)
 
-        self.write_packet("window-token", wid=0, token=container.token,
+        self.write_packet("window-token", wid=container.wid, token=container.token,
             acknowledged=selected)
-
+            
+    def drop_items( self, items ):
+        # Loop over items and drop all of them in front of the player.
+        dest = self.location.in_front_of(1)
+        dest.y += 1
+        coords = (int(dest.x * 32) + 16, int(dest.y * 32) + 16,
+            int(dest.z * 32) + 16)
+        for item in items:
+            if item is None:
+                continue
+            self.factory.give(coords, (item[0], item[1]), item[2])
+    
+    def drop_selected( self, inventory ):
+        if inventory.selected is not None:
+            self.drop_items( ( inventory.selected, ) )
+            inventory.selected = None
+    
     def sign(self, container):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
 
