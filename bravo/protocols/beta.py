@@ -21,7 +21,7 @@ from bravo.errors import BetaClientError, BuildError
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
     IDigHook, ISignHook, IUseHook)
-from bravo.inventory import Workbench, sync_inventories
+from bravo.inventory import Workbench, ChestStorage, sync_inventories
 from bravo.location import Location
 from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
@@ -826,28 +826,44 @@ class BravoProtocol(BetaServerProtocol):
         dl = DeferredList(l)
         dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
 
-    def select_for_inventory(self, block):
+    def select_for_inventory(self, chunk, coords):
         """
         Perform a custom block selection to open an inventory window.
 
         Returns whether the selection was successful.
         """
 
+        block = chunk.get_block(coords)
         if block == blocks["workbench"].slot:
             i = Workbench()
-            i.wid = self.wid
-            self.wid += 1
+            slots = 9
+        elif block == blocks["chest"].slot:
+            # XXX large chest is not supported yet
+            x, y, z = coords
+            if chunk.get_block((x, y+1, z)) != blocks["air"].slot:
+                return True # handled, nothing shall be done
+            try:
+                chest = chunk.tiles[coords]
+            except KeyError:
+                # Chest block have no Chest entity associated!
+                return True # handled, nothing shall be done
+            i = chest.inventory
+            slots = 27
+        else:
+            return False
+        
+        i.wid = self.wid
+        self.wid += 1
 
-            sync_inventories(self.player.inventory, i)
-            self.windows.append(i)
+        sync_inventories(self.player.inventory, i)
+        self.windows.append(i)
 
-            self.write_packet("window-open", wid=i.wid, type="workbench",
-                title="Hurp", slots=9)
-            packet = i.save_to_packet()
-            self.transport.write(packet)
-            return True
-
-        return False
+        self.write_packet("window-open", wid=i.wid, type=i.identifier,
+                          title=i.title, slots=slots)
+        packet = i.save_to_packet()
+        self.transport.write(packet)
+        
+        return True
 
     @inlineCallbacks
     def build(self, container):
@@ -863,8 +879,7 @@ class BravoProtocol(BetaServerProtocol):
             self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        if self.select_for_inventory(
-            chunk.get_block((smallx, container.y, smallz))):
+        if self.select_for_inventory( chunk, (smallx, container.y, smallz)):
             return
 
         # Ignore clients that think -1 is placeable.

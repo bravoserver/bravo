@@ -1,5 +1,5 @@
 from collections import namedtuple
-from itertools import chain
+from itertools import chain, izip
 
 from construct import Container, ListContainer
 
@@ -92,25 +92,26 @@ class Inventory(object):
 
     The main concept of the ``Inventory`` lies in **slots**, which are boxes
     capable of holding items, and **tables**, which are groups of slots with
-    an associated semantic meaning. Currently, ``Inventory`` supports four
+    an associated semantic meaning. Currently, ``Inventory`` supports five
     tables:
 
      * Crafting: A rectangular arrangement of slots which can be used to
        transmute items. Crafting tables are always preceded by a single slot
        which is used for the output of the crafting table.
      * Armor: A set of slots used to equip armor.
-     * Storage: A generalized table for storing arbitrary items. This is the
-       main region of chests and player inventories.
+     * Content: Main region of chests.
+     * Storage: Region of player inventories.
      * Holdables: A region mapped to a player's usable items.
     """
 
     crafting = 0
     crafting_stride = 0
     armor = 0
+    content = 0
     storage = 0
     holdables = 0
 
-    identifier = 0
+    identifier = "none"
 
     slot_table = tuple()
 
@@ -125,6 +126,11 @@ class Inventory(object):
             self.armor = [None] * self.armor
         else:
             self.armor = []
+
+        if self.content:
+            self.content = [None] * self.content
+        else:
+            self.content = []
 
         if self.storage:
             self.storage = [None] * self.storage
@@ -147,7 +153,7 @@ class Inventory(object):
 
     def __len__(self):
         retval = len(self.crafted) + len(self.crafting) + len(self.armor)
-        retval += len(self.storage) + len(self.holdables)
+        retval += len(self.content) + len(self.storage) + len(self.holdables)
         return retval
 
     def encode_slot(self, slot):
@@ -176,8 +182,8 @@ class Inventory(object):
         ``Inventory`` to be viewed as a single large table of slots.
         """
 
-        metalist = [self.crafted, self.crafting, self.armor, self.storage,
-            self.holdables]
+        metalist = [self.crafted, self.crafting, self.armor, self.content,
+                    self.storage, self.holdables]
 
         for l in metalist:
             if not len(l):
@@ -188,8 +194,8 @@ class Inventory(object):
 
     def load_from_list(self, l):
 
-        metalist = [self.crafted, self.crafting, self.armor, self.storage,
-            self.holdables]
+        metalist = [self.crafted, self.crafting, self.armor, self.content,
+                    self.storage, self.holdables]
 
         for target in metalist:
             if len(target):
@@ -200,7 +206,8 @@ class Inventory(object):
         Load data from a packet container.
         """
 
-        length = self.crafting + self.armor + self.storage + self.holdables
+        length = self.crafting + self.armor + self.content
+        length += self.storage + self.holdables
         if self.crafting:
             # +1 for crafting output slot
             length += 1
@@ -224,7 +231,7 @@ class Inventory(object):
 
         lc = ListContainer()
         for item in chain(self.crafted, self.crafting, self.armor,
-            self.storage, self.holdables):
+                          self.content, self.storage, self.holdables):
             if item is None:
                 lc.append(Container(primary=-1))
             else:
@@ -374,10 +381,21 @@ class Inventory(object):
         if item is None:
             return False
 
+        loop_over = enumerate # default enumerator - from start to end
+        # same as enumerate() but in reverse order
+        reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
+
         if container is self.crafting:
             targets = (self.storage, self.holdables)
+        elif container is self.content:
+            targets = (self.holdables, self.storage)
+            # in this case notchian client enumerates from the end. o_O
+            loop_over = reverse_enumerate
         elif container is self.storage:
-            targets = (self.holdables,)
+            if len(self.content):
+                targets = (self.content,)
+            else:
+                targets = (self.holdables,)
         elif container is self.holdables:
             targets = (self.storage,)
         else:
@@ -385,7 +403,7 @@ class Inventory(object):
 
         # find same item to stack
         for stash in targets:
-            for i, slot in enumerate(stash):
+            for i, slot in loop_over(stash):
                 if slot is not None and slot.holds(item) and slot.quantity < 64:
                     count = slot.quantity + item.quantity
                     if count > 64:
@@ -401,7 +419,7 @@ class Inventory(object):
 
         # find empty space to move
         for stash in targets:
-            for i, slot in enumerate(stash):
+            for i, slot in loop_over(stash):
                 if slot is None:
                     stash[i] = item
                     container[index] = None
@@ -562,7 +580,6 @@ class Inventory(object):
                 slot = self.crafting[index]
                 self.crafting[index] = slot.decrement(rcount)
 
-
 class Equipment(Inventory):
 
     crafting = 4
@@ -586,10 +603,12 @@ class Workbench(Inventory):
     storage = 27
     holdables = 9
 
+    title = "Workbench"
     identifier = "workbench"
 
 class Furnace(Inventory):
 
+    title = "Furnace"
     identifier = "furnace"
 
 class GenericWindow(Inventory):
@@ -614,11 +633,20 @@ class ChestStorage(GenericWindow):
     """
     A window representing chest storage.
     """
-
+    content = 27
     storage = 27
+    holdables = 9
+
+    identifier = "chest"
 
     def __init__(self):
         GenericWindow.__init__(self, "Chest")
+
+class LargeChestStorage(ChestStorage):
+    """
+    A window representing large chest storage.
+    """
+    content = 54
 
 def sync_inventories(src, dst):
     """
