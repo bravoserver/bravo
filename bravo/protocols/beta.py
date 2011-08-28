@@ -1059,19 +1059,20 @@ class BravoProtocol(BetaServerProtocol):
             packet = i.save_to_packet()
             self.transport.write(packet)
 
+            equipped_slot = self.player.equipped + 36
             # Inform other players about changes to this player's equipment.
             if container.wid == 0 and (container.slot in range(5, 9) or
-                                       container.slot == 36):
+                                       container.slot == equipped_slot):
 
+                # Currently equipped item changes.
+                if container.slot == equipped_slot:
+                    item = i.holdables[self.player.equipped]
+                    slot = 0
                 # Armor changes.
-                if container.slot in range(5, 9):
+                else:
                     item = i.armor[container.slot - 5]
                     # Order of slots is reversed in the equipment package.
                     slot = 4 - (container.slot - 5)
-                # Currently equipped item changes.
-                elif container.slot == 36:
-                    item = i.holdables[0]
-                    slot = 0
 
                 if item is None:
                     primary, secondary = 65535, 0
