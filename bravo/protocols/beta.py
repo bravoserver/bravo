@@ -21,7 +21,7 @@ from bravo.errors import BetaClientError, BuildError
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
     IDigHook, ISignHook, IUseHook)
-from bravo.inventory import Window, InventoryWindow, Workbench, ChestStorage
+from bravo.inventory.windows import Window, InventoryWindow, WorkbenchWindow
 from bravo.location import Location
 from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
@@ -837,8 +837,7 @@ class BravoProtocol(BetaServerProtocol):
 
         block = chunk.get_block(coords)
         if block == blocks["workbench"].slot:
-            i = Window(self.wid, self.player.inventory, Workbench())
-            slots = 9
+            i = WorkbenchWindow(self.wid, self.player.inventory)
         elif block == blocks["chest"].slot:
             # XXX large chest is not supported yet
             x, y, z = coords
@@ -850,7 +849,6 @@ class BravoProtocol(BetaServerProtocol):
                 # Chest block have no Chest entity associated!
                 return True # handled, nothing shall be done
             i = Window(self.wid, self.player.inventory, chest.inventory)
-            slots = 27
         else:
             return False
         

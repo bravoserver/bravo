@@ -2,7 +2,8 @@ from math import pi
 
 from twisted.python import log
 
-from bravo.inventory import Inventory, ChestStorage, FurnaceStorage
+from bravo.inventory import Inventory
+from bravo.inventory.slots import ChestStorage, FurnaceStorage
 from bravo.location import Location
 from bravo.packets.beta import make_packet
 
