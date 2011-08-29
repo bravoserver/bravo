@@ -6,7 +6,7 @@ from bravo import blocks
 
 class Slot(namedtuple("Slot", "primary, secondary, quantity")):
     """
-    A slot in an inventory.
+    The class represents slot in an inventory.
     """
 
     __slots__ = tuple()
@@ -76,7 +76,7 @@ class SerializableSlots(object):
 
 class Inventory(SerializableSlots):
     '''
-    Player's inventory
+    The class represents Player's inventory
     '''
 
     def __init__(self):
@@ -143,7 +143,7 @@ class Inventory(SerializableSlots):
         """
         Handle a slot selection on an armor slot.
 
-        Returns: ( True/False, new selection )
+        :returns tuple: ( True/False, new selection )
         """
 
         # Special case for armor slots.
