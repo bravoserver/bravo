@@ -1,4 +1,3 @@
-
 from itertools import chain, izip
 from construct import Container, ListContainer
 
@@ -16,7 +15,7 @@ class Window(SerializableSlots):
 
     The ``Window`` agregates player's inventory and other crafting/storage slots
     as building blocks of the window.
-    
+
     :param int wid: window ID
     :param Inventory inventory: player's inventory object
     :param SlotsSet slots: other window slots
@@ -103,7 +102,7 @@ class Window(SerializableSlots):
 
         if container is self.slots.crafting:
             targets = (self.inventory.storage, self.inventory.holdables)
-        elif container is self.slots.storage:
+        elif container is self.slots.crafted or container is self.slots.storage:
             targets = (self.inventory.holdables, self.inventory.storage)
             # in this case notchian client enumerates from the end. o_O
             loop_over = reverse_enumerate
@@ -170,8 +169,18 @@ class Window(SerializableSlots):
                                          alternate, shift, self.selected)
             return result
         elif l is self.slots.crafted:
-            result, self.selected = self.slots.select_crafted(index,
-                                         alternate, shift, self.selected)
+            if shift: # shift-click on crafted slot
+                # if we can put crafted item somewhere...
+                if ( self.select_stack(self.slots.crafted, 0)):
+                    # As select_stack() call took item from crafted[0]
+                    # we must update the recipe to generate new item there
+                    self.slots.update_crafted()
+                    result, temp = self.slots.select_crafted(0, alternate, True, None)
+                else:
+                    result = False
+            else:
+                result, self.selected = self.slots.select_crafted(index,
+                                            alternate, shift, self.selected)
             return result
         elif shift:
             return self.select_stack(l, index)

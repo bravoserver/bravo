@@ -403,6 +403,25 @@ class TestWindowIntegration(unittest.TestCase):
             self.assertTrue(self.i.select(5 + index))
             self.assertEqual(self.i.inventory.armor[index], (bravo.blocks.items[item].slot, 0, 1))
 
+    def test_shift_click_crafted(self):
+        # Select log into crafting.
+        self.i.inventory.add(bravo.blocks.blocks["log"].key, 2)
+        self.i.select(36)
+        self.i.select(1)
+        # Shift-Click on wood from crafted.
+        self.i.select(0, False, True)
+        self.assertEqual(self.i.selected, None )
+        self.assertEqual(self.i.inventory.holdables[8],
+            (bravo.blocks.blocks["wood"].slot, 0, 4))
+        # Move crafted wood to another slot
+        self.i.select(44)
+        self.i.select(18)
+        # One more time
+        self.i.select(0, False, True)
+        self.assertEqual(self.i.selected, None )
+        self.assertEqual(self.i.inventory.storage[9],
+            (bravo.blocks.blocks["wood"].slot, 0, 8))
+
     def test_close_window(self):
         items, packets = self.i.close()
         self.assertEqual(len(items), 0)
