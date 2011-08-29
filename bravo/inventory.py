@@ -82,137 +82,81 @@ class Slot(namedtuple("Slot", "primary, secondary, quantity")):
 
         return new
 
-class Inventory(object):
-    """
-    Item manager.
-
-    The ``Inventory`` covers all kinds of inventory and crafting windows,
-    ranging from user inventories to furnaces to workbenches. It is completely
-    extensible and customizeable.
-
-    The main concept of the ``Inventory`` lies in **slots**, which are boxes
-    capable of holding items, and **tables**, which are groups of slots with
-    an associated semantic meaning. Currently, ``Inventory`` supports five
-    tables:
-
-     * Crafting: A rectangular arrangement of slots which can be used to
-       transmute items. Crafting tables are always preceded by a single slot
-       which is used for the output of the crafting table.
-     * Armor: A set of slots used to equip armor.
-     * Content: Main region of chests.
-     * Storage: Region of player inventories.
-     * Holdables: A region mapped to a player's usable items.
-    """
-
-    crafting = 0
-    crafting_stride = 0
-    armor = 0
-    content = 0
-    storage = 0
-    holdables = 0
-
-    identifier = "none"
-
-    slot_table = tuple()
-
-    def __init__(self):
-        if self.crafting:
-            self.crafting = [None] * self.crafting
-            self.crafted = [None]
-        else:
-            self.crafting = self.crafted = []
-
-        if self.armor:
-            self.armor = [None] * self.armor
-        else:
-            self.armor = []
-
-        if self.content:
-            self.content = [None] * self.content
-        else:
-            self.content = []
-
-        if self.storage:
-            self.storage = [None] * self.storage
-        else:
-            self.storage = []
-
-        if self.holdables:
-            self.holdables = [None] * self.holdables
-        else:
-            self.holdables = []
-
-        self.selected = None
-
-        self.recipe = None
-        self.recipe_offset = None
-
-        # Prep decoder rings.
-        self.slot_encoder_ring = dict(self.slot_table)
-        self.slot_decoder_ring = dict((v, k) for k, v in self.slot_table)
+class SerializableSlots(object):
 
     def __len__(self):
-        retval = len(self.crafted) + len(self.crafting) + len(self.armor)
-        retval += len(self.content) + len(self.storage) + len(self.holdables)
-        return retval
+        return self.metalength
 
-    def encode_slot(self, slot):
-        """
-        Turn a server-side slot into a Notchian slot.
+    @property
+    def metalength(self):
+        return sum(map(len, self.metalist))
 
-        Only used for old serializers.
-        """
+    def load_from_list(self, l):
+        if len(l) < self.metalength:
+            raise AttributeError # otherwise it will break everything
+        for target in self.metalist:
+            if len(target):
+                target[:], l = l[:len(target)], l[len(target):]
 
-        return self.slot_encoder_ring.get(slot, slot)
+    def save_to_list(self):
+        return [i for i in chain(*self.metalist)]
 
-    def decode_slot(self, slot):
-        """
-        Turn a Notchian slot into a server-side slot.
+class Window(SerializableSlots):
+    """
+    Item manager
 
-        Only used for old serializers.
-        """
+    The ``Window`` covers all kinds of inventory and crafting windows,
+    ranging from user inventories to furnaces and workbenches.
 
-        return self.slot_decoder_ring.get(slot, slot)
+    The ``Window`` agregates player's inventory and other crafting/storage slots
+    as building blocks of the window.
+    """
+
+    def __init__(self, wid, inventory, slots):
+        self.inventory = inventory
+        self.slots = slots
+        self.wid = wid
+        self.selected = None
+
+    @property
+    def metalist(self):
+        m = [self.slots.crafted, self.slots.crafting, self.slots.storage]
+        m += [self.inventory.storage, self.inventory.holdables]
+        return m
+
+    @property
+    def slots_num(self):
+        return self.slots.slots_num
+
+    @property
+    def identifier(self):
+        return self.slots.identifier
+
+    @property
+    def title(self):
+        return self.slots.title
 
     def container_for_slot(self, slot):
         """
         Retrieve the table and index for a given slot.
 
         There is an isomorphism here which allows all of the tables of this
-        ``Inventory`` to be viewed as a single large table of slots.
+        ``Window`` to be viewed as a single large table of slots.
         """
 
-        metalist = [self.crafted, self.crafting, self.armor, self.content,
-                    self.storage, self.holdables]
-
-        for l in metalist:
+        for l in self.metalist:
             if not len(l):
                 continue
             if slot < len(l):
                 return l, slot
             slot -= len(l)
 
-    def load_from_list(self, l):
-
-        metalist = [self.crafted, self.crafting, self.armor, self.content,
-                    self.storage, self.holdables]
-
-        for target in metalist:
-            if len(target):
-                target[:], l = l[:len(target)], l[len(target):]
-
     def load_from_packet(self, container):
         """
         Load data from a packet container.
         """
 
-        length = self.crafting + self.armor + self.content
-        length += self.storage + self.holdables
-        if self.crafting:
-            # +1 for crafting output slot
-            length += 1
-
-        items = [None] * length
+        items = [None] * self.metalength
 
         for i, item in enumerate(container.items):
             if item.id < 0:
@@ -222,16 +166,9 @@ class Inventory(object):
 
         self.load_from_list(items)
 
-    def save_to_packet(self, wid=None):
-        # XXX This is a horrible place for this kind of silliness. Inventories
-        # don't need to know or care about WIDs. Use a partial and fill this
-        # out in inherited classes.
-        if wid is not None:
-            self.wid = wid
-
+    def save_to_packet(self):
         lc = ListContainer()
-        for item in chain(self.crafted, self.crafting, self.armor,
-                          self.content, self.storage, self.holdables):
+        for item in chain(*self.metalist):
             if item is None:
                 lc.append(Container(primary=-1))
             else:
@@ -239,8 +176,217 @@ class Inventory(object):
                     secondary=item.secondary, count=item.quantity))
 
         packet = make_packet("inventory", wid=self.wid, length=len(lc), items=lc)
-
         return packet
+
+    def select_stack(self, container, index):
+        """
+        Handle stacking of items (Shift + RMB/LMB)
+        """
+
+        item = container[index]
+        if item is None:
+            return False
+
+        loop_over = enumerate # default enumerator - from start to end
+        # same as enumerate() but in reverse order
+        reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
+
+        if container is self.slots.crafting:
+            targets = (self.inventory.storage, self.inventory.holdables)
+        elif container is self.slots.storage:
+            targets = (self.inventory.holdables, self.inventory.storage)
+            # in this case notchian client enumerates from the end. o_O
+            loop_over = reverse_enumerate
+        elif container is self.inventory.storage:
+            if len(self.slots.storage):
+                targets = (self.slots.storage,)
+            else:
+                targets = (self.inventory.holdables,)
+        elif container is self.inventory.holdables:
+            targets = (self.inventory.storage,)
+        else:
+            return False
+
+        # find same item to stack
+        for stash in targets:
+            for i, slot in loop_over(stash):
+                if slot is not None and slot.holds(item) and slot.quantity < 64:
+                    count = slot.quantity + item.quantity
+                    if count > 64:
+                        stash[i] = slot.replace(quantity=64)
+                        container[index] = item.replace(quantity=count - 64)
+                        # XXX recursive call with same args; make sure this is
+                        # reasonable
+                        self.select_stack(container, index) # do the same with rest of the items
+                    else:
+                        stash[i] = slot.replace(quantity=count)
+                        container[index] = None
+                    return True
+
+        # find empty space to move
+        for stash in targets:
+            for i, slot in loop_over(stash):
+                if slot is None:
+                    stash[i] = item
+                    container[index] = None
+                    return True
+        return False
+
+    def select(self, slot, alternate=False, shift=False):
+        """
+        Handle a slot selection.
+
+        This method implements the basic public interface for interacting with
+        ``Inventory`` objects. It is directly equivalent to mouse clicks made
+        upon slots.
+
+        :param int slot: which slot was selected
+        :param bool alternate: whether the selection is alternate; e.g., if it
+                               was done with a right-click
+        :param bool shift: whether the shift key is toogled
+        """
+
+        # Look up the container and offset.
+        # If, for any reason, our slot is out-of-bounds, then
+        # container_for_slot will return None. In that case, catch the error
+        # and return False.
+        try:
+            l, index = self.container_for_slot(slot)
+        except TypeError:
+            return False
+
+        if l is self.inventory.armor:
+            result, self.selected = self.inventory.select_armor(index,
+                                         alternate, shift, self.selected)
+            return result
+        elif l is self.slots.crafted:
+            result, self.selected = self.slots.select_crafted(index,
+                                         alternate, shift, self.selected)
+            return result
+        elif shift:
+            return self.select_stack(l, index)
+        elif self.selected is not None and l[index] is not None:
+            sslot = self.selected
+            islot = l[index]
+            if islot.holds(sslot):
+                # both contain the same item
+                if alternate:
+                    if islot.quantity < 64:
+                        l[index] = islot.increment()
+                        self.selected = sslot.decrement()
+                else:
+                    if sslot.quantity + islot.quantity <= 64:
+                        # Sum of items fits in one slot, so this is easy.
+                        l[index] = islot.increment(sslot.quantity)
+                        self.selected = None
+                    else:
+                        # fill up slot to 64, move left overs to selection
+                        # valid for left and right mouse click
+                        l[index] = islot.replace(quantity=64)
+                        self.selected = sslot.replace(
+                            quantity=sslot.quantity + islot.quantity - 64)
+            else:
+                # Default case: just swap
+                # valid for left and right mouse click
+                self.selected, l[index] = l[index], self.selected
+        else:
+            if alternate:
+                if self.selected is not None:
+                    sslot = self.selected
+                    l[index] = sslot.replace(quantity=1)
+                    self.selected = sslot.decrement()
+                elif l[index] is None:
+                    # Right click on empty inventory slot does nothing
+                    return False
+                else:
+                    # Logically, l[index] is not None, but self.selected is.
+                    islot = l[index]
+                    scount = islot.quantity // 2
+                    scount, lcount = islot.quantity - scount, scount
+                    l[index] = islot.replace(quantity=lcount)
+                    self.selected = islot.replace(quantity=scount)
+            else:
+                # Default case: just swap.
+                self.selected, l[index] = l[index], self.selected
+
+        # At this point, we've already finished touching our selection; this
+        # is just a state update.
+        if l is self.slots.crafting:
+            self.slots.update_crafted()
+
+        return True
+
+    def close(self):
+        '''
+        Clear crafting areas and return items to drop and packets to send to client
+        '''
+        items = []
+        packets = ""
+
+        # process crafting area
+        for i, itm in enumerate(self.slots.crafting):
+            if itm is not None:
+                items.append(itm)
+                self.slots.crafting[i] = None
+                packets += make_packet("window-slot", wid = self.wid,
+                                        slot = i+1, primary = -1)
+        # process crafted area
+        if len(self.slots.crafted):
+            self.slots.crafted[0] = None
+
+        # process selection
+        items += self.drop_selected()
+
+        return items, packets
+
+    def drop_selected(self):
+        items = []
+        if self.selected is not None:
+            items.append( self.selected )
+            self.selected = None
+        return items
+
+class InventoryWindow(Window):
+    '''
+    Special case of window - player's inventory window
+    '''
+
+    def __init__(self, inventory):
+        Window.__init__(self, 0, inventory, Crafting())
+
+    @property
+    def slots_num(self):
+        # Actually it doesn't matter. Client never notifies when it opens inventory
+        return 5
+
+    @property
+    def identifier(self):
+        # Actually it doesn't matter. Client never notifies when it opens inventory
+        return "inventory"
+
+    @property
+    def title(self):
+        # Actually it doesn't matter. Client never notifies when it opens inventory
+        return "Inventory"
+
+    @property
+    def metalist(self):
+        m = [self.slots.crafted, self.slots.crafting]
+        m += [self.inventory.armor, self.slots.storage]
+        m += [self.inventory.storage, self.inventory.holdables]
+        return m
+
+class Inventory(SerializableSlots):
+    '''
+    Player's inventory
+    '''
+
+    def __init__(self):
+        self.armor = [None] * 4
+        self.crafting = [None] * 27
+        self.storage = [None] * 27
+        self.holdables = [None] * 9
+        self.dummy = [None] * 64 # represents gap in serialized structure
 
     def add(self, item, quantity):
         """
@@ -295,10 +441,11 @@ class Inventory(object):
 
         return False
 
-
-    def select_armor(self, index, alternate, shift):
+    def select_armor(self, index, alternate, shift, selected = None):
         """
         Handle a slot selection on an armor slot.
+
+        Returns: ( True/False, new selection )
         """
 
         # Special case for armor slots.
@@ -309,54 +456,136 @@ class Inventory(object):
 
         allowed_items = allowed_items_per_slot[index]
 
-        if self.selected is not None:
-            sslot = self.selected
+        if selected is not None:
+            sslot = selected
             if sslot.primary not in allowed_items:
-                return False
+                return (False, selected)
 
             if self.armor[index] is None:
                 # Put one armor piece into the slot, decrement the amount
                 # in the selection.
                 self.armor[index] = sslot.replace(quantity=1)
-                self.selected = sslot.decrement()
+                selected = sslot.decrement()
             else:
                 # If both slot and selection are the same item, do nothing.
                 # If not, the quantity needs to be 1, because only one item
                 # fits into the slot, and exchanging slot and selection is not
                 # possible otherwise.
                 if not self.armor[index].holds(sslot) and sslot.quantity == 1:
-                    self.selected, self.armor[index] = self.armor[index], self.selected
+                    selected, self.armor[index] = self.armor[index], selected
                 else:
-                    return False
+                    return (False, selected)
         else:
             if self.armor[index] is None:
                 # Slot and selection are empty, do nothing.
-                return False
+                return (False, selected)
             else:
                 # Move item in the slot into the selection.
-                self.selected = self.armor[index]
+                selected = self.armor[index]
                 self.armor[index] = None
 
         # Yeah, okay, success.
-        return True
+        return (True, selected)
 
-    def select_crafted(self, index, alternate, shift):
+    #
+    # The methods below are for serialization purposes only.
+    #
+
+    @property
+    def metalist(self):
+        # this one is used for serialization
+        return [self.holdables, self.storage, self.dummy, self.armor]
+
+    def load_from_list(self, l):
+        SerializableSlots.load_from_list(self, l)
+        # reverse armor slots (notchian)
+        self.armor = [i for i in reversed(self.armor)]
+
+    def save_to_list(self):
+        # save armor
+        tmp_armor = []
+        tmp_armor[:] = self.armor
+        # reverse armor (notchian)
+        self.armor = [i for i in reversed(self.armor)]
+        # generate the list
+        l = SerializableSlots.save_to_list(self)
+        # restore armor
+        self.armor = tmp_armor
+        return l
+
+class SlotsSet(SerializableSlots):
+    '''
+    Base calss for different slot configurations except player's inventory
+    '''
+
+    crafting = 0
+    storage = 0
+    crafting_stride = 0
+
+    def __init__(self):
+        if self.crafting:
+            self.crafting = [None] * self.crafting
+            self.crafted = [None]
+        else:
+            self.crafting = self.crafted = []
+
+        if self.storage:
+            self.storage = [None] * self.storage
+        else:
+            self.storage = []
+        self.dummy = [None] * 36 # represents gap in serialized structure:
+                                 # storage (27) + holdables(9) from player's
+                                 # inventory (notchian)
+
+    def update_crafted(self):
+        pass
+
+
+    @property
+    def metalist(self):
+        return [self.crafted, self.crafting, self.storage, self.dummy]
+
+class Crafting(SlotsSet):
+    '''
+    Base crafting class. Never shall be instantinated directly.
+    '''
+
+    crafting = 4
+    crafting_stride = 2
+
+    def __init__(self):
+        SlotsSet.__init__(self)
+        self.show_armor = True # count armor slots
+        self.recipe = None
+        self.recipe_offset = None
+        self.show_armor = True # count armor slots
+
+    def update_crafted(self):
+        self.check_recipes()
+        if self.recipe is None:
+            self.crafted[0] = None
+        else:
+            provides = self.recipe.provides
+            self.crafted[0] = Slot(provides[0][0], provides[0][1], provides[1])
+
+    def select_crafted(self, index, alternate, shift, selected = None):
         """
         Handle a slot selection on a crafted output.
+
+        Returns: ( True/False, new selection )
         """
 
         if self.recipe and self.crafted[0]:
-            if self.selected is None:
-                self.selected = self.crafted[0]
+            if selected is None:
+                selected = self.crafted[0]
                 self.crafted[0] = None
             else:
-                sslot = self.selected
+                sslot = selected
                 if sslot.holds(self.recipe.provides[0]):
-                    self.selected = sslot.increment(
-                        self.recipe.provides[1])
+                    selected = sslot.increment(self.recipe.provides[1])
                 else:
                     # Mismatch; don't allow it.
-                    return False
+                    return (False, selected)
 
             self.reduce_recipe()
             self.check_recipes()
@@ -367,151 +596,10 @@ class Inventory(object):
                 self.crafted[0] = Slot(provides[0][0], provides[0][1],
                     provides[1])
 
-            return True
+            return (True, selected)
         else:
             # Forbid placing things in the crafted slot.
-            return False
-
-    def select_stack(self, container, index):
-        """
-        Handle stacking of items (Shift + RMB/LMB)
-        """
-
-        item = container[index]
-        if item is None:
-            return False
-
-        loop_over = enumerate # default enumerator - from start to end
-        # same as enumerate() but in reverse order
-        reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
-
-        if container is self.crafting:
-            targets = (self.storage, self.holdables)
-        elif container is self.content:
-            targets = (self.holdables, self.storage)
-            # in this case notchian client enumerates from the end. o_O
-            loop_over = reverse_enumerate
-        elif container is self.storage:
-            if len(self.content):
-                targets = (self.content,)
-            else:
-                targets = (self.holdables,)
-        elif container is self.holdables:
-            targets = (self.storage,)
-        else:
-            return False
-
-        # find same item to stack
-        for stash in targets:
-            for i, slot in loop_over(stash):
-                if slot is not None and slot.holds(item) and slot.quantity < 64:
-                    count = slot.quantity + item.quantity
-                    if count > 64:
-                        stash[i] = slot.replace(quantity=64)
-                        container[index] = item.replace(quantity=count - 64)
-                        # XXX recursive call with same args; make sure this is
-                        # reasonable
-                        self.select_stack(container, index) # do the same with rest of the items
-                    else:
-                        stash[i] = slot.replace(quantity=count)
-                        container[index] = None
-                    return True
-
-        # find empty space to move
-        for stash in targets:
-            for i, slot in loop_over(stash):
-                if slot is None:
-                    stash[i] = item
-                    container[index] = None
-                    return True
-        return False
-
-    def select(self, slot, alternate=False, shift=False):
-        """
-        Handle a slot selection.
-
-        This method implements the basic public interface for interacting with
-        ``Inventory`` objects. It is directly equivalent to mouse clicks made
-        upon slots.
-
-        :param int slot: which slot was selected
-        :param bool alternate: whether the selection is alternate; e.g., if it
-                               was done with a right-click
-        :param bool shift: whether the shift key is toogled
-        """
-
-        # Look up the container and offset.
-        # If, for any reason, our slot is out-of-bounds, then
-        # container_for_slot will return None. In that case, catch the error
-        # and return False.
-        try:
-            l, index = self.container_for_slot(slot)
-        except TypeError:
-            return False
-
-        if l is self.armor:
-            return self.select_armor(index, alternate, shift)
-        elif l is self.crafted:
-            return self.select_crafted(index, alternate, shift)
-        elif shift:
-            return self.select_stack(l, index)
-        elif self.selected is not None and l[index] is not None:
-            sslot = self.selected
-            islot = l[index]
-            if islot.holds(sslot):
-                # both contain the same item
-                if alternate:
-                    if islot.quantity < 64:
-                        l[index] = islot.increment()
-                        self.selected = sslot.decrement()
-                else:
-                    if sslot.quantity + islot.quantity <= 64:
-                        # Sum of items fits in one slot, so this is easy.
-                        l[index] = islot.increment(sslot.quantity)
-                        self.selected = None
-                    else:
-                        # fill up slot to 64, move left overs to selection
-                        # valid for left and right mouse click
-                        l[index] = islot.replace(quantity=64)
-                        self.selected = sslot.replace(
-                            quantity=sslot.quantity + islot.quantity - 64)
-            else:
-                # Default case: just swap
-                # valid for left and right mouse click
-                self.selected, l[index] = l[index], self.selected
-        else:
-            if alternate:
-                if self.selected is not None:
-                    sslot = self.selected
-                    l[index] = sslot.replace(quantity=1)
-                    self.selected = sslot.decrement()
-                elif l[index] is None:
-                    # Right click on empty inventory slot does nothing
-                    return False
-                else:
-                    # Logically, l[index] is not None, but self.selected is.
-                    islot = l[index]
-                    scount = islot.quantity // 2
-                    scount, lcount = islot.quantity - scount, scount
-                    l[index] = islot.replace(quantity=lcount)
-                    self.selected = islot.replace(quantity=scount)
-            else:
-                # Default case: just swap.
-                self.selected, l[index] = l[index], self.selected
-
-        # At this point, we've already finished touching our selection; this
-        # is just a state update.
-        if l is self.crafting:
-            # Crafting table changed...
-            self.check_recipes()
-            if self.recipe is None:
-                self.crafted[0] = None
-            else:
-                provides = self.recipe.provides
-                self.crafted[0] = Slot(provides[0][0], provides[0][1],
-                    provides[1])
-
-        return True
+            return (False, selected)
 
     def check_recipes(self):
         """
@@ -580,81 +668,26 @@ class Inventory(object):
                 slot = self.crafting[index]
                 self.crafting[index] = slot.decrement(rcount)
 
-class Equipment(Inventory):
-
-    crafting = 4
-    crafting_stride = 2
-    armor = 4
-    storage = 27
-    holdables = 9
-    wid = 0
-
-    slot_table = (
-        (36, 0), (37, 1), (38, 2), (39, 3), (40, 4), (41, 5), (42, 6),
-        (43, 7), (44, 8), (1, 80), (2, 81), (3, 82), (4, 83), (8, 100),
-        (7, 101), (6, 102), (5, 103))
-
-    identifier = "inventory"
-
-class Workbench(Inventory):
+class Workbench(Crafting):
 
     crafting = 9
     crafting_stride = 3
-    storage = 27
-    holdables = 9
-
     title = "Workbench"
     identifier = "workbench"
+    slots_num = 9
 
-class Furnace(Inventory):
+class ChestStorage(SlotsSet):
+
+    storage = 27
+    identifier = "chest"
+    slots_num = 27
+
+    def __init__(self):
+        SlotsSet.__init__(self)
+        self.title = "Chest"
+
+class FurnaceStorage(SlotsSet):
 
     title = "Furnace"
     identifier = "furnace"
-
-class GenericWindow(Inventory):
-    """
-    A window which holds many slots in a very basic pattern, and can have a
-    customized titlebar.
-    """
-
-    identifier = "inventory"
-
-    def __init__(self, title):
-        """
-        Create a generic window.
-
-        :ivar str title: The window title.
-        """
-
-        self.title = title
-        super(GenericWindow, self).__init__()
-
-class ChestStorage(GenericWindow):
-    """
-    A window representing chest storage.
-    """
-    content = 27
-    storage = 27
-    holdables = 9
-
-    identifier = "chest"
-
-    def __init__(self):
-        GenericWindow.__init__(self, "Chest")
-
-class LargeChestStorage(ChestStorage):
-    """
-    A window representing large chest storage.
-    """
-    content = 54
-
-def sync_inventories(src, dst):
-    """
-    Copy storage and holdables from one inventory into another.
-
-    This is usually intended for temporary inventories which will be sync'd
-    and destroyed later.
-    """
-
-    dst.holdables = src.holdables
-    dst.storage = src.storage
+    slots_num = 3 # TODO: check this

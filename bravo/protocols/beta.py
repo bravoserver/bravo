@@ -21,7 +21,7 @@ from bravo.errors import BetaClientError, BuildError
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
     IDigHook, ISignHook, IUseHook)
-from bravo.inventory import Workbench, ChestStorage, sync_inventories
+from bravo.inventory import Window, InventoryWindow, Workbench, ChestStorage
 from bravo.location import Location
 from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
@@ -540,6 +540,8 @@ class BravoProtocol(BetaServerProtocol):
         self.player = yield self.factory.world.load_player(self.username)
         self.player.eid = self.eid
         self.location = self.player.location
+        # Init players' inventory window.
+        self.inventory = InventoryWindow(self.player.inventory)
 
         # Announce our presence.
         packet = make_packet("chat",
@@ -566,7 +568,7 @@ class BravoProtocol(BetaServerProtocol):
         # Send spawn and inventory.
         spawn = self.factory.world.spawn
         packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
-        packet += self.player.inventory.save_to_packet()
+        packet += self.inventory.save_to_packet()
         self.transport.write(packet)
 
         # Send weather.
@@ -614,7 +616,7 @@ class BravoProtocol(BetaServerProtocol):
                 packet = make_packet("destroy", eid=entity.eid)
                 self.factory.broadcast(packet)
 
-                packet = self.player.inventory.save_to_packet()
+                packet = self.inventory.save_to_packet()
                 self.transport.write(packet)
 
                 self.factory.destroy_entity(entity)
@@ -756,7 +758,7 @@ class BravoProtocol(BetaServerProtocol):
                     self.factory.give(coords, (primary, secondary), 1)
 
                     # Re-send inventory.
-                    packet = self.player.inventory.save_to_packet()
+                    packet = self.inventory.save_to_packet()
                     self.transport.write(packet)
 
                     # If no items in this slot are left, this player isn't
@@ -835,7 +837,7 @@ class BravoProtocol(BetaServerProtocol):
 
         block = chunk.get_block(coords)
         if block == blocks["workbench"].slot:
-            i = Workbench()
+            i = Window(self.wid, self.player.inventory, Workbench())
             slots = 9
         elif block == blocks["chest"].slot:
             # XXX large chest is not supported yet
@@ -847,19 +849,16 @@ class BravoProtocol(BetaServerProtocol):
             except KeyError:
                 # Chest block have no Chest entity associated!
                 return True # handled, nothing shall be done
-            i = chest.inventory
+            i = Window(self.wid, self.player.inventory, chest.inventory)
             slots = 27
         else:
             return False
         
-        i.wid = self.wid
         self.wid += 1
-
-        sync_inventories(self.player.inventory, i)
         self.windows.append(i)
 
         self.write_packet("window-open", wid=i.wid, type=i.identifier,
-                          title=i.title, slots=slots)
+                          title=i.title, slots=i.slots_num)
         packet = i.save_to_packet()
         self.transport.write(packet)
         
@@ -938,7 +937,7 @@ class BravoProtocol(BetaServerProtocol):
 
         # Re-send inventory.
         # XXX this could be optimized if/when inventories track damage.
-        packet = self.player.inventory.save_to_packet()
+        packet = self.inventory.save_to_packet()
         self.transport.write(packet)
 
         # Flush damaged chunks.
@@ -1012,66 +1011,43 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_others(packet, self)
 
     def wclose(self, container):
-        # Handle windows getting closed. First, a special case for inventory
-        # windows, then the generic case for other opened windows.
-
-        # Notchian client will open its inventory window without telling the
-        # server about it, so it can request an inventory window close
-        # *without* an open, and the window wouldn't be on our window stack.
-        # To properly handle it, special-case it here.
+        # Handle windows getting closed.
         if container.wid == 0:
-            # Kick items out of the crafting table.
-            self.drop_items(self.player.inventory.crafting)
-            # And vacate the corresponding slots on the client.
-            # XXX we should really have a method for automating this in the
-            # inventory.
-            for i in xrange(0, 4):
-                if self.player.inventory.crafting[i] is not None:
-                    self.write_packet( "window-slot", wid = 0, slot = i+1, primary = -1 )
-                    self.player.inventory.crafting[i] = None
-            # XXX huh?
-            self.drop_selected(self.player.inventory)
-            return
-
-        top = self.windows.pop()
-
-        # If the requested WID is on top of the stack, go ahead and close the
-        # window. Otherwise, ignore it.
-        # XXX should/can we nak requests for closing windows?
-        if container.wid == top.wid:
-            if top.identifier == "workbench":
-                # Closing the workbench.
-                self.drop_items(top.crafting)
-            self.drop_selected(top)
-            sync_inventories(top, self.player.inventory)
-            # All done!
-            return
+            w = self.inventory
+        elif self.windows and container.wid == self.windows[-1].wid:
+            w = self.windows.pop()
         else:
-            log.msg("Ignoring request to close non-current window %d" %
-                container.wid)
+            self.error("Couldn't close non-current window %d" % container.wid)
+
+        # Go ahead and close the window.
+        items, packets = w.close()
+        if packets:
+            self.transport.write(packets)
+        self.drop_items(items)
+        return
 
     def waction(self, container):
         if container.wid == 0:
-            # Inventory.
-            i = self.player.inventory
+            w = self.inventory
         elif self.windows and container.wid == self.windows[-1].wid:
-            i = self.windows[-1]
+            w = self.windows[-1]
         else:
             self.error("Couldn't find window %d" % container.wid)
 
         if container.slot == 64537:
             # XXX clicked out of the window ( 64537? wtf )
-            self.drop_selected(i)
+            items = w.drop_selected()
+            self.drop_items(items)
             self.write_packet("window-token", wid=container.wid,
                 token=container.token, acknowledged=True)
             return
 
-        selected = i.select(container.slot, bool(container.button),
+        selected = w.select(container.slot, bool(container.button),
             bool(container.shift))
 
         if selected:
             # XXX should be if there's any damage to the inventory
-            packet = i.save_to_packet()
+            packet = w.save_to_packet()
             self.transport.write(packet)
 
             equipped_slot = self.player.equipped + 36
@@ -1081,7 +1057,7 @@ class BravoProtocol(BetaServerProtocol):
 
                 # Currently equipped item changes.
                 if container.slot == equipped_slot:
-                    item = i.holdables[self.player.equipped]
+                    item = self.player.inventory.holdables[self.player.equipped]
                     slot = 0
                 # Armor changes.
                 else:
@@ -1118,13 +1094,6 @@ class BravoProtocol(BetaServerProtocol):
             if item is None:
                 continue
             self.factory.give(coords, (item[0], item[1]), item[2])
-
-    def drop_selected(self, inventory):
-        # XXX can probably be inlined along with drop_items when the time
-        # comes
-        if inventory.selected is not None:
-            self.drop_items((inventory.selected,))
-            inventory.selected = None
 
     def sign(self, container):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
