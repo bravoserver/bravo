@@ -54,13 +54,13 @@ class SlotsSet(SerializableSlots):
                                  # storage (27) + holdables(9) from player's
                                  # inventory (notchian)
 
-    def update_crafted(self):
-        pass
-
-
     @property
     def metalist(self):
         return [self.crafted, self.crafting, self.storage, self.dummy]
+
+    def update_crafted(self):
+        # override later in Crafting
+        pass
 
 class Crafting(SlotsSet):
     '''

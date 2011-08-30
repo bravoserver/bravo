@@ -26,6 +26,7 @@ class Window(SerializableSlots):
         self.slots = slots
         self.wid = wid
         self.selected = None
+        self.coords = None
 
     @property
     def metalist(self):
@@ -59,6 +60,24 @@ class Window(SerializableSlots):
             if slot < len(l):
                 return l, slot
             slot -= len(l)
+
+    def slot_for_container(self, table, index):
+        """
+        Retrieve slot number for given table and index.
+        """
+
+        i = 0
+        for t in self.metalist:
+            l = len(t)
+            if t is table:
+                if l == 0 or l <= index:
+                    return -1
+                else:
+                    i += index
+                    return i
+            else:
+                i += l
+        return -1
 
     def load_from_packet(self, container):
         """
@@ -130,6 +149,8 @@ class Window(SerializableSlots):
                     else:
                         stash[i] = slot.replace(quantity=count)
                         container[index] = None
+                    self.mark_dirty(stash, i)
+                    self.mark_dirty(container, index)
                     return True
 
         # find empty space to move
@@ -138,6 +159,8 @@ class Window(SerializableSlots):
                 if slot is None:
                     stash[i] = item
                     container[index] = None
+                    self.mark_dirty(stash, i)
+                    self.mark_dirty(container, index)
                     return True
         return False
 
@@ -193,6 +216,7 @@ class Window(SerializableSlots):
                     if islot.quantity < 64:
                         l[index] = islot.increment()
                         self.selected = sslot.decrement()
+                        self.mark_dirty(l, index)
                 else:
                     if sslot.quantity + islot.quantity <= 64:
                         # Sum of items fits in one slot, so this is easy.
@@ -204,16 +228,19 @@ class Window(SerializableSlots):
                         l[index] = islot.replace(quantity=64)
                         self.selected = sslot.replace(
                             quantity=sslot.quantity + islot.quantity - 64)
+                    self.mark_dirty(l, index)
             else:
                 # Default case: just swap
                 # valid for left and right mouse click
                 self.selected, l[index] = l[index], self.selected
+                self.mark_dirty(l, index)
         else:
             if alternate:
                 if self.selected is not None:
                     sslot = self.selected
                     l[index] = sslot.replace(quantity=1)
                     self.selected = sslot.decrement()
+                    self.mark_dirty(l, index)
                 elif l[index] is None:
                     # Right click on empty inventory slot does nothing
                     return False
@@ -224,9 +251,11 @@ class Window(SerializableSlots):
                     scount, lcount = islot.quantity - scount, scount
                     l[index] = islot.replace(quantity=lcount)
                     self.selected = islot.replace(quantity=scount)
+                    self.mark_dirty(l, index)
             else:
                 # Default case: just swap.
                 self.selected, l[index] = l[index], self.selected
+                self.mark_dirty(l, index)
 
         # At this point, we've already finished touching our selection; this
         # is just a state update.
@@ -247,8 +276,8 @@ class Window(SerializableSlots):
             if itm is not None:
                 items.append(itm)
                 self.slots.crafting[i] = None
-                packets += make_packet("window-slot", wid = self.wid,
-                                        slot = i+1, primary = -1)
+                packets += make_packet("window-slot", wid=self.wid,
+                                        slot=i+1, primary=-1)
         # process crafted area
         if len(self.slots.crafted):
             self.slots.crafted[0] = None
@@ -264,6 +293,14 @@ class Window(SerializableSlots):
             items.append( self.selected )
             self.selected = None
         return items
+
+    def mark_dirty(self, table, index):
+        # override later in SharedWindow
+        pass
+
+    def packets_for_dirty(self, a):
+        # override later in SharedWindow
+        return ""
 
 class InventoryWindow(Window):
     '''
@@ -299,3 +336,38 @@ class WorkbenchWindow(Window):
 
     def __init__(self, wid, inventory):
         Window.__init__(self, wid, inventory, Workbench())
+
+class SharedWindow(Window):
+    """
+    Base class for all windows with shared containers (like chests, furnace and dispenser)
+    """
+    def __init__(self, wid, inventory, slots, coords):
+        """
+        :param int wid: window ID
+        :param Inventory inventory: player's inventory object
+        :param Tile tile: tile object
+        :param tuple coords: world coords of the tile (bigx, smallx, bigz, smallz, y)
+        """
+        Window.__init__(self, wid, inventory, slots)
+        self.coords = coords
+        self.dirty_slots = {} # { slot : value, ... }
+
+    def mark_dirty(self, table, index):
+        # player's inventory are not shareable slots, skip it
+        if table in self.slots.metalist:
+            slot = self.slot_for_container(table, index)
+            self.dirty_slots[slot] = table[index]
+
+    def packets_for_dirty(self, dirty_slots):
+        """
+        Generate update packets for dirty usually privided by another window (sic!)
+        """
+        packets = ""
+        for slot, item in dirty_slots.iteritems():
+            if item is None:
+                packets += make_packet("window-slot", wid=self.wid, slot=slot, primary=-1)
+            else:
+                packets += make_packet("window-slot", wid=self.wid, slot=slot,
+                                       primary=item.primary, secondary=item.secondary,
+                                       count=item.quantity)
+        return packets

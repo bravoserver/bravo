@@ -5,7 +5,7 @@ import bravo.blocks
 from bravo.ibravo import IRecipe
 from bravo.inventory import Slot, Inventory
 from bravo.inventory.slots import SlotsSet, ChestStorage
-from bravo.inventory.windows import Window, InventoryWindow, WorkbenchWindow
+from bravo.inventory.windows import Window, InventoryWindow, WorkbenchWindow, SharedWindow
 from bravo.plugin import retrieve_plugins
 
 class TestSlot(unittest.TestCase):
@@ -147,6 +147,15 @@ class TestInventoryIntegration(unittest.TestCase):
         c, i = self.i.container_for_slot(44)
         self.assertTrue(c is self.i.inventory.holdables)
         self.assertEqual(i, 8)
+
+    def test_slots_resolution(self):
+        self.assertEqual(self.i.slot_for_container(self.i.slots.crafted, 0), 0)
+        self.assertEqual(self.i.slot_for_container(self.i.slots.crafting, 1), 2)
+        self.assertEqual(self.i.slot_for_container(self.i.slots.storage, 0), -1)
+        self.assertEqual(self.i.slot_for_container(self.i.inventory.armor, 2), 7)
+        self.assertEqual(self.i.slot_for_container(self.i.inventory.storage, 26), 35)
+        self.assertEqual(self.i.slot_for_container(self.i.inventory.holdables, 0), 36)
+        self.assertEqual(self.i.slot_for_container(self.i.slots.crafted, 2), -1)
 
     def test_load_holdables_from_list(self):
         l = [None] * len(self.i)
@@ -539,27 +548,9 @@ class TestWorkbenchIntegration(unittest.TestCase):
         self.assertEqual(self.i.slots.crafting[0], None)
         self.assertEqual(self.i.slots.crafted[0], None)
 
-class TestChestSerialization(unittest.TestCase):
-    def setUp(self):
-        self.i = ChestStorage()
-        self.l = [None] * len(self.i)
-        self.l[0] = 1, 0, 1
-        self.l[9] = 2, 0, 1
-
-    def test_load_from_list(self):
-        self.i.load_from_list(self.l)
-        self.assertEqual(self.i.storage[0], (1, 0, 1))
-        self.assertEqual(self.i.storage[9], (2, 0, 1))
-
-    def test_save_to_list(self):
-        self.i.storage[0] = 1, 0, 1
-        self.i.storage[9] = 2, 0, 1
-        m = self.i.save_to_list()
-        self.assertEqual(m, self.l)
-
 class TestChestIntegration(unittest.TestCase):
     def setUp(self):
-        self.i = self.i = Window(1, Inventory(), ChestStorage())
+        self.i = SharedWindow(1, Inventory(), ChestStorage(), 0)
 
     def test_internals(self):
         self.assertEqual(self.i.metalist, [[], [], [None] * 27,
@@ -570,3 +561,37 @@ class TestChestIntegration(unittest.TestCase):
         self.assertEqual( self.i.slots_num, 27 )
         self.assertEqual( self.i.identifier, "chest" )
         self.assertEqual( self.i.title, "MyChest" )
+
+    def test_dirty_slots_move(self):
+        self.i.slots.storage[0] = Slot(2, 0, 1)
+        self.i.slots.storage[2] = Slot(1, 0, 4)
+        # simple move
+        self.i.select(0)
+        self.i.select(1)
+        self.assertEqual(self.i.dirty_slots, {0 : None, 1 : (2, 0, 1)})
+
+    def test_dirty_slots_split_and_stack(self):
+        self.i.slots.storage[0] = Slot(2, 0, 1)
+        self.i.slots.storage[2] = Slot(1, 0, 4)
+        # split
+        self.i.select(2, True)
+        self.i.select(1)
+        self.assertEqual(self.i.dirty_slots, {1 : (1, 0, 2), 2 : (1, 0, 2)})
+        # stack
+        self.i.select(2)
+        self.i.select(1)
+        self.assertEqual(self.i.dirty_slots, {1 : (1, 0, 4), 2 : None})
+
+    def test_dirty_slots_move_stack(self):
+        self.i.slots.storage[0] = Slot(2, 0, 1)
+        self.i.select(0, False, True)
+        self.assertEqual(self.i.dirty_slots, {0 : None})
+
+    def test_dirty_slots_packaging(self):
+        self.i.slots.storage[0] = Slot(1, 0, 1)
+        self.i.select(0)
+        self.i.select(1)
+        self.assertEqual(self.i.dirty_slots, {0 : None, 1 : (1, 0, 1)})
+        packets = self.i.packets_for_dirty(self.i.dirty_slots)
+        self.assertEqual(packets, '\x67\x01\x00\x00\xff\xff' +\
+                                  '\x67\x01\x00\x01\x00\x01\x01\x00\x00')

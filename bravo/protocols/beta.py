@@ -21,7 +21,8 @@ from bravo.errors import BetaClientError, BuildError
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
     IDigHook, ISignHook, IUseHook)
-from bravo.inventory.windows import Window, InventoryWindow, WorkbenchWindow
+from bravo.inventory.windows import (Window, InventoryWindow, WorkbenchWindow,
+    SharedWindow)
 from bravo.location import Location
 from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
@@ -834,21 +835,22 @@ class BravoProtocol(BetaServerProtocol):
 
         Returns whether the selection was successful.
         """
+        bigx, smallx, bigz, smallz, y = coords
 
-        block = chunk.get_block(coords)
+        block = chunk.get_block((smallx, y, smallz))
         if block == blocks["workbench"].slot:
             i = WorkbenchWindow(self.wid, self.player.inventory)
         elif block == blocks["chest"].slot:
             # XXX large chest is not supported yet
-            x, y, z = coords
-            if chunk.get_block((x, y+1, z)) != blocks["air"].slot:
+            if chunk.get_block((smallx, y+1, smallz)) != blocks["air"].slot:
                 return True # handled, nothing shall be done
             try:
-                chest = chunk.tiles[coords]
+                chest = chunk.tiles[(smallx, y, smallz)]
             except KeyError:
                 # Chest block have no Chest entity associated!
                 return True # handled, nothing shall be done
-            i = Window(self.wid, self.player.inventory, chest.inventory)
+            i = SharedWindow(self.wid, self.player.inventory,
+                             chest.inventory, coords)
         else:
             return False
         
@@ -876,7 +878,7 @@ class BravoProtocol(BetaServerProtocol):
             self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        if self.select_for_inventory( chunk, (smallx, container.y, smallz)):
+        if self.select_for_inventory(chunk, (bigx, smallx, bigz, smallz, container.y)):
             return
 
         # Ignore clients that think -1 is placeable.
@@ -1044,9 +1046,14 @@ class BravoProtocol(BetaServerProtocol):
             bool(container.shift))
 
         if selected:
-            # XXX should be if there's any damage to the inventory
+            # Notchian server does not send any packets here because both server
+            # and client uses same algorithm for inventory actions. I did my best
+            # to make bravo's inventory behave the same way but there is a change
+            # some differencies still exist. So we send whole window content to
+            # the cliet to make sure client displays inventory we have on server.
             packet = w.save_to_packet()
             self.transport.write(packet)
+            # TODO: send package for 'item on cursor'.
 
             equipped_slot = self.player.equipped + 36
             # Inform other players about changes to this player's equipment.
@@ -1074,6 +1081,21 @@ class BravoProtocol(BetaServerProtocol):
                     secondary=secondary
                 )
                 self.factory.broadcast_for_others(packet, self)
+
+            # If the window is SharedWindow for tile...
+            if w.coords is not None:
+                # ...and the window have dirty slots...
+                if len(w.dirty_slots):
+                    # ...check if some one else...
+                    for p in self.factory.protocols.itervalues():
+                        if p is self:
+                            continue
+                        # ... have window opened for the same tile...
+                        if len(p.windows) and p.windows[-1].coords == w.coords:
+                            # ... and notify about changes
+                            packets = p.windows[-1].packets_for_dirty(w.dirty_slots)
+                            p.transport.write(packets)
+                    w.dirty_slots.clear()
 
         self.write_packet("window-token", wid=container.wid, token=container.token,
             acknowledged=selected)

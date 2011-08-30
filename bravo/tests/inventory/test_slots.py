@@ -4,7 +4,7 @@ import bravo.blocks
 
 from bravo.ibravo import IRecipe
 from bravo.inventory import Slot
-from bravo.inventory.slots import Crafting, Workbench
+from bravo.inventory.slots import Crafting, Workbench, ChestStorage
 from bravo.plugin import retrieve_plugins
 
 class TestCraftingInternals(unittest.TestCase):
@@ -238,3 +238,21 @@ class TestCraftingFurnace(unittest.TestCase):
         self.i.update_crafted()
         self.assertEqual(self.i.crafted[0],
             (bravo.blocks.blocks["furnace"].slot, 0, 1))
+
+class TestChestSerialization(unittest.TestCase):
+    def setUp(self):
+        self.i = ChestStorage()
+        self.l = [None] * len(self.i)
+        self.l[0] = 1, 0, 1
+        self.l[9] = 2, 0, 1
+
+    def test_load_from_list(self):
+        self.i.load_from_list(self.l)
+        self.assertEqual(self.i.storage[0], (1, 0, 1))
+        self.assertEqual(self.i.storage[9], (2, 0, 1))
+
+    def test_save_to_list(self):
+        self.i.storage[0] = 1, 0, 1
+        self.i.storage[9] = 2, 0, 1
+        m = self.i.save_to_list()
+        self.assertEqual(m, self.l)
