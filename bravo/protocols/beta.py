@@ -851,6 +851,14 @@ class BravoProtocol(BetaServerProtocol):
                 return True # handled, nothing shall be done
             i = SharedWindow(self.wid, self.player.inventory,
                              chest.inventory, coords)
+        elif block == blocks["furnace"].slot:
+            try:
+                furnace = chunk.tiles[(smallx, y, smallz)]
+            except KeyError:
+                # Furnace block have no Furnace entity associated!
+                return True # handled, nothing shall be done
+            i = SharedWindow(self.wid, self.player.inventory,
+                             furnace.inventory, coords)
         else:
             return False
         
@@ -1092,10 +1100,17 @@ class BravoProtocol(BetaServerProtocol):
                             continue
                         # ... have window opened for the same tile...
                         if len(p.windows) and p.windows[-1].coords == w.coords:
-                            # ... and notify about changes
+                            # ... and notify about changes.
                             packets = p.windows[-1].packets_for_dirty(w.dirty_slots)
                             p.transport.write(packets)
                     w.dirty_slots.clear()
+                    # At the end mark the chunk dirty
+                    try:
+                        bigx, smallx, bigz, smallz, y = w.coords
+                        chunk = self.chunks[bigx, bigz]
+                        chunk.dirty = True
+                    except KeyError:
+                        self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
 
         self.write_packet("window-token", wid=container.wid, token=container.token,
             acknowledged=selected)

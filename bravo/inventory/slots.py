@@ -35,16 +35,32 @@ class SlotsSet(SerializableSlots):
     Base calss for different slot configurations except player's inventory
     '''
 
-    crafting = 0
-    storage = 0
+    crafting = 0          # crafting slots (inventory, workbench)
+    source = 0            # furnace
+    fuel = 0              # furnace
+    storage = 0           # chest
     crafting_stride = 0
 
     def __init__(self):
+
+        self.crafted = []
+
         if self.crafting:
             self.crafting = [None] * self.crafting
             self.crafted = [None]
         else:
-            self.crafting = self.crafted = []
+            self.crafting = []
+
+        if self.source:
+            self.source = [None]
+            self.crafted = [None]
+        else:
+            self.source = []
+
+        if self.fuel:
+            self.fuel = [None]
+        else:
+            self.fuel = []
 
         if self.storage:
             self.storage = [None] * self.storage
@@ -56,7 +72,8 @@ class SlotsSet(SerializableSlots):
 
     @property
     def metalist(self):
-        return [self.crafted, self.crafting, self.storage, self.dummy]
+        return [self.crafted, self.crafting, self.source,
+                self.fuel, self.storage, self.dummy]
 
     def update_crafted(self):
         # override later in Crafting
@@ -205,6 +222,32 @@ class ChestStorage(SlotsSet):
 
 class FurnaceStorage(SlotsSet):
 
+    source = 1
+    fuel = 1
     title = "Furnace"
     identifier = "furnace"
-    slots_num = 3 # TODO: check this
+    slots_num = 3
+
+    def select_crafted(self, index, alternate, shift, selected = None):
+        """
+        Handle a slot selection on a crafted output.
+        Returns: ( True/False, new selection )
+        """
+
+        if self.crafted[0]:
+            if selected is None:
+                selected = self.crafted[0]
+                self.crafted[0] = None
+            else:
+                sslot = selected
+                if sslot.holds(self.crafted[0]):
+                    selected = sslot.increment(self.crafted[0].quantity)
+                    self.crafted[0] = None
+                else:
+                    # Mismatch; don't allow it.
+                    return (False, selected)
+
+            return (True, selected)
+        else:
+            # Forbid placing things in the crafted slot.
+            return (False, selected)

@@ -128,7 +128,7 @@ class TestInventoryIntegration(unittest.TestCase):
         self.i = InventoryWindow(Inventory())
 
     def test_internals(self):
-        self.assertEqual(self.i.metalist, [[None], [None] * 4, [None] * 4, [],
+        self.assertEqual(self.i.metalist, [[None], [None] * 4, [None] * 4,
                                            [None] * 27, [None] * 9])
 
     def test_container_resolution(self):
@@ -464,8 +464,7 @@ class TestWorkbenchIntegration(unittest.TestCase):
         self.i = WorkbenchWindow(1, Inventory())
 
     def test_internals(self):
-        self.assertEqual(self.i.metalist, [[None], [None] * 9, [],
-                                           [None] * 27, [None] * 9])
+        self.assertEqual(self.i.metalist, [[None], [None] * 9, [None] * 27, [None] * 9])
 
     def test_parameters(self):
         self.assertEqual( self.i.slots_num, 9 )
@@ -553,7 +552,7 @@ class TestChestIntegration(unittest.TestCase):
         self.i = SharedWindow(1, Inventory(), ChestStorage(), 0)
 
     def test_internals(self):
-        self.assertEqual(self.i.metalist, [[], [], [None] * 27,
+        self.assertEqual(self.i.metalist, [[], [], [], [], [None] * 27,
                                            [None] * 27, [None] * 9])
 
     def test_parameters(self):

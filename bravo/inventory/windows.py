@@ -30,7 +30,8 @@ class Window(SerializableSlots):
 
     @property
     def metalist(self):
-        m = [self.slots.crafted, self.slots.crafting, self.slots.storage]
+        m = [self.slots.crafted, self.slots.crafting, self.slots.source,
+             self.slots.fuel, self.slots.storage]
         m += [self.inventory.storage, self.inventory.holdables]
         return m
 
@@ -119,7 +120,9 @@ class Window(SerializableSlots):
         # same as enumerate() but in reverse order
         reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
 
-        if container is self.slots.crafting:
+        if container is self.slots.crafting or \
+           container is self.slots.source or \
+           container is self.slots.fuel:
             targets = (self.inventory.storage, self.inventory.holdables)
         elif container is self.slots.crafted or container is self.slots.storage:
             targets = (self.inventory.holdables, self.inventory.storage)
@@ -328,14 +331,21 @@ class InventoryWindow(Window):
     @property
     def metalist(self):
         m = [self.slots.crafted, self.slots.crafting]
-        m += [self.inventory.armor, self.slots.storage]
-        m += [self.inventory.storage, self.inventory.holdables]
+        m += [self.inventory.armor, self.inventory.storage, self.inventory.holdables]
         return m
 
 class WorkbenchWindow(Window):
 
     def __init__(self, wid, inventory):
         Window.__init__(self, wid, inventory, Workbench())
+
+    @property
+    def metalist(self):
+        # Window.metalist will work fine as well,
+        # but this verion works a little bit faster
+        m = [self.slots.crafted, self.slots.crafting]
+        m += [self.inventory.storage, self.inventory.holdables]
+        return m
 
 class SharedWindow(Window):
     """
