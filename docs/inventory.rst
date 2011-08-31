@@ -5,16 +5,18 @@
 The ``inventory`` module contains all kinds of windows and window parts
 like inventory, crafting and storage slots.
 
-Generally to create a window you must create a ``Window`` object (or something
-derived from ``Window`` ) and pass three arguments: window ID, inventory and
-slots set.
+Generally to create a window you must create a ``Window`` object (of specific class
+derived from ``Window``) and pass arguments like: window ID, player's inventory,
+slot's or tile's inventory, coordinates etc.
+
+Generic construction (never use in your code :)
 
 .. code-block:: python
 
-   window = Window( id, Inventory(), Workbench())
+   window = Window( id, Inventory(), Workbench(), ...)
 
 Please note that player's inventory window is a special case. It is created when
-user logins and stays always opened. It's never generated on-fly.
+user logins and stays always opened. You probably will never have to create it.
 
 .. code-block:: python
 
@@ -28,19 +30,19 @@ user logins and stays always opened. It's never generated on-fly.
         self.inventory = InventoryWindow(self.player.inventory)
         ...
 
-Some windows have helper classes. For instanse to create a workbench window:
+Every windows have own class. For instanse, to create a workbench window:
 
 .. code-block:: python
 
     i = WorkbenchWindow(self.wid, self.player.inventory)
 
-To create a window for tile (chest, furnace, etc.) or anything that have persistent
-storage you must use raw Window:
+Furnace:
 
 .. code-block:: python
 
-    chest = self.chunks[x, y].tiles[coords]
-    window = Window(self.wid, self.player.inventory, chest.inventory)
+    bigx, smallx, bigz, smallz, y = coords
+    furnace = self.chunks[x, y].tiles[(smallx, y, smallz)]
+    window = FurnaceWindow(self.wid, self.player.inventory, furnace.inventory, coords)
 
 
 .. automodule:: bravo.inventory

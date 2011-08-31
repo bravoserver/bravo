@@ -2,7 +2,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
-from bravo.entity import Chest, Sign
+from bravo.entity import Chest, Sign, Furnace
 from bravo.ibravo import IPreBuildHook
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
 
@@ -14,6 +14,11 @@ class Tile(object):
 
     You almost certainly want to enable this plugin.
     """
+
+    block_to_tile = {
+        blocks["chest"].slot : Chest,
+        blocks["furnace"].slot : Furnace
+    }
 
     implements(IPreBuildHook)
 
@@ -59,15 +64,15 @@ class Tile(object):
             s = Sign(smallx, y, smallz)
             chunk.tiles[smallx, y, smallz] = s
 
-        elif item.slot == blocks["chest"].slot:
+        elif item.slot in self.block_to_tile:
             x, y, z = adjust_coords_for_face((x, y, z), face)
-
             bigx, smallx, bigz, smallz = split_coords(x, z)
-
-           # Not much to do, just tell the chunk about this chest.
             chunk = yield factory.world.request_chunk(bigx, bigz)
-            c = Chest(smallx, y, smallz)
-            chunk.tiles[smallx, y, smallz] = c
+
+            # Not much to do, just tell the chunk about this tile.
+            tileClass = self.block_to_tile[item.slot]
+            tile = tileClass(smallx, y, smallz)
+            chunk.tiles[smallx, y, smallz] = tile
 
         returnValue((True, builddata))
 

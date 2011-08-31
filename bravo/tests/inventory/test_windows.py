@@ -4,8 +4,8 @@ import bravo.blocks
 
 from bravo.ibravo import IRecipe
 from bravo.inventory import Slot, Inventory
-from bravo.inventory.slots import SlotsSet, ChestStorage
-from bravo.inventory.windows import Window, InventoryWindow, WorkbenchWindow, SharedWindow
+from bravo.inventory.slots import SlotsSet, ChestStorage, FurnaceStorage
+from bravo.inventory.windows import InventoryWindow, WorkbenchWindow, ChestWindow, FurnaceWindow
 from bravo.plugin import retrieve_plugins
 
 class TestSlot(unittest.TestCase):
@@ -549,11 +549,10 @@ class TestWorkbenchIntegration(unittest.TestCase):
 
 class TestChestIntegration(unittest.TestCase):
     def setUp(self):
-        self.i = SharedWindow(1, Inventory(), ChestStorage(), 0)
+        self.i = ChestWindow(1, Inventory(), ChestStorage(), 0)
 
     def test_internals(self):
-        self.assertEqual(self.i.metalist, [[], [], [], [], [None] * 27,
-                                           [None] * 27, [None] * 9])
+        self.assertEqual(self.i.metalist, [[None] * 27, [None] * 27, [None] * 9])
 
     def test_parameters(self):
         self.i.slots.title = "MyChest"
@@ -594,3 +593,19 @@ class TestChestIntegration(unittest.TestCase):
         packets = self.i.packets_for_dirty(self.i.dirty_slots)
         self.assertEqual(packets, '\x67\x01\x00\x00\xff\xff' +\
                                   '\x67\x01\x00\x01\x00\x01\x01\x00\x00')
+
+class TestFurnaceIntegration(unittest.TestCase):
+    def setUp(self):
+        self.i = FurnaceWindow(1, Inventory(), FurnaceStorage(), 0)
+
+    def test_internals(self):
+        self.assertEqual(self.i.metalist, [[None], [None], [None],
+                                           [None] * 27, [None] * 9])
+
+    def test_furnace_no_drop(self):
+        self.i.slots.crafted[0] = Slot(1, 0, 1)
+        self.i.slots.crafting[0] = Slot(2, 0, 1)
+        self.i.slots.fuel[0] = Slot(3, 0, 1)
+        items, packets = self.i.close()
+        self.assertEqual(items, [])
+        self.assertEqual(packets, "")

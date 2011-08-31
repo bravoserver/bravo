@@ -2,6 +2,7 @@
 from bravo import blocks
 from bravo.ibravo import IRecipe
 from bravo.plugin import retrieve_plugins
+from bravo.packets.beta import make_packet
 from bravo.inventory import Slot, SerializableSlots
 
 def pad_to_stride(recipe, rstride, cstride):
@@ -35,27 +36,18 @@ class SlotsSet(SerializableSlots):
     Base calss for different slot configurations except player's inventory
     '''
 
-    crafting = 0          # crafting slots (inventory, workbench)
-    source = 0            # furnace
+    crafting = 0          # crafting slots (inventory, workbench, furnace)
     fuel = 0              # furnace
     storage = 0           # chest
     crafting_stride = 0
 
     def __init__(self):
 
-        self.crafted = []
-
         if self.crafting:
             self.crafting = [None] * self.crafting
             self.crafted = [None]
         else:
-            self.crafting = []
-
-        if self.source:
-            self.source = [None]
-            self.crafted = [None]
-        else:
-            self.source = []
+            self.crafting = self.crafted = []
 
         if self.fuel:
             self.fuel = [None]
@@ -72,12 +64,15 @@ class SlotsSet(SerializableSlots):
 
     @property
     def metalist(self):
-        return [self.crafted, self.crafting, self.source,
-                self.fuel, self.storage, self.dummy]
+        return [self.crafted, self.crafting, self.fuel, self.storage, self.dummy]
 
     def update_crafted(self):
-        # override later in Crafting
+        # override me
         pass
+
+    def close(self, wid):
+        # override me, see description in Crafting
+        return [], ""
 
 class Crafting(SlotsSet):
     '''
@@ -202,6 +197,24 @@ class Crafting(SlotsSet):
                 slot = self.crafting[index]
                 self.crafting[index] = slot.decrement(rcount)
 
+    def close(self, wid):
+        '''
+        Clear crafting areas and return items to drop and packets to send to client
+        '''
+        items = []
+        packets = ""
+
+        # process crafting area
+        for i, itm in enumerate(self.crafting):
+            if itm is not None:
+                items.append(itm)
+                self.crafting[i] = None
+                packets += make_packet("window-slot", wid=wid,
+                                        slot=i+1, primary=-1)
+        self.crafted[0] = None
+
+        return items, packets
+
 class Workbench(Crafting):
 
     crafting = 9
@@ -222,7 +235,11 @@ class ChestStorage(SlotsSet):
 
 class FurnaceStorage(SlotsSet):
 
-    source = 1
+    #TODO: Make sure notchian furnace have following slots order:
+    #      0 -crafted, 1 - crafting, 2 - fuel, etc.
+    #      Override SlotsSet.metalist() property if not.
+
+    crafting = 1
     fuel = 1
     title = "Furnace"
     identifier = "furnace"

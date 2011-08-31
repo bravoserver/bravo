@@ -550,6 +550,8 @@ class Furnace(Tile):
     def __init__(self, *args, **kwargs):
         super(Furnace, self).__init__(*args, **kwargs)
 
+        self.burntime = 0
+        self.cooktime = 0
         self.inventory = FurnaceStorage()
 
 class MobSpawner(Tile):

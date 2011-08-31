@@ -21,8 +21,8 @@ from bravo.errors import BetaClientError, BuildError
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
     IDigHook, ISignHook, IUseHook)
-from bravo.inventory.windows import (Window, InventoryWindow, WorkbenchWindow,
-    SharedWindow)
+from bravo.inventory.windows import (InventoryWindow, WorkbenchWindow,
+    ChestWindow, FurnaceWindow)
 from bravo.location import Location
 from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
@@ -849,7 +849,7 @@ class BravoProtocol(BetaServerProtocol):
             except KeyError:
                 # Chest block have no Chest entity associated!
                 return True # handled, nothing shall be done
-            i = SharedWindow(self.wid, self.player.inventory,
+            i = ChestWindow(self.wid, self.player.inventory,
                              chest.inventory, coords)
         elif block == blocks["furnace"].slot:
             try:
@@ -857,7 +857,7 @@ class BravoProtocol(BetaServerProtocol):
             except KeyError:
                 # Furnace block have no Furnace entity associated!
                 return True # handled, nothing shall be done
-            i = SharedWindow(self.wid, self.player.inventory,
+            i = FurnaceWindow(self.wid, self.player.inventory,
                              furnace.inventory, coords)
         else:
             return False

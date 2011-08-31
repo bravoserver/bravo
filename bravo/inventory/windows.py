@@ -28,12 +28,15 @@ class Window(SerializableSlots):
         self.selected = None
         self.coords = None
 
-    @property
-    def metalist(self):
-        m = [self.slots.crafted, self.slots.crafting, self.slots.source,
-             self.slots.fuel, self.slots.storage]
-        m += [self.inventory.storage, self.inventory.holdables]
-        return m
+    # NOTE: The property must be defined in every final class
+    #       of certain window. Never use generic one. This can lead to
+    #       awfull bugs.
+    #@property
+    #def metalist(self):
+    #    m = [self.slots.crafted, self.slots.crafting,
+    #         self.slots.fuel, self.slots.storage]
+    #    m += [self.inventory.storage, self.inventory.holdables]
+    #    return m
 
     @property
     def slots_num(self):
@@ -120,9 +123,7 @@ class Window(SerializableSlots):
         # same as enumerate() but in reverse order
         reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
 
-        if container is self.slots.crafting or \
-           container is self.slots.source or \
-           container is self.slots.fuel:
+        if container is self.slots.crafting or container is self.slots.fuel:
             targets = (self.inventory.storage, self.inventory.holdables)
         elif container is self.slots.crafted or container is self.slots.storage:
             targets = (self.inventory.holdables, self.inventory.storage)
@@ -274,18 +275,12 @@ class Window(SerializableSlots):
         items = []
         packets = ""
 
-        # process crafting area
-        for i, itm in enumerate(self.slots.crafting):
-            if itm is not None:
-                items.append(itm)
-                self.slots.crafting[i] = None
-                packets += make_packet("window-slot", wid=self.wid,
-                                        slot=i+1, primary=-1)
-        # process crafted area
-        if len(self.slots.crafted):
-            self.slots.crafted[0] = None
+        # slots on close action
+        it, pk = self.slots.close(self.wid)
+        items += it
+        packets += pk
 
-        # process selection
+        # drop 'item on cursor'
         items += self.drop_selected()
 
         return items, packets
@@ -381,3 +376,17 @@ class SharedWindow(Window):
                                        primary=item.primary, secondary=item.secondary,
                                        count=item.quantity)
         return packets
+
+class ChestWindow(SharedWindow):
+    @property
+    def metalist(self):
+        m = [self.slots.storage, self.inventory.storage, self.inventory.holdables]
+        return m
+
+class FurnaceWindow(SharedWindow):
+
+    @property
+    def metalist(self):
+        m = [self.slots.crafting, self.slots.fuel, self.slots.crafted]
+        m += [self.inventory.storage, self.inventory.holdables]
+        return m
