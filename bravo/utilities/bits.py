@@ -1,4 +1,4 @@
-from numpy import uint8, cast, dstack, fromstring
+from numpy import cast, dstack, fromstring
 
 """
 Bit-twiddling devices.
@@ -20,7 +20,7 @@ def unpack_nibbles(l):
 
     :returns: list of nibbles
     """
-    data = fromstring(l, dtype=uint8)
+    data = fromstring(l, dtype="uint8")
     return dstack((data & 0xf, data >> 4)).flat
 
 def pack_nibbles(a):
@@ -35,6 +35,5 @@ def pack_nibbles(a):
     """
 
     a = a.reshape(-1, 2)
-    if a.dtype != uint8:
-        a = cast[uint8](a)
+    a = cast["uint8"](a)
     return ((a[:, 1] << 4) | a[:, 0]).tostring()
