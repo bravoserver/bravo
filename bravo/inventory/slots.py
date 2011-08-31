@@ -84,10 +84,8 @@ class Crafting(SlotsSet):
 
     def __init__(self):
         SlotsSet.__init__(self)
-        self.show_armor = True # count armor slots
         self.recipe = None
         self.recipe_offset = None
-        self.show_armor = True # count armor slots
 
     def update_crafted(self):
         self.check_recipes()

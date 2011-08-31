@@ -201,8 +201,7 @@ class Inventory(SerializableSlots):
 
     def save_to_list(self):
         # save armor
-        tmp_armor = []
-        tmp_armor[:] = self.armor
+        tmp_armor = self.armor
         # reverse armor (notchian)
         self.armor = [i for i in reversed(self.armor)]
         # generate the list
