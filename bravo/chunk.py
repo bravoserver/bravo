@@ -1,7 +1,6 @@
 from itertools import product
 from warnings import warn
 
-from numpy import int8, uint8, uint32, bool
 from numpy import cast, logical_not, logical_and, transpose, where, zeros, amax
 from numpy import vectorize
 
@@ -23,11 +22,11 @@ class ChunkWarning(Warning):
 glow = [None] * 16
 for i in range(16):
     dim = 2 * i + 1
-    glow[i] = zeros((dim, dim, dim), dtype=int8)
+    glow[i] = zeros((dim, dim, dim), dtype="int8")
     for x, y, z in product(xrange(dim), repeat=3):
         distance = abs(x - i) + abs(y - i) + abs(z - i)
         glow[i][ x,  y,  z] = i + 1 - distance
-    glow[i] = cast[uint8](glow[i].clip(0, 15))
+    glow[i] = cast["uint8"](glow[i].clip(0, 15))
 
 def composite_glow(target, strength, x, y, z):
     """
@@ -107,16 +106,16 @@ class Chunk(object):
         self.x = int(x)
         self.z = int(z)
 
-        self.blocks = zeros((16, 16, 128), dtype=uint8)
-        self.heightmap = zeros((16, 16), dtype=uint8)
-        self.blocklight = zeros((16, 16, 128), dtype=uint8)
-        self.metadata = zeros((16, 16, 128), dtype=uint8)
-        self.skylight = zeros((16, 16, 128), dtype=uint8)
+        self.blocks = zeros((16, 16, 128), dtype="uint8")
+        self.heightmap = zeros((16, 16), dtype="uint8")
+        self.blocklight = zeros((16, 16, 128), dtype="uint8")
+        self.metadata = zeros((16, 16, 128), dtype="uint8")
+        self.skylight = zeros((16, 16, 128), dtype="uint8")
 
         self.entities = set()
         self.tiles = {}
 
-        self.damaged = zeros((16, 16, 128), dtype=bool)
+        self.damaged = zeros((16, 16, 128), dtype="bool")
 
         self.all_damaged = False
 
@@ -141,14 +140,14 @@ class Chunk(object):
             self.heightmap[x, z] = y
 
     def regenerate_blocklight(self):
-        lightmap = zeros((16, 16, 128), dtype=uint32)
+        lightmap = zeros((16, 16, 128), dtype="uint32")
 
         for x, y, z in product(xrange(16), xrange(128), xrange(16)):
             block = self.blocks[x, z, y]
             if block in glowing_blocks:
                 composite_glow(lightmap, glowing_blocks[block], x, y, z)
 
-        self.blocklight = cast[uint8](lightmap.clip(0, 15))
+        self.blocklight = cast["uint8"](lightmap.clip(0, 15))
 
     def regenerate_metadata(self):
         pass
@@ -163,7 +162,7 @@ class Chunk(object):
         The height map must be valid for this method to produce valid results.
         """
 
-        lightmap = zeros((16, 16, 128), dtype=uint8)
+        lightmap = zeros((16, 16, 128), dtype="uint8")
 
         for x, z in product(xrange(16), repeat=2):
             # The maximum lighting value, unsurprisingly, is 0xf, which is the
@@ -200,7 +199,7 @@ class Chunk(object):
 
         # Create a mask to find all blocks that have an unlighted block
         # as a neighbour in the xz-plane.
-        mask = zeros((16, 16, max_height), dtype=bool)
+        mask = zeros((16, 16, max_height), dtype="bool")
         mask[:-1,:,:max_height] |= unlighted[1:, :, :max_height]
         mask[:,:-1,:max_height] |= unlighted[:, 1:, :max_height]
         mask[1:,:,:max_height] |= unlighted[:-1, :, :max_height]
@@ -415,7 +414,7 @@ class Chunk(object):
                     composite_glow(self.blocklight, glowing_blocks[block],
                         x, y, z)
 
-                    self.blocklight = cast[uint8](self.blocklight.clip(0, 15))
+                    self.blocklight = cast["uint8"](self.blocklight.clip(0, 15))
 
                 self.dirty = True
                 self.damage(coords)
