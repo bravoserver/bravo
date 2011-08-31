@@ -4,7 +4,7 @@ import random
 import sys
 import weakref
 
-from numpy import fromstring, uint8
+from numpy import fromstring
 
 from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
                                     returnValue, succeed)
@@ -342,15 +342,15 @@ class World(object):
             # Get chunk data into our chunk object.
             def fill_chunk(kwargs):
                 chunk.blocks = fromstring(kwargs["blocks"],
-                    dtype=uint8).reshape(chunk.blocks.shape)
+                    dtype="uint8").reshape(chunk.blocks.shape)
                 chunk.heightmap = fromstring(kwargs["heightmap"],
-                    dtype=uint8).reshape(chunk.heightmap.shape)
+                    dtype="uint8").reshape(chunk.heightmap.shape)
                 chunk.metadata = fromstring(kwargs["metadata"],
-                    dtype=uint8).reshape(chunk.metadata.shape)
+                    dtype="uint8").reshape(chunk.metadata.shape)
                 chunk.skylight = fromstring(kwargs["skylight"],
-                    dtype=uint8).reshape(chunk.skylight.shape)
+                    dtype="uint8").reshape(chunk.skylight.shape)
                 chunk.blocklight = fromstring(kwargs["blocklight"],
-                    dtype=uint8).reshape(chunk.blocklight.shape)
+                    dtype="uint8").reshape(chunk.blocklight.shape)
 
                 return chunk
             d.addCallback(fill_chunk)
