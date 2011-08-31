@@ -6,6 +6,8 @@ from bravo.inventory import Equipment, ChestStorage
 from bravo.location import Location
 from bravo.packets.beta import make_packet
 
+from twisted.internet.tasks import LoopingCall
+
 class Entity(object):
     """
     Class representing an entity.
@@ -184,11 +186,22 @@ class Mob(Entity):
     """
     A creature.
     """
+    def __init__(self,manager):
+        """
+        Create a mob
+
+        This method calls super().
+        """
+
+        super(Mob, self).__init__(**kwargs)
+        self.manager = manager
+        self.loop = LoopingCall(self.update,self.manager)
 
     name = "Mob"
     type = "mob"
 
     metadata = {0: ("byte", 0)}
+
 
     def save_to_packet(self):
         """
@@ -206,7 +219,7 @@ class Mob(Entity):
             metadata=self.metadata
         )
 
-    def update_location(self, factory):
+    def update(self, manager):
         """
         Update this mob's location with respect to a factory.
         """
