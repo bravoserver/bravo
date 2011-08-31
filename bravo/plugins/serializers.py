@@ -7,7 +7,7 @@ from StringIO import StringIO
 from struct import pack, unpack
 from urlparse import urlparse
 
-from numpy import array, fromstring, uint8
+from numpy import array, fromstring
 
 from twisted.python import log
 from twisted.python.filepath import FilePath
@@ -360,9 +360,9 @@ class Alpha(object):
         # These are designed to raise if there are any issues, but still be
         # speedy.
         chunk.blocks = fromstring(level["Blocks"].value,
-            dtype=uint8).reshape(chunk.blocks.shape)
+            dtype="uint8").reshape(chunk.blocks.shape)
         chunk.heightmap = fromstring(level["HeightMap"].value,
-            dtype=uint8).reshape(chunk.heightmap.shape)
+            dtype="uint8").reshape(chunk.heightmap.shape)
         chunk.blocklight = array(unpack_nibbles(
             level["BlockLight"].value)).reshape(chunk.blocklight.shape)
         chunk.metadata = array(unpack_nibbles(
