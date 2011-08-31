@@ -4,7 +4,7 @@ from construct import Container, ListContainer
 from bravo import blocks
 from bravo.packets.beta import make_packet
 from bravo.inventory import Slot, SerializableSlots
-from bravo.inventory.slots import Crafting, Workbench
+from bravo.inventory.slots import Crafting, Workbench, LargeChestStorage
 
 class Window(SerializableSlots):
     """
@@ -135,7 +135,10 @@ class Window(SerializableSlots):
             else:
                 targets = (self.inventory.holdables,)
         elif container is self.inventory.holdables:
-            targets = (self.inventory.storage,)
+            if len(self.slots.storage):
+                targets = (self.slots.storage,)
+            else:
+                targets = (self.inventory.storage,)
         else:
             return False
 
@@ -378,6 +381,17 @@ class SharedWindow(Window):
         return packets
 
 class ChestWindow(SharedWindow):
+    @property
+    def metalist(self):
+        m = [self.slots.storage, self.inventory.storage, self.inventory.holdables]
+        return m
+
+class LargeChestWindow(SharedWindow):
+
+    def __init__(self, wid, inventory, chest1, chest2, coords):
+        chests_storage = LargeChestStorage(chest1.storage, chest2.storage)
+        SharedWindow.__init__(self, wid, inventory, chests_storage, coords)
+
     @property
     def metalist(self):
         m = [self.slots.storage, self.inventory.storage, self.inventory.holdables]

@@ -4,8 +4,30 @@ import bravo.blocks
 
 from bravo.ibravo import IRecipe
 from bravo.inventory import Slot
-from bravo.inventory.slots import Crafting, Workbench, ChestStorage
+from bravo.inventory.slots import comblist, Crafting, Workbench, ChestStorage
 from bravo.plugin import retrieve_plugins
+
+class TestComblist(unittest.TestCase):
+
+    def setUp(self):
+        self.a = [1, 2]
+        self.b = [3, 4]
+        self.i = comblist(self.a, self.b)
+
+    def test_length(self):
+        self.assertEqual(len(self.i), 4)
+
+    def test_getitem(self):
+        self.assertEqual(self.i[0], 1)
+        self.assertEqual(self.i[1], 2)
+        self.assertEqual(self.i[2], 3)
+        self.assertEqual(self.i[3], 4)
+        self.assertRaises(IndexError, self.i.__getitem__, 5 )
+
+    def test_setitem(self):
+        self.i[1] = 5
+        self.i[2] = 6
+        self.assertRaises(IndexError, self.i.__setitem__, 5, 0 )
 
 class TestCraftingInternals(unittest.TestCase):
     def setUp(self):

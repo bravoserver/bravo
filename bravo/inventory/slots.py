@@ -5,6 +5,35 @@ from bravo.plugin import retrieve_plugins
 from bravo.packets.beta import make_packet
 from bravo.inventory import Slot, SerializableSlots
 
+class comblist(object):
+    def __init__(self, a, b):
+        self.l = a, b
+        self.offset = len(a)
+        self.length = sum(map(len,self.l))
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, key):
+        if key < self.offset:
+            return self.l[0][key]
+        key -= self.offset
+        if key < self.length:
+            return self.l[1][key]
+        raise IndexError
+
+    def __setitem__(self, key, value):
+        if key < 0:
+            raise IndexError
+        if key < self.offset:
+            self.l[0][key] = value
+            return
+        key -= self.offset
+        if key < self.length:
+            self.l[1][key] = value
+            return
+        raise IndexError
+
 def pad_to_stride(recipe, rstride, cstride):
     """
     Pad a recipe out to a given stride.
@@ -225,11 +254,30 @@ class ChestStorage(SlotsSet):
 
     storage = 27
     identifier = "chest"
+    title = "Chest"
     slots_num = 27
 
     def __init__(self):
         SlotsSet.__init__(self)
         self.title = "Chest"
+
+class LargeChestStorage(SlotsSet):
+    """
+    LargeChest is a wrapper around 2 ChestStorages
+    """
+
+    identifier = "chest"
+    title = "LargeChest"
+    slots_num = 54
+
+    def __init__(self, chest1, chest2):
+        SlotsSet.__init__(self)
+        # NOTE: chest1 and chest2 are ChestStorage.storages
+        self.storage = comblist(chest1, chest2)
+
+    @property
+    def metalist(self):
+        return [self.storage]
 
 class FurnaceStorage(SlotsSet):
 

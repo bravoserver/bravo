@@ -5,7 +5,8 @@ import bravo.blocks
 from bravo.ibravo import IRecipe
 from bravo.inventory import Slot, Inventory
 from bravo.inventory.slots import SlotsSet, ChestStorage, FurnaceStorage
-from bravo.inventory.windows import InventoryWindow, WorkbenchWindow, ChestWindow, FurnaceWindow
+from bravo.inventory.windows import (InventoryWindow, WorkbenchWindow, ChestWindow,
+    FurnaceWindow, LargeChestWindow)
 from bravo.plugin import retrieve_plugins
 
 class TestSlot(unittest.TestCase):
@@ -593,6 +594,74 @@ class TestChestIntegration(unittest.TestCase):
         packets = self.i.packets_for_dirty(self.i.dirty_slots)
         self.assertEqual(packets, '\x67\x01\x00\x00\xff\xff' +\
                                   '\x67\x01\x00\x01\x00\x01\x01\x00\x00')
+
+class TestLargeChestIntegration(unittest.TestCase):
+    def setUp(self):
+        self.a = ChestStorage()
+        self.b = ChestStorage()
+        self.i = LargeChestWindow(1, Inventory(), self.a, self.b, 0)
+
+    def test_internals(self):
+        slot = self.i.slot_for_container(self.i.slots.storage, 0)
+        self.assertEqual(slot, 0)
+        slot = self.i.slot_for_container(self.i.slots.storage, 27)
+        self.assertEqual(slot, 27)
+        slot = self.i.slot_for_container(self.i.inventory.storage, 0)
+        self.assertEqual(slot, 54)
+        slot = self.i.slot_for_container(self.i.inventory.holdables, 0)
+        self.assertEqual(slot, 81)
+
+    def test_parameters(self):
+        self.i.slots.title = "MyLargeChest"
+        self.assertEqual(self.i.slots_num, 54)
+        self.assertEqual(self.i.identifier, "chest")
+        self.assertEqual(self.i.title, "MyLargeChest")
+
+    def test_combining(self):
+        self.a.storage[0] = Slot(1, 0, 1)
+        self.b.storage[0] = Slot(2, 0, 1)
+        self.assertEqual(self.i.slots.storage[0], (1, 0, 1))
+        self.assertEqual(self.i.slots.storage[27], (2, 0, 1))
+
+    def test_dirty_slots_move(self):
+        self.a.storage[0] = Slot(1, 0, 1)
+        # simple move
+        self.i.select(0)
+        self.i.select(53)
+        self.assertEqual(self.a.storage[0], None)
+        self.assertEqual(self.b.storage[26], (1, 0, 1))
+        self.assertEqual(self.i.dirty_slots, {0 : None, 53 : (1, 0, 1)})
+
+    def test_dirty_slots_split_and_stack(self):
+        self.a.storage[0] = Slot(1, 0, 4)
+        # split
+        self.i.select(0, True)
+        self.i.select(28)
+        self.assertEqual(self.a.storage[0], (1, 0, 2))
+        self.assertEqual(self.b.storage[1], (1, 0, 2))
+        self.assertEqual(self.i.dirty_slots, {0 : (1, 0, 2), 28 : (1, 0, 2)})
+        # stack
+        self.i.select(28)
+        self.i.select(0)
+        #
+        self.assertEqual(self.a.storage[0], (1, 0, 4))
+        self.assertEqual(self.b.storage[1], (None))
+        self.assertEqual(self.i.dirty_slots, {0 : (1, 0, 4), 28 : None})
+
+    def test_dirty_slots_move_stack(self):
+        self.b.storage[3] = Slot(1, 0, 1)
+        self.i.select(30, False, True)
+        self.assertEqual(self.b.storage[3], None)
+        self.assertEqual(self.i.dirty_slots, {30 : None})
+
+    def test_dirty_slots_packaging(self):
+        self.a.storage[0] = Slot(1, 0, 1)
+        self.i.select(0)
+        self.i.select(53)
+        self.assertEqual(self.i.dirty_slots, {0 : None, 53 : (1, 0, 1)})
+        packets = self.i.packets_for_dirty(self.i.dirty_slots)
+        self.assertEqual(packets, '\x67\x01\x00\x00\xff\xff' +\
+                                  '\x67\x01\x00\x35\x00\x01\x01\x00\x00')
 
 class TestFurnaceIntegration(unittest.TestCase):
     def setUp(self):

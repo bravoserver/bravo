@@ -22,7 +22,7 @@ from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
     IDigHook, ISignHook, IUseHook)
 from bravo.inventory.windows import (InventoryWindow, WorkbenchWindow,
-    ChestWindow, FurnaceWindow)
+    ChestWindow, LargeChestWindow, FurnaceWindow)
 from bravo.location import Location
 from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
@@ -841,16 +841,51 @@ class BravoProtocol(BetaServerProtocol):
         if block == blocks["workbench"].slot:
             i = WorkbenchWindow(self.wid, self.player.inventory)
         elif block == blocks["chest"].slot:
-            # XXX large chest is not supported yet
-            if chunk.get_block((smallx, y+1, smallz)) != blocks["air"].slot:
-                return True # handled, nothing shall be done
+            # NOTE: This is raw implementation. It's straightforward,
+            #       not optimal and have some limitations.
+            #       Must be improved and re-factored.
+
+            # try to find neighbour chest block
+            check_blocks = ((smallx+1, y, smallz), (smallx, y, smallz+1),
+                            (smallx-1, y, smallz), (smallx, y, smallz-1))
+            block2, coords2 = None, None
+            for vrnt, crd in enumerate(check_blocks):
+                # TODO: What if we go out of the chunk?
+                #       Probably must load neighbour chunk.
+                blk = chunk.get_block(crd)
+                if blk == blocks["chest"].slot:
+                    block2 = blk
+                    coords2 = bigx, crd[0], bigz, crd[2], y
+                    break
+
+            # TODO: Uncomment to disallow opening chest that do not have
+            #       air blocks above it (notchian). Untested, BTW. ;)
+            #if chunk.get_block((smallx, y+1, smallz)) != blocks["air"].slot:
+            #    # there is a block above
+            #    return True # handled, nothing shall be done
+            #elif block2 is not None and
+            #    # there is a block above neighbour chest block
+            #    chunk.get_block((crd[0], y+1, crd[2])) != blocks["air"].slot:
+            #    return True # handled, nothing shall be done
+
             try:
-                chest = chunk.tiles[(smallx, y, smallz)]
+                if block2 is None: # small chest
+                    chest = chunk.tiles[(smallx, y, smallz)]
+                    i = ChestWindow(self.wid, self.player.inventory,
+                                    chest.inventory, coords)
+                else: # large chest
+                    chest1 = chunk.tiles[(smallx, y, smallz)]
+                    chest2 = chunk.tiles[(crd[0], y, crd[2])]
+                    # NOTE: This is VERY important!
+                    if vrnt in (0, 1):
+                        i = LargeChestWindow(self.wid, self.player.inventory,
+                                chest1.inventory, chest2.inventory, coords)
+                    else:
+                        i = LargeChestWindow(self.wid, self.player.inventory,
+                                chest2.inventory, chest1.inventory, coords2)
             except KeyError:
                 # Chest block have no Chest entity associated!
                 return True # handled, nothing shall be done
-            i = ChestWindow(self.wid, self.player.inventory,
-                             chest.inventory, coords)
         elif block == blocks["furnace"].slot:
             try:
                 furnace = chunk.tiles[(smallx, y, smallz)]
@@ -861,7 +896,7 @@ class BravoProtocol(BetaServerProtocol):
                              furnace.inventory, coords)
         else:
             return False
-        
+
         self.wid += 1
         self.windows.append(i)
 
@@ -869,7 +904,7 @@ class BravoProtocol(BetaServerProtocol):
                           title=i.title, slots=i.slots_num)
         packet = i.save_to_packet()
         self.transport.write(packet)
-        
+
         return True
 
     @inlineCallbacks
