@@ -170,8 +170,8 @@ class BravoFactory(Factory):
             p.factory = self
             return p
 
-        # This probably a needs cleanup. We need to see if that IP has 
-        # connected already, check if +1 connections is ok, and ignore 
+        # This probably a needs cleanup. We need to see if that IP has
+        # connected already, check if +1 connections is ok, and ignore
         # values less than 1.
         if (self.limitPerIP and addr.host in self.connectedIPs.keys()
             and self.connectedIPs[addr.host] >= self.limitPerIP):
@@ -308,28 +308,6 @@ class BravoFactory(Factory):
         d = self.world.request_chunk(bigx, bigz)
         d.addCallback(lambda chunk: chunk.entities.discard(entity))
         d.addCallback(lambda none: log.msg("Destroyed entity %s" % entity))
-
-
-    def update_entities(self):
-        """
-        Update all entities covered by this factory.
-        """
-
-        # XXX this method could cause chunks to be generated :c
-
-        points = set()
-
-        for player in self.protocols.itervalues():
-            x = player.location.x
-            z = player.location.z
-            bigx, chaff, bigz, chaff = split_coords(x, z)
-            new = set((i + bigx, j + bigz) for i, j in circle)
-            points.update(new)
-
-        for x, y in points:
-            d = self.world.request_chunk(x, y)
-            d.addCallback(lambda chunk: chunk.update_entities(self))
-
 
     def update_time(self):
         """

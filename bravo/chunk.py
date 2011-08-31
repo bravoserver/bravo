@@ -539,16 +539,3 @@ class Chunk(object):
         self.dirty = True
         for y in range(128):
             self.damage((x, y, z))
-
-    def update_entities(self, factory):
-        """
-        Request that the provided factory update this chunk's entities.
-        """
-
-        # XXX this method is really bad inversion of control
-
-        for entity in self.entities:
-            # XXX bad polymorphism
-            if isinstance(entity, Mob):
-                # XXX um, WTF. Why is this here?
-                maybeDeferred(entity.update_location, factory)
