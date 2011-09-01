@@ -669,6 +669,15 @@ armor_boots = (301, 305, 309, 313, 317)
 List of slots of boots.
 """
 
+"""
+List of unstackable items
+"""
+unstackable = (
+    items["wooden-sword"].slot,
+    items["wooden-shovel"].slot,
+    items["wooden-pickaxe"].slot
+)
+
 def parse_block(block):
     """
     Get the key for a given block/item.

@@ -52,22 +52,39 @@ class TestInventory(unittest.TestCase):
 
     def test_add_to_inventory(self):
         self.assertEqual(self.i.holdables, [None] * 9)
-        self.assertTrue(self.i.add((2, 0), 1))
+        self.assertEqual(self.i.add((2, 0), 1), 0)
         self.assertEqual(self.i.holdables[0], (2, 0, 1))
 
     def test_add_to_inventory_sequential(self):
         self.assertEqual(self.i.holdables, [None] * 9)
-        self.assertTrue(self.i.add((2, 0), 1))
+        self.assertEqual(self.i.add((2, 0), 1), 0)
         self.assertEqual(self.i.holdables[0], (2, 0, 1))
-        self.assertTrue(self.i.add((2, 0), 1))
+        self.assertEqual(self.i.add((2, 0), 1), 0)
         self.assertEqual(self.i.holdables[0], (2, 0, 2))
         self.assertEqual(self.i.holdables[1], None)
 
     def test_add_to_inventory_fill_slot(self):
         self.i.holdables[0] = Slot(2, 0, 50)
-        self.assertTrue(self.i.add((2, 0), 30))
+        self.assertEqual(self.i.add((2, 0), 30), 0)
         self.assertEqual(self.i.holdables[0], (2, 0, 64))
         self.assertEqual(self.i.holdables[1], (2, 0, 16))
+
+    def test_add_to_inventory_fill_with_stack(self):
+        self.i.storage[0] = Slot(2, 0, 50)
+        self.assertEqual(self.i.add((2, 0), 30), 0)
+        self.assertEqual(self.i.storage[0], (2, 0, 64))
+        self.assertEqual(self.i.holdables[0], (2, 0, 16))
+
+    def test_add_to_full_inventory(self):
+        self.i.storage[:] = [Slot(2, 0, 1)] * 27
+        self.i.holdables[:] = [Slot(1, 0, 64)] * 27
+        self.assertEqual(self.i.add((1, 0), 20), 20)
+
+    def test_add_to_almost_full_inventory(self):
+        self.i.holdables[:] = [Slot(2, 0, 1)] * 9
+        self.i.storage[:] = [Slot(1, 0, 64)] * 27
+        self.i.storage[5] = Slot(1, 0, 50)
+        self.assertEqual(self.i.add((1, 0), 20), 6)
 
     def test_consume_holdable(self):
         self.i.holdables[0] = Slot(2, 0, 1)
@@ -286,11 +303,26 @@ class TestInventoryIntegration(unittest.TestCase):
         # check if item goes from crafting area directly to
         # holdables if possible
         self.i.slots.crafting[1] = Slot(1, 0, 60)
+        self.i.inventory.storage[3] = Slot(1, 0, 63)
         self.i.select(2, True, True)
         self.assertEqual(self.i.slots.crafting[1], None)
-        self.assertEqual(self.i.inventory.storage[2], (1, 0, 3))
+        self.assertEqual(self.i.inventory.storage[2], (1, 0, 2))
+        self.assertEqual(self.i.inventory.storage[3], (1, 0, 64))
         self.assertEqual(self.i.inventory.holdables[4], (1, 0, 64))
 
+    def test_unstackable_items(self):
+        shovel = (bravo.blocks.items["wooden-shovel"].slot, 0, 1)
+        self.i.inventory.storage[0] = Slot(*shovel)
+        self.i.inventory.storage[1] = Slot(*shovel)
+        self.i.select(9)
+        self.i.select(10)
+        self.assertEqual(self.i.inventory.storage[0], None)
+        self.assertEqual(self.i.inventory.storage[1], shovel)
+        self.assertEqual(self.i.selected, shovel)
+        self.i.select(36)
+        self.i.select(10, False, True)
+        self.assertEqual(self.i.inventory.holdables[0], shovel)
+        self.assertEqual(self.i.inventory.holdables[1], shovel)
 
 class TestWindowIntegration(unittest.TestCase):
 

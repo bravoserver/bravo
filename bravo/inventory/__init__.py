@@ -4,6 +4,9 @@ from collections import namedtuple
 
 from bravo import blocks
 
+class NextLoop(Exception):
+    pass
+
 class Slot(namedtuple("Slot", "primary, secondary, quantity")):
     """
     The class represents slot in an inventory.
@@ -91,29 +94,40 @@ class Inventory(SerializableSlots):
         Attempt to add an item to the inventory.
 
         :param tuple item: a key representing the item
-        :returns: whether the item was successfully added
+        :returns: quantity of items that did not fit inventory
         """
 
-        # Try to put it in holdables first.
-        for stash in (self.holdables, self.storage):
-            # Check in two separate loops, to avoid bad grouping patterns.
-            for i, slot in enumerate(stash):
-                if slot is not None:
-                    if slot.holds(item) and slot.quantity < 64:
-                        count = slot.quantity + quantity
-                        if count > 64:
-                            count, quantity = 64, count - 64
-                        else:
-                            quantity = 0
-                        stash[i] = slot.replace(quantity=count)
-                        if not quantity:
-                            return True
-            for i, slot in enumerate(stash):
-                if slot is None:
-                    stash[i] = Slot(item[0], item[1], quantity)
-                    return True
-
-        return False
+        while quantity:
+            try:
+                qty_before = quantity
+                # Try to stack first
+                for stash in (self.holdables, self.storage):
+                    for i, slot in enumerate(stash):
+                        if slot is not None and slot.holds(item) and slot.quantity < 64 \
+                                            and slot.primary not in blocks.unstackable:
+                            count = slot.quantity + quantity
+                            if count > 64:
+                                count, quantity = 64, count - 64
+                            else:
+                                quantity = 0
+                            stash[i] = slot.replace(quantity=count)
+                            if quantity == 0:
+                                return 0
+                            # one more loop for rest of items
+                            raise NextLoop # break to outer while loop
+                # try to find empty space
+                for stash in (self.holdables, self.storage):
+                    for i, slot in enumerate(stash):
+                        if slot is None:
+                            stash[i] = Slot(item[0], item[1], quantity)
+                            return 0
+                if qty_before == quantity:
+                    # did one loop but was not able to put any of the items
+                    break
+            except NextLoop:
+                # used to break out of all 'for' loops
+                pass
+        return quantity
 
     def consume(self, item, index):
         """

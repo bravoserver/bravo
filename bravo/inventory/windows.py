@@ -6,6 +6,9 @@ from bravo.packets.beta import make_packet
 from bravo.inventory import Slot, SerializableSlots
 from bravo.inventory.slots import Crafting, Workbench, LargeChestStorage
 
+class NextLoop(Exception):
+    pass
+
 class Window(SerializableSlots):
     """
     Item manager
@@ -143,33 +146,44 @@ class Window(SerializableSlots):
             return False
 
         # find same item to stack
-        for stash in targets:
-            for i, slot in loop_over(stash):
-                if slot is not None and slot.holds(item) and slot.quantity < 64:
-                    count = slot.quantity + item.quantity
-                    if count > 64:
-                        stash[i] = slot.replace(quantity=64)
-                        container[index] = item.replace(quantity=count - 64)
-                        # XXX recursive call with same args; make sure this is
-                        # reasonable
-                        self.select_stack(container, index) # do the same with rest of the items
-                    else:
-                        stash[i] = slot.replace(quantity=count)
-                        container[index] = None
-                    self.mark_dirty(stash, i)
-                    self.mark_dirty(container, index)
-                    return True
-
-        # find empty space to move
-        for stash in targets:
-            for i, slot in loop_over(stash):
-                if slot is None:
-                    stash[i] = item
-                    container[index] = None
-                    self.mark_dirty(stash, i)
-                    self.mark_dirty(container, index)
-                    return True
-        return False
+        initial_quantity = item_quantity = item.quantity
+        while item_quantity:
+            try:
+                qty_before = item_quantity
+                for stash in targets:
+                    for i, slot in loop_over(stash):
+                        if slot is not None and slot.holds(item) and slot.quantity < 64 \
+                                and slot.primary not in blocks.unstackable:
+                            count = slot.quantity + item_quantity
+                            if count > 64:
+                                count, item_quantity = 64, count - 64
+                            else:
+                                item_quantity = 0
+                            stash[i] = slot.replace(quantity=count)
+                            container[index] = item.replace(quantity=item_quantity)
+                            self.mark_dirty(stash, i)
+                            self.mark_dirty(container, index)
+                            if item_quantity == 0:
+                                container[index] = None
+                                return True
+                            # one more loop for rest of items
+                            raise NextLoop # break to outer while loop
+                # find empty space to move
+                for stash in targets:
+                    for i, slot in loop_over(stash):
+                        if slot is None:
+                            stash[i] = item.replace(quantity=item_quantity)
+                            container[index] = None
+                            self.mark_dirty(stash, i)
+                            self.mark_dirty(container, index)
+                            return True
+                if item_quantity == qty_before:
+                    # did one loop but was not able to put any of the items
+                    break
+            except NextLoop:
+                # used to break out of all 'for' loops
+                pass
+        return initial_quantity != item_quantity
 
     def select(self, slot, alternate=False, shift=False):
         """
@@ -200,11 +214,15 @@ class Window(SerializableSlots):
             return result
         elif l is self.slots.crafted:
             if shift: # shift-click on crafted slot
-                # if we can put crafted item somewhere...
-                if ( self.select_stack(self.slots.crafted, 0)):
-                    # As select_stack() call took item from crafted[0]
+                # We cannot rollback if all items cannot be moved to inventory.
+                # I know it's not good but I have no solution for this right now.
+                # You will lose items that was not moved to inventory. ;(
+
+                if (self.select_stack(self.slots.crafted, 0)):
+                    # As select_stack() call took items from crafted[0]
                     # we must update the recipe to generate new item there
                     self.slots.update_crafted()
+                    # and now we emulate taking of the items
                     result, temp = self.slots.select_crafted(0, alternate, True, None)
                 else:
                     result = False
@@ -217,7 +235,7 @@ class Window(SerializableSlots):
         elif self.selected is not None and l[index] is not None:
             sslot = self.selected
             islot = l[index]
-            if islot.holds(sslot):
+            if islot.holds(sslot) and islot.primary not in blocks.unstackable:
                 # both contain the same item
                 if alternate:
                     if islot.quantity < 64:

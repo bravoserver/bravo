@@ -612,18 +612,20 @@ class BravoProtocol(BetaServerProtocol):
             if entity.name != "Item":
                 continue
 
-            if self.player.inventory.add(entity.item, entity.quantity):
-                packet = make_packet("collect", eid=entity.eid,
-                    destination=self.player.eid)
-                self.factory.broadcast(packet)
-
-                packet = make_packet("destroy", eid=entity.eid)
-                self.factory.broadcast(packet)
+            left = self.player.inventory.add(entity.item, entity.quantity)
+            if left != entity.quantity:
+                if left != 0:
+                    # partial collect
+                    entity.quantity = left
+                else:
+                    packet = make_packet("collect", eid=entity.eid,
+                        destination=self.player.eid)
+                    packet += make_packet("destroy", eid=entity.eid)
+                    self.factory.broadcast(packet)
+                    self.factory.destroy_entity(entity)
 
                 packet = self.inventory.save_to_packet()
                 self.transport.write(packet)
-
-                self.factory.destroy_entity(entity)
 
     def entities_near(self, radius):
         """
