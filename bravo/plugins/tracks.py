@@ -84,11 +84,11 @@ class Tracks(object):
 
         # Handle tracks only
         if block.slot != blocks["tracks"].slot:
-            return True, builddata
+            return True, builddata, False
 
         # Check for correct underground
         if world.get_block((x, y - 1, z)) not in tracks_allowed_on:
-            return False, builddata
+            return False, builddata, False
 
         # Use facing direction of player to set correct track tile
         yaw = player.location.yaw
@@ -131,7 +131,7 @@ class Tracks(object):
                 if world.get_metadata((x, y - 1, z + 1)) == FLAT_EW:
                     world.set_metadata((x, y - 1, z + 1), ASCEND_E)
         builddata = builddata._replace(metadata=metadata)
-        return True, builddata
+        return True, builddata, False
 
     def dig_hook(self, chunk, x, y, z, block):
         """

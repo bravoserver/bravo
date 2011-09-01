@@ -90,6 +90,11 @@ perm_cache = 3
 # the documentation in order to get a good grasp of how to customize your
 # server.
 
+# Window hooks
+open_hooks = workbench, furnace, chest
+click_hooks = inventory, windows
+close_hooks = inventory, windows
+
 # Dig hooks.
 dig_hooks = give, bravo_snow, alpha_sand_gravel, torch, water, lava, grass
 

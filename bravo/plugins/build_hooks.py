@@ -5,6 +5,7 @@ from bravo.blocks import blocks, items
 from bravo.entity import Chest, Sign, Furnace
 from bravo.ibravo import IPreBuildHook
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
+from bravo.utilities.building import chestsAround
 
 from bravo.parameters import factory
 
@@ -39,7 +40,7 @@ class Tile(object):
                 x += 1
             elif face == "-y":
                 # Ceiling Sign is watching you read.
-                returnValue((False, builddata))
+                returnValue((False, builddata, False))
             elif face == "+y":
                 # Put +Y signs on signposts. We're fancy that way. Also,
                 # calculate the proper orientation based on player
@@ -67,14 +68,31 @@ class Tile(object):
         elif item.slot in self.block_to_tile:
             x, y, z = adjust_coords_for_face((x, y, z), face)
             bigx, smallx, bigz, smallz = split_coords(x, z)
+
+            if item.slot == blocks["chest"].slot:
+                # Chests have some restrictions on building:
+                # you cannot connect more than two chests.
+                # (notchian)
+                ccs = chestsAround(factory, (x, y, z))
+                ccn = len(ccs)
+                if ccn == 1:
+                    # check gonna-be-connected chest is not connected already
+                    n = chestsAround(factory, ccs[0])
+                    if n != 0:
+                        returnValue((False, builddata, True))
+                elif ccn > 1:
+                    # cannot build three or more connected chests
+                    returnValue((False, builddata, True))
+
             chunk = yield factory.world.request_chunk(bigx, bigz)
 
             # Not much to do, just tell the chunk about this tile.
             tileClass = self.block_to_tile[item.slot]
             tile = tileClass(smallx, y, smallz)
             chunk.tiles[smallx, y, smallz] = tile
+            print "created chest tile"
 
-        returnValue((True, builddata))
+        returnValue((True, builddata, False))
 
     name = "tile"
 
@@ -100,7 +118,7 @@ class BuildSnow(object):
                 bd = builddata._replace(face="+y", y=builddata.y - 1)
             else:
                 bd = builddata
-            return True, bd
+            return True, bd, False
 
         return d
 

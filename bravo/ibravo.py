@@ -292,6 +292,45 @@ class ISerializerFactory(IBravoPlugin):
 
 # Hooks
 
+class IWindowOpenHook(ISortedPlugin):
+    """
+    Hook for actions to be taken on container open
+    """
+
+    def open_hook(player, container, block):
+        """
+        The ``player`` is a Player's protocol
+        The ``container`` is a 0x64 message
+        The ``block`` is a block we trying to open
+        :returns: ``Deffered`` with None or window object
+        """
+        pass
+
+class IWindowClickHook(ISortedPlugin):
+    """
+    Hook for actions to be taken on window clicks
+    """
+
+    def click_hook(player, container):
+        """
+        The ``player`` a Player's protocol
+        The ``container`` is a 0x66 message
+        :returns: True if handled
+        """
+        pass
+
+class IWindowCloseHook(ISortedPlugin):
+    """
+    Hook for actions to be taken on window clicks
+    """
+
+    def close_hook(player, container):
+        """
+        The ``player`` a Player's protocol
+        The ``container`` is a 0x65 message
+        """
+        pass
+
 class IPreBuildHook(ISortedPlugin):
     """
     Hook for actions to be taken before a block is placed.
@@ -316,9 +355,12 @@ class IPreBuildHook(ISortedPlugin):
 
         >>> from bravo.parameters import factory
 
-        The second variable in the return value indicates whether processing
+        First variable in the return value indicates whether processing
         of building should continue after this hook runs. Use it to halt build
         hook processing, if needed.
+
+        Third variable in the return value indicates whether building process
+        shall be canceled. Use it to completele stop the process.
 
         For sanity purposes, build hooks may return a ``Deferred`` which will
         fire with their return values, but are not obligated to do so.
@@ -326,14 +368,14 @@ class IPreBuildHook(ISortedPlugin):
         A trivial do-nothing build hook looks like the following:
 
         >>> def pre_build_hook(self, player, builddata):
-        ...     return True, builddata
+        ...     return True, builddata, False
 
         To make life more pleasant when returning deferred values, use
         ``inlineCallbacks``, which many of the standard build hooks use:
 
         >>> @inlineCallbacks
         ... def pre_build_hook(self, player, builddata):
-        ...     returnValue((True, builddata))
+        ...     returnValue((True, builddata, False))
 
         This form makes it much easier to deal with asynchronous operations on
         the factory and world.

@@ -12,7 +12,7 @@ from bravo.config import configuration
 from bravo.entity import entities
 from bravo.ibravo import (ISortedPlugin, IAutomaton, IAuthenticator, ISeason,
     ITerrainGenerator, IUseHook, ISignHook, IDigHook, IPreBuildHook,
-    IPostBuildHook)
+    IPostBuildHook, IWindowOpenHook, IWindowClickHook, IWindowCloseHook)
 from bravo.location import Location
 from bravo.packets.beta import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
@@ -227,6 +227,9 @@ class BravoFactory(Factory):
             "automatons": IAutomaton,
             "generators": ITerrainGenerator,
             "seasons": ISeason,
+            "open_hooks": IWindowOpenHook,
+            "click_hooks": IWindowClickHook,
+            "close_hooks": IWindowCloseHook,
             "pre_build_hooks": IPreBuildHook,
             "post_build_hooks": IPostBuildHook,
             "dig_hooks": IDigHook,

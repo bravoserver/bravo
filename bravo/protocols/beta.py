@@ -20,9 +20,9 @@ from bravo.entity import Sign
 from bravo.errors import BetaClientError, BuildError
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
+    IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
     IDigHook, ISignHook, IUseHook)
-from bravo.inventory.windows import (InventoryWindow, WorkbenchWindow,
-    ChestWindow, LargeChestWindow, FurnaceWindow)
+from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location
 from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
@@ -518,6 +518,9 @@ class BravoProtocol(BetaServerProtocol):
     def register_hooks(self):
 
         plugin_types = {
+            "open_hooks": IWindowOpenHook,
+            "click_hooks": IWindowClickHook,
+            "close_hooks": IWindowCloseHook,
             "pre_build_hooks": IPreBuildHook,
             "post_build_hooks": IPostBuildHook,
             "dig_hooks": IDigHook,
@@ -829,84 +832,6 @@ class BravoProtocol(BetaServerProtocol):
         dl = DeferredList(l)
         dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
 
-    def select_for_inventory(self, chunk, coords):
-        """
-        Perform a custom block selection to open an inventory window.
-
-        Returns whether the selection was successful.
-        """
-        bigx, smallx, bigz, smallz, y = coords
-
-        block = chunk.get_block((smallx, y, smallz))
-        if block == blocks["workbench"].slot:
-            i = WorkbenchWindow(self.wid, self.player.inventory)
-        elif block == blocks["chest"].slot:
-            # NOTE: This is raw implementation. It's straightforward,
-            #       not optimal and have some limitations.
-            #       Must be improved and re-factored.
-
-            # try to find neighbour chest block
-            check_blocks = ((smallx+1, y, smallz), (smallx, y, smallz+1),
-                            (smallx-1, y, smallz), (smallx, y, smallz-1))
-            block2, coords2 = None, None
-            for vrnt, crd in enumerate(check_blocks):
-                # TODO: What if we go out of the chunk?
-                #       Probably must load neighbour chunk.
-                blk = chunk.get_block(crd)
-                if blk == blocks["chest"].slot:
-                    block2 = blk
-                    coords2 = bigx, crd[0], bigz, crd[2], y
-                    break
-
-            # TODO: Uncomment to disallow opening chest that do not have
-            #       air blocks above it (notchian). Untested, BTW. ;)
-            #if chunk.get_block((smallx, y+1, smallz)) != blocks["air"].slot:
-            #    # there is a block above
-            #    return True # handled, nothing shall be done
-            #elif block2 is not None and
-            #    # there is a block above neighbour chest block
-            #    chunk.get_block((crd[0], y+1, crd[2])) != blocks["air"].slot:
-            #    return True # handled, nothing shall be done
-
-            try:
-                if block2 is None: # small chest
-                    chest = chunk.tiles[(smallx, y, smallz)]
-                    i = ChestWindow(self.wid, self.player.inventory,
-                                    chest.inventory, coords)
-                else: # large chest
-                    chest1 = chunk.tiles[(smallx, y, smallz)]
-                    chest2 = chunk.tiles[(crd[0], y, crd[2])]
-                    # NOTE: This is VERY important!
-                    if vrnt in (0, 1):
-                        i = LargeChestWindow(self.wid, self.player.inventory,
-                                chest1.inventory, chest2.inventory, coords)
-                    else:
-                        i = LargeChestWindow(self.wid, self.player.inventory,
-                                chest2.inventory, chest1.inventory, coords2)
-            except KeyError:
-                # Chest block have no Chest entity associated!
-                return True # handled, nothing shall be done
-        elif block == blocks["furnace"].slot:
-            try:
-                furnace = chunk.tiles[(smallx, y, smallz)]
-            except KeyError:
-                # Furnace block have no Furnace entity associated!
-                return True # handled, nothing shall be done
-            i = FurnaceWindow(self.wid, self.player.inventory,
-                             furnace.inventory, coords)
-        else:
-            return False
-
-        self.wid += 1
-        self.windows.append(i)
-
-        self.write_packet("window-open", wid=i.wid, type=i.identifier,
-                          title=i.title, slots=i.slots_num)
-        packet = i.save_to_packet()
-        self.transport.write(packet)
-
-        return True
-
     @inlineCallbacks
     def build(self, container):
         if container.x == -1 and container.z == -1 and container.y == 255:
@@ -921,8 +846,18 @@ class BravoProtocol(BetaServerProtocol):
             self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        if self.select_for_inventory(chunk, (bigx, smallx, bigz, smallz, container.y)):
-            return
+        # Try to open it first
+        for hook in self.open_hooks:
+            window = yield maybeDeferred(hook.open_hook, self, container,
+                           chunk.get_block((smallx, container.y, smallz)))
+            if window:
+                self.write_packet("window-open", wid=window.wid,
+                    type=window.identifier, title=window.title,
+                    slots=window.slots_num)
+                packet = window.save_to_packet()
+                self.transport.write(packet)
+                # window opened
+                return
 
         # Ignore clients that think -1 is placeable.
         if container.primary == -1:
@@ -952,8 +887,10 @@ class BravoProtocol(BetaServerProtocol):
             container.z, container.face)
 
         for hook in self.pre_build_hooks:
-            cont, builddata = yield maybeDeferred(hook.pre_build_hook,
+            cont, builddata, cancel = yield maybeDeferred(hook.pre_build_hook,
                 self.player, builddata)
+            if cancel:
+                return
             if not cont:
                 break
 
@@ -1054,116 +991,18 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_others(packet, self)
 
     def wclose(self, container):
-        # Handle windows getting closed.
-        if container.wid == 0:
-            w = self.inventory
-        elif self.windows and container.wid == self.windows[-1].wid:
-            w = self.windows.pop()
-        else:
-            self.error("Couldn't close non-current window %d" % container.wid)
-
-        # Go ahead and close the window.
-        items, packets = w.close()
-        if packets:
-            self.transport.write(packets)
-        self.drop_items(items)
-        return
+        # run all hooks
+        for hook in self.close_hooks:
+            hook.close_hook(self, container)
 
     def waction(self, container):
-        if container.wid == 0:
-            w = self.inventory
-        elif self.windows and container.wid == self.windows[-1].wid:
-            w = self.windows[-1]
-        else:
-            self.error("Couldn't find window %d" % container.wid)
-
-        if container.slot == 64537:
-            # XXX clicked out of the window ( 64537? wtf )
-            items = w.drop_selected()
-            self.drop_items(items)
-            self.write_packet("window-token", wid=container.wid,
-                token=container.token, acknowledged=True)
-            return
-
-        selected = w.select(container.slot, bool(container.button),
-            bool(container.shift))
-
-        if selected:
-            # Notchian server does not send any packets here because both server
-            # and client uses same algorithm for inventory actions. I did my best
-            # to make bravo's inventory behave the same way but there is a change
-            # some differencies still exist. So we send whole window content to
-            # the cliet to make sure client displays inventory we have on server.
-            packet = w.save_to_packet()
-            self.transport.write(packet)
-            # TODO: send package for 'item on cursor'.
-
-            equipped_slot = self.player.equipped + 36
-            # Inform other players about changes to this player's equipment.
-            if container.wid == 0 and (container.slot in range(5, 9) or
-                                       container.slot == equipped_slot):
-
-                # Currently equipped item changes.
-                if container.slot == equipped_slot:
-                    item = self.player.inventory.holdables[self.player.equipped]
-                    slot = 0
-                # Armor changes.
-                else:
-                    item = i.armor[container.slot - 5]
-                    # Order of slots is reversed in the equipment package.
-                    slot = 4 - (container.slot - 5)
-
-                if item is None:
-                    primary, secondary = 65535, 0
-                else:
-                    primary, secondary, count = item
-                packet = make_packet("entity-equipment",
-                    eid=self.player.eid,
-                    slot=slot,
-                    primary=primary,
-                    secondary=secondary
-                )
-                self.factory.broadcast_for_others(packet, self)
-
-            # If the window is SharedWindow for tile...
-            if w.coords is not None:
-                # ...and the window have dirty slots...
-                if len(w.dirty_slots):
-                    # ...check if some one else...
-                    for p in self.factory.protocols.itervalues():
-                        if p is self:
-                            continue
-                        # ... have window opened for the same tile...
-                        if len(p.windows) and p.windows[-1].coords == w.coords:
-                            # ... and notify about changes.
-                            packets = p.windows[-1].packets_for_dirty(w.dirty_slots)
-                            p.transport.write(packets)
-                    w.dirty_slots.clear()
-                    # At the end mark the chunk dirty
-                    try:
-                        bigx, smallx, bigz, smallz, y = w.coords
-                        chunk = self.chunks[bigx, bigz]
-                        chunk.dirty = True
-                    except KeyError:
-                        self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
-
-        self.write_packet("window-token", wid=container.wid, token=container.token,
-            acknowledged=selected)
-
-    def drop_items(self, items):
-        """
-        Loop over items and drop all of them in front of the player.
-        """
-
-        # XXX WTF is this a method on this class?
-        dest = self.location.in_front_of(1)
-        dest.y += 1
-        coords = (int(dest.x * 32) + 16, int(dest.y * 32) + 16,
-            int(dest.z * 32) + 16)
-        for item in items:
-            if item is None:
-                continue
-            self.factory.give(coords, (item[0], item[1]), item[2])
+        # run hooks until handled
+        for hook in self.click_hooks:
+            if hook.click_hook(self, container):
+                return
+        # if not handled
+        self.write_packet("window-token", wid=container.wid,
+            token=container.token, acknowledged=False)
 
     def sign(self, container):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)

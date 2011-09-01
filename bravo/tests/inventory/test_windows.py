@@ -472,6 +472,27 @@ class TestWorkbenchIntegration(unittest.TestCase):
         self.assertEqual( self.i.identifier, "workbench" )
         self.assertEqual( self.i.title, "Workbench" )
 
+    def test_close_window(self):
+        items, packets = self.i.close()
+        self.assertEqual(len(items), 0)
+        self.assertEqual(packets, "")
+
+        self.i.slots.crafting[0] = Slot(bravo.blocks.items["coal"].slot, 0, 1)
+        self.i.slots.crafting[3] = Slot(bravo.blocks.items["stick"].slot, 0, 1)
+        self.i.inventory.storage[0] = Slot(1, 0, 1)
+        self.i.inventory.holdables[0] = Slot(2, 0, 1)
+        ## Force crafting table to be rechecked.
+        self.i.slots.update_crafted()
+        self.i.select(37)
+        items, packets = self.i.close()
+        self.assertEqual(self.i.selected, None)
+        self.assertEqual(self.i.slots.crafted[0], None)
+        self.assertEqual(self.i.slots.crafting, [None] * 9)
+        self.assertEqual(len(items), 3)
+        self.assertEqual(items[0], (263, 0, 1))
+        self.assertEqual(items[1], (280, 0, 1))
+        self.assertEqual(items[2], (2, 0, 1))
+
     def test_craft_golden_apple(self):
         #Add 8 gold blocks and 1 apple to inventory
         self.i.inventory.add(bravo.blocks.blocks["gold"].key, 8)
@@ -653,6 +674,10 @@ class TestLargeChestIntegration(unittest.TestCase):
         self.i.select(30, False, True)
         self.assertEqual(self.b.storage[3], None)
         self.assertEqual(self.i.dirty_slots, {30 : None})
+        self.i.inventory.holdables[0] = Slot(2, 0, 1)
+        self.i.select(81, False, True)
+        self.assertEqual(self.i.inventory.holdables[0], None)
+        self.assertEqual(self.a.storage[0], (2, 0, 1))
 
     def test_dirty_slots_packaging(self):
         self.a.storage[0] = Slot(1, 0, 1)
