@@ -77,7 +77,7 @@ class Tile(object):
                 ccn = len(ccs)
                 if ccn == 1:
                     # check gonna-be-connected chest is not connected already
-                    n = chestsAround(factory, ccs[0])
+                    n = len(chestsAround(factory, ccs[0]))
                     if n != 0:
                         returnValue((False, builddata, True))
                 elif ccn > 1:
@@ -90,7 +90,6 @@ class Tile(object):
             tileClass = self.block_to_tile[item.slot]
             tile = tileClass(smallx, y, smallz)
             chunk.tiles[smallx, y, smallz] = tile
-            print "created chest tile"
 
         returnValue((True, builddata, False))
 
