@@ -262,7 +262,8 @@ class Furnace(object):
         if block.slot != blocks["furnace"].slot:
             return
 
-        furnace = self.get_furnace_tile(chunk, (x, y, z))
+        coords = (x, y, z)
+        furnace = self.get_furnace_tile(chunk, coords)
         if furnace is None:
             return
         
@@ -271,6 +272,7 @@ class Furnace(object):
         z = chunk.z * 16 + z
         furnace = furnace.inventory
         drop_items((x, y, z), furnace.crafted + furnace.crafting + furnace.fuel)
+        del(chunk.tiles[coords])
 
     name = "furnace"
 
@@ -349,7 +351,8 @@ class Chest(object):
         if block.slot != blocks["chest"].slot:
             return
 
-        chest = self.get_chest_tile(chunk, (x, y, z))
+        coords = (x, y, z)
+        chest = self.get_chest_tile(chunk, coords)
         if chest is None:
             return
         
@@ -358,6 +361,7 @@ class Chest(object):
         z = chunk.z * 16 + z
         chest = chest.inventory
         drop_items((x, y, z), chest.storage)
+        del(chunk.tiles[coords])
 
     name = "chest"
 
