@@ -1,5 +1,5 @@
 from zope.interface import implements
-
+import traceback
 from bravo.ibravo import IConsoleCommand, IChatCommand
 
 from bravo.parameters import factory
@@ -111,8 +111,43 @@ class Rain(object):
     aliases = tuple()
     usage = "<state>"
 
+class CreateMob(object):
+    """
+    Create a mob
+    """
+
+    implements(IChatCommand)
+
+    def chat_command(self, username, parameters):
+        make = True
+        position = factory.protocols[username].location
+        if len(parameters) == 1:
+            mob = parameters[0]
+            number = 1
+        elif len(parameters) == 2:
+            mob = parameters[0]
+            number = int(parameters[1])
+        else:
+            make = False
+            return ("Couldn't understand you!",)
+        if make:
+#            try:
+            for i in range(0,number):
+                print mob, number
+                entity = factory.create_entity(position.x,position.y,position.z,mob)
+                factory.broadcast(entity.save_to_packet())
+                entity.run(factory)
+            return ("Made mob!",)
+#            except:
+#                return ("Couldn't make mob!",)
+
+    name = "mob"
+    aliases = tuple()
+    usage = "<state>"
+
 hello = Hello()
 meliae = Meliae()
 status = Status()
 colors = Colors()
 rain = Rain()
+mob = CreateMob()

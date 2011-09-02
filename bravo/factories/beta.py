@@ -103,8 +103,6 @@ class BravoFactory(Factory):
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
         log.msg("Starting entity updates...")
-        self.entity_loop = LoopingCall(self.update_entities)
-        self.entity_loop.start(.2)
 
         # Start automatons.
         for automaton in self.automatons:
@@ -130,7 +128,6 @@ class BravoFactory(Factory):
             automaton.stop()
 
         self.time_loop.stop()
-        self.entity_loop.stop()
 
         # Write back current world time. This must be done before stopping the
         # world.
@@ -277,7 +274,8 @@ class BravoFactory(Factory):
         d = self.world.request_chunk(bigx, bigz)
         d.addCallback(lambda chunk: chunk.entities.add(entity))
         d.addCallback(lambda none: log.msg("Created entity %s" % entity))
-
+        if hasattr(entity,'loop'): # Maybe just send the entity object to the manager?
+            entity.run(self)
         return entity
 
     def register_entity(self, entity):
@@ -291,7 +289,8 @@ class BravoFactory(Factory):
         if not entity.eid:
             self.eid += 1
             entity.eid = self.eid
-
+            if hasattr(entity,'loop'): # Maybe just send the entity object to the manager?
+                entity.run(self)
         log.msg("Registered entity %s" % entity)
 
     def destroy_entity(self, entity):

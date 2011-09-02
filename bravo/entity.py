@@ -1,12 +1,13 @@
-from math import pi
+from math import pi, atan2, degrees
+from random import uniform
 
 from twisted.python import log
 
 from bravo.inventory import Equipment, ChestStorage
 from bravo.location import Location
 from bravo.packets.beta import make_packet
-
-from twisted.internet.tasks import LoopingCall
+from bravo.utilities.ai import closest_player, check_collision
+from twisted.internet.task import LoopingCall
 
 class Entity(object):
     """
@@ -186,7 +187,7 @@ class Mob(Entity):
     """
     A creature.
     """
-    def __init__(self,manager):
+    def __init__(self, **kwargs):
         """
         Create a mob
 
@@ -194,14 +195,16 @@ class Mob(Entity):
         """
 
         super(Mob, self).__init__(**kwargs)
-        self.manager = manager
-        self.loop = LoopingCall(self.update,self.manager)
-
+        self.manager = None
+        self.offsetlist = ((.5,0,.5),(-.5,0,.5),(.5,0,-.5),(-.5,0,-.5))
     name = "Mob"
     type = "mob"
 
     metadata = {0: ("byte", 0)}
 
+    def run(self,factory):
+        self.loop = LoopingCall(self.update,factory)
+        self.loop.start(.2)
 
     def save_to_packet(self):
         """
@@ -219,12 +222,61 @@ class Mob(Entity):
             metadata=self.metadata
         )
 
-    def update(self, manager):
+    def save_location_to_packet(self):
+        return make_packet("teleport",
+            eid=self.eid,
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=int(self.location.yaw),
+            pitch=int(self.location.pitch),
+        )
+
+    def update(self, factory):
         """
         Update this mob's location with respect to a factory.
         """
+        clamp = lambda n: max(min(.5, n), -.5)
+        # XXX  Discuss appropriate style with MAD
+        player = closest_player(factory,
+                                (self.location.x,
+                                self.location.y,
+                                self.location.z),
+                                16)
+        if player == None:
+            vector = (uniform(-.5,.5),
+                      uniform(-.5,.5),
+                      uniform(-.5,.5))
+            target = (self.location.x + vector[0],
+                      self.location.y + vector[1],
+                      self.location.z + vector[2])
+        else:
+            target = (player.location.x,
+                      player.location.y,
+                      player.location.z)
+            vector = (clamp(target[0] - self.location.x),
+                      clamp(target[1] - self.location.y),
+                      clamp(target[2] - self.location.z))
 
-        # XXX IoC violation, WTF
+        new_position = (vector[0] + self.location.x,
+                        vector[1] + self.location.y,
+                        vector[2] + self.location.z,)
+
+        new_pitch = int(atan2((self.location.z - target[2]),
+            (self.location.x - target[0] )) + pi/2)
+        if new_pitch < 0 :
+            new_pitch = 0
+
+        can_go = check_collision(new_position,self.offsetlist, factory)
+
+        if can_go:
+            self.location.x = new_position[0]
+            self.location.y = new_position[1]
+            self.location.z = new_position[2]
+            self.location.theta = new_pitch
+            factory.broadcast(self.save_location_to_packet())
+        else:
+            pass
 
 
 class Chuck(Mob):

@@ -3,7 +3,7 @@ from itertools import product
 import random
 import sys
 import weakref
-
+from copy import copy
 from numpy import fromstring, uint8
 
 from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
@@ -13,7 +13,7 @@ from twisted.python import log
 
 from bravo.chunk import Chunk
 from bravo.config import configuration
-from bravo.entity import Player
+from bravo.entity import Player, Mob
 from bravo.errors import ChunkNotLoaded, SerializerReadException
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import (retrieve_named_plugins, verify_plugin,
@@ -297,6 +297,11 @@ class World(object):
 
         # Register the chunk's entities with our parent factory.
         for entity in chunk.entities:
+            if hasattr(entity,'loop'):
+                print "Started mob!"
+                entity.run(factory)
+            else:
+                print "I have no loop"
             self.factory.register_entity(entity)
 
         # Return the chunk, in case we are in a Deferred chain.
