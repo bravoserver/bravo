@@ -324,6 +324,18 @@ class TestInventoryIntegration(unittest.TestCase):
         self.assertEqual(self.i.inventory.holdables[0], shovel)
         self.assertEqual(self.i.inventory.holdables[1], shovel)
 
+    def test_drop_selected_all(self):
+        self.i.selected = Slot(1, 0, 3)
+        items = self.i.drop_selected()
+        self.assertEqual(self.i.selected, None)
+        self.assertEqual(items, [(1, 0, 3)])
+
+    def test_drop_selected_one(self):
+        self.i.selected = Slot(1, 0, 3)
+        items = self.i.drop_selected(True)
+        self.assertEqual(self.i.selected, (1, 0, 2))
+        self.assertEqual(items, [(1, 0, 1)])
+
 class TestWindowIntegration(unittest.TestCase):
 
     def setUp(self):
@@ -463,6 +475,46 @@ class TestWindowIntegration(unittest.TestCase):
         self.assertEqual(self.i.selected, None )
         self.assertEqual(self.i.inventory.storage[9],
             (bravo.blocks.blocks["wood"].slot, 0, 8))
+
+    def test_shift_click_crafted_almost_full_inventory(self):
+        # NOTE:Notchian client works this way: you lose items
+        # that was not moved to inventory. So, it's not a bug.
+
+        # there is space for 3 `wood`s only
+        self.i.inventory.storage[:] = [Slot(1, 0, 64)] * 27
+        self.i.inventory.holdables[:] = [Slot(bravo.blocks.blocks["wood"].slot, 0, 64)] * 9
+        self.i.inventory.holdables[1] = Slot(bravo.blocks.blocks["wood"].slot, 0, 63)
+        self.i.inventory.holdables[2] = Slot(bravo.blocks.blocks["wood"].slot, 0, 63)
+        self.i.inventory.holdables[3] = Slot(bravo.blocks.blocks["wood"].slot, 0, 63)
+        # Select log into crafting.
+        self.i.slots.crafting[0] = Slot(bravo.blocks.blocks["log"].slot, 0, 2)
+        self.i.slots.update_crafted()
+        # Shift-Click on wood from crafted.
+        self.assertTrue(self.i.select(0, False, True))
+        self.assertEqual(self.i.selected, None )
+        self.assertEqual(self.i.inventory.holdables[1],
+            (bravo.blocks.blocks["wood"].slot, 0, 64))
+        self.assertEqual(self.i.inventory.holdables[2],
+            (bravo.blocks.blocks["wood"].slot, 0, 64))
+        self.assertEqual(self.i.inventory.holdables[3],
+            (bravo.blocks.blocks["wood"].slot, 0, 64))
+        self.assertEqual(self.i.slots.crafting[0],
+            (bravo.blocks.blocks["log"].slot, 0, 1))
+        self.assertEqual(self.i.slots.crafted[0],
+            (bravo.blocks.blocks["wood"].slot, 0, 4))
+
+    def test_shift_click_crafted_full_inventory(self):
+        # there is no space left
+        self.i.inventory.storage[:] = [Slot(1, 0, 64)] * 27
+        self.i.inventory.holdables[:] = [Slot(bravo.blocks.blocks["wood"].slot, 0, 64)] * 9
+        # Select log into crafting.
+        self.i.slots.crafting[0] = Slot(bravo.blocks.blocks["log"].slot, 0, 2)
+        self.i.slots.update_crafted()
+        # Shift-Click on wood from crafted.
+        self.assertFalse(self.i.select(0, False, True))
+        self.assertEqual(self.i.selected, None )
+        self.assertEqual(self.i.slots.crafting[0],
+            (bravo.blocks.blocks["log"].slot, 0, 2))
 
     def test_close_window(self):
         items, packets = self.i.close()

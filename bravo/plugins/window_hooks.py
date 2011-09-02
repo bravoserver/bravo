@@ -26,7 +26,7 @@ def processClickMessage(player, window, container):
 
     # Clicked out of the window
     if container.slot == 64537: # -999
-        items = window.drop_selected()
+        items = window.drop_selected(bool(container.button))
         drop_items(player.location, items)
         player.write_packet("window-token", wid=container.wid,
             token=container.token, acknowledged=True)

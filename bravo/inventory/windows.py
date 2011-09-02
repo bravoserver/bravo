@@ -214,10 +214,8 @@ class Window(SerializableSlots):
             return result
         elif l is self.slots.crafted:
             if shift: # shift-click on crafted slot
-                # We cannot rollback if all items cannot be moved to inventory.
-                # I know it's not good but I have no solution for this right now.
-                # You will lose items that was not moved to inventory. ;(
-
+                # Notchian client works this way: you lose items
+                # that was not moved to inventory. So, it's not a bug.
                 if (self.select_stack(self.slots.crafted, 0)):
                     # As select_stack() call took items from crafted[0]
                     # we must update the recipe to generate new item there
@@ -306,11 +304,16 @@ class Window(SerializableSlots):
 
         return items, packets
 
-    def drop_selected(self):
+    def drop_selected(self, alternate=False):
         items = []
         if self.selected is not None:
-            items.append( self.selected )
-            self.selected = None
+            if alternate: # drop one item
+                i = Slot(self.selected.primary, self.selected.secondary, 1)
+                items.append(i)
+                self.selected = self.selected.decrement()
+            else: # drop all
+                items.append(self.selected)
+                self.selected = None
         return items
 
     def mark_dirty(self, table, index):
