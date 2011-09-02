@@ -1,22 +1,31 @@
 from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.python import log
 from zope.interface import implements
 
 from bravo.blocks import blocks
+from bravo.location import Location
 from bravo.packets.beta import make_packet
-from bravo.ibravo import IWindowOpenHook, IWindowClickHook, IWindowCloseHook
+from bravo.ibravo import IWindowOpenHook, IWindowClickHook, IWindowCloseHook, IDigHook
 from bravo.inventory.windows import WorkbenchWindow, ChestWindow, LargeChestWindow, FurnaceWindow
+from bravo.entity import Chest as ChestTile, Furnace as FurnaceTile
 
 from bravo.parameters import factory
 from bravo.utilities.coords import split_coords
 from bravo.utilities.building import chestsAround
 
-def drop_items(location, items):
+def drop_items(location, items, y_offset = 0):
     """
     Loop over items and drop all of them
+    
+    :param location: Location() or tuple (x, y, z)
+    :param items: list of items
     """
-    dest = location.in_front_of(1)
-    dest.y += 1
-    coords = (int(dest.x * 32) + 16, int(dest.y * 32) + 16, int(dest.z * 32) + 16)
+    if type(location) == Location:
+        x, y, z = location.x, location.y, location.z
+    else:
+        x, y, z = location
+    y += y_offset
+    coords = (int(x * 32) + 16, int(y * 32) + 16, int(z * 32) + 16)
     for item in items:
         if item is None:
             continue
@@ -27,7 +36,7 @@ def processClickMessage(player, window, container):
     # Clicked out of the window
     if container.slot == 64537: # -999
         items = window.drop_selected(bool(container.button))
-        drop_items(player.location, items)
+        drop_items(player.location.in_front_of(1), items, 1)
         player.write_packet("window-token", wid=container.wid,
             token=container.token, acknowledged=True)
         return
@@ -117,7 +126,7 @@ class Windows(object):
             items, packets = window.close()
             # No need to send the packet as the window already closed on client.
             # Pakets work only for player's inventory.
-            drop_items(player.location, items)
+            drop_items(player.location.in_front_of(1), items, 1)
         else:
             player.error("Couldn't close non-current window %d" % container.wid)
 
@@ -163,7 +172,7 @@ class Inventory(object):
         items, packets = player.inventory.close() # it's window from protocol
         if packets:
             player.transport.write(packets)
-        drop_items(player.location, items)
+        drop_items(player.location.in_front_of(1), items, 1)
 
     def click_hook(self, player, container):
         """
@@ -207,7 +216,21 @@ class Workbench(object):
 
 class Furnace(object):
 
-    implements(IWindowOpenHook)
+    implements(IWindowOpenHook, IDigHook)
+
+    def get_furnace_tile(self, chunk, coords):
+        try:
+            furnace = chunk.tiles[coords]
+            if type(furnace) != FurnaceTile:
+                raise KeyError
+        except KeyError:
+            x, y, z = coords
+            x = chunk.x * 16 + x
+            z = chunk.z * 16 + z
+            log.msg("Furnace at (%d, %d, %d) do not have tile or tile type mismatch" %
+                    (x, y, z))
+            furnace = None
+        return furnace
 
     @inlineCallbacks
     def open_hook(self, player, container, block):
@@ -223,19 +246,31 @@ class Furnace(object):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
         chunk = yield factory.world.request_chunk(bigx, bigz)
 
-        try:
-            furnace = chunk.tiles[(smallx, container.y, smallz)]
-            # TODO: Check the furnace is furnace tile
-        except KeyError:
-            # WTF? Furnace block have no furnace tile attached to it.
-            # World is corrupted?
+        furnace = self.get_furnace_tile(chunk, (smallx, container.y, smallz))
+        if furnace is None:
             returnValue(None)
+        print "Opening furnace at", (container.x, container.y, container.z), (smallx, container.y, smallz)
 
         coords = bigx, smallx, bigz, smallz, container.y
         window = FurnaceWindow(player.wid, player.player.inventory,
                                furnace.inventory, coords)
         player.windows.append(window)
         returnValue(window)
+
+    def dig_hook(self, chunk, x, y, z, block):
+        # NOTE: x, y, z - coords in chunk
+        if block.slot != blocks["furnace"].slot:
+            return
+
+        furnace = self.get_furnace_tile(chunk, (x, y, z))
+        if furnace is None:
+            return
+        
+        # Block coordinates
+        x = chunk.x * 16 + x
+        z = chunk.z * 16 + z
+        furnace = furnace.inventory
+        drop_items((x, y, z), furnace.crafted + furnace.crafting + furnace.fuel)
 
     name = "furnace"
 
@@ -244,7 +279,21 @@ class Furnace(object):
 
 class Chest(object):
 
-    implements(IWindowOpenHook)
+    implements(IWindowOpenHook, IDigHook)
+
+    def get_chest_tile(self, chunk, coords):
+        try:
+            chest = chunk.tiles[coords]
+            if type(chest) != ChestTile:
+                raise KeyError
+        except KeyError:
+            x, y, z = coords
+            x = chunk.x * 16 + x
+            z = chunk.z * 16 + z
+            log.msg("Chest at (%d, %d, %d) do not have tile or tile type mismatch" %
+                    (x, y, z))
+            chest = None
+        return chest
 
     @inlineCallbacks
     def open_hook(self, player, container, block):
@@ -262,41 +311,53 @@ class Chest(object):
 
         chests_around = chestsAround(factory, (container.x, container.y, container.z))
         chests_around_num = len(chests_around)
-        try:
-            if chests_around_num == 0: # small chest
-                chest = chunk.tiles[(smallx, container.y, smallz)]
-                # TODO: Check the chest is chest tile
-                coords = bigx, smallx, bigz, smallz, container.y
-                window = ChestWindow(player.wid, player.player.inventory,
-                                    chest.inventory, coords)
-            elif chests_around_num == 1: # large chest
-                # process second chest coordinates
-                x2, y2, z2 = chests_around[0]
-                bigx2, smallx2, bigz2, smallz2 = split_coords(x2, z2)
 
-                chest1 = chunk.tiles[(smallx, container.y, smallz)]
-                chest2 = chunk.tiles[(smallx2, container.y, smallz2)]
-                # TODO: Check the chests are chest tiles
-                c1 = bigx, smallx, bigz, smallz, container.y
-                c2 = bigx2, smallx2, bigz2, smallz2, container.y
-                # We shall properly order chest inventories
-                if c1 < c2:
-                    window = LargeChestWindow(player.wid, player.player.inventory,
-                            chest1.inventory, chest2.inventory, c1)
-                else:
-                    window = LargeChestWindow(player.wid, player.player.inventory,
-                            chest2.inventory, chest1.inventory, c2)
-            else:
-                # WTF? The chest have two connected chests.
-                # World is corrupted?
+        if chests_around_num == 0: # small chest
+            chest = self.get_chest_tile(chunk, (smallx, container.y, smallz))
+            if chest is None:
                 returnValue(None)
-        except KeyError:
-            # WTF? Chest block have no chest tile attached to it.
-            # World is corrupted?
+            coords = bigx, smallx, bigz, smallz, container.y
+            window = ChestWindow(player.wid, player.player.inventory,
+                                 chest.inventory, coords)
+        elif chests_around_num == 1: # large chest
+            # process second chest coordinates
+            x2, y2, z2 = chests_around[0]
+            bigx2, smallx2, bigz2, smallz2 = split_coords(x2, z2)
+
+            chest1 = self.get_chest_tile(chunk, (smallx, container.y, smallz))
+            chest2 = self.get_chest_tile(chunk, (smallx2, container.y, smallz2))
+            if chest1 is None or chest2 is None:
+                returnValue(None)
+            c1 = bigx, smallx, bigz, smallz, container.y
+            c2 = bigx2, smallx2, bigz2, smallz2, container.y
+            # We shall properly order chest inventories
+            if c1 < c2:
+                window = LargeChestWindow(player.wid, player.player.inventory,
+                        chest1.inventory, chest2.inventory, c1)
+            else:
+                window = LargeChestWindow(player.wid, player.player.inventory,
+                        chest2.inventory, chest1.inventory, c2)
+        else:
+            log.msg("Chest at (%d, %d, %d) have three chests connected" %
+                    (container.x, container.y, container.z))
             returnValue(None)
 
         player.windows.append(window)
         returnValue(window)
+
+    def dig_hook(self, chunk, x, y, z, block):
+        if block.slot != blocks["chest"].slot:
+            return
+
+        chest = self.get_chest_tile(chunk, (x, y, z))
+        if chest is None:
+            return
+        
+        # Block coordinates
+        x = chunk.x * 16 + x
+        z = chunk.z * 16 + z
+        chest = chest.inventory
+        drop_items((x, y, z), chest.storage)
 
     name = "chest"
 
