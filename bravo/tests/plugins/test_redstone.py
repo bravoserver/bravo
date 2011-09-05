@@ -8,38 +8,10 @@ import bravo.config
 from bravo.ibravo import IDigHook
 from bravo.plugin import retrieve_plugins
 from bravo.world import World
+from bravo.utilities.redstone import truthify_block
 
 class RedstoneMockFactory(object):
     pass
-
-def truth_to_block(truth, block, metadata):
-    """
-    Alter a block based on whether it should be true or false (on or off).
-
-    This function returns a tuple of the block and metadata, possibly
-    partially or fully unaltered.
-    """
-
-    # Redstone torches.
-    if block in (blocks["redstone-torch"].slot,
-        blocks["redstone-torch-off"].slot):
-        if truth:
-            return blocks["redstone-torch"].slot, metadata
-        else:
-            return blocks["redstone-torch-off"].slot, metadata
-    # Redstone wires.
-    elif block == blocks["redstone-wire"].slot:
-        if truth:
-            # Try to preserve the current wire value.
-            return block, metadata if metadata else 0xf
-        else:
-            return block, 0x0
-    # Levers.
-    elif block == blocks["lever"].slot:
-        if truth:
-            return block, metadata | 0x8
-        else:
-            return block, metadata & ~0x8
 
 class TestRedstone(unittest.TestCase):
 
@@ -174,12 +146,12 @@ class TestRedstone(unittest.TestCase):
 
                 # Attach the levers to the sand block.
                 orientation = blocks["lever"].orientation("+z")
-                iblock, imetadata = truth_to_block(i1, blocks["lever"].slot,
+                iblock, imetadata = truthify_block(i1, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
                 orientation = blocks["lever"].orientation("-z")
-                iblock, imetadata = truth_to_block(i2, blocks["lever"].slot,
+                iblock, imetadata = truthify_block(i2, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 3), iblock)
                 chunk.set_metadata((1, 1, 3), imetadata)
@@ -193,7 +165,7 @@ class TestRedstone(unittest.TestCase):
                 block = chunk.get_block((2, 1, 2))
                 metadata = chunk.get_metadata((2, 1, 2))
                 self.assertEqual((block, metadata),
-                    truth_to_block(o, block, metadata))
+                    truthify_block(o, block, metadata))
 
         return d
 
@@ -217,7 +189,7 @@ class TestRedstone(unittest.TestCase):
                 # purposes, grab the orientation metadata from the block
                 # definition.
                 orientation = blocks["lever"].orientation("+x")
-                iblock, imetadata = truth_to_block(i, blocks["lever"].slot,
+                iblock, imetadata = truthify_block(i, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
@@ -232,7 +204,7 @@ class TestRedstone(unittest.TestCase):
                 block = chunk.get_block((3, 1, 1))
                 metadata = chunk.get_metadata((3, 1, 1))
                 self.assertEqual((block, metadata),
-                    truth_to_block(o, block, metadata))
+                    truthify_block(o, block, metadata))
 
         return d
 
@@ -257,12 +229,12 @@ class TestRedstone(unittest.TestCase):
 
                 # Attach the levers to the sand block.
                 orientation = blocks["lever"].orientation("+z")
-                iblock, imetadata = truth_to_block(i1, blocks["lever"].slot,
+                iblock, imetadata = truthify_block(i1, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
                 orientation = blocks["lever"].orientation("-z")
-                iblock, imetadata = truth_to_block(i2, blocks["lever"].slot,
+                iblock, imetadata = truthify_block(i2, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 3), iblock)
                 chunk.set_metadata((1, 1, 3), imetadata)
@@ -279,6 +251,6 @@ class TestRedstone(unittest.TestCase):
                 block = chunk.get_block((2, 1, 2))
                 metadata = chunk.get_metadata((2, 1, 2))
                 self.assertEqual((block, metadata),
-                    truth_to_block(o, block, metadata))
+                    truthify_block(o, block, metadata))
 
         return d
