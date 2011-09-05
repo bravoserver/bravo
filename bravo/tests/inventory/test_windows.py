@@ -2,12 +2,10 @@ from twisted.trial import unittest
 
 import bravo.blocks
 
-from bravo.ibravo import IRecipe
 from bravo.inventory import Slot, Inventory
-from bravo.inventory.slots import SlotsSet, ChestStorage, FurnaceStorage
+from bravo.inventory.slots import ChestStorage, FurnaceStorage
 from bravo.inventory.windows import (InventoryWindow, WorkbenchWindow, ChestWindow,
     FurnaceWindow, LargeChestWindow)
-from bravo.plugin import retrieve_plugins
 
 class TestSlot(unittest.TestCase):
     """

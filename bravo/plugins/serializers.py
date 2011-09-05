@@ -1,7 +1,6 @@
 from __future__ import division
 
 from gzip import GzipFile
-from itertools import chain
 import os
 from StringIO import StringIO
 from struct import pack, unpack

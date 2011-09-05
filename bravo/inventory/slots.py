@@ -1,5 +1,3 @@
-
-from bravo import blocks
 from bravo.ibravo import IRecipe
 from bravo.plugin import retrieve_plugins
 from bravo.packets.beta import make_packet
