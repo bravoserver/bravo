@@ -76,7 +76,6 @@ class Tracks(object):
         """
 
         # XXX I need to be a post hook
-        # XXX I don't handle my Deferreds correctly
         # XXX I need tests so that the above doesn't happen again
 
         block, metadata, x, y, z, face = builddata
@@ -87,7 +86,7 @@ class Tracks(object):
             return True, builddata, False
 
         # Check for correct underground
-        if world.get_block((x, y - 1, z)) not in tracks_allowed_on:
+        if world.sync_get_block((x, y - 1, z)) not in tracks_allowed_on:
             return False, builddata, False
 
         # Use facing direction of player to set correct track tile
@@ -101,35 +100,51 @@ class Tracks(object):
         elif 300 < yaw < 330:
             metadata = CORNER_NE
         elif 60 <= yaw <= 120 or 240 <= yaw <= 300:
-            # north or south
-            if world.get_block((x - 1, y + 1, z)) == blocks["tracks"].slot:
+            # North and south ascending tracks, if there are already tracks to
+            # the north or south.
+            if (world.sync_get_block((x - 1, y + 1, z)) ==
+                blocks["tracks"].slot):
                 metadata = ASCEND_N
-            elif world.get_block((x + 1, y + 1, z)) == blocks["tracks"].slot:
+            elif (world.sync_get_block((x + 1, y + 1, z)) ==
+                  blocks["tracks"].slot):
                 metadata = ASCEND_S
             else:
                 metadata = FLAT_NS
-            # check and adjust ascending tracks
-            if world.get_block((x - 1, y - 1, z)) == blocks["tracks"].slot:
-                if world.get_metadata((x - 1, y - 1, z)) == FLAT_NS:
-                    world.set_metadata((x - 1, y - 1, z), ASCEND_S)
-            if world.get_block((x + 1, y - 1, z)) == blocks["tracks"].slot:
-                if world.get_metadata((x + 1, y - 1, z)) == FLAT_NS:
-                    world.set_metadata((x + 1, y - 1, z), ASCEND_N)
-        else: # (0, 30) or (330, 0)
+
+            # If there are tracks to the north or south on the next Z-level
+            # down, they should be adjusted to ascend to this level.
+            target = x - 1, y - 1, z
+            if (world.sync_get_block(target) == blocks["tracks"].slot
+                and world.sync_get_metadata(target) == FLAT_NS):
+                world.sync_set_metadata(target, ASCEND_S)
+
+            target = x + 1, y - 1, z
+            if (world.sync_get_block(target) == blocks["tracks"].slot
+                and world.sync_get_metadata(target) == FLAT_NS):
+                world.sync_set_metadata(target, ASCEND_N)
+        # And this last range is east/west.
+        else:
             # east or west
-            if world.get_block((x, y + 1, z + 1)) == blocks["tracks"].slot:
+            if (world.sync_get_block((x, y + 1, z + 1)) ==
+                blocks["tracks"].slot):
                 metadata = ASCEND_W
-            elif world.get_block((x, y + 1, z - 1)) == blocks["tracks"].slot:
+            elif (world.sync_get_block((x, y + 1, z - 1)) ==
+                  blocks["tracks"].slot):
                 metadata = ASCEND_E
             else:
                 metadata = FLAT_EW
+
             # check and adjust ascending tracks
-            if world.get_block((x, y - 1, z - 1)) == blocks["tracks"].slot:
-                if world.get_metadata((x, y - 1, z - 1)) == FLAT_EW:
-                    world.set_metadata((x, y - 1, z - 1), ASCEND_W)
-            if world.get_block((x, y - 1, z + 1)) == blocks["tracks"].slot:
-                if world.get_metadata((x, y - 1, z + 1)) == FLAT_EW:
-                    world.set_metadata((x, y - 1, z + 1), ASCEND_E)
+            target = x, y - 1, z - 1
+            if (world.sync_get_block(target) == blocks["tracks"].slot
+                and world.sync_get_metadata(target) == FLAT_EW):
+                world.sync_set_metadata(target, ASCEND_W)
+
+            target = x, y - 1, z + 1
+            if (world.sync_get_block(target) == blocks["tracks"].slot
+                and world.sync_get_metadata(target) == FLAT_EW):
+                world.sync_set_metadata(target, ASCEND_E)
+
         builddata = builddata._replace(metadata=metadata)
         return True, builddata, False
 
