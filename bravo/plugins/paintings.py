@@ -49,15 +49,15 @@ class Paintings(object):
         item, metadata, x, y, z, face = builddata
 
         if item.slot != items["paintings"].slot:
-            return True, builddata
+            return True, builddata, False
 
         if face in ["+y", "-y"]:
             # No paintings on the floor.
-            return False, builddata
+            return False, builddata, False
 
         # Make sure we can remove it from the inventory.
         if not player.inventory.consume((item.slot, 0), player.equipped):
-            return False, builddata
+            return False, builddata, False
 
         entity = factory.create_entity(x, y, z, "Painting",
             direction=face_to_direction[face],
@@ -67,7 +67,7 @@ class Paintings(object):
         # Force the chunk (with its entities) to be saved to disk.
         factory.world.mark_dirty((x, y, z))
 
-        return False, builddata
+        return False, builddata, False
 
     def use_hook(self, player, target, button):
         # Block coordinates.

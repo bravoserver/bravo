@@ -65,17 +65,17 @@ class Door (object):
         faced_block = world.get_block ( (x, y, z) )
         if blocks["wooden-door"].slot == faced_block.result:
             self.open_or_close (world, (x, y, z) )
-            return False, builddata
+            return False, builddata, False
 
         # Checking that we want to place a door.
         if item.slot != items["wooden-door"].slot and item.slot != items["iron-door"].slot:
-            return True, builddata
+            return True, builddata, False
 
         entity_name = "wooden-door" if items["wooden-door"].slot == item.slot else "iron-door"
 
         if face != "+y":
             # No doors on the walls or on the ceiling !
-            return False, builddata
+            return False, builddata, False
 
         # If we're facing a snow block, then the door is going to replace it instead of
         # being built one block above !
@@ -106,11 +106,11 @@ class Door (object):
         actual_top_block = world.get_block ( (x, y + 1, z) )
         # Make sure the above block does not contain anything.
         if not actual_top_block.result == blocks["air"].slot:
-            return False, builddata
+            return False, builddata, False
 
         # Make sure we can remove it from the inventory.
         if not player.inventory.consume((item.slot, 0), player.equipped):
-            return False, builddata
+            return False, builddata, False
 
         if other_door:
             doubledoor_on_north_south_axis = False if other_door[0] == x else True
@@ -154,7 +154,7 @@ class Door (object):
         world.set_block((x, y + 1, z), blocks[entity_name].slot)
         world.set_metadata((x, y, z), orientation)
         world.set_metadata((x, y + 1, z), DOOR_TOP_BLOCK | orientation)
-        return False, builddata
+        return False, builddata, False
 
     def dig_hook(self, chunk, x, y, z, block):
 

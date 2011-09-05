@@ -464,7 +464,7 @@ packets = {
     100: Struct("window-open",
         UBInt8("wid"),
         Enum(UBInt8("type"),
-            inventory=0,
+            chest=0,
             workbench=1,
             furnace=2,
             dispenser=3,

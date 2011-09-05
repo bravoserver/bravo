@@ -20,8 +20,9 @@ from bravo.entity import Sign
 from bravo.errors import BetaClientError, BuildError
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
+    IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
     IDigHook, ISignHook, IUseHook)
-from bravo.inventory import Workbench, sync_inventories
+from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location
 from bravo.motd import get_motd
 from bravo.packets.beta import parse_packets, make_packet, make_error_packet
@@ -517,6 +518,9 @@ class BravoProtocol(BetaServerProtocol):
     def register_hooks(self):
 
         plugin_types = {
+            "open_hooks": IWindowOpenHook,
+            "click_hooks": IWindowClickHook,
+            "close_hooks": IWindowCloseHook,
             "pre_build_hooks": IPreBuildHook,
             "post_build_hooks": IPostBuildHook,
             "dig_hooks": IDigHook,
@@ -540,6 +544,8 @@ class BravoProtocol(BetaServerProtocol):
         self.player = yield self.factory.world.load_player(self.username)
         self.player.eid = self.eid
         self.location = self.player.location
+        # Init players' inventory window.
+        self.inventory = InventoryWindow(self.player.inventory)
 
         # Announce our presence.
         packet = make_packet("chat",
@@ -566,7 +572,7 @@ class BravoProtocol(BetaServerProtocol):
         # Send spawn and inventory.
         spawn = self.factory.world.spawn
         packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
-        packet += self.player.inventory.save_to_packet()
+        packet += self.inventory.save_to_packet()
         self.transport.write(packet)
 
         # Send weather.
@@ -606,18 +612,20 @@ class BravoProtocol(BetaServerProtocol):
             if entity.name != "Item":
                 continue
 
-            if self.player.inventory.add(entity.item, entity.quantity):
-                packet = make_packet("collect", eid=entity.eid,
-                    destination=self.player.eid)
-                self.factory.broadcast(packet)
+            left = self.player.inventory.add(entity.item, entity.quantity)
+            if left != entity.quantity:
+                if left != 0:
+                    # partial collect
+                    entity.quantity = left
+                else:
+                    packet = make_packet("collect", eid=entity.eid,
+                        destination=self.player.eid)
+                    packet += make_packet("destroy", eid=entity.eid)
+                    self.factory.broadcast(packet)
+                    self.factory.destroy_entity(entity)
 
-                packet = make_packet("destroy", eid=entity.eid)
-                self.factory.broadcast(packet)
-
-                packet = self.player.inventory.save_to_packet()
+                packet = self.inventory.save_to_packet()
                 self.transport.write(packet)
-
-                self.factory.destroy_entity(entity)
 
     def entities_near(self, radius):
         """
@@ -756,7 +764,7 @@ class BravoProtocol(BetaServerProtocol):
                     self.factory.give(coords, (primary, secondary), 1)
 
                     # Re-send inventory.
-                    packet = self.player.inventory.save_to_packet()
+                    packet = self.inventory.save_to_packet()
                     self.transport.write(packet)
 
                     # If no items in this slot are left, this player isn't
@@ -826,29 +834,6 @@ class BravoProtocol(BetaServerProtocol):
         dl = DeferredList(l)
         dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
 
-    def select_for_inventory(self, block):
-        """
-        Perform a custom block selection to open an inventory window.
-
-        Returns whether the selection was successful.
-        """
-
-        if block == blocks["workbench"].slot:
-            i = Workbench()
-            i.wid = self.wid
-            self.wid += 1
-
-            sync_inventories(self.player.inventory, i)
-            self.windows.append(i)
-
-            self.write_packet("window-open", wid=i.wid, type="workbench",
-                title="Hurp", slots=9)
-            packet = i.save_to_packet()
-            self.transport.write(packet)
-            return True
-
-        return False
-
     @inlineCallbacks
     def build(self, container):
         if container.x == -1 and container.z == -1 and container.y == 255:
@@ -863,9 +848,18 @@ class BravoProtocol(BetaServerProtocol):
             self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        if self.select_for_inventory(
-            chunk.get_block((smallx, container.y, smallz))):
-            return
+        # Try to open it first
+        for hook in self.open_hooks:
+            window = yield maybeDeferred(hook.open_hook, self, container,
+                           chunk.get_block((smallx, container.y, smallz)))
+            if window:
+                self.write_packet("window-open", wid=window.wid,
+                    type=window.identifier, title=window.title,
+                    slots=window.slots_num)
+                packet = window.save_to_packet()
+                self.transport.write(packet)
+                # window opened
+                return
 
         # Ignore clients that think -1 is placeable.
         if container.primary == -1:
@@ -895,8 +889,10 @@ class BravoProtocol(BetaServerProtocol):
             container.z, container.face)
 
         for hook in self.pre_build_hooks:
-            cont, builddata = yield maybeDeferred(hook.pre_build_hook,
+            cont, builddata, cancel = yield maybeDeferred(hook.pre_build_hook,
                 self.player, builddata)
+            if cancel:
+                return
             if not cont:
                 break
 
@@ -923,7 +919,7 @@ class BravoProtocol(BetaServerProtocol):
 
         # Re-send inventory.
         # XXX this could be optimized if/when inventories track damage.
-        packet = self.player.inventory.save_to_packet()
+        packet = self.inventory.save_to_packet()
         self.transport.write(packet)
 
         # Flush damaged chunks.
@@ -997,118 +993,18 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_others(packet, self)
 
     def wclose(self, container):
-        # Handle windows getting closed. First, a special case for inventory
-        # windows, then the generic case for other opened windows.
-
-        # Notchian client will open its inventory window without telling the
-        # server about it, so it can request an inventory window close
-        # *without* an open, and the window wouldn't be on our window stack.
-        # To properly handle it, special-case it here.
-        if container.wid == 0:
-            # Kick items out of the crafting table.
-            self.drop_items(self.player.inventory.crafting)
-            # And vacate the corresponding slots on the client.
-            # XXX we should really have a method for automating this in the
-            # inventory.
-            for i in xrange(0, 4):
-                if self.player.inventory.crafting[i] is not None:
-                    self.write_packet( "window-slot", wid = 0, slot = i+1, primary = -1 )
-                    self.player.inventory.crafting[i] = None
-            # XXX huh?
-            self.drop_selected(self.player.inventory)
-            return
-
-        top = self.windows.pop()
-
-        # If the requested WID is on top of the stack, go ahead and close the
-        # window. Otherwise, ignore it.
-        # XXX should/can we nak requests for closing windows?
-        if container.wid == top.wid:
-            if top.identifier == "workbench":
-                # Closing the workbench.
-                self.drop_items(top.crafting)
-            self.drop_selected(top)
-            sync_inventories(top, self.player.inventory)
-            # All done!
-            return
-        else:
-            log.msg("Ignoring request to close non-current window %d" %
-                container.wid)
+        # run all hooks
+        for hook in self.close_hooks:
+            hook.close_hook(self, container)
 
     def waction(self, container):
-        if container.wid == 0:
-            # Inventory.
-            i = self.player.inventory
-        elif self.windows and container.wid == self.windows[-1].wid:
-            i = self.windows[-1]
-        else:
-            self.error("Couldn't find window %d" % container.wid)
-
-        if container.slot == 64537:
-            # XXX clicked out of the window ( 64537? wtf )
-            self.drop_selected(i)
-            self.write_packet("window-token", wid=container.wid,
-                token=container.token, acknowledged=True)
-            return
-
-        selected = i.select(container.slot, bool(container.button),
-            bool(container.shift))
-
-        if selected:
-            # XXX should be if there's any damage to the inventory
-            packet = i.save_to_packet()
-            self.transport.write(packet)
-
-            # Inform other players about changes to this player's equipment.
-            if container.wid == 0 and (container.slot in range(5, 9) or
-                                       container.slot == 36):
-
-                # Armor changes.
-                if container.slot in range(5, 9):
-                    item = i.armor[container.slot - 5]
-                    # Order of slots is reversed in the equipment package.
-                    slot = 4 - (container.slot - 5)
-                # Currently equipped item changes.
-                elif container.slot == 36:
-                    item = i.holdables[0]
-                    slot = 0
-
-                if item is None:
-                    primary, secondary = 65535, 0
-                else:
-                    primary, secondary, count = item
-                packet = make_packet("entity-equipment",
-                    eid=self.player.eid,
-                    slot=slot,
-                    primary=primary,
-                    secondary=secondary
-                )
-                self.factory.broadcast_for_others(packet, self)
-
-        self.write_packet("window-token", wid=container.wid, token=container.token,
-            acknowledged=selected)
-
-    def drop_items(self, items):
-        """
-        Loop over items and drop all of them in front of the player.
-        """
-
-        # XXX WTF is this a method on this class?
-        dest = self.location.in_front_of(1)
-        dest.y += 1
-        coords = (int(dest.x * 32) + 16, int(dest.y * 32) + 16,
-            int(dest.z * 32) + 16)
-        for item in items:
-            if item is None:
-                continue
-            self.factory.give(coords, (item[0], item[1]), item[2])
-
-    def drop_selected(self, inventory):
-        # XXX can probably be inlined along with drop_items when the time
-        # comes
-        if inventory.selected is not None:
-            self.drop_items((inventory.selected,))
-            inventory.selected = None
+        # run hooks until handled
+        for hook in self.click_hooks:
+            if hook.click_hook(self, container):
+                return
+        # if not handled
+        self.write_packet("window-token", wid=container.wid,
+            token=container.token, acknowledged=False)
 
     def sign(self, container):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)

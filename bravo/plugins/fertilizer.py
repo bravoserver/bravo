@@ -37,7 +37,7 @@ class Fertilizer(object):
                 # Make sure we can remove it from the inventory.
                 if not player.inventory.consume(items["bone-meal"].key, player.equipped):
                     # If not, don't let bone meal get placed.
-                    returnValue((False, builddata))
+                    returnValue((False, builddata, False))
 
                 # Select correct treee and coordinates, then build tree.
                 tree = self.trees[metadata % 4](pos=(x, y, z))
@@ -49,7 +49,7 @@ class Fertilizer(object):
                 factory.flush_all_chunks()
 
         # Interrupt the processing here.
-        returnValue((False, builddata))
+        returnValue((False, builddata, False))
 
     name = "fertilizer"
 

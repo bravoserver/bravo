@@ -44,8 +44,9 @@ class TestTile(unittest.TestCase):
             bravo.blocks.items["sign"],
             0, 0, 0, 0, "+x"
         )
-        success, newdata = yield self.hook.pre_build_hook(None, builddata)
+        success, newdata, cancel = yield self.hook.pre_build_hook(None, builddata)
         self.assertTrue(success)
+        self.assertFalse(cancel)
         builddata = builddata._replace(block=bravo.blocks.blocks["wall-sign"],
             metadata=0x5)
         self.assertEqual(builddata, newdata)
@@ -58,8 +59,9 @@ class TestTile(unittest.TestCase):
             bravo.blocks.items["sign"],
             0, 0, 0, 0, "+y"
         )
-        success, newdata = yield self.hook.pre_build_hook(player, builddata)
+        success, newdata, cancel = yield self.hook.pre_build_hook(player, builddata)
         self.assertTrue(success)
+        self.assertFalse(cancel)
         builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
             metadata=0x8)
         self.assertEqual(builddata, newdata)
@@ -73,8 +75,9 @@ class TestTile(unittest.TestCase):
             bravo.blocks.items["sign"],
             0, 0, 0, 0, "+y"
         )
-        success, newdata = yield self.hook.pre_build_hook(player, builddata)
+        success, newdata, cancel = yield self.hook.pre_build_hook(player, builddata)
         self.assertTrue(success)
+        self.assertFalse(cancel)
         builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
             metadata=0x9)
         self.assertEqual(builddata, newdata)
@@ -91,6 +94,7 @@ class TestTile(unittest.TestCase):
             bravo.blocks.blocks["ladder"],
             0, 0, 0, 0, "+x"
         )
-        success, newdata = yield self.hook.pre_build_hook(None, builddata)
+        success, newdata, cancel = yield self.hook.pre_build_hook(None, builddata)
         self.assertTrue(success)
+        self.assertFalse(cancel)
         self.assertEqual(builddata, newdata)

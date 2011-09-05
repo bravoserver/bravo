@@ -2,7 +2,8 @@ from math import pi
 
 from twisted.python import log
 
-from bravo.inventory import Equipment, ChestStorage
+from bravo.inventory import Inventory
+from bravo.inventory.slots import ChestStorage, FurnaceStorage
 from bravo.location import Location
 from bravo.packets.beta import make_packet
 
@@ -54,7 +55,7 @@ class Player(Entity):
         super(Player, self).__init__(**kwargs)
 
         self.username = username
-        self.inventory = Equipment()
+        self.inventory = Inventory()
 
         self.equipped = 0
 
@@ -90,9 +91,9 @@ class Player(Entity):
         """
 
         packet = ""
-        slots = (self.inventory.holdables[0], self.inventory.armor[3],
-                 self.inventory.armor[2], self.inventory.armor[1],
-                 self.inventory.armor[0])
+        slots = (self.inventory.holdables[self.equipped],
+                 self.inventory.armor[3], self.inventory.armor[2],
+                 self.inventory.armor[1], self.inventory.armor[0])
 
         for slot, item in enumerate(slots):
             if item is None:
@@ -549,7 +550,9 @@ class Furnace(Tile):
     def __init__(self, *args, **kwargs):
         super(Furnace, self).__init__(*args, **kwargs)
 
-        self.inventory = ChestStorage()
+        self.burntime = 0
+        self.cooktime = 0
+        self.inventory = FurnaceStorage()
 
 class MobSpawner(Tile):
     """
