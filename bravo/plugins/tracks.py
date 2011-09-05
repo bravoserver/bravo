@@ -1,7 +1,7 @@
 from zope.interface import implements
 
 from bravo.blocks import blocks
-from bravo.ibravo import IPreBuildHook, IDigHook
+from bravo.ibravo import IPostBuildHook, IDigHook
 
 from bravo.parameters import factory
 
@@ -60,11 +60,11 @@ class Tracks(object):
     Build and dig hooks for mine cart tracks.
     """
 
-    implements(IPreBuildHook, IDigHook)
+    implements(IPostBuildHook, IDigHook)
 
     name = "tracks"
 
-    def pre_build_hook(self, player, builddata):
+    def post_build_hook(self, player, coords, block):
         """
         Uses the players location yaw relative to the building position to
         place the tracks. This allows building straight tracks as well as
@@ -75,19 +75,16 @@ class Tracks(object):
         adjusted for placement and the face has no meaning.
         """
 
-        # XXX I need to be a post hook
-        # XXX I need tests so that the above doesn't happen again
-
-        block, metadata, x, y, z, face = builddata
+        x, y, z = coords
         world = factory.world
 
         # Handle tracks only
         if block.slot != blocks["tracks"].slot:
-            return True, builddata, False
+            return
 
         # Check for correct underground
         if world.sync_get_block((x, y - 1, z)) not in tracks_allowed_on:
-            return False, builddata, False
+            return
 
         # Use facing direction of player to set correct track tile
         yaw = player.location.yaw
@@ -145,8 +142,8 @@ class Tracks(object):
                 and world.sync_get_metadata(target) == FLAT_EW):
                 world.sync_set_metadata(target, ASCEND_E)
 
-        builddata = builddata._replace(metadata=metadata)
-        return True, builddata, False
+        # And finally, set the new metadata.
+        world.sync_set_metadata((x, y, z), metadata)
 
     def dig_hook(self, chunk, x, y, z, block):
         """
