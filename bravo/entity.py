@@ -1,12 +1,12 @@
-from math import pi, atan2, degrees
+from math import pi, atan2
 from random import uniform
 
 from twisted.python import log
 
+from bravo.utilities.coords import split_coords
 from bravo.inventory import Equipment, ChestStorage
 from bravo.location import Location
 from bravo.packets.beta import make_packet
-from bravo.utilities.ai import closest_player, check_collision
 from twisted.internet.task import LoopingCall
 
 class Entity(object):
@@ -193,17 +193,26 @@ class Mob(Entity):
 
         This method calls super().
         """
-
+        self.loop = None
         super(Mob, self).__init__(**kwargs)
         self.manager = None
-        self.offsetlist = ((.5,0,.5),(-.5,0,.5),(.5,0,-.5),(-.5,0,-.5))
+        self.offsetlist = ((.5, 0, .5),
+            (-.5, 0, .5),
+            (.5, 0, -.5),
+            (-.5, 0, -.5))
     name = "Mob"
     type = "mob"
 
     metadata = {0: ("byte", 0)}
 
-    def run(self,factory):
-        self.loop = LoopingCall(self.update,factory)
+    def run(self):
+        """
+        Starts a mob's loop process
+        """
+        xcoord, chaff, zcoord, chaff = split_coords(self.location.x,
+            self.location.z)
+        self.chunk_coords = (xcoord,1, zcoord) # XXX The one is redundant, fix it
+        self.loop = LoopingCall(self.update)
         self.loop.start(.2)
 
     def save_to_packet(self):
@@ -232,49 +241,55 @@ class Mob(Entity):
             pitch=int(self.location.pitch),
         )
 
-    def update(self, factory):
+    def update(self):
         """
         Update this mob's location with respect to a factory.
         """
         clamp = lambda n: max(min(.5, n), -.5)
         # XXX  Discuss appropriate style with MAD
-        player = closest_player(factory,
-                                (self.location.x,
-                                self.location.y,
-                                self.location.z),
-                                16)
+        player = self.manager.closest_player((self.location.x,
+                                 self.location.y,
+                                 self.location.z),
+                                 16)
+
         if player == None:
             vector = (uniform(-.5,.5),
                       uniform(-.5,.5),
                       uniform(-.5,.5))
+
             target = (self.location.x + vector[0],
-                      self.location.y + vector[1],
-                      self.location.z + vector[2])
+                self.location.y + vector[1],
+                self.location.z + vector[2])
         else:
             target = (player.location.x,
-                      player.location.y,
-                      player.location.z)
+                player.location.y,
+                player.location.z)
+
             vector = (clamp(target[0] - self.location.x),
-                      clamp(target[1] - self.location.y),
-                      clamp(target[2] - self.location.z))
+                clamp(target[1] - self.location.y),
+                clamp(target[2] - self.location.z))
 
         new_position = (vector[0] + self.location.x,
-                        vector[1] + self.location.y,
-                        vector[2] + self.location.z,)
+            vector[1] + self.location.y,
+            vector[2] + self.location.z,)
 
-        new_pitch = int(atan2((self.location.z - target[2]),
-            (self.location.x - target[0] )) + pi/2)
-        if new_pitch < 0 :
-            new_pitch = 0
+        new_theta = int(atan2(
+            (self.location.z - target[2]),
+            (self.location.x - target[0] ))
+            + pi/2)
 
-        can_go = check_collision(new_position,self.offsetlist, factory)
+        if new_theta < 0 :
+            new_theta = 0
+
+        can_go = self.manager.check_collision(new_position,self.offsetlist)
 
         if can_go:
             self.location.x = new_position[0]
             self.location.y = new_position[1]
             self.location.z = new_position[2]
-            self.location.theta = new_pitch
-            factory.broadcast(self.save_location_to_packet())
+            self.location.theta = new_theta
+            self.manager.correct_origin_chunk(self)
+            self.manager.broadcast(self.save_location_to_packet())
         else:
             pass
 

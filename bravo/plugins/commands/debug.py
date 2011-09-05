@@ -136,7 +136,7 @@ class CreateMob(object):
                 print mob, number
                 entity = factory.create_entity(position.x,position.y,position.z,mob)
                 factory.broadcast(entity.save_to_packet())
-                entity.run(factory)
+                factory.world.mob_manager.start_mob(entity)
             return ("Made mob!",)
 #            except:
 #                return ("Couldn't make mob!",)

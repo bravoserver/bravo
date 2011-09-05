@@ -274,8 +274,8 @@ class BravoFactory(Factory):
         d = self.world.request_chunk(bigx, bigz)
         d.addCallback(lambda chunk: chunk.entities.add(entity))
         d.addCallback(lambda none: log.msg("Created entity %s" % entity))
-        if hasattr(entity,'loop'): # Maybe just send the entity object to the manager?
-            entity.run(self)
+        if hasattr(entity,'loop'): # XXX Maybe just send the entity object to the manager?
+            self.world.mob_manager.start_mob(entity)
         return entity
 
     def register_entity(self, entity):
@@ -289,8 +289,7 @@ class BravoFactory(Factory):
         if not entity.eid:
             self.eid += 1
             entity.eid = self.eid
-            if hasattr(entity,'loop'): # Maybe just send the entity object to the manager?
-                entity.run(self)
+
         log.msg("Registered entity %s" % entity)
 
     def destroy_entity(self, entity):

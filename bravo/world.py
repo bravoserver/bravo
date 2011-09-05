@@ -20,6 +20,7 @@ from bravo.plugin import (retrieve_named_plugins, verify_plugin,
     PluginException)
 from bravo.utilities.coords import split_coords
 from bravo.utilities.temporal import PendingEvent
+from bravo.mobmanager import MobManager
 
 def coords_to_chunk(f):
     """
@@ -173,6 +174,9 @@ class World(object):
             (world_url, self.serializer.name))
         log.msg("Using Ampoule: %s" % self.async)
 
+        self.mob_manager = MobManager() # XXX Put this in init or here?
+        self.mob_manager.world = self # XXX  Put this in the managers constructor?
+
     def stop(self):
         """
         Stop managing the world.
@@ -299,7 +303,7 @@ class World(object):
         for entity in chunk.entities:
             if hasattr(entity,'loop'):
                 print "Started mob!"
-                entity.run(factory)
+                self.mob_manager.start_mob(entity)
             else:
                 print "I have no loop"
             self.factory.register_entity(entity)
@@ -555,3 +559,13 @@ class World(object):
         """
 
         chunk.dirty = True
+
+    @sync_coords_to_chunk
+    def sync_request_chunk(self, chunk, coords):
+        """
+        Get an unknown chunk.
+
+        :returns: a ``Deferred`` with the requested value
+        """
+
+        return chunk
