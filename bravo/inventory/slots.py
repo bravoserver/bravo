@@ -1,4 +1,4 @@
-from bravo.ibravo import IRecipe
+from bravo.ibravo import IRecipe, IStraightRecipe
 from bravo.plugin import retrieve_plugins
 from bravo.packets.beta import make_packet
 from bravo.inventory import Slot, SerializableSlots
@@ -142,14 +142,7 @@ class Crafting(SlotsSet):
                     return (False, selected)
 
             self.reduce_recipe()
-            self.check_recipes()
-            if self.recipe is None:
-                self.crafted[0] = None
-            else:
-                provides = self.recipe.provides
-                self.crafted[0] = Slot(provides[0][0], provides[0][1],
-                    provides[1])
-
+            self.update_crafted()
             return (True, selected)
         else:
             # Forbid placing things in the crafted slot.
@@ -198,6 +191,16 @@ class Crafting(SlotsSet):
                         self.recipe_offset = offset
                         return
 
+        # Try to check free-form recipes
+        crafting = [(i.primary, i.secondary) for i in filter(lambda i: i is not None, self.crafting)]
+        crafting.sort()
+        for name, recipe in sorted(retrieve_plugins(IStraightRecipe).iteritems()):
+            if (crafting == recipe.ingredients):
+                # Jackpot!
+                self.recipe = recipe
+                self.recipe_offset = -128 # indicates the recipe if straight recipe
+                return
+
         self.recipe = None
 
     def reduce_recipe(self):
@@ -212,15 +215,20 @@ class Crafting(SlotsSet):
 
         offset = self.recipe_offset
 
-        padded = pad_to_stride(self.recipe.recipe, self.recipe.dimensions[0],
-            self.crafting_stride)
+        if offset == -128: # straight recipe
+            for index, slot in enumerate(self.crafting):
+                if slot is not None:
+                    self.crafting[index] = slot.decrement(1)
+        else: # normal recipe
+            padded = pad_to_stride(self.recipe.recipe, self.recipe.dimensions[0],
+                self.crafting_stride)
 
-        for index, slot in enumerate(padded):
-            if slot is not None:
-                index += offset
-                rcount = slot[1]
-                slot = self.crafting[index]
-                self.crafting[index] = slot.decrement(rcount)
+            for index, slot in enumerate(padded):
+                if slot is not None:
+                    index += offset
+                    rcount = slot[1]
+                    slot = self.crafting[index]
+                    self.crafting[index] = slot.decrement(rcount)
 
     def close(self, wid):
         '''
@@ -280,7 +288,7 @@ class LargeChestStorage(SlotsSet):
 class FurnaceStorage(SlotsSet):
 
     #TODO: Make sure notchian furnace have following slots order:
-    #      2 -crafted, 0 - crafting, 1 - fuel
+    #      0 - crafted, 1 - crafting, 2 - fuel
     #      Override SlotsSet.metalist() property if not.
 
     crafting = 1
