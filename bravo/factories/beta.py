@@ -103,9 +103,14 @@ class BravoFactory(Factory):
         self.update_season()
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)
+
         log.msg("Starting entity updates...")
         self.entity_loop = LoopingCall(self.update_entities)
         self.entity_loop.start(.2)
+
+        log.msg("Starting furnaces...")
+        self.furnace_manager = FurnaceManager(self)
+        self.furnace_manager.start()
 
         # Start automatons.
         for automaton in self.automatons:
@@ -132,6 +137,7 @@ class BravoFactory(Factory):
 
         self.time_loop.stop()
         self.entity_loop.stop()
+        self.furnace_manager.stop()
 
         # Write back current world time. This must be done before stopping the
         # world.
@@ -239,7 +245,7 @@ class BravoFactory(Factory):
         }
 
         pp = {"factory": self,
-              "furnaces": FurnaceManager(self)}
+              "furnaces": self.furnace_manager}
 
         for t, interface in plugin_types.iteritems():
             l = configuration.getlistdefault(self.config_name, t, [])

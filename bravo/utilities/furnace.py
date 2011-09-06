@@ -25,8 +25,19 @@ class FurnaceManager(object):
         self.factory = factory
         self.furnaces = {}
         self.cleanup_timer = LoopingCall(self.cleanup)
-        # every 5 minutes remove furnace processes that do not run
+
+    def start(self):
+        """
+        Enable this manager.
+
+        While this manager is running, furnaces will be reaped every 5
+        minutes.
+        """
+
         self.cleanup_timer.start(300)
+
+    def stop(self):
+        self.cleanup_timer.stop()
 
     @inlineCallbacks
     def update(self, coords):
