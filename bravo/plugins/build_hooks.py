@@ -83,6 +83,13 @@ class Tile(object):
                 elif ccn > 1:
                     # cannot build three or more connected chests
                     returnValue((False, builddata, True))
+            elif item.slot == blocks["furnace"].slot:
+                # the furnace cannot be oriented up or down
+                if face == "-y" or face == "+y":
+                    orientation = ('+x', '+z', '-x', '-z')[((int(player.location.yaw) \
+                                                        - 45 + 360) % 360) / 90]
+                    metadata = blocks["furnace"].orientation(orientation)
+                    builddata = builddata._replace(metadata=metadata)
 
             chunk = yield factory.world.request_chunk(bigx, bigz)
 
