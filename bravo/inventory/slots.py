@@ -191,13 +191,17 @@ class Crafting(SlotsSet):
                         self.recipe_offset = offset
                         return
 
-        # Try to check free-form recipes
-        crafting = [(i.primary, i.secondary) for i in filter(lambda i: i is not None, self.crafting)]
-        crafting.sort()
+        # Try to check free-form recipes. Sort the table's occupied slots and
+        # compare to the recipe's slots.
+        # XXX can fail if the recipe's ingredients aren't sorted
+        crafting = sorted(
+            (i.primary, i.secondary) for i in self.crafting if i)
+        # XXX is there any reason to sort these here? Do they overlap?
         for name, recipe in sorted(retrieve_plugins(IStraightRecipe).iteritems()):
             if (crafting == recipe.ingredients):
                 # Jackpot!
                 self.recipe = recipe
+                # XXX :T
                 self.recipe_offset = -128 # indicates the recipe if straight recipe
                 return
 
