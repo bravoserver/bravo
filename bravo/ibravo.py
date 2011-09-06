@@ -203,6 +203,11 @@ class IRecipe(IBravoPlugin):
         This tuple must be of the format (slot, count).
         """)
 
+def straight_recipe_invariant(sr):
+    # Sorted invariant.
+    if sorted(sr.ingredients) != list(sr.ingredients):
+        raise InvariantException("Recipe is not sorted")
+
 class IStraightRecipe(IBravoPlugin):
     """
     Recipe for crafting materials that do not have any stable form
@@ -211,8 +216,9 @@ class IStraightRecipe(IBravoPlugin):
 
     ingredients = Attribute("""
         Tuple representing the items of the recipe.
-        
+
         A tuple (slot, count) for the item/block that needs to be present.
+        These ingredients must be sorted.
         """)
 
     provides = Attribute("""
