@@ -16,7 +16,7 @@
       };
 
       var bravoMapType = new google.maps.ImageMapType(bravoOptions);
- 
+
       var mapOptions = {
         zoom: 17,
         center: new google.maps.LatLng(0, 0),
@@ -25,8 +25,8 @@
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         scrollwheel: false
       }
- 
- 
+
+
       var map;
       function initialize() {
         map = new google.maps.Map(document.getElementById("map"), mapOptions);

@@ -17,9 +17,9 @@ class StraightRecipe(object):
     """
     Base class for all straight recipes
     """
-    
+
     implements(IStraightRecipe)
-    
+
     def __init__(self, ingredients, provides, amount, name=None):
         self.name = name
         self.ingredients = [i.key for i in ingredients]
@@ -136,7 +136,7 @@ class TwoByOne(Recipe):
             (material.key, 1),
         )
         self.provides = (provides.key, amount)
-    
+
 class ThreeByOne(Recipe):
 
     dimensions = (3, 1)
@@ -526,7 +526,7 @@ class MushroomSoup(Recipe):
         (items["bowl"].key, 1),
     )
     provides = (items["mushroom-soup"].key, 1)
-    
+
 class MushroomSoup2(Recipe):
 
     dimensions = (1, 3)
@@ -645,7 +645,7 @@ class Bed(Recipe):
 #Wool
 
 class ColoredWool(StraightRecipe):
-    
+
     def __init__(self, dye, color):
         name = "%s-wool" % color
         ingredients = (blocks["white-wool"], dye)

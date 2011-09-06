@@ -16,7 +16,7 @@ class FakeProtocol(object):
     def __init__(self):
         self.windows = []
         self.write_packet_calls = []
-        
+
     def write_packet(self, *args, **kwargs):
         self.write_packet_calls.append((args, kwargs))
 
@@ -30,17 +30,17 @@ class TestFurnaceProcessInternals(unittest.TestCase):
         self.factory = FakeFactory()
         self.process = FurnaceProcess(self.tile, coords)
         self.process.factory = self.factory
-        
+
     def test_fuel_slot(self):
         # empty slot
         self.assertFalse(self.process.hasFuel)
         # non-fuel item
         self.tile.inventory.fuel[0] = Slot(blocks['rose'].slot, 0, 1)
         self.assertFalse(self.process.hasFuel)
-        # fuel item 
+        # fuel item
         self.tile.inventory.fuel[0] = Slot(items['coal'].slot, 0, 1)
         self.assertTrue(self.process.hasFuel)
-        
+
     def test_crafting_slot(self):
         # empty slots
         self.assertFalse(self.process.canCraft)
@@ -66,7 +66,7 @@ class TestFurnaceProcessWindowsUpdate(unittest.TestCase):
     def setUp(self):
         self.tile = FurnaceTile(0, 0, 0)
         self.tile2 = FurnaceTile(0, 1, 0)
-        
+
         # no any windows
         self.protocol1 = FakeProtocol()
         # window with different coordinates
@@ -77,7 +77,7 @@ class TestFurnaceProcessWindowsUpdate(unittest.TestCase):
         self.protocol3 = FakeProtocol()
         self.protocol3.windows.append(FurnaceWindow(2, Inventory(),
             self.tile.inventory, coords))
-        
+
         self.factory = FakeFactory()
         self.factory.protocols = {
             1: self.protocol1,
@@ -86,7 +86,7 @@ class TestFurnaceProcessWindowsUpdate(unittest.TestCase):
         }
         self.process = FurnaceProcess(self.tile, coords)
         self.process.factory = self.factory
-        
+
     def test_slot_update(self):
         self.process.update_all_windows_slot(1, None)
         self.process.update_all_windows_slot(2, Slot(blocks['glass'].slot, 0, 13))
@@ -97,7 +97,7 @@ class TestFurnaceProcessWindowsUpdate(unittest.TestCase):
             (('window-slot',), {'wid': 2, 'slot': 1, 'primary': -1}))
         self.assertEqual(self.protocol3.write_packet_calls[1],
             (('window-slot',), {'wid': 2, 'slot': 2, 'primary': 20, 'secondary': 0, 'count': 13}))
-        
+
     def test_bar_update(self):
         self.process.update_all_windows_progress(0, 55)
         self.assertEqual(self.protocol1.write_packet_calls, [])
@@ -111,7 +111,7 @@ class TestFurnaceProcessCrafting(unittest.TestCase):
         self.states = []
         def fake_on_off(state):
             self.states.append(state)
-    
+
         self.tile = FurnaceTile(0, 0, 0)
         self.protocol = FakeProtocol()
         self.protocol.windows.append(FurnaceWindow(7, Inventory(),
@@ -125,7 +125,7 @@ class TestFurnaceProcessCrafting(unittest.TestCase):
     def tearDown(self):
         self.states = []
         self.protocol.write_packet_calls = []
-        
+
     def test_glass_from_sand_on_wood(self):
         '''Craft 1 glass from 1 sand on 1 wood'''
         self.tile.inventory.fuel[0] = Slot(blocks['wood'].slot, 0, 1)

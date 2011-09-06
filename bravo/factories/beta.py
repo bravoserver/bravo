@@ -177,8 +177,8 @@ class BravoFactory(Factory):
             p.factory = self
             return p
 
-        # This probably a needs cleanup. We need to see if that IP has 
-        # connected already, check if +1 connections is ok, and ignore 
+        # This probably a needs cleanup. We need to see if that IP has
+        # connected already, check if +1 connections is ok, and ignore
         # values less than 1.
         if (self.limitPerIP and addr.host in self.connectedIPs.keys()
             and self.connectedIPs[addr.host] >= self.limitPerIP):

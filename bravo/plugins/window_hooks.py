@@ -20,6 +20,8 @@ def drop_items(location, items, y_offset = 0):
     :param location: Location() or tuple (x, y, z)
     :param items: list of items
     """
+
+    # XXX why am I polymorphic? :T
     if type(location) == Location:
         x, y, z = location.x, location.y, location.z
     else:
@@ -376,7 +378,7 @@ class Chest(object):
         chest = self.get_chest_tile(chunk, coords)
         if chest is None:
             return
-        
+
         # Block coordinates
         x = chunk.x * 16 + x
         z = chunk.z * 16 + z

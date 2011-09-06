@@ -85,7 +85,7 @@ class TestWinter(unittest.TestCase):
         self.hook.transform(self.c)
 
 class Spring(unittest.TestCase):
-    
+
     def setUp(self):
         self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.ISeason)
 
