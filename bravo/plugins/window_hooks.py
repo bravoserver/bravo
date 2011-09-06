@@ -9,14 +9,14 @@ from bravo.ibravo import IWindowOpenHook, IWindowClickHook, IWindowCloseHook, ID
 from bravo.inventory.windows import WorkbenchWindow, ChestWindow, LargeChestWindow, FurnaceWindow
 from bravo.entity import Chest as ChestTile, Furnace as FurnaceTile
 
-from bravo.parameters import factory, furnaces
+from bravo.parameters import factory
 from bravo.utilities.coords import split_coords
 from bravo.utilities.building import chestsAround
 
 def drop_items(location, items, y_offset = 0):
     """
     Loop over items and drop all of them
-    
+
     :param location: Location() or tuple (x, y, z)
     :param items: list of items
     """
@@ -259,7 +259,9 @@ class Furnace(object):
         The ``player`` is a Player's protocol
         The ``container`` is a 0x66 message
         """
-        
+
+        furnaces = factory.furnace_manager
+
         if container.wid == 0:
             return # skip inventory window
         elif player.windows:
@@ -271,12 +273,14 @@ class Furnace(object):
             return
         # inform content of furnace was probably changed
         furnaces.update(window.coords)
-        
+
     def dig_hook(self, chunk, x, y, z, block):
         # NOTE: x, y, z - coords in chunk
         if block.slot not in (blocks["furnace"].slot, blocks["burning-furnace"].slot):
             return
-            
+
+        furnaces = factory.furnace_manager
+
         coords = (x, y, z)
         furnace = self.get_furnace_tile(chunk, coords)
         if furnace is None:

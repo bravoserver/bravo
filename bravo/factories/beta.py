@@ -75,6 +75,7 @@ class BravoFactory(Factory):
         self.limitPerIP = configuration.getintdefault(self.config_name,
                                                       "limitPerIP", 0)
 
+        self.furnace_manager = FurnaceManager(self)
         self.vane = WeatherVane(self)
 
     def startFactory(self):
@@ -109,7 +110,6 @@ class BravoFactory(Factory):
         self.entity_loop.start(.2)
 
         log.msg("Starting furnaces...")
-        self.furnace_manager = FurnaceManager(self)
         self.furnace_manager.start()
 
         # Start automatons.
