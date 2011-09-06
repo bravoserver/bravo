@@ -19,6 +19,7 @@ from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
 from bravo.protocols.beta import BravoProtocol, KickedProtocol
 from bravo.utilities.chat import chat_name, sanitize_chat
 from bravo.utilities.coords import split_coords
+from bravo.utilities.furnace import FurnaceManager
 from bravo.weather import WeatherVane
 from bravo.world import World
 
@@ -237,7 +238,8 @@ class BravoFactory(Factory):
             "use_hooks": IUseHook,
         }
 
-        pp = {"factory": self}
+        pp = {"factory": self,
+              "furnaces": FurnaceManager(self)}
 
         for t, interface in plugin_types.iteritems():
             l = configuration.getlistdefault(self.config_name, t, [])

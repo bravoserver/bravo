@@ -992,19 +992,21 @@ class BravoProtocol(BetaServerProtocol):
         )
         self.factory.broadcast_for_others(packet, self)
 
+    @inlineCallbacks
     def wclose(self, container):
         # run all hooks
         for hook in self.close_hooks:
-            hook.close_hook(self, container)
+            yield maybeDeferred(hook.close_hook, self, container)
 
+    @inlineCallbacks
     def waction(self, container):
         # run hooks until handled
+        handled = False
         for hook in self.click_hooks:
-            if hook.click_hook(self, container):
-                return
-        # if not handled
+            res = yield maybeDeferred(hook.click_hook, self, container)
+            handled = handled or res
         self.write_packet("window-token", wid=container.wid,
-            token=container.token, acknowledged=False)
+            token=container.token, acknowledged=handled)
 
     def sign(self, container):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)

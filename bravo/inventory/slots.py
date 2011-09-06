@@ -280,7 +280,7 @@ class LargeChestStorage(SlotsSet):
 class FurnaceStorage(SlotsSet):
 
     #TODO: Make sure notchian furnace have following slots order:
-    #      0 -crafted, 1 - crafting, 2 - fuel, etc.
+    #      2 -crafted, 0 - crafting, 1 - fuel
     #      Override SlotsSet.metalist() property if not.
 
     crafting = 1
@@ -312,3 +312,7 @@ class FurnaceStorage(SlotsSet):
         else:
             # Forbid placing things in the crafted slot.
             return (False, selected)
+
+    #@property
+    #def metalist(self):
+    #    return [self.crafting, self.fuel, self.crafted]

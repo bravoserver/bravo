@@ -675,8 +675,30 @@ List of unstackable items
 unstackable = (
     items["wooden-sword"].slot,
     items["wooden-shovel"].slot,
-    items["wooden-pickaxe"].slot
+    items["wooden-pickaxe"].slot,
+    # TODO: update the list
 )
+
+"""
+List of fuel blocks and items maped to burn time
+"""
+furnace_fuel = {
+    items["stick"].slot: 10,          # 5s
+    blocks["sapling"].slot: 10,       # 5s
+    blocks["wood"].slot: 30,          # 15s
+    blocks["fence"].slot: 30,         # 15s
+    blocks["wooden-stairs"].slot: 30, # 15s
+    blocks["trapdoor"].slot: 30,      # 15s
+    blocks["log"].slot: 30,           # 15s
+    blocks["workbench"].slot: 30,     # 15s
+    blocks["bookshelf"].slot: 30,     # 15s
+    blocks["chest"].slot: 30,         # 15s
+    blocks["locked-chest"].slot: 30,  # 15s
+    blocks["jukebox"].slot: 30,       # 15s
+    blocks["note-block"].slot: 30,    # 15s
+    items["coal"].slot: 160,          # 80s
+    items["lava-bucket"].slot: 2000   # 1000s
+}
 
 def parse_block(block):
     """

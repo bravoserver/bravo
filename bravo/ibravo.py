@@ -315,7 +315,8 @@ class IWindowClickHook(ISortedPlugin):
         """
         The ``player`` a Player's protocol
         The ``container`` is a 0x66 message
-        :returns: True if handled
+        :returns: True if you processed the action and TRANSACTION must be ok
+                  You probably will never return True here.
         """
         pass
 
