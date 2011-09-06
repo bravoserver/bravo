@@ -92,7 +92,7 @@ perm_cache = 3
 
 # Window hooks
 open_hooks = workbench, furnace, chest
-click_hooks = inventory, windows
+click_hooks = inventory, windows, furnace
 close_hooks = inventory, windows
 
 # Dig hooks.

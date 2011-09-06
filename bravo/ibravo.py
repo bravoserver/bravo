@@ -203,6 +203,24 @@ class IRecipe(IBravoPlugin):
         This tuple must be of the format (slot, count).
         """)
 
+class IStraightRecipe(IBravoPlugin):
+    """
+    Recipe for crafting materials that do not have any stable form
+    and is just a list of ingredients (like dye and colored wool).
+    """
+
+    ingredients = Attribute("""
+        Tuple representing the items of the recipe.
+        
+        A tuple (slot, count) for the item/block that needs to be present.
+        """)
+
+    provides = Attribute("""
+        Tuple representing the yield of this recipe.
+
+        This tuple must be of the format (slot, count).
+        """)
+
 class ISeason(IBravoPlugin):
     """
     Seasons are transformational stages run during certain days to emulate an
@@ -315,7 +333,8 @@ class IWindowClickHook(ISortedPlugin):
         """
         The ``player`` a Player's protocol
         The ``container`` is a 0x66 message
-        :returns: True if handled
+        :returns: True if you processed the action and TRANSACTION must be ok
+                  You probably will never return True here.
         """
         pass
 

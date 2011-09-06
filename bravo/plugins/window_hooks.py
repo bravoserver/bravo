@@ -9,7 +9,7 @@ from bravo.ibravo import IWindowOpenHook, IWindowClickHook, IWindowCloseHook, ID
 from bravo.inventory.windows import WorkbenchWindow, ChestWindow, LargeChestWindow, FurnaceWindow
 from bravo.entity import Chest as ChestTile, Furnace as FurnaceTile
 
-from bravo.parameters import factory
+from bravo.parameters import factory, furnaces
 from bravo.utilities.coords import split_coords
 from bravo.utilities.building import chestsAround
 
@@ -102,9 +102,7 @@ def processClickMessage(player, window, container):
                 @d.addCallback
                 def mark_chunk_dirty(chunk):
                     chunk.dirty = True
-
-    player.write_packet("window-token", wid=container.wid,
-        token=container.token, acknowledged=selected)
+    return True
 
 class Windows(object):
     '''
@@ -216,7 +214,7 @@ class Workbench(object):
 
 class Furnace(object):
 
-    implements(IWindowOpenHook, IDigHook)
+    implements(IWindowOpenHook, IWindowClickHook, IDigHook)
 
     def get_furnace_tile(self, chunk, coords):
         try:
@@ -240,7 +238,7 @@ class Furnace(object):
         The ``block`` is a block we trying to open
         :returns: None or window object
         """
-        if block != blocks["furnace"].slot:
+        if block not in (blocks["furnace"].slot, blocks["burning-furnace"].slot):
             returnValue(None)
 
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
@@ -249,7 +247,6 @@ class Furnace(object):
         furnace = self.get_furnace_tile(chunk, (smallx, container.y, smallz))
         if furnace is None:
             returnValue(None)
-        print "Opening furnace at", (container.x, container.y, container.z), (smallx, container.y, smallz)
 
         coords = bigx, smallx, bigz, smallz, container.y
         window = FurnaceWindow(player.wid, player.player.inventory,
@@ -257,16 +254,36 @@ class Furnace(object):
         player.windows.append(window)
         returnValue(window)
 
+    def click_hook(self, player, container):
+        """
+        The ``player`` is a Player's protocol
+        The ``container`` is a 0x66 message
+        """
+        
+        if container.wid == 0:
+            return # skip inventory window
+        elif player.windows:
+            window = player.windows[-1]
+        else:
+            # click message but no window... hmm...
+            return
+        if type(window) != FurnaceWindow:
+            return
+        # inform content of furnace was probably changed
+        furnaces.update(window.coords)
+        
     def dig_hook(self, chunk, x, y, z, block):
         # NOTE: x, y, z - coords in chunk
-        if block.slot != blocks["furnace"].slot:
+        if block.slot not in (blocks["furnace"].slot, blocks["burning-furnace"].slot):
             return
-
+            
         coords = (x, y, z)
         furnace = self.get_furnace_tile(chunk, coords)
         if furnace is None:
             return
-        
+        # Inform FurnaceManager the furnace was removed
+        furnaces.remove((chunk.x, x, chunk.z, z, y))
+
         # Block coordinates
         x = chunk.x * 16 + x
         z = chunk.z * 16 + z
@@ -276,7 +293,7 @@ class Furnace(object):
 
     name = "furnace"
 
-    before = tuple()
+    before = ("windows",) # plugins that comes before this plugin
     after = tuple()
 
 class Chest(object):
