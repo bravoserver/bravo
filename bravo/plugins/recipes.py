@@ -112,6 +112,18 @@ class TNT(Recipe):
     )
     provides = (blocks["tnt"].key, 1)
 
+class TwoByOne(Recipe):
+
+    dimensions = (2, 1)
+
+    def __init__(self, material, provides, amount, name=None):
+        self.name = name
+        self.recipe = (
+            (material.key, 1),
+            (material.key, 1),
+        )
+        self.provides = (provides.key, amount)
+    
 class ThreeByOne(Recipe):
 
     dimensions = (3, 1)
@@ -353,7 +365,7 @@ class FishingRod(Recipe):
 
 class BowlBucket(Recipe):
 
-    dimensions = (2, 3)
+    dimensions = (3, 2)
 
     def __init__(self, material, provides, amount, name=None):
         self.name = name
@@ -557,7 +569,7 @@ class Ladder(Recipe):
         None,
         (items["stick"].key, 1),
     )
-    provides = (blocks["ladder"].key, 1)
+    provides = (blocks["ladder"].key, 2)
 
 class Book(Recipe):
 
@@ -626,7 +638,12 @@ glowstone = ThreeByThree(items["glowstone-dust"], items["glowstone-dust"],
     blocks["lightstone"], "lightstone")
 wool = ThreeByThree(items["string"], items["string"], blocks["wool"], "wool")
 tnt = TNT()
-stoneslab = ThreeByOne(blocks["cobblestone"], blocks["step"], 1, "step")
+stoneslab = ThreeByOne(blocks["stone"], blocks["stone-step"], 3, "stone-step")
+cstoneslab = ThreeByOne(blocks["cobblestone"], blocks["cobblestone-step"], 3,
+    "cobblestone-step")
+sstoneslab = ThreeByOne(blocks["sandstone"], blocks["sandstone-step"], 3,
+    "sandstone-step")
+woodenslab = ThreeByOne(blocks["wood"], blocks["wooden-step"], 3, "wooden-step")
 woodstairs = Stairs(blocks["wood"], blocks["wooden-stairs"], "wood")
 cstonestairs = Stairs(blocks["cobblestone"], blocks["stone-stairs"], "stone")
 snowblock = TwoByTwo(items["snowball"], blocks["snow-block"], "snow-block")
@@ -717,9 +734,9 @@ boat = CartBoat(blocks["wood"], items["boat"], "boat")
 #Mechanism
 wooddoor = Door(blocks["wood"], items["wooden-door"], "wood")
 irondoor = Door(items["iron-ingot"], items["iron-door"], "iron")
-woodpressure = ThreeByOne(blocks["wood"], blocks["wooden-plate"], 1,
+woodpressure = TwoByOne(blocks["wood"], blocks["wooden-plate"], 1,
     "wood-plate")
-stonepressure = ThreeByOne(blocks["stone"], blocks["stone-plate"], 1,
+stonepressure = TwoByOne(blocks["stone"], blocks["stone-plate"], 1,
     "stone-plate")
 stonebtn = OneByTwo(blocks["stone"], blocks["stone"], blocks["stone-button"],
     1, "stone-btn")
