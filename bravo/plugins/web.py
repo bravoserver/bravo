@@ -72,6 +72,11 @@ class ChunkIllustrator(Resource):
         self.z = z
 
     def _cb_render_GET(self, chunk, request):
+        # If the request finished already, then don't even bother preparing
+        # the image.
+        if request._disconnected:
+            return
+
         request.setHeader('content-type', 'image/png')
         i = Image.new("RGB", (16, 16))
         pbo = i.load()
@@ -130,8 +135,9 @@ class WorldMap(Resource):
     def render_GET(self, request):
         d = flattenString(request, self.element)
         def complete_request(html):
-            request.write(html)
-            request.finish()
+            if not request._disconnected:
+                request.write(html)
+                request.finish()
         d.addCallback(complete_request)
         return NOT_DONE_YET
 
@@ -188,8 +194,9 @@ class AutomatonStats(Resource):
     def render_GET(self, request):
         d = flattenString(request, AutomatonStatsElement())
         def complete_request(html):
-            request.write(html)
-            request.finish()
+            if not request._disconnected:
+                request.write(html)
+                request.finish()
         d.addCallback(complete_request)
         return NOT_DONE_YET
 

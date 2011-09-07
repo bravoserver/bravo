@@ -122,8 +122,9 @@ class BravoResource(Resource):
     def render_GET(self, request):
         d = flattenString(request, self.element)
         def complete_request(html):
-            request.write(html)
-            request.finish()
+            if not request._disconnected:
+                request.write(html)
+                request.finish()
         d.addCallback(complete_request)
         return NOT_DONE_YET
 
