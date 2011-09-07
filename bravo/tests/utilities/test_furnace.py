@@ -1,6 +1,6 @@
 from twisted.trial import unittest
 from twisted.internet import reactor
-from twisted.internet.task import LoopingCall, deferLater
+from twisted.internet.task import deferLater
 
 from bravo.blocks import items, blocks
 from bravo.inventory import Slot, Inventory
@@ -146,7 +146,7 @@ class TestFurnaceProcessCrafting(unittest.TestCase):
         d = deferLater(reactor, 18, done) # wood burn time is 15s
         return d
 
-    def test_glass_from_sand_on_wood(self):
+    def test_glass_from_sand_on_wood_multiple(self):
         '''Craft 2 blocks of glass from 2 blocks of sand on 10 saplings'''
         self.tile.inventory.fuel[0] = Slot(blocks['sapling'].slot, 0, 10)
         self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 2)
