@@ -1,9 +1,12 @@
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
+from twisted.python import log
 
 from bravo.blocks import blocks, items, furnace_fuel, unstackable
 from bravo.inventory import Slot
 from bravo.inventory.windows import FurnaceWindow
+
+COOCK_TICKS = 20
 
 # TODO: move this out of the module into plug-in
 furnace_recipes = {
@@ -69,7 +72,7 @@ class FurnaceProcess(object):
         self.tile = tile
         self.coords = coords
         self.running = False
-        self.burning = LoopingCall(self.burn)
+        self.burning = LoopingCall.withCount(self.burn)
 
     def update(self):
         if not self.running:
@@ -78,52 +81,58 @@ class FurnaceProcess(object):
                 self.tile.cooktime = 0
                 self.burning.start(0.5) # start burning loop
 
-    def burn(self):
-        # -----------------------------
-        # ---     item crafting     ---
-        # -----------------------------
-        if self.canCraft:
-            self.tile.cooktime += 1
-            # Notchian time is ~9.25-9.50 sec.
-            if self.tile.cooktime == 20: # cooked!
-                source = self.tile.inventory.crafting[0]
-                product = furnace_recipes[source.primary]
-                self.tile.inventory.crafting[0] = source.decrement()
-                if self.tile.inventory.crafted[0] is None:
-                    self.tile.inventory.crafted[0] = product
-                else:
-                    item = self.tile.inventory.crafted[0]
-                    self.tile.inventory.crafted[0] = item.increment(product.quantity)
-                self.update_all_windows_slot(0, self.tile.inventory.crafting[0])
-                self.update_all_windows_slot(2, self.tile.inventory.crafted[0])
+    def burn(self, ticks):
+        # Usually it's only one iteration but if something blocks the server
+        # for long period we shall process skipped ticks.
+        # Note: progress bars will lag anyway.
+        if ticks > 1:
+            log.msg("Furnace process drifts. %s ticks skipped." % (ticks - 1,))
+        for iteration in xrange(ticks):
+            # -----------------------------
+            # ---     item crafting     ---
+            # -----------------------------
+            if self.canCraft:
+                self.tile.cooktime += 1
+                # Notchian time is ~9.25-9.50 sec.
+                if self.tile.cooktime == COOCK_TICKS: # cooked!
+                    source = self.tile.inventory.crafting[0]
+                    product = furnace_recipes[source.primary]
+                    self.tile.inventory.crafting[0] = source.decrement()
+                    if self.tile.inventory.crafted[0] is None:
+                        self.tile.inventory.crafted[0] = product
+                    else:
+                        item = self.tile.inventory.crafted[0]
+                        self.tile.inventory.crafted[0] = item.increment(product.quantity)
+                    self.update_all_windows_slot(0, self.tile.inventory.crafting[0])
+                    self.update_all_windows_slot(2, self.tile.inventory.crafted[0])
+                    self.tile.cooktime -= COOCK_TICKS
+            else:
                 self.tile.cooktime = 0
-        else:
-            self.tile.cooktime = 0
 
-        # ----------------------------
-        # ---     fuel consume     ---
-        # ----------------------------
-        if self.tile.burntime == 0:
-            if self.hasFuel and self.canCraft: # burn next portion of the fuel
-                fuel = self.tile.inventory.fuel[0]
-                self.tile.burntime = self.burn_max = furnace_fuel[fuel.primary]
-                self.tile.inventory.fuel[0] = fuel.decrement()
-                if not self.running:
-                    self.on_off(True)
-                self.update_all_windows_slot(1, self.tile.inventory.fuel[0])
-            else: # out of fuel or no need to burn more
-                self.burning.stop()
-                self.on_off(False)
-                # reset cook time
-                self.tile.cooktime = 0
-                self.update_all_windows_progress(0, 0)
-                return
-        self.tile.burntime -= 1
+            # ----------------------------
+            # ---     fuel consume     ---
+            # ----------------------------
+            if self.tile.burntime == 0:
+                if self.hasFuel and self.canCraft: # burn next portion of the fuel
+                    fuel = self.tile.inventory.fuel[0]
+                    self.tile.burntime = self.burn_max = furnace_fuel[fuel.primary]
+                    self.tile.inventory.fuel[0] = fuel.decrement()
+                    if not self.running:
+                        self.on_off(True)
+                    self.update_all_windows_slot(1, self.tile.inventory.fuel[0])
+                else: # out of fuel or no need to burn more
+                    self.burning.stop()
+                    self.on_off(False)
+                    # reset cook time
+                    self.tile.cooktime = 0
+                    self.update_all_windows_progress(0, 0)
+                    return
+            self.tile.burntime -= 1
 
         # ----------------------------
         # --- update progress bars ---
         # ----------------------------
-        cook_progress = 185 * self.tile.cooktime / 19
+        cook_progress = 185 * self.tile.cooktime / (COOCK_TICKS - 1)
         burn_progress = 250 * self.tile.burntime / self.burn_max
         self.update_all_windows_progress(0, cook_progress)
         self.update_all_windows_progress(1, burn_progress)
