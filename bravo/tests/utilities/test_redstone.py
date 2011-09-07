@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from bravo.blocks import blocks
-from bravo.utilities.redstone import truthify_block
+from bravo.utilities.redstone import bbool, truthify_block
 
 class TestTruthifyBlock(TestCase):
     """
@@ -35,3 +35,26 @@ class TestTruthifyBlock(TestCase):
         self.assertEqual(
             truthify_block(True, blocks["redstone-wire"].slot, 0x9),
             (blocks["redstone-wire"].slot, 0x9))
+
+class TestBBool(TestCase):
+    """
+    Blocks are castable to bools, with the help of ``bbool()``.
+    """
+
+    def test_wire_false(self):
+        self.assertFalse(bbool(blocks["redstone-wire"].slot, 0x0))
+
+    def test_wire_true(self):
+        self.assertTrue(bbool(blocks["redstone-wire"].slot, 0xc))
+
+    def test_lever_false(self):
+        self.assertFalse(bbool(blocks["lever"].slot, 0x7))
+
+    def test_lever_true(self):
+        self.assertTrue(bbool(blocks["lever"].slot, 0xf))
+
+    def test_torch_false(self):
+        self.assertFalse(bbool(blocks["redstone-torch-off"].slot, 0x0))
+
+    def test_torch_true(self):
+        self.assertTrue(bbool(blocks["redstone-torch"].slot, 0x0))

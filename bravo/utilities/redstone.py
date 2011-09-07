@@ -28,3 +28,17 @@ def truthify_block(truth, block, metadata):
             return block, metadata | 0x8
         else:
             return block, metadata & ~0x8
+
+def bbool(block, metadata):
+    """
+    Get a Boolean value for a given block and metadata.
+    """
+
+    if block == blocks["redstone-torch"].slot:
+        return True
+    elif block == blocks["redstone-torch-off"].slot:
+        return False
+    elif block == blocks["redstone-wire"].slot:
+        return bool(metadata)
+    elif block == blocks["lever"].slot:
+        return bool(metadata & 0x8)
