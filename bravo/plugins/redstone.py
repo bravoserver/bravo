@@ -1,3 +1,5 @@
+import operator
+
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 from zope.interface import implements
@@ -6,8 +8,61 @@ from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
 from bravo.utilities.coords import adjust_coords_for_face
+from bravo.utilities.redstone import bbool, truthify_block
 
 from bravo.parameters import factory
+
+class Circuit(object):
+    """
+    A block or series of blocks conveying a basic composited transistor.
+
+    Circuits form the base of speedily-evaluated redstone. They know their
+    inputs, their outputs, and how to update themselves.
+    """
+
+    __slots__ = (
+        "inputs",
+        "outputs",
+        "status",
+    )
+
+    def __init__(self, coordinates):
+        self.inputs = set()
+        self.outputs = set()
+
+    def update(self):
+        """
+        Update outputs based on current state of inputs.
+        """
+
+        inputs = [i.status for i in self.inputs]
+        status = self.op(*inputs)
+        return self.outputs
+
+    def from_block(self, block, metadata):
+        self.status = bbool(block, metadata)
+
+    def to_block(self, block, metadata):
+        return truthify_block(self.status, block, metadata)
+
+class PlainBlock(Circuit):
+    """
+    Any block which doesn't contain redstone. Traditionally, a sand block, but
+    most blocks work for this.
+
+    Plain blocks do an OR operation across their inputs.
+    """
+
+    op = staticmethod(any)
+
+class Torch(Circuit):
+    """
+    A redstone torch.
+
+    Torches do a NOT operation from their input.
+    """
+
+    op = staticmethod(operator.not_)
 
 class Redstone(object):
 
