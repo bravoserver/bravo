@@ -317,8 +317,11 @@ class BravoFactory(Factory):
         bigz = entity.location.z // 16
 
         d = self.world.request_chunk(bigx, bigz)
-        d.addCallback(lambda chunk: chunk.entities.discard(entity))
-        d.addCallback(lambda none: log.msg("Destroyed entity %s" % entity))
+        @d.addCallback
+        def cb(chunk):
+            chunk.entities.discard(entity)
+            chunk.dirty = True
+            log.msg("Destroyed entity %s" % entity)
 
 
     def update_entities(self):

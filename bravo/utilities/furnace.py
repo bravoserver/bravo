@@ -76,7 +76,12 @@ class FurnaceProcess(object):
 
     def update(self):
         if not self.running:
-            if self.hasFuel and self.canCraft:
+            if self.tile.burntime != 0:
+                # burning furnace was loaded
+                self.running = True
+                self.burn_max = self.tile.burntime
+                self.burning.start(0.5)
+            elif self.hasFuel and self.canCraft:
                 self.tile.burntime = 0
                 self.tile.cooktime = 0
                 self.burning.start(0.5) # start burning loop
