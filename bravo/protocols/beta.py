@@ -822,14 +822,14 @@ class BravoProtocol(BetaServerProtocol):
         Destroy a block and run the post-destroy dig hooks.
         """
 
-        if block.breakable:
-            chunk.destroy(coords)
-
         x, y, z = coords
 
         l = []
         for hook in self.dig_hooks:
             l.append(maybeDeferred(hook.dig_hook, chunk, x, y, z, block))
+
+        if block.breakable:
+            chunk.destroy(coords)
 
         dl = DeferredList(l)
         dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
@@ -892,6 +892,9 @@ class BravoProtocol(BetaServerProtocol):
             cont, builddata, cancel = yield maybeDeferred(hook.pre_build_hook,
                 self.player, builddata)
             if cancel:
+                # Flush damaged chunks.
+                for chunk in self.chunks.itervalues():
+                    self.factory.flush_chunk(chunk)
                 return
             if not cont:
                 break

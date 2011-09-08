@@ -640,7 +640,7 @@ class Bed(Recipe):
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
     )
-    provides = (blocks["bed"].key, 1)
+    provides = (items["bed"].key, 1)
 
 #Wool
 

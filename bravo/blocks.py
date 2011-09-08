@@ -453,7 +453,6 @@ drops = {}
 drops[1]  = 4   # Stone           -> Cobblestone
 drops[2]  = 3   # Grass           -> Dirt
 drops[20] = 0   # Glass
-drops[26] = 0   # Bed block shall be handled manually
 drops[52] = 0   # Mob spawner
 drops[60] = 3   # Soil            -> Dirt
 drops[62] = 61  # Burning Furnace -> Furnace
@@ -538,10 +537,12 @@ _add_block(Block(9, "spring", breakable=False, dim=3))
 _add_block(Block(13, "gravel", drop=318, ratio=1 / 10))
 # Leaves drop saplings, with 1 in 9 odds, and dims by 1.
 _add_block(Block(18, "leaves", drop=6, ratio=1 / 9, dim=1))
+# Beds are orientable and drops Bed Item
+_add_block(Block(26, "bed", drop=355, orientation=(None, None, 2, 4, 1, 3)))
 # Torches are orientable and don't dim.
 _add_block(Block(50, "torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Furnaces are orientable.
-_add_block(Block(61, "furnace", orientation=(0, 1, 2, 3, 4, 5)))
+_add_block(Block(61, "furnace", orientation=(None, None, 2, 3, 4, 5)))
 # Ladders are orientable and don't dim.
 _add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5), dim=0))
 # Levers are orientable and don't dim.
