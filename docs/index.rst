@@ -1,24 +1,48 @@
-.. Bravo documentation master file, created by
-   sphinx-quickstart on Thu Nov 25 04:33:31 2010.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. include:: globals.txt
 
-Bravo
-=====
+Bravo Documentation
+===================
 
-Contents:
+Bravo_ is an elegant, speedy, and extensible implementation of the Minecraft
+Alpha/Beta protocol. Only the server side is implemented. The following
+introductory topics provide a better look at the project, its goals, and
+current capabilities.
 
 .. toctree::
    :maxdepth: 2
 
-   faq
+   introduction
    features
-   plugins
-   extending
    differences
-   administration
-   web
    philosophy
+
+
+Administrator Topics
+--------------------
+
+The following topics are meant for those wishing to run a Bravo server. Topics
+such as installation, configuration, and troubleshooting are covered here.
+No software development background is necessary.
+
+.. toctree::
+   :maxdepth: 2
+
+   administration
+   plugins
+   troubleshooting
+   web
+
+Developer Topics
+----------------
+
+The following topics are of general use to those wishing to modify or understand
+the Bravo source code. These topics are completely unecessary for those who
+are only interested in running or administering a Bravo server.
+
+.. toctree::
+   :maxdepth: 2
+
+   extending
    noise
    core
    auxiliary
