@@ -1,6 +1,27 @@
 """
 Utilities for coordinate handling and munging.
 """
+from math import floor, ceil
+def polar_round_vector(vector):
+    """
+    Rounds a vector towards zero
+    """
+    if vector[0] >= 0:
+        calculated_x = floor(vector[0])
+    else:
+        calculated_x = ceil(vector[0])
+
+    if vector[1] >= 0:
+        calculated_y = floor(vector[1])
+    else:
+        calculated_y = ceil(vector[1])
+
+    if vector[2] >= 0:
+        calculated_z = floor(vector[2])
+    else:
+        calculated_z = ceil(vector[2])
+
+    return calculated_x, calculated_y, calculated_z
 
 def split_coords(x, z):
     """

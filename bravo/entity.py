@@ -4,6 +4,7 @@ from random import uniform
 from twisted.python import log
 
 from bravo.utilities.coords import split_coords
+from bravo.utilities.geometry import gen_close_point
 from bravo.inventory import Equipment, ChestStorage
 from bravo.location import Location
 from bravo.packets.beta import make_packet
@@ -196,10 +197,7 @@ class Mob(Entity):
         self.loop = None
         super(Mob, self).__init__(**kwargs)
         self.manager = None
-        self.offsetlist = ((.5, 0, .5),
-            (-.5, 0, .5),
-            (.5, 0, -.5),
-            (-.5, 0, -.5))
+
     name = "Mob"
     type = "mob"
 
@@ -245,7 +243,7 @@ class Mob(Entity):
         """
         Update this mob's location with respect to a factory.
         """
-        clamp = lambda n: max(min(.5, n), -.5)
+        clamp = lambda n: max(min(.4, n), -.4)
         # XXX  Discuss appropriate style with MAD
         player = self.manager.closest_player((self.location.x,
                                  self.location.y,
@@ -253,9 +251,9 @@ class Mob(Entity):
                                  16)
 
         if player == None:
-            vector = (uniform(-.5,.5),
-                      uniform(-.5,.5),
-                      uniform(-.5,.5))
+            vector = (uniform(-.4,.4),
+                      uniform(-.4,.4),
+                      uniform(-.4,.4))
 
             target = (self.location.x + vector[0],
                 self.location.y + vector[1],
@@ -265,9 +263,12 @@ class Mob(Entity):
                 player.location.y,
                 player.location.z)
 
-            vector = (clamp(target[0] - self.location.x),
-                clamp(target[1] - self.location.y),
-                clamp(target[2] - self.location.z))
+            self_pos = (self.location.x, self.location.y, self.location.z)
+            vector = gen_close_point(self_pos, target)
+
+            vector = (clamp(vector[0]),
+                clamp(vector[1]),
+                clamp(vector[2]))
 
         new_position = (vector[0] + self.location.x,
             vector[1] + self.location.y,
@@ -281,7 +282,7 @@ class Mob(Entity):
         if new_theta < 0 :
             new_theta = 0
 
-        can_go = self.manager.check_collision(new_position,self.offsetlist)
+        can_go = self.manager.check_block_collision(new_position,self.offsetlist)
 
         if can_go:
             self.location.x = new_position[0]
@@ -301,6 +302,10 @@ class Chuck(Mob):
 
     name = "Chicken"
     type = "chuck"
+    offsetlist = ((.5, 0, .5),
+            (-.5, 0, .5),
+            (.5, 0, -.5),
+            (-.5, 0, -.5))
 
 class Cow(Mob):
     """
@@ -561,7 +566,14 @@ class Zombie(Mob):
 
     name = "Zombie"
     type = "zombie"
-
+    offsetlist = ((-0.7, 0, -0.7),
+     (-0.7, 0, 0.7),
+     (-0.7, 1, -0.7),
+     (-0.7, 1, 0.7),
+     (0.7, 0, -0.7),
+     (0.7, 0, 0.7),
+     (0.7, 1, -0.7),
+     (0.7, 1, 0.7))
 entities = dict((entity.name, entity)
     for entity in (
         Chuck,
