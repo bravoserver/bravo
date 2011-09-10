@@ -42,6 +42,21 @@ class TestChunkBlocks(unittest.TestCase):
         self.assertEqual(self.c.blocks[0, 0, 0], 0)
         self.assertEqual(self.c.metadata[0, 0, 0], 0)
 
+    def test_sed(self):
+        """
+        ``sed()`` should work.
+        """
+
+        self.c.set_block((1, 1, 1), 1)
+        self.c.set_block((2, 2, 2), 2)
+        self.c.set_block((3, 3, 3), 3)
+
+        self.c.sed(1, 3)
+
+        self.assertEqual(self.c.get_block((1, 1, 1)), 3)
+        self.assertEqual(self.c.get_block((2, 2, 2)), 2)
+        self.assertEqual(self.c.get_block((3, 3, 3)), 3)
+
     def test_single_block_damage_packet(self):
         chunk = bravo.chunk.Chunk(0, 1)
         chunk.populated = True
