@@ -3,8 +3,6 @@ from __future__ import division
 from itertools import combinations, product
 from random import Random
 
-from numpy import array, where
-
 from zope.interface import implements
 
 from bravo.blocks import blocks
@@ -86,8 +84,6 @@ class ComplexGenerator(object):
 
     This class uses a simplex noise generator to procedurally generate
     ridiculous things.
-
-    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(ITerrainGenerator)
@@ -101,18 +97,16 @@ class ComplexGenerator(object):
 
         factor = 1 / 256
 
-        for x, z in product(xrange(16), repeat=2):
-            column = chunk.get_column(x, z)
+        for x, z, y in product(xrange(16), xrange(16), xrange(128)):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
-            samples = array([octaves3(magx, magz, y * factor, 6)
-                    for y in xrange(column.size)])
+            sample = octaves3(magx, magz, y * factor, 6)
 
-            column = where(samples > 0, blocks["dirt"].slot, column)
-            column = where(samples > 0.1, blocks["stone"].slot, column)
-
-            chunk.set_column(x, z, column)
+            if sample > 0.1:
+                chunk.set_block((x, y, z), blocks["stone"].slot)
+            elif sample > 0:
+                chunk.set_block((x, y, z), blocks["dirt"].slot)
 
     name = "complex"
 
@@ -123,8 +117,6 @@ class ComplexGenerator(object):
 class WaterTableGenerator(object):
     """
     Create a water table.
-
-    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(ITerrainGenerator)
@@ -134,10 +126,9 @@ class WaterTableGenerator(object):
         Generate a flat water table halfway up the map.
         """
 
-        chunk.blocks[:, :, :64] = where(
-            chunk.blocks[:, :, :64] == blocks["air"].slot,
-            blocks["spring"].slot,
-            chunk.blocks[:, :, :64])
+        for x, z, y in product(xrange(16), xrange(16), xrange(64)):
+            if chunk.get_block((x, y, z)) == blocks["air"].slot:
+                chunk.set_block((x, y, z), blocks["spring"].slot)
 
     name = "watertable"
 
@@ -147,8 +138,6 @@ class WaterTableGenerator(object):
 class ErosionGenerator(object):
     """
     Erodes stone surfaces into dirt.
-
-    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(ITerrainGenerator)
@@ -161,12 +150,12 @@ class ErosionGenerator(object):
         chunk.regenerate_heightmap()
 
         for x, z in product(xrange(16), repeat=2):
-            y = chunk.heightmap[x, z]
+            y = chunk.height_at(x, z)
 
             if chunk.get_block((x, y, z)) == blocks["stone"].slot:
-                column = chunk.get_column(x, z)
                 bottom = max(y - 3, 0)
-                column[bottom:y + 1].fill(blocks["dirt"].slot)
+                for i in range(bottom, y + 1):
+                    chunk.set_block((x, i, z), blocks["dirt"].slot)
 
     name = "erosion"
 
@@ -176,8 +165,6 @@ class ErosionGenerator(object):
 class GrassGenerator(object):
     """
     Find exposed dirt and grow grass.
-
-    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(ITerrainGenerator)
@@ -190,12 +177,12 @@ class GrassGenerator(object):
         chunk.regenerate_heightmap()
 
         for x, z in product(xrange(16), repeat=2):
-            y = chunk.heightmap[x, z]
+            y = chunk.height_at(x, z)
 
             if (chunk.get_block((x, y, z)) == blocks["dirt"].slot and
                 (y == 127 or
                     chunk.get_block((x, y + 1, z)) == blocks["air"].slot)):
-                chunk.blocks[x, z, y] = blocks["grass"].slot
+                chunk.set_block((x, y, z), blocks["grass"].slot)
 
     name = "grass"
 
@@ -210,8 +197,6 @@ class BeachGenerator(object):
     beaches near all bodies of water regardless of size or composition; it
     will form beaches at large seashores and frozen lakes. It will even place
     beaches on one-block puddles.
-
-    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(ITerrainGenerator)
@@ -230,7 +215,7 @@ class BeachGenerator(object):
         chunk.regenerate_heightmap()
 
         for x, z in product(xrange(16), repeat=2):
-            y = chunk.heightmap[x, z]
+            y = chunk.height_at(x, z)
 
             while y > 60 and chunk.get_block((x, y, z)) in self.above:
                 y -= 1
@@ -239,7 +224,7 @@ class BeachGenerator(object):
                 continue
 
             if chunk.get_block((x, y, z)) in self.replace:
-                chunk.blocks[x, z, y] = blocks["sand"].slot
+                chunk.set_block((x, y, z), blocks["sand"].slot)
 
     name = "beaches"
 
@@ -249,8 +234,6 @@ class BeachGenerator(object):
 class OreGenerator(object):
     """
     Place ores and clay.
-
-    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(ITerrainGenerator)
@@ -262,7 +245,7 @@ class OreGenerator(object):
         yfactor = 1 / 32
 
         for x, z in product(xrange(16), repeat=2):
-            for y in range(chunk.heightmap[x, z] + 1):
+            for y in range(chunk.height_at(x, z) + 1):
                 magx = (chunk.x * 16 + x) * xzfactor
                 magz = (chunk.z * 16 + z) * xzfactor
                 magy = y * yfactor
@@ -271,7 +254,7 @@ class OreGenerator(object):
 
                 if sample > 0.9999:
                     # Figure out what to place here.
-                    old = chunk.blocks[x, z, y]
+                    old = chunk.get_block((x, y, z))
                     new = None
                     if old == blocks["sand"].slot:
                         # Sand becomes clay.
@@ -293,7 +276,7 @@ class OreGenerator(object):
                             new = blocks["coal-ore"].slot
 
                     if new:
-                        chunk.blocks[x, z, y] = new
+                        chunk.set_block((x, y, z), new)
 
     name = "ore"
 
@@ -303,8 +286,6 @@ class OreGenerator(object):
 class SafetyGenerator(object):
     """
     Generates terrain features essential for the safety of clients.
-
-    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(ITerrainGenerator)
@@ -315,9 +296,10 @@ class SafetyGenerator(object):
         top two layers to avoid players getting stuck at the top.
         """
 
-        chunk.blocks[:, :, 0].fill(blocks["bedrock"].slot)
-        chunk.blocks[:, :, 126].fill(blocks["air"].slot)
-        chunk.blocks[:, :, 127].fill(blocks["air"].slot)
+        for x, z in product(xrange(16), repeat=2):
+            chunk.set_block((x, 0, z), blocks["bedrock"].slot)
+            chunk.set_block((x, 126, z), blocks["air"].slot)
+            chunk.set_block((x, 127, z), blocks["air"].slot)
 
     name = "safety"
 
@@ -326,17 +308,20 @@ class SafetyGenerator(object):
 
 class CliffGenerator(object):
     """
-    This class/generator creates cliffs by selectively
-    applying a offset of the noise map to blocks based on height.
-    Feel free to make this more realistic.
+    This class/generator creates cliffs by selectively applying a offset of
+    the noise map to blocks based on height. Feel free to make this more
+    realistic.
+
+    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(ITerrainGenerator)
 
     def populate(self, chunk, seed):
         """
-        Make smooth waves of stone, then compare to current landscape
+        Make smooth waves of stone, then compare to current landscape.
         """
+
         factor = 1 / 256
         for x, z in product(xrange(16), repeat=2):
             magx = ((chunk.x + 32) * 16 + x) * factor
@@ -357,7 +342,7 @@ class CliffGenerator(object):
 
 class FloatGenerator(object):
     """
-    Rips chunks out of the map, to create surreal chunks of floating land
+    Rips chunks out of the map, to create surreal chunks of floating land.
 
     This generator relies on implementation details of ``Chunk``.
     """
@@ -413,11 +398,10 @@ class CaveGenerator(object):
             magx = (chunk.x * 16 + x) * xzfactor
             magz = (chunk.z * 16 + z) * xzfactor
 
-            column = chunk.get_column(x, z)
-
             for y in range(128):
-                if not column[y]:
+                if not chunk.get_block((x, y, z)):
                     continue
+
                 magy = y * yfactor
 
                 set_seed(seed)
@@ -426,7 +410,7 @@ class CaveGenerator(object):
                 should_cave *= abs(octaves3(magx, magz, magy, 3))
 
                 if should_cave < 0.002:
-                    column[y] = blocks["air"].slot
+                    chunk.set_block((x, y, z), blocks["air"].slot)
 
     name = "caves"
 
