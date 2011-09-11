@@ -915,7 +915,7 @@ class BravoProtocol(BetaServerProtocol):
         # Feed automatons.
         for automaton in self.factory.automatons:
             if newblock in automaton.blocks:
-                automaton.feed((builddata.x, builddata.y, builddata.z))
+                automaton.feed(adjust_coords_for_face((builddata.x, builddata.y, builddata.z), builddata.face))
 
         # Re-send inventory.
         # XXX this could be optimized if/when inventories track damage.
