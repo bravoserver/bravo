@@ -1,6 +1,6 @@
-===========
-Differences
-===========
+========================================
+Differences vs. vanilla Minecraft Server
+========================================
 
 Bravo was written from the ground up and doesn't inherit code from any other
 Minecraft project. This means that it sometimes behaves very differently, in
