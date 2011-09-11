@@ -1,5 +1,6 @@
 from __future__ import division
 
+from collections import deque
 from itertools import product
 from random import randint, random
 
@@ -94,13 +95,13 @@ class Grass(object):
         Get the step.
         """
 
-        if not self.tracked:
-            return 5
+        if self.tracked:
+            return 1
         else:
-            return max(1 / 20, 5 / len(self.tracked))
+            return 5
 
     def __init__(self):
-        self.tracked = set()
+        self.tracked = deque()
         self.loop = LoopingCall(self.process)
 
     def start(self):
@@ -141,6 +142,7 @@ class Grass(object):
                 # top of it, so check that first.
                 above = factory.world.sync_get_block((x, y + 1, z))
                 if above:
+                    self.reschedule()
                     return
 
                 # The number of grassy neighbors.
@@ -165,14 +167,14 @@ class Grass(object):
                     d.addCallback(factory.flush_chunk)
                 else:
                     # Not yet; add it back to the list.
-                    self.tracked.add(coords)
+                    self.tracked.appendleft(coords)
         except ChunkNotLoaded:
             pass
 
         self.reschedule()
 
     def feed(self, coords):
-        self.tracked.add(coords)
+        self.tracked.appendleft(coords)
 
     scan = column_scan
 
@@ -182,7 +184,7 @@ class Grass(object):
             if block in self.blocks:
                 # Track it now.
                 coords = (chunk.x * 16 + x, y - 1, chunk.z * 16 + z)
-                self.tracked.add(coords)
+                self.tracked.appendleft(coords)
 
     name = "grass"
 
