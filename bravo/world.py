@@ -325,7 +325,7 @@ class World(object):
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
             self.postprocess_chunk(chunk)
-            #self.factory.scan_chunk(chunk)
+            self.factory.scan_chunk(chunk)
             returnValue(chunk)
 
         if self.async:
@@ -369,7 +369,7 @@ class World(object):
         # This one is for our return value.
         retval = pe.deferred()
         # This one is for scanning the chunk for automatons.
-        #pe.deferred().addCallback(self.factory.scan_chunk)
+        pe.deferred().addCallback(self.factory.scan_chunk)
         self._pending_chunks[x, z] = pe
 
         def pp(chunk):
