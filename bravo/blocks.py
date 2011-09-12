@@ -462,9 +462,7 @@ drops[78] = 0   # Snow
 drops[16] = 263 # Coal Ore Block    -> Coal
 drops[56] = 264 # Diamond Ore Block -> Diamond
 drops[63] = 323 # Sign Post         -> Sign Item
-drops[64] = 324 # Wooden Door       -> Wooden Door Item
 drops[68] = 323 # Wall Sign         -> Sign Item
-drops[71] = 330 # Iron Door         -> Iron Door Item
 drops[83] = 338 # Reed              -> Reed Item
 drops[89] = 348 # Lightstone        -> Lightstone Dust
 drops[93] = 356 # Redstone-repeater-on  -> Redstone-repeater
@@ -538,15 +536,19 @@ _add_block(Block(13, "gravel", drop=318, ratio=1 / 10))
 # Leaves drop saplings, with 1 in 9 odds, and dims by 1.
 _add_block(Block(18, "leaves", drop=6, ratio=1 / 9, dim=1))
 # Beds are orientable and drops Bed Item
-_add_block(Block(26, "bed", drop=355, orientation=(None, None, 2, 4, 1, 3)))
+_add_block(Block(26, "bed", drop=355, orientation=(None, None, 2, 0, 1, 3)))
 # Torches are orientable and don't dim.
 _add_block(Block(50, "torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Furnaces are orientable.
 _add_block(Block(61, "furnace", orientation=(None, None, 2, 3, 4, 5)))
+# Wooden Door is orientable and drops Wooden Door item
+_add_block(Block(64, "wooden-door", drop=324, orientation=(None, None, 1, 3, 0, 2)))
 # Ladders are orientable and don't dim.
 _add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5), dim=0))
 # Levers are orientable and don't dim.
 _add_block(Block(69, "lever", orientation=(None, 5, 4, 3, 2, 1), dim=0))
+# Iron Door is orientable and drops Iron Door item
+_add_block(Block(71, "iron-door", drop=330, orientation=(None, None, 1, 3, 0, 2)))
 # Redstone ore drops 5 redstone dusts.
 _add_block(Block(73, "redstone-ore", drop=331, quantity=5))
 _add_block(Block(74, "glowing-redstone-ore", drop=331, quantity=5))

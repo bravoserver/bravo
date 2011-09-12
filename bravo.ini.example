@@ -96,6 +96,7 @@ click_hooks = inventory, windows, furnace
 close_hooks = inventory, windows
 
 # Dig hooks.
+pre_dig_hooks = door
 dig_hooks = give, bravo_snow, alpha_sand_gravel, torch, water, lava, grass, furnace, chest, bed
 
 # Build hooks.

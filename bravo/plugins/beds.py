@@ -36,12 +36,12 @@ class Bed(object):
         orientation = ('-x', '-z', '+x', '+z')[((int(player.location.yaw) \
                                             - 45 + 360) % 360) / 90]
         dx, dz = self.deltas(orientation)
-
         metadata = blocks["bed"].orientation(orientation)
 
         y += 1
         # Check if there is enough space for the bed.
-        if factory.world.sync_get_block((x + dx, y, z + dz)):
+        bl = factory.world.sync_get_block((x + dx, y, z + dz))
+        if bl and bl != blocks["snow"].slot:
             return False, builddata, True
 
         # Make sure we can remove it from the inventory.

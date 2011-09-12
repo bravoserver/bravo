@@ -11,7 +11,7 @@ from zope.interface import implements
 from bravo.config import configuration
 from bravo.entity import entities
 from bravo.ibravo import (ISortedPlugin, IAutomaton, IAuthenticator, ISeason,
-    ITerrainGenerator, IUseHook, ISignHook, IDigHook, IPreBuildHook,
+    ITerrainGenerator, IUseHook, ISignHook, IPreDigHook, IDigHook, IPreBuildHook,
     IPostBuildHook, IWindowOpenHook, IWindowClickHook, IWindowCloseHook)
 from bravo.location import Location
 from bravo.packets.beta import make_packet
@@ -239,6 +239,7 @@ class BravoFactory(Factory):
             "close_hooks": IWindowCloseHook,
             "pre_build_hooks": IPreBuildHook,
             "post_build_hooks": IPostBuildHook,
+            "pre_dig_hooks": IPreDigHook,
             "dig_hooks": IDigHook,
             "sign_hooks": ISignHook,
             "use_hooks": IUseHook,
