@@ -88,17 +88,7 @@ class Grass(object):
     implements(IAutomaton, IDigHook)
 
     blocks = (blocks["dirt"].slot,)
-
-    @property
-    def step(self):
-        """
-        Get the step.
-        """
-
-        if self.tracked:
-            return 1
-        else:
-            return 5
+    step = 1
 
     def __init__(self):
         self.tracked = deque()
@@ -111,11 +101,6 @@ class Grass(object):
     def stop(self):
         if self.loop.running:
             self.loop.stop()
-
-    def reschedule(self):
-        if self.loop.running:
-            self.stop()
-            self.start()
 
     def process(self):
         if not self.tracked:
@@ -142,7 +127,6 @@ class Grass(object):
                 # top of it, so check that first.
                 above = factory.world.sync_get_block((x, y + 1, z))
                 if above:
-                    self.reschedule()
                     return
 
                 # The number of grassy neighbors.
@@ -170,8 +154,6 @@ class Grass(object):
                     self.tracked.appendleft(coords)
         except ChunkNotLoaded:
             pass
-
-        self.reschedule()
 
     def feed(self, coords):
         self.tracked.appendleft(coords)
