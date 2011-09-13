@@ -69,6 +69,7 @@ class SerializableSlots(object):
 
     def load_from_list(self, l):
         if len(l) < self.metalength:
+            # XXX why will it break everything? :T
             raise AttributeError # otherwise it will break everything
         for target in self.metalist:
             if len(target):

@@ -3,6 +3,8 @@ from bravo.plugin import retrieve_plugins
 from bravo.packets.beta import make_packet
 from bravo.inventory import Slot, SerializableSlots
 
+# XXX I am completely undocumented and untested; is this any way to go through
+# life? Test and document me!
 class comblist(object):
     def __init__(self, a, b):
         self.l = a, b
@@ -129,6 +131,7 @@ class Crafting(SlotsSet):
         Returns: ( True/False, new selection )
         """
 
+        # XXX my docstring bites
         if self.recipe and self.crafted[0]:
             if selected is None:
                 selected = self.crafted[0]

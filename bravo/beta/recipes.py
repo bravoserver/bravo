@@ -14,6 +14,37 @@ from zope.interface import implements
 
 from bravo.ibravo import IRecipe
 
+def grouper(n, iterable):
+    args = [iter(iterable)] * n
+    for i in zip(*args):
+        yield i
+
+def pad_to_stride(recipe, rstride, cstride):
+    """
+    Pad a recipe out to a given stride.
+
+    :param tuple recipe: a recipe
+    :param int rstride: stride of the recipe
+    :param int cstride: stride of the crafting table
+
+    :raises: ValueError if the initial stride is larger than the requested
+             stride
+    """
+
+    if rstride > cstride:
+        raise ValueError(
+            "Initial stride %d is larger than requested stride %d" %
+            (rstride, cstride))
+
+    pad = (None,) * (cstride - rstride)
+    g = grouper(rstride, recipe)
+    padded = list(next(g))
+    for row in g:
+        padded.extend(pad)
+        padded.extend(row)
+
+    return padded
+
 class RecipeError(Exception):
     """
     Something bad happened inside a recipe.
@@ -54,6 +85,53 @@ class Blueprint(object):
         self.blueprint = blueprint
         self.provides = provides
 
+    def matches(self, table, stride):
+        """
+        Figure out whether this blueprint matches a given crafting table.
+
+        The general strategy here is to try to line up the blueprint on every
+        possible offset of the table, and see whether the blueprint matches
+        every slot in the table.
+        """
+
+        # Early-out if the table is not wide enough for us.
+        if self.dims[0] > stride:
+            return False
+
+        # Early-out if it's not tall enough, either.
+        if self.dims[1] > len(table) // stride:
+            continue
+
+        # Transform the blueprint to have the same stride as the crafting
+        # table.
+        padded = pad_to_stride(self.blueprint, self.dims[0], stride)
+
+        # Try to line up the table.
+        for offset in range(len(table) - len(padded) + 1):
+            # Check the empty slots first.
+            nones = table[:offset]
+            nones += table[len(padded) + offset:]
+            if not all(i is None for i in nones):
+                continue
+
+            # We need all of these slots to match. All of them.
+            matches_needed = len(padded)
+
+            for i, j in zip(padded,
+                table[offset:len(padded) + offset]):
+                if i is None and j is None:
+                    matches_needed -= 1
+                elif i is not None and j is not None:
+                    skey, scount = i
+                    if j.holds(skey) and j.quantity >= scount:
+                        matches_needed -= 1
+
+                if matches_needed == 0:
+                    # Jackpot!
+                    return True
+
+        return False
+
 class Ingredients(object):
     """
     Base class for ingredient-based recipes.
@@ -71,5 +149,16 @@ class Ingredients(object):
         ``ingredients`` should be a finite iterable of (slot, count) tuples.
         """
 
-        self.ingredients = tuple(sorted(ingredients))
+        self.ingredients = sorted(ingredients)
         self.provides = provides
+
+    def matches(self, table, stride):
+        """
+        Figure out whether all the ingredients are in a given crafting table.
+
+        This method is quite simple but provided for convenience and
+        completeness.
+        """
+
+        on_the_table = sorted((i.primary, i.secondary) for i in table if i)
+        return self.ingredients == on_the_table

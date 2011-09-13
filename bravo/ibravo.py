@@ -176,6 +176,16 @@ class IRecipe(IBravoPlugin):
     A description for creating materials from other materials.
     """
 
+    def matches(table, stride):
+        """
+        Determine whether a given crafting table matches this recipe.
+
+        ``table`` is a list of slots.
+        ``stride`` is the stride of the table.
+
+        :returns: bool
+        """
+
     provides = Attribute("""
         Tuple representing the yield of this recipe.
 
