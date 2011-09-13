@@ -21,7 +21,7 @@ from bravo.errors import BetaClientError, BuildError
 from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
     IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
-    IDigHook, ISignHook, IUseHook)
+    IPreDigHook, IDigHook, ISignHook, IUseHook)
 from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location
 from bravo.motd import get_motd
@@ -523,6 +523,7 @@ class BravoProtocol(BetaServerProtocol):
             "close_hooks": IWindowCloseHook,
             "pre_build_hooks": IPreBuildHook,
             "post_build_hooks": IPostBuildHook,
+            "pre_dig_hooks": IPreDigHook,
             "dig_hooks": IDigHook,
             "sign_hooks": ISignHook,
             "use_hooks": IUseHook,
@@ -744,6 +745,7 @@ class BravoProtocol(BetaServerProtocol):
                         container.button == 0)
                 break
 
+    @inlineCallbacks
     def digging(self, container):
         if container.x == -1 and container.z == -1 and container.y == 255:
             # Lala-land dig packet. Discard it for now.
@@ -791,6 +793,13 @@ class BravoProtocol(BetaServerProtocol):
         block = chunk.get_block((smallx, container.y, smallz))
 
         if container.state == "started":
+            # Run pre dig hooks
+            for hook in self.pre_dig_hooks:
+                cancel = yield maybeDeferred(hook.pre_dig_hook, self.player,
+                            (container.x, container.y, container.z), block)
+                if cancel:
+                    return
+
             tool = self.player.inventory.holdables[self.player.equipped]
             # Check to see whether we should break this block.
             if self.dig_policy.is_1ko(block, tool):
@@ -822,14 +831,14 @@ class BravoProtocol(BetaServerProtocol):
         Destroy a block and run the post-destroy dig hooks.
         """
 
-        if block.breakable:
-            chunk.destroy(coords)
-
         x, y, z = coords
 
         l = []
         for hook in self.dig_hooks:
             l.append(maybeDeferred(hook.dig_hook, chunk, x, y, z, block))
+
+        if block.breakable:
+            chunk.destroy(coords)
 
         dl = DeferredList(l)
         dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
@@ -892,6 +901,9 @@ class BravoProtocol(BetaServerProtocol):
             cont, builddata, cancel = yield maybeDeferred(hook.pre_build_hook,
                 self.player, builddata)
             if cancel:
+                # Flush damaged chunks.
+                for chunk in self.chunks.itervalues():
+                    self.factory.flush_chunk(chunk)
                 return
             if not cont:
                 break

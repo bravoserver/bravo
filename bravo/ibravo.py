@@ -422,6 +422,18 @@ class IPostBuildHook(ISortedPlugin):
         Do things.
         """
 
+class IPreDigHook(ISortedPlugin):
+    """
+    Hook for actions to be taken as dig started.
+    """
+    def pre_dig_hook(player, coords, block):
+        """
+        The ``player`` a Player's protocol
+        The ``coords`` is block coords - x, y, z
+        The ``block`` is a block we going to dig
+        :returns: True to cancel the dig action.
+        """
+
 class IDigHook(ISortedPlugin):
     """
     Hook for actions to be taken after a block is dug up.

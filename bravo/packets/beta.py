@@ -224,6 +224,7 @@ packets = {
             noop=0,
             arm=1,
             hit=2,
+            leave_bed=3,
             unknown=102,
             crouch=104,
             uncrouch=105,
@@ -234,6 +235,7 @@ packets = {
         Enum(UBInt8("action"),
             crouch=1,
             uncrouch=2,
+            leave_bed=3
         ),
     ),
     20: Struct("player",

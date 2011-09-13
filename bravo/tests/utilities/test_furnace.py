@@ -1,3 +1,5 @@
+from time import sleep
+
 from twisted.trial import unittest
 from twisted.internet import reactor
 from twisted.internet.task import deferLater
@@ -168,4 +170,32 @@ class TestFurnaceProcessCrafting(unittest.TestCase):
             self.assertEqual(headers.count('window-progress'), 81)
 
         d = deferLater(reactor, 23, done) # smelting time is ~20s
+        return d
+
+    def test_timer_mega_drift(self):
+        # we have more wood than we need and we can process 2 blocks
+        # but we have space only for one
+        self.tile.inventory.fuel[0] = Slot(blocks['sapling'].slot, 0, 10)
+        self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 2)
+        self.tile.inventory.crafted[0] = Slot(blocks['glass'].slot, 0, 63)
+        self.process.update()
+
+        def done():
+            self.assertTrue(self.states[0]) # it was started...
+            self.assertFalse(self.states[-1]) # ...and stopped at the end
+            self.assertEqual(self.tile.inventory.fuel[0], (blocks['sapling'].slot, 0, 8))
+            self.assertEqual(self.tile.inventory.crafting[0], (blocks['sand'].slot, 0, 1))
+            self.assertEqual(self.tile.inventory.crafted[0], (blocks['glass'].slot, 0, 64))
+            headers = [header[0] for header, params in self.protocol.write_packet_calls]
+            # 2 updates for fuel slot (2 saplings burned)
+            # 1 updates for crafting slot (1 sand blocks melted)
+            # 1 updates for crafted slot (1 glass blocks crafted)
+            self.assertEqual(headers.count('window-slot'), 4)
+
+        # smelting time of 2 blocks is ~20s
+        d = deferLater(reactor, 23, done)
+        # but we block the reactor for longer period (12 sec)
+        reactor.callLater(3, sleep, 25)
+        # incorrect timer drifting protection will consume more fuel than needed
+        # or produce more blocks than we can store
         return d

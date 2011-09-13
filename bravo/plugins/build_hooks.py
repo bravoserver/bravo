@@ -103,7 +103,7 @@ class Tile(object):
     name = "tile"
 
     before = tuple()
-    after = ("build",)
+    after = tuple()
 
 class BuildSnow(object):
     """
@@ -131,7 +131,7 @@ class BuildSnow(object):
     name = "build_snow"
 
     before = tuple()
-    after = ("build",)
+    after = tuple()
 
 tile = Tile()
 build_snow = BuildSnow()

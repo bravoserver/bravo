@@ -96,10 +96,11 @@ click_hooks = inventory, windows, furnace
 close_hooks = inventory, windows
 
 # Dig hooks.
-dig_hooks = give, bravo_snow, alpha_sand_gravel, torch, water, lava, grass, furnace, chest
+pre_dig_hooks = door
+dig_hooks = give, bravo_snow, alpha_sand_gravel, torch, water, lava, grass, furnace, chest, bed
 
 # Build hooks.
-pre_build_hooks = build_snow, tile, fertilizer
+pre_build_hooks = build_snow, tile, bed, fertilizer
 post_build_hooks = bravo_snow, alpha_sand_gravel
 
 # Automatons. These make grass grow, birds fly, sun shine, and, well...
