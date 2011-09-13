@@ -171,55 +171,10 @@ class ChatToConsole(object):
 
 registerAdapter(ChatToConsole, IChatCommand, IConsoleCommand)
 
-def recipe_invariant(r):
-    # Size invariant.
-    if len(r.recipe) != r.dimensions[0] * r.dimensions[1]:
-        raise InvariantException("Recipe size is invalid")
-
 class IRecipe(IBravoPlugin):
     """
-    Recipe for crafting materials from other materials.
+    A description for creating materials from other materials.
     """
-
-    invariant(recipe_invariant)
-
-    dimensions = Attribute("""
-        Tuple representing the size of the recipe.
-        """)
-
-    recipe = Attribute("""
-        Tuple representing the items of the recipe.
-
-        Recipes need to be filled out left-to-right, top-to-bottom, with one
-        of two things:
-
-         * A tuple (slot, count) for the item/block that needs to be present;
-         * None, if the slot needs to be empty.
-        """)
-
-    provides = Attribute("""
-        Tuple representing the yield of this recipe.
-
-        This tuple must be of the format (slot, count).
-        """)
-
-def straight_recipe_invariant(sr):
-    # Sorted invariant.
-    if sorted(sr.ingredients) != list(sr.ingredients):
-        raise InvariantException("Recipe is not sorted")
-
-class IStraightRecipe(IBravoPlugin):
-    """
-    Recipe for crafting materials that do not have any stable form
-    and is just a list of ingredients (like dye and colored wool).
-    """
-
-    ingredients = Attribute("""
-        Tuple representing the items of the recipe.
-
-        A tuple (slot, count) for the item/block that needs to be present.
-        These ingredients must be sorted.
-        """)
 
     provides = Attribute("""
         Tuple representing the yield of this recipe.
