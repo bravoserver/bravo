@@ -1,30 +1,15 @@
-from zope.interface import implements
-
 from bravo.blocks import blocks, items
-from bravo.ibravo import IRecipe
+from bravo.beta.recipes import Blueprint
 
-class Recipe(object):
+def one_by_two(top, bottom, provides, amount, name):
     """
-    Base class for recipes.
-
-    Just holds the implements() incantation; this is a space savings by
-    itself.
+    A simple recipe with one block stacked on top of another.
     """
 
-    implements(IRecipe)
+    return Blueprint(name, (1, 2), ((top.key, 1), (bottom.key,1)),
+        (provides.key, amount))
 
-#Basics
-class OneByTwo(Recipe):
-
-    dimensions = (1, 2)
-
-    def __init__(self, topMat, btmMat, provides, amount, name=None):
-        self.name = name
-        self.recipe = (
-            (topMat.key, 1),
-            (btmMat.key, 1),
-        )
-        self.provides = (provides.key, amount)
+class Recipe: pass
 
 class TwoByTwo(Recipe):
 
@@ -621,8 +606,8 @@ class Bed(Recipe):
 #--Recipies--
 
 #Basics
-sticks = OneByTwo(blocks["wood"], blocks["wood"], items["stick"], 4, "sticks")
-torches = OneByTwo(items["coal"], items["stick"], blocks["torch"], 4,
+sticks = one_by_two(blocks["wood"], blocks["wood"], items["stick"], 4, "sticks")
+torches = one_by_two(items["coal"], items["stick"], blocks["torch"], 4,
     "torches")
 workbench = TwoByTwo(blocks["wood"], blocks["workbench"], "workbench")
 furnace = ChestFurnace(blocks["cobblestone"], blocks["furnace"], "furnace")
@@ -654,7 +639,7 @@ clayblock = TwoByTwo(items["clay-balls"], blocks["clay"], "clay-block")
 brick = TwoByTwo(items["clay-brick"], blocks["brick"], "brick")
 bookshelf = Bookshelf()
 sandstone = TwoByTwo(blocks["sand"], blocks["sandstone"], "sandstone")
-jackolantern = OneByTwo(blocks["pumpkin"], items["stick"],
+jackolantern = one_by_two(blocks["pumpkin"], items["stick"],
     blocks["jack-o-lantern"], 1, "jack-o-lantern")
 
 #Tools
@@ -727,9 +712,9 @@ chainmailboots = Boots(blocks["fire"], items["chainmail-boots"], "chainmail")
 
 #Transportation
 minecart = CartBoat(items["iron-ingot"], items["mine-cart"], "minecart")
-poweredmc = OneByTwo(blocks["furnace"], items["mine-cart"],
+poweredmc = one_by_two(blocks["furnace"], items["mine-cart"],
     items["powered-minecart"], 1, "poweredmc")
-storagemc = OneByTwo(blocks["chest"], items["mine-cart"],
+storagemc = one_by_two(blocks["chest"], items["mine-cart"],
     items["storage-minecart"], 1, "storagemc")
 track = Track()
 boat = CartBoat(blocks["wood"], items["boat"], "boat")
@@ -741,11 +726,11 @@ woodpressure = TwoByOne(blocks["wood"], blocks["wooden-plate"], 1,
     "wood-plate")
 stonepressure = TwoByOne(blocks["stone"], blocks["stone-plate"], 1,
     "stone-plate")
-stonebtn = OneByTwo(blocks["stone"], blocks["stone"], blocks["stone-button"],
+stonebtn = one_by_two(blocks["stone"], blocks["stone"], blocks["stone-button"],
     1, "stone-btn")
-redstonetorch = OneByTwo(items["redstone"], items["stick"],
+redstonetorch = one_by_two(items["redstone"], items["stick"],
     blocks["redstone-torch"], 1, "redstone-torch")
-lever = OneByTwo(items["stick"], blocks["cobblestone"], blocks["lever"], 1,
+lever = one_by_two(items["stick"], blocks["cobblestone"], blocks["lever"], 1,
     "lever")
 noteblock = ThreeByThree(blocks["wood"], items["redstone"],
     blocks["note-block"], "noteblock")
