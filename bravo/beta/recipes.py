@@ -140,6 +140,11 @@ class Blueprint(object):
         # Set up the blueprint to match the crafting stride.
         padded = pad_to_stride(self.blueprint, self.dims[0], stride)
 
+        # Use hax to find the offset.
+        ours = next(i for (i, o) in enumerate(padded) if o)
+        theirs = next(i for (i, o) in enumerate(table) if o)
+        offset = theirs - ours
+
         # Go through and decrement each slot accordingly.
         for index, slot in enumerate(padded):
             if slot is not None:
