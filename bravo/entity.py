@@ -275,24 +275,27 @@ class Mob(Entity):
             vector[2] + self.location.z,)
 
         new_theta = int(atan2(
-            (self.location.z - target[2]),
-            (self.location.x - target[0] ))
+            (self.location.z - new_position[2]),
+            (self.location.x - new_position[0] ))
             + pi/2)
 
         if new_theta < 0 :
             new_theta = 0
 
-        can_go = self.manager.check_block_collision(new_position,self.offsetlist)
+        can_go = self.manager.check_block_collision(self.location, (-.3, 0, -.3,), (.5, 1, .5))
+        self.location.theta = new_theta
 
         if can_go:
+            self.slide = False
             self.location.x = new_position[0]
             self.location.y = new_position[1]
             self.location.z = new_position[2]
-            self.location.theta = new_theta
+
             self.manager.correct_origin_chunk(self)
             self.manager.broadcast(self.save_location_to_packet())
         else:
-            pass
+            self.slide = self.manager.slide_vector(vector, )
+            self.manager.broadcast(self.save_location_to_packet())
 
 
 class Chuck(Mob):
@@ -566,14 +569,7 @@ class Zombie(Mob):
 
     name = "Zombie"
     type = "zombie"
-    offsetlist = ((-0.7, 0, -0.7),
-     (-0.7, 0, 0.7),
-     (-0.7, 1, -0.7),
-     (-0.7, 1, 0.7),
-     (0.7, 0, -0.7),
-     (0.7, 0, 0.7),
-     (0.7, 1, -0.7),
-     (0.7, 1, 0.7))
+    offsetlist = ((-.5,0,-.5), (-.5,0,.5), (.5,0,-.5), (.5,0,.5), (-.5,1,-.5), (-.5,1,.5), (.5,1,-.5), (.5,1,.5),)
 entities = dict((entity.name, entity)
     for entity in (
         Chuck,
@@ -588,6 +584,7 @@ entities = dict((entity.name, entity)
         Player,
         Sheep,
         Skeleton,
+        Slime,
         Spider,
         Squid,
         Wolf,

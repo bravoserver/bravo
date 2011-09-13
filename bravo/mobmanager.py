@@ -4,6 +4,7 @@ from math import floor, ceil
 from bravo.simplex import dot3
 from bravo.utilities.coords import polar_round_vector
 
+clamp = lambda n: max(min(1, n), -1)
 class MobManager(object):
 
     """
@@ -18,6 +19,7 @@ class MobManager(object):
         """
         mob.manager = self
         mob.run()
+
 
 
     def closest_player(self, position, threshold = None):
@@ -42,55 +44,59 @@ class MobManager(object):
                     closest = player
         return closest
 
-    def check_block_collision(self, vector, offsetlist, block = 0):
-        """
-        Checks a list of points to see if a block other than air occupies the
-        same space
-        """
-        cont = True
-        for offset_x, offset_y, offset_z in offsetlist:
-            vector_x = vector[0] + offset_x
-            vector_y = vector[1] + offset_y
-            vector_z = vector[2] + offset_z
+##    def check_block_collision(self, vector, offsetlist, block = 0):
+##        """
+##        Checks a list of points to see if a block other than air occupies the
+##        same space
+##        """
+##        cont = True
+##        for offset_x, offset_y, offset_z in offsetlist:
+##            vector_x = vector[0] + offset_x
+##            vector_y = vector[1] + offset_y
+##            vector_z = vector[2] + offset_z
+##
+##            block_coord = polar_round_vector((vector_x, vector_y, vector_z))
+##            block = self.world.sync_get_block(block_coord)
+##            if block == 0:
+##                continue
+##            else:
+##                return False
+##        if cont:
+##            return True
 
-            block_coord = polar_round_vector((vector_x, vector_y, vector_z))
-            block = self.world.sync_get_block(block_coord)
-            if block == 0:
-                continue
-            else:
-                return False
-        if cont:
-            return True
+    def check_block_collision(self, location, minvec, maxvec):
+        min_point = [minvec[0] + location.x,
+               minvec[1] + location.y,
+               minvec[2] + location.z]
 
-    def check_entity_collision(self, vector, offsetlist):
-        """
-        Checks a list of points to see if a block other than air occupies the
-        same space
-        """
-        cont = True
-        for offset_x, offset_y, offset_z in offsetlist:
-            vector_x = vector[0] + offset_x
-            vector_y = vector[1] + offset_y
-            vector_z = vector[2] + offset_z
+        max_point = [maxvec[0] + location.x,
+               maxvec[1] + location.y,
+               maxvec[2] + location.z]
 
-            block_coord = polar_round_vector((vector_x, vector_y, vector_z))
+        min_point[0] = int(floor(min_point[0]))
+        min_point[1] = int(floor(min_point[1]))
+        min_point[2] = int(floor(min_point[2]))
 
-            block = self.world.sync_get_block(block_coord)
-            if block == 0:
-                continue
-            else:
-                return False
-        if cont:
-            return True
+        max_point[0] = int(floor(max_point[0]))
+        max_point[1] = int(floor(max_point[1]))
+        max_point[2] = int(floor(max_point[2]))
 
-    def slide_collision_vector(self, vector, normal):
-        """
-        Returns an adjacent vector (I think)
-        """
-        dot = dot3(vector,(-normal[0], -normal[1], -normal[2]))
-        return (vector[0] + (normal[0] * dot),
-            vector[1] + (normal[1] * dot),
-            vector[2] + (normal[2] * dot))
+        for x in xrange(min_point[0],max_point[0]):
+            for y in xrange(min_point[1],max_point[1]):
+                for z in xrange(min_point[2],max_point[2]):
+                    if self.world.sync_get_block((x,y,z)) != 0:
+                        normal = (clamp(int(location.x) - x),
+                                  clamp(int(location.y) - y),
+                                  clamp(int(location.z) - z))
+                        return False, normal
+
+        return True
+
+    def calculate_slide(vector,normal):
+        dot = dot3(vector,normal)
+        return (vector[0] - (dot)*normal[0],
+                vector[1] - (dot)*normal[1],
+                vector[2] - (dot)*normal[2])
 
     def correct_origin_chunk(self, mob):
         """
