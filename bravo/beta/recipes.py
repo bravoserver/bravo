@@ -159,8 +159,10 @@ class Ingredients(object):
     """
     Base class for ingredient-based recipes.
 
-    Ingredients are sprinkled into a crafting table at any location. This
-    yields a very simple recipe.
+    Ingredients are sprinkled into a crafting table at any location. Only one
+    count of any given ingredient is needed. This yields a very simple recipe,
+    but with the limitation that multiple counts of an item cannot be required
+    in a recipe.
     """
 
     implements(IRecipe)
@@ -169,7 +171,8 @@ class Ingredients(object):
         """
         Create an ingredient-based recipe.
 
-        ``ingredients`` should be a finite iterable of (slot, count) tuples.
+        ``ingredients`` should be a finite iterable of (primary, secondary)
+        slot tuples.
         """
 
         self.name = name
@@ -190,9 +193,11 @@ class Ingredients(object):
     def reduce(self, table, stride):
         """
         Remove stuff from a given crafting table.
+
+        This method cheats a bit and assumes that the table matches this
+        recipe.
         """
 
-        # XXX this doesn't properly handle counts.
         for index, slot in enumerate(table):
             if slot is not None:
                 table[index] = slot.decrement(1)
