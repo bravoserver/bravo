@@ -61,7 +61,7 @@ class Blueprint(object):
 
     implements(IRecipe)
 
-    def __init__(self, dimensions, blueprint, provides):
+    def __init__(self, name, dimensions, blueprint, provides):
         """
         Create a blueprint.
 
@@ -81,6 +81,8 @@ class Blueprint(object):
             raise RecipeError(
                 "Recipe dimensions (%d, %d) didn't match blueprint size %d" %
                 (dimensions[0], dimensions[1], len(blueprint)))
+
+        self.name = name
         self.dims = dimensions
         self.blueprint = blueprint
         self.provides = provides
@@ -100,7 +102,7 @@ class Blueprint(object):
 
         # Early-out if it's not tall enough, either.
         if self.dims[1] > len(table) // stride:
-            continue
+            return False
 
         # Transform the blueprint to have the same stride as the crafting
         # table.
@@ -163,13 +165,14 @@ class Ingredients(object):
 
     implements(IRecipe)
 
-    def __init__(self, ingredients, provides):
+    def __init__(self, name, ingredients, provides):
         """
         Create an ingredient-based recipe.
 
         ``ingredients`` should be a finite iterable of (slot, count) tuples.
         """
 
+        self.name = name
         self.ingredients = sorted(ingredients)
         self.provides = provides
 

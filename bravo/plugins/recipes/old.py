@@ -1,7 +1,7 @@
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
-from bravo.ibravo import IRecipe, IStraightRecipe
+from bravo.ibravo import IRecipe
 
 class Recipe(object):
     """
@@ -12,19 +12,6 @@ class Recipe(object):
     """
 
     implements(IRecipe)
-
-class StraightRecipe(object):
-    """
-    Base class for all straight recipes
-    """
-
-    implements(IStraightRecipe)
-
-    def __init__(self, ingredients, provides, amount, name=None):
-        self.name = name
-        self.ingredients = [i.key for i in ingredients]
-        self.ingredients.sort()
-        self.provides = (provides.key, amount)
 
 #Basics
 class OneBlock(Recipe):
@@ -642,15 +629,6 @@ class Bed(Recipe):
     )
     provides = (blocks["bed"].key, 1)
 
-#Wool
-
-class ColoredWool(StraightRecipe):
-
-    def __init__(self, dye, color):
-        name = "%s-wool" % color
-        ingredients = (blocks["white-wool"], dye)
-        StraightRecipe.__init__(self, ingredients, blocks[name], 1, name)
-
 #--Recipies--
 
 #Basics
@@ -816,44 +794,3 @@ bed = Bed()
 bonemeal = OneBlock(items["bone"], items["bone-meal"], 3, "bonemeal")
 dye_red = OneBlock(blocks["rose"], items["red-dye"], 2, "red-dye")
 dye_yellow = OneBlock(blocks["flower"], items["yellow-dye"], 3, "yellow-dye")
-dye_gray = StraightRecipe((items["ink-sac"], items["bone-meal"]),
-                          items["gray-dye"], 2, "gray-dye")
-dye_orange = StraightRecipe((items["red-dye"], items["yellow-dye"]),
-                            items["orange-dye"], 2, "orange-dye")
-dye_lime = StraightRecipe((items["green-dye"], items["bone-meal"]),
-                          items["lime-dye"], 2, "lime-dye")
-dye_lblue = StraightRecipe((items["lapis-lazuli"], items["bone-meal"]),
-                           items["light-blue-dye"], 2, "light-blue-dye")
-dye_cyan = StraightRecipe((items["lapis-lazuli"], items["green-dye"]),
-                          items["cyan-dye"], 2, "cyan-dye")
-dye_purple = StraightRecipe((items["lapis-lazuli"], items["red-dye"]),
-                            items["purple-dye"], 2, "purple-dye")
-dye_pink = StraightRecipe((items["red-dye"], items["bone-meal"]),
-                          items["pink-dye"], 2, "pink-dye")
-dye_magenta0 = StraightRecipe((items["lapis-lazuli"], items["bone-meal"], items["red-dye"], items["red-dye"]),
-                              items["magenta-dye"], 2, "magenta-dye-4")
-dye_magenta1 = StraightRecipe((items["purple-dye"], items["pink-dye"]),
-                              items["magenta-dye"], 2, "magenta-dye-2")
-dye_magenta2 = StraightRecipe((items["pink-dye"], items["red-dye"], items["lapis-lazuli"]),
-                              items["magenta-dye"], 3, "magenta-dye-3")
-dye_lgray1 = StraightRecipe((items["gray-dye"], items['bone-meal']),
-                            items["light-gray-dye"], 2, "light-gray-dye-2")
-dye_lgray2 = StraightRecipe((items["ink-sac"], items['bone-meal'], items['bone-meal']),
-                            items["light-gray-dye"], 3, "light-gray-dye-3")
-
-# Wool
-wool_lgray = ColoredWool(items["light-gray-dye"], "light-gray")
-wool_gray = ColoredWool(items["gray-dye"], "gray")
-wool_black = ColoredWool(items["ink-sac"], "black")
-wool_red = ColoredWool(items["red-dye"], "red")
-wool_orange = ColoredWool(items["orange-dye"], "orange")
-wool_yellow = ColoredWool(items["yellow-dye"], "yellow")
-wool_lime = ColoredWool(items["lime-dye"], "light-green")
-wool_green = ColoredWool(items["green-dye"], "dark-green")
-wool_lblue = ColoredWool(items["light-blue-dye"], "light-blue")
-wool_cyan = ColoredWool(items["cyan-dye"], "cyan")
-wool_blue = ColoredWool(items["lapis-lazuli"], "blue")
-wool_purple = ColoredWool(items["purple-dye"], "purple")
-wool_magenta = ColoredWool(items["magenta-dye"], "magenta")
-wool_pink = ColoredWool(items["pink-dye"], "pink")
-wool_brown = ColoredWool(items["cocoa-beans"], "brown")
