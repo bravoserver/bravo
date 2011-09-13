@@ -222,6 +222,7 @@ class Crafting(SlotsSet):
 
         offset = self.recipe_offset
 
+        # XXX Oh god this is so horribly wrong.
         if offset == -128: # straight recipe
             for index, slot in enumerate(self.crafting):
                 if slot is not None:

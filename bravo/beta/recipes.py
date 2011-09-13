@@ -132,6 +132,22 @@ class Blueprint(object):
 
         return False
 
+    def reduce(self, table, stride):
+        """
+        Remove stuff from a given crafting table.
+        """
+
+        # Set up the blueprint to match the crafting stride.
+        padded = pad_to_stride(self.blueprint, self.dims[0], stride)
+
+        # Go through and decrement each slot accordingly.
+        for index, slot in enumerate(padded):
+            if slot is not None:
+                index += offset
+                rcount = slot[1]
+                slot = table[index]
+                table[index] = slot.decrement(rcount)
+
 class Ingredients(object):
     """
     Base class for ingredient-based recipes.
@@ -162,3 +178,13 @@ class Ingredients(object):
 
         on_the_table = sorted((i.primary, i.secondary) for i in table if i)
         return self.ingredients == on_the_table
+
+    def reduce(self, table, stride):
+        """
+        Remove stuff from a given crafting table.
+        """
+
+        # XXX this doesn't properly handle counts.
+        for index, slot in enumerate(table):
+            if slot is not None:
+                table[index] = slot.decrement(1)

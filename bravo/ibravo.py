@@ -186,6 +186,20 @@ class IRecipe(IBravoPlugin):
         :returns: bool
         """
 
+    def reduce(table, stride):
+        """
+        Remove items from a given crafting table corresponding to a single
+        match of this recipe. The table is modified in-place.
+
+        This method is meant to be used to subtract items from a crafting
+        table following a successful recipe match.
+
+        This method may assume that this recipe ``matches()`` the table.
+
+        ``table`` is a list of slots.
+        ``stride`` is the stride of the table.
+        """
+
     provides = Attribute("""
         Tuple representing the yield of this recipe.
 
