@@ -1,4 +1,4 @@
-from bravo.ibravo import IRecipe, IStraightRecipe
+from bravo.ibravo import IRecipe
 from bravo.plugin import retrieve_plugins
 from bravo.packets.beta import make_packet
 from bravo.inventory import Slot, SerializableSlots
@@ -114,7 +114,6 @@ class Crafting(SlotsSet):
     def __init__(self):
         SlotsSet.__init__(self)
         self.recipe = None
-        self.recipe_offset = None
 
     def update_crafted(self):
         self.check_recipes()
@@ -155,60 +154,14 @@ class Crafting(SlotsSet):
         """
         See if the crafting table matches any recipes.
 
-        :returns: the recipe and offset, or None if no matches could be made
+        :returns: None
         """
 
-        # This isn't perfect, unfortunately, but correctness trumps algorithmic
-        # perfection. (For now.)
-        for name, recipe in sorted(retrieve_plugins(IRecipe).iteritems()):
-            dims = recipe.dimensions
-
-            # Skip recipes that don't fit our crafting table.
-            if (dims[0] > self.crafting_stride or
-                dims[1] > len(self.crafting) // self.crafting_stride):
-                continue
-
-            padded = pad_to_stride(recipe.recipe, dims[0],
-                self.crafting_stride)
-
-            for offset in range(len(self.crafting) - len(padded) + 1):
-                nones = self.crafting[:offset]
-                nones += self.crafting[len(padded) + offset:]
-                if not all(i is None for i in nones):
-                    continue
-
-                matches_needed = len(padded)
-
-                for i, j in zip(padded,
-                    self.crafting[offset:len(padded) + offset]):
-                    if i is None and j is None:
-                        matches_needed -= 1
-                    elif i is not None and j is not None:
-                        skey, scount = i
-                        if j.holds(skey) and j.quantity >= scount:
-                            matches_needed -= 1
-
-                    if matches_needed == 0:
-                        # Jackpot!
-                        self.recipe = recipe
-                        self.recipe_offset = offset
-                        return
-
-        # Try to check free-form recipes. Sort the table's occupied slots and
-        # compare to the recipe's slots.
-        # XXX can fail if the recipe's ingredients aren't sorted
-        crafting = sorted(
-            (i.primary, i.secondary) for i in self.crafting if i)
-        # XXX is there any reason to sort these here? Do they overlap?
-        for name, recipe in sorted(retrieve_plugins(IStraightRecipe).iteritems()):
-            if (crafting == recipe.ingredients):
-                # Jackpot!
-                self.recipe = recipe
-                # XXX :T
-                self.recipe_offset = -128 # indicates the recipe if straight recipe
-                return
-
         self.recipe = None
+
+        for name, recipe in retrieve_plugins(IRecipe).iteritems():
+            if recipe.matches(self.crafting, self.crafting_stride):
+                self.recipe = recipe
 
     def reduce_recipe(self):
         """
@@ -220,23 +173,7 @@ class Crafting(SlotsSet):
         and will not do additional checks to verify this assumption.
         """
 
-        offset = self.recipe_offset
-
-        # XXX Oh god this is so horribly wrong.
-        if offset == -128: # straight recipe
-            for index, slot in enumerate(self.crafting):
-                if slot is not None:
-                    self.crafting[index] = slot.decrement(1)
-        else: # normal recipe
-            padded = pad_to_stride(self.recipe.recipe, self.recipe.dimensions[0],
-                self.crafting_stride)
-
-            for index, slot in enumerate(padded):
-                if slot is not None:
-                    index += offset
-                    rcount = slot[1]
-                    slot = self.crafting[index]
-                    self.crafting[index] = slot.decrement(rcount)
+        self.recipe.reduce(self.crafting, self.crafting_stride)
 
     def close(self, wid):
         '''
