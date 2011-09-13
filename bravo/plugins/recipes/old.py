@@ -14,17 +14,6 @@ class Recipe(object):
     implements(IRecipe)
 
 #Basics
-class OneBlock(Recipe):
-
-    dimensions = (1, 1)
-
-    def __init__(self, material, provides, amount, name=None):
-        self.name = name
-        self.recipe = (
-            (material.key, 1),
-        )
-        self.provides = (provides.key, amount)
-
 class OneByTwo(Recipe):
 
     dimensions = (1, 2)
@@ -632,7 +621,6 @@ class Bed(Recipe):
 #--Recipies--
 
 #Basics
-wood = OneBlock(blocks["log"], blocks["wood"], 4, "wood")
 sticks = OneByTwo(blocks["wood"], blocks["wood"], items["stick"], 4, "sticks")
 torches = OneByTwo(items["coal"], items["stick"], blocks["torch"], 4,
     "torches")
@@ -770,16 +758,9 @@ bowl = BowlBucket(blocks["wood"], items["bowl"], 4, "bowl")
 shroomsoup = MushroomSoup()
 shroomsoup2 = MushroomSoup2()
 bread = ThreeByOne(items["wheat"], items["bread"], 1, "bread")
-sugar = OneBlock(items["sugar-cane"], items["sugar"], 1, "sugar")
 cake = Cake()
 goldenapple = ThreeByThree(blocks["gold"], items["apple"],
     items["golden-apple"], "goldapple")
-
-#Misc.
-ironingots = OneBlock(blocks["iron"], items["iron-ingot"], 9, "iron-ingots")
-goldingots = OneBlock(blocks["gold"], items["gold-ingot"], 9, "gold-ingots")
-diamonds = OneBlock(blocks["diamond"], items["diamond"], 9, "diamonds")
-lazulis = OneBlock(blocks["lapis-lazuli"], items["lapis-lazuli"], 9, "lazulis")
 
 painting = ThreeByThree(items["stick"], blocks["wool"], items["paintings"],
     "paintings")
@@ -789,8 +770,3 @@ papers = ThreeByOne(blocks["sugar-cane"], items["paper"], 3, "paper")
 book = Book()
 fence = Fence()
 bed = Bed()
-
-#Dye
-bonemeal = OneBlock(items["bone"], items["bone-meal"], 3, "bonemeal")
-dye_red = OneBlock(blocks["rose"], items["red-dye"], 2, "red-dye")
-dye_yellow = OneBlock(blocks["flower"], items["yellow-dye"], 3, "yellow-dye")

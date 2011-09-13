@@ -15,6 +15,22 @@ def wool(color, dye):
     return Ingredients(name, (blocks["white-wool"].key, dye),
         (blocks[name].key, 1))
 
+# Various things.
+wood = Ingredients("wood", (blocks["log"].key,), (blocks["wood"].key, 4))
+sugar = Ingredients("sugar", (items["sugar-cane"].key,),
+    (items["sugar"].key, 1))
+iron_ingots = Ingredients("iron-ingots", (blocks["iron"].key,),
+    (items["iron-ingot"].key, 9))
+gold_ingots = Ingredients("gold-ingots", (blocks["gold"].key,),
+    (items["gold-ingot"].key, 9))
+diamonds = Ingredients("diamonds", (blocks["diamond"].key,),
+    (items["diamond"].key, 9))
+lapis_lazulis = Ingredients("lapis-lazulis", (blocks["lapis-lazuli"].key,),
+    (items["lapis-lazuli"].key, 9))
+bone_meal = Ingredients("bone-meal", (items["bone"].key,),
+    (items["bone-meal"].key, 3))
+
+# Dyes.
 dye_orange = Ingredients("orange-dye",
     (items["red-dye"].key, items["yellow-dye"].key), (items["orange-dye"].key, 2))
 # There are three different valid recipes for magenta dye, one with bone meal,
@@ -32,7 +48,8 @@ dye_magenta2 = Ingredients("magenta-dye-3",
 dye_lblue = Ingredients("light-blue-dye",
     (items["lapis-lazuli"].key, items["bone-meal"].key),
     (items["light-blue-dye"].key, 2))
-# yellow?
+dye_yellow = Ingredients("yellow-dye", (blocks["flower"].key,),
+    (items["yellow-dye"], 3))
 dye_lime = Ingredients("lime-dye",
     (items["green-dye"].key, items["bone-meal"].key),
     (items["lime-dye"].key, 2))
@@ -55,7 +72,9 @@ dye_cyan = Ingredients("cyan-dye",
 dye_purple = Ingredients("purple-dye",
     (items["lapis-lazuli"].key, items["red-dye"].key),
     (items["purple-dye"].key, 2))
-# blue, brown, green, red, black?
+# blue, brown, green?
+dye_red = Ingredients("red-dye", (blocks["rose"].key,), (items["red-dye"], 2))
+# black?
 
 # Wools. It'd be nice if we could loop these, but whatever.
 wool_orange  = wool("orange", items["orange-dye"].key)
