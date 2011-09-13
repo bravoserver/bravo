@@ -250,39 +250,6 @@ class ClockCompass(Recipe):
         )
         self.provides = (provides.key, 1)
 
-class FlintAndSteel(Recipe):
-
-    name = "flint-and-steel"
-
-    dimensions = (2, 2)
-
-    recipe = (
-        (items["iron-ingot"].key, 1),
-        None,
-        None,
-        (items["flint"].key, 1)
-    )
-    provides = (items["flint-and-steel"].key, 1)
-
-class FishingRod(Recipe):
-
-    name = "fishing-rod"
-
-    dimensions = (3, 3)
-
-    recipe = (
-        None,
-        None,
-        (items["stick"].key, 1),
-        None,
-        (items["stick"].key, 1),
-        (items["string"].key, 1),
-        (items["stick"].key, 1),
-        None,
-        (items["string"].key, 1),
-    )
-    provides = (items["fishing-rod"].key, 1)
-
 class BowlBucket(Recipe):
 
     dimensions = (3, 2)
@@ -313,38 +280,6 @@ class Sword(Recipe):
         )
         self.provides = (provides.key, 1)
 
-class Bow(Recipe):
-
-    dimensions = (3, 3)
-
-    name = "bow"
-
-    recipe = (
-        (items["string"].key, 1),
-        (items["stick"].key, 1),
-        None,
-        (items["string"].key, 1),
-        None,
-        (items["stick"].key, 1),
-        (items["string"].key, 1),
-        (items["stick"].key, 1),
-        None,
-    )
-    provides = (items["bow"].key, 1)
-
-class Arrow(Recipe):
-
-    dimensions = (1, 3)
-
-    name = "arrow"
-
-    recipe = (
-        (items["coal"].key, 1),
-        (items["stick"].key, 1),
-        (items["feather"].key, 1),
-    )
-    provides = (items["arrow"].key, 4)
-
 #Transportation
 class CartBoat(Recipe):
     """
@@ -365,25 +300,6 @@ class CartBoat(Recipe):
         )
         self.provides = (provides.key, 1)
 
-class Track(Recipe):
-
-    dimensions = (3, 3)
-
-    name = "track"
-
-    recipe = (
-        (items["iron-ingot"].key, 1),
-        None,
-        (items["iron-ingot"].key, 1),
-        (items["iron-ingot"].key, 1),
-        (items["stick"].key, 1),
-        (items["iron-ingot"].key, 1),
-        (items["iron-ingot"].key, 1),
-        None,
-        (items["iron-ingot"].key, 1),
-    )
-    provides = (blocks["tracks"].key, 16)
-
 #Mechanism
 class Door(Recipe):
 
@@ -400,154 +316,6 @@ class Door(Recipe):
             (material.key, 1),
         )
         self.provides = (provides.key, 1)
-
-class Dispenser(Recipe):
-
-    dimensions = (3, 3)
-
-    name = "dispenser"
-
-    recipe = (
-        (blocks["cobblestone"].key, 1),
-        (blocks["cobblestone"].key, 1),
-        (blocks["cobblestone"].key, 1),
-        (blocks["cobblestone"].key, 1),
-        (items["bow"].key, 1),
-        (blocks["cobblestone"].key, 1),
-        (blocks["cobblestone"].key, 1),
-        (items["redstone"].key, 1),
-        (blocks["cobblestone"].key, 1),
-    )
-    provides = (blocks["dispenser"].key, 1)
-
-#Food
-class MushroomSoup(Recipe):
-
-    dimensions = (1, 3)
-
-    name = "shroomstew"
-
-    recipe = (
-        (blocks["red-mushroom"].key, 1),
-        (blocks["brown-mushroom"].key, 1),
-        (items["bowl"].key, 1),
-    )
-    provides = (items["mushroom-soup"].key, 1)
-
-class MushroomSoup2(Recipe):
-
-    dimensions = (1, 3)
-
-    name = "shroomstew2"
-
-    recipe = (
-        (blocks["brown-mushroom"].key, 1),
-        (blocks["red-mushroom"].key, 1),
-        (items["bowl"].key, 1),
-    )
-    provides = (items["mushroom-soup"].key, 1)
-
-class Cake(Recipe):
-
-    dimensions = (3, 3)
-
-    name = "cake"
-
-    recipe = (
-        (items["milk"].key, 1),
-        (items["milk"].key, 1),
-        (items["milk"].key, 1),
-        (items["egg"].key, 1),
-        (items["sugar"].key, 1),
-        (items["egg"].key, 1),
-        (items["wheat"].key, 1),
-        (items["wheat"].key, 1),
-        (items["wheat"].key, 1),
-    )
-    provides = (items["cake"].key, 1)
-
-class Sign(Recipe):
-
-    dimensions = (3, 3)
-
-    name = "sign"
-
-    recipe = (
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-        None,
-        (items["stick"].key, 1),
-        None,
-    )
-    provides = (items["sign"].key, 1)
-
-class Ladder(Recipe):
-
-    dimensions = (3, 3)
-
-    name = "ladder"
-
-    recipe = (
-        (items["stick"].key, 1),
-        None,
-        (items["stick"].key, 1),
-        (items["stick"].key, 1),
-        (items["stick"].key, 1),
-        (items["stick"].key, 1),
-        (items["stick"].key, 1),
-        None,
-        (items["stick"].key, 1),
-    )
-    provides = (blocks["ladder"].key, 2)
-
-class Book(Recipe):
-
-    dimensions = (1, 3)
-
-    name = "book"
-
-    recipe = (
-        (items["paper"].key, 1),
-        (items["paper"].key, 1),
-        (items["paper"].key, 1),
-    )
-    provides = (items["book"].key, 1)
-
-class Fence(Recipe):
-
-    name = "fence"
-
-    dimensions = (3, 2)
-
-    recipe = (
-        (items["stick"].key, 1),
-        (items["stick"].key, 1),
-        (items["stick"].key, 1),
-        (items["stick"].key, 1),
-        (items["stick"].key, 1),
-        (items["stick"].key, 1),
-    )
-    provides = (blocks["fence"].key, 2)
-
-class Bed(Recipe):
-
-    name = "bed"
-
-    dimensions = (3, 2)
-
-    recipe =(
-        (blocks["wool"].key, 1),
-        (blocks["wool"].key, 1),
-        (blocks["wool"].key, 1),
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-    )
-    provides = (blocks["bed"].key, 1)
 
 #--Recipies--
 
@@ -610,8 +378,6 @@ goldhoe = Hoe(items["gold-ingot"], items["gold-hoe"], "gold")
 diamondhoe = Hoe(items["diamond"], items["diamond-hoe"], "diamond")
 clock = ClockCompass(items["iron-ingot"], items["clock"], "clock")
 compass = ClockCompass(items["gold-ingot"], items["compass"], "compass")
-flintandsteel = FlintAndSteel()
-fishingrod = FishingRod()
 bucket = BowlBucket(items["iron-ingot"], items["bucket"], 1, "bucket")
 
 #Weapon
@@ -620,8 +386,6 @@ cstonesword = Sword(blocks["cobblestone"], items["stone-sword"], "stone")
 ironsword = Sword(items["iron-ingot"], items["iron-sword"], "iron")
 goldsword = Sword(items["gold-ingot"], items["gold-sword"], "gold")
 diamondsword = Sword(items["diamond"], items["diamond-sword"], "diamond")
-bow = Bow()
-arrow = Arrow()
 
 #Armor
 leatherhelmet = Helmet(items["leather"], items["leather-helmet"], "leather")
@@ -660,7 +424,6 @@ poweredmc = one_by_two(blocks["furnace"], items["mine-cart"],
     items["powered-minecart"], 1, "poweredmc")
 storagemc = one_by_two(blocks["chest"], items["mine-cart"],
     items["storage-minecart"], 1, "storagemc")
-track = Track()
 boat = CartBoat(blocks["wood"], items["boat"], "boat")
 
 #Mechanism
@@ -680,25 +443,47 @@ noteblock = three_by_three(blocks["wood"], items["redstone"],
     blocks["note-block"], "noteblock")
 jukebox = three_by_three(blocks["wood"], items["diamond"], blocks["jukebox"],
     "jukebox")
-dispenser = Dispenser()
 
 #Food
 bowl = BowlBucket(blocks["wood"], items["bowl"], 4, "bowl")
-shroomsoup = MushroomSoup()
-shroomsoup2 = MushroomSoup2()
 bread = three_by_one(items["wheat"], items["bread"], 1, "bread")
-cake = Cake()
 goldenapple = three_by_three(blocks["gold"], items["apple"],
     items["golden-apple"], "goldapple")
 
 painting = three_by_three(items["stick"], blocks["wool"], items["paintings"],
     "paintings")
-sign = Sign()
-ladder = Ladder()
 papers = three_by_one(blocks["sugar-cane"], items["paper"], 3, "paper")
-book = Book()
-fence = Fence()
-bed = Bed()
+
+# Special items.
+# These recipes are only special in that their blueprints don't follow any
+# interesting or reusable patterns, so they are presented here in a very
+# explicit, open-coded style.
+arrow = Blueprint("arrow", (1, 3),
+    (
+        (items["coal"].key, 1),
+        (items["stick"].key, 1),
+        (items["feather"].key, 1),
+    ),
+    (items["arrow"].key, 4))
+
+bed = Blueprint("bed", (3, 2),
+    (
+        (blocks["wool"].key, 1),
+        (blocks["wool"].key, 1),
+        (blocks["wool"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+    ),
+    (blocks["bed"].key, 1))
+
+book = Blueprint("book", (1, 3),
+    (
+        (items["paper"].key, 1),
+        (items["paper"].key, 1),
+        (items["paper"].key, 1),
+    ),
+    (items["book"].key, 1))
 
 bookshelf = Blueprint("bookshelf", (3, 3),
     (
@@ -714,6 +499,126 @@ bookshelf = Blueprint("bookshelf", (3, 3),
     ),
     (blocks["bookshelf"].key, 1))
 
+bow = Blueprint("bow", (3, 3),
+    (
+        (items["string"].key, 1),
+        (items["stick"].key, 1),
+        None,
+        (items["string"].key, 1),
+        None,
+        (items["stick"].key, 1),
+        (items["string"].key, 1),
+        (items["stick"].key, 1),
+        None,
+    ),
+    (items["bow"].key, 1))
+
+cake = Blueprint("cake", (3, 3),
+    (
+        (items["milk"].key, 1),
+        (items["milk"].key, 1),
+        (items["milk"].key, 1),
+        (items["egg"].key, 1),
+        (items["sugar"].key, 1),
+        (items["egg"].key, 1),
+        (items["wheat"].key, 1),
+        (items["wheat"].key, 1),
+        (items["wheat"].key, 1),
+    ),
+    (items["cake"].key, 1))
+
+dispenser = Blueprint("dispenser", (3, 3),
+    (
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (items["bow"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (items["redstone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+    ),
+    (blocks["dispenser"].key, 1))
+
+fence = Blueprint("fence", (3, 2),
+    (
+        (items["stick"].key, 1),
+        (items["stick"].key, 1),
+        (items["stick"].key, 1),
+        (items["stick"].key, 1),
+        (items["stick"].key, 1),
+        (items["stick"].key, 1),
+    ),
+    (blocks["fence"].key, 2))
+
+fishing_rod = Blueprint("fishing-rod", (3, 3),
+    (
+        None,
+        None,
+        (items["stick"].key, 1),
+        None,
+        (items["stick"].key, 1),
+        (items["string"].key, 1),
+        (items["stick"].key, 1),
+        None,
+        (items["string"].key, 1),
+    ),
+    (items["fishing-rod"].key, 1))
+
+flint = Blueprint("flint-and-steel", (2, 2),
+    (
+        (items["iron-ingot"].key, 1),
+        None,
+        None,
+        (items["flint"].key, 1)
+    ),
+    (items["flint-and-steel"].key, 1))
+
+ladder = Blueprint("ladder", (3, 3),
+    (
+        (items["stick"].key, 1),
+        None,
+        (items["stick"].key, 1),
+        (items["stick"].key, 1),
+        (items["stick"].key, 1),
+        (items["stick"].key, 1),
+        (items["stick"].key, 1),
+        None,
+        (items["stick"].key, 1),
+    ),
+    (blocks["ladder"].key, 2))
+
+mushroom_soup = Blueprint("mushroom-stew", (1, 3),
+    (
+        (blocks["red-mushroom"].key, 1),
+        (blocks["brown-mushroom"].key, 1),
+        (items["bowl"].key, 1),
+    ),
+    (items["mushroom-soup"].key, 1))
+
+mushroom_soup2 = Blueprint("mushroom-stew2", (1, 3),
+    (
+        (blocks["brown-mushroom"].key, 1),
+        (blocks["red-mushroom"].key, 1),
+        (items["bowl"].key, 1),
+    ),
+    (items["mushroom-soup"].key, 1))
+
+sign = Blueprint("sign", (3, 3),
+    (
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        None,
+        (items["stick"].key, 1),
+        None,
+    ),
+    (items["sign"].key, 1))
+
 tnt = Blueprint("tnt", (3, 3),
     (
         (items["sulphur"].key, 1),
@@ -727,3 +632,17 @@ tnt = Blueprint("tnt", (3, 3),
         (items["sulphur"].key, 1),
     ),
     (blocks["tnt"].key, 1))
+
+track = Blueprint("track", (3, 3),
+    (
+        (items["iron-ingot"].key, 1),
+        None,
+        (items["iron-ingot"].key, 1),
+        (items["iron-ingot"].key, 1),
+        (items["stick"].key, 1),
+        (items["iron-ingot"].key, 1),
+        (items["iron-ingot"].key, 1),
+        None,
+        (items["iron-ingot"].key, 1),
+    ),
+    (blocks["tracks"].key, 16))
