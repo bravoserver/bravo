@@ -12,6 +12,7 @@ These modules comprise the core functionality of Bravo.
    factory
    ibravo
    inventory
+   furnace
    location
    packets
    plugin
