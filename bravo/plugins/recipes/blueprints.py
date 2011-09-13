@@ -42,16 +42,16 @@ def three_by_three(outer, inner, provides, name):
     """
 
     blueprint = (
-            (outer.key, 1),
-            (outer.key, 1),
-            (outer.key, 1),
-            (outer.key, 1),
-            (inner.key, 1),
-            (outer.key, 1),
-            (outer.key, 1),
-            (outer.key, 1),
-            (outer.key, 1),
-        )
+        (outer.key, 1),
+        (outer.key, 1),
+        (outer.key, 1),
+        (outer.key, 1),
+        (inner.key, 1),
+        (outer.key, 1),
+        (outer.key, 1),
+        (outer.key, 1),
+        (outer.key, 1),
+    )
 
     return Blueprint(name, (3, 3), blueprint, (provides.key, 1))
 
@@ -61,263 +61,188 @@ def hollow_eight(outer, provides, name):
     """
 
     blueprint = (
-            (outer.key, 1),
-            (outer.key, 1),
-            (outer.key, 1),
-            (outer.key, 1),
-            None,
-            (outer.key, 1),
-            (outer.key, 1),
-            (outer.key, 1),
-            (outer.key, 1),
-        )
+        (outer.key, 1),
+        (outer.key, 1),
+        (outer.key, 1),
+        (outer.key, 1),
+        None,
+        (outer.key, 1),
+        (outer.key, 1),
+        (outer.key, 1),
+        (outer.key, 1),
+    )
 
     return Blueprint(name, (3, 3), blueprint, (provides.key, 1))
 
-class Recipe: pass
+def stairs(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        None,
+        None,
+        (material.key, 1),
+        (material.key, 1),
+        None,
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+    )
 
-class Stairs(Recipe):
+    return Blueprint("%s-stairs" % name, (3, 3), blueprint, (provides.key, 1))
 
-    dimensions = (3, 3)
+# Armor.
+def helmet(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        None,
+        (material.key, 1),
+    )
 
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-stairs" % name
-        self.recipe = (
-            (material.key, 1),
-            None,
-            None,
-            (material.key, 1),
-            (material.key, 1),
-            None,
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-        )
-        self.provides = (provides.key, 1)
+    return Blueprint("%s-helmet" % name, (3, 2), blueprint, (provides.key, 1))
 
-#Armor
-class Helmet(Recipe):
+def chestplate(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        None,
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+    )
 
-    dimensions = (3, 2)
+    return Blueprint("%s-chestplate" % name, (3, 3), blueprint,
+        (provides.key, 1))
 
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-helmet" % name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            None,
-            (material.key, 1),
-        )
-        self.provides = (provides.key, 1)
+def leggings(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        None,
+        (material.key, 1),
+        (material.key, 1),
+        None,
+        (material.key, 1),
+    )
 
-class Chestplate(Recipe):
+    return Blueprint("%s-leggings" % name, (3, 3), blueprint,
+        (provides.key, 1))
 
-    dimensions = (3, 3)
+def boots(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        None,
+        (material.key, 1),
+        (material.key, 1),
+        None,
+        (material.key, 1),
+    )
 
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-chestplate" % name
-        self.recipe = (
-            (material.key, 1),
-            None,
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-        )
-        self.provides = (provides.key, 1)
+    return Blueprint("%s-boots" % name, (3, 2), blueprint, (provides.key, 1))
 
-class Leggings(Recipe):
+# Weaponry.
+def axe(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        (items["stick"].key, 1),
+        None,
+        (items["stick"].key, 1),
+    )
+    return Blueprint("%s-axe" % name, (2, 3), blueprint, (provides.key, 1))
 
-    dimensions = (3, 3)
+def pickaxe(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        None,
+        (items["stick"].key, 1),
+        None,
+        None,
+        (items["stick"].key, 1),
+        None,
+    )
+    return Blueprint("%s-pickaxe" % name, (3, 3), blueprint,
+        (provides.key, 1))
 
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-leggings" % name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            None,
-            (material.key, 1),
-            (material.key, 1),
-            None,
-            (material.key, 1),
-        )
-        self.provides = (provides.key, 1)
+def shovel(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        (items["stick"].key, 1),
+        (items["stick"].key, 1),
+    )
+    return Blueprint("%s-shovel" % name, (1, 3), blueprint, (provides.key, 1))
 
-class Boots(Recipe):
+def hoe(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        (material.key, 1),
+        None,
+        (items["stick"].key, 1),
+        None,
+        (items["stick"].key, 1),
+    )
+    return Blueprint("%s-hoe" % name, (3, 2), blueprint, (provides.key, 1))
 
-    dimensions = (3, 2)
+def sword(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        (material.key, 1),
+        (items["stick"].key, 1),
+    )
+    return Blueprint("%s-sword" % name, (1, 3), blueprint, (provides.key, 1))
 
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-boots" % name
-        self.recipe = (
-            (material.key, 1),
-            None,
-            (material.key, 1),
-            (material.key, 1),
-            None,
-            (material.key, 1),
-        )
-        self.provides = (provides.key, 1)
+def clock_compass(material, provides, name):
+    blueprint = (
+        None,
+        (material.key, 1),
+        None,
+        (material.key, 1),
+        (items["redstone"].key, 1),
+        (material.key, 1),
+        None,
+        (material.key, 1),
+        None,
+    )
 
-#Tools
-class Axe(Recipe):
+    return Blueprint(name, (3, 3), blueprint, (provides.key, 1))
 
-    dimensions = (2, 3)
+def bowl_bucket(material, provides, amount, name):
+    blueprint = (
+        (material.key, 1),
+        None,
+        (material.key, 1),
+        None,
+        (material.key, 1),
+        None,
+    )
+    return Blueprint(name, (3, 2), blueprint, (provides.key, amount))
 
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-axe" % name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (items["stick"].key, 1),
-            None,
-            (items["stick"].key, 1),
-        )
-        self.provides = (provides.key, 1)
+def cart_boat(material, provides, name):
+    blueprint = (
+        (material.key, 1),
+        None,
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+        (material.key, 1),
+    )
+    return Blueprint(name, (3, 2), blueprint, (provides.key, 1))
 
-class Pickaxe(Recipe):
+def door(material, provides, name):
+    return Blueprint("%s-door" % name, (2, 3), ((material.key, 1),) * 6,
+        (provides.key, 1))
 
-    dimensions = (3, 3)
-
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-pickaxe" % name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            None,
-            (items["stick"].key, 1),
-            None,
-            None,
-            (items["stick"].key, 1),
-            None,
-        )
-        self.provides = (provides.key, 1)
-
-class Shovel(Recipe):
-
-    dimensions = (1, 3)
-
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-shovel" % name
-        self.recipe = (
-            (material.key, 1),
-            (items["stick"].key, 1),
-            (items["stick"].key, 1),
-        )
-        self.provides = (provides.key, 1)
-
-class Hoe(Recipe):
-
-    dimensions = (3, 2)
-
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-hoe" % name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            None,
-            (items["stick"].key, 1),
-            None,
-            (items["stick"].key, 1),
-        )
-        self.provides = (provides.key, 1)
-
-class ClockCompass(Recipe):
-
-    dimensions = (3, 3)
-
-    def __init__(self, material, provides, name=None):
-        self.name = name
-        self.recipe = (
-            None,
-            (material.key, 1),
-            None,
-            (material.key, 1),
-            (items["redstone"].key, 1),
-            (material.key, 1),
-            None,
-            (material.key, 1),
-            None,
-        )
-        self.provides = (provides.key, 1)
-
-class BowlBucket(Recipe):
-
-    dimensions = (3, 2)
-
-    def __init__(self, material, provides, amount, name=None):
-        self.name = name
-        self.recipe = (
-            (material.key, 1),
-            None,
-            (material.key, 1),
-            None,
-            (material.key, 1),
-            None,
-        )
-        self.provides = (provides.key, amount)
-
-#Weapons
-class Sword(Recipe):
-
-    dimensions = (1, 3)
-
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-sword" % name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            (items["stick"].key, 1),
-        )
-        self.provides = (provides.key, 1)
-
-#Transportation
-class CartBoat(Recipe):
-    """
-    Cart or boat class.
-    """
-
-    dimensions = (3, 2)
-
-    def __init__(self, material, provides, name=None):
-        self.name = name
-        self.recipe = (
-            (material.key, 1),
-            None,
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-        )
-        self.provides = (provides.key, 1)
-
-#Mechanism
-class Door(Recipe):
-
-    dimensions = (2, 3)
-
-    def __init__(self, material, provides, name=None):
-        self.name = "%s-door" % name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-        )
-        self.provides = (provides.key, 1)
-
-#--Recipies--
+# And now, having defined our helpers, we instantiate all of the recipes, in
+# no particular order.
 
 #Basics
 sticks = one_by_two(blocks["wood"], blocks["wood"], items["stick"], 4, "sticks")
@@ -345,8 +270,8 @@ cstoneslab = three_by_one(blocks["cobblestone"], blocks["cobblestone-step"], 3,
 sstoneslab = three_by_one(blocks["sandstone"], blocks["sandstone-step"], 3,
     "sandstone-step")
 woodenslab = three_by_one(blocks["wood"], blocks["wooden-step"], 3, "wooden-step")
-woodstairs = Stairs(blocks["wood"], blocks["wooden-stairs"], "wood")
-cstonestairs = Stairs(blocks["cobblestone"], blocks["stone-stairs"], "stone")
+woodstairs = stairs(blocks["wood"], blocks["wooden-stairs"], "wood")
+cstonestairs = stairs(blocks["cobblestone"], blocks["stone-stairs"], "stone")
 snowblock = two_by_two(items["snowball"], blocks["snow-block"], "snow-block")
 clayblock = two_by_two(items["clay-balls"], blocks["clay"], "clay-block")
 brick = two_by_two(items["clay-brick"], blocks["brick"], "brick")
@@ -355,80 +280,80 @@ jackolantern = one_by_two(blocks["pumpkin"], items["stick"],
     blocks["jack-o-lantern"], 1, "jack-o-lantern")
 
 #Tools
-woodaxe = Axe(blocks["wood"], items["wooden-axe"], "wood")
-stoneaxe = Axe(blocks["cobblestone"], items["stone-axe"], "stone")
-ironaxe = Axe(items["iron-ingot"], items["iron-axe"], "iron")
-goldaxe = Axe(items["gold-ingot"], items["gold-axe"], "gold")
-diamondaxe = Axe(items["diamond"], items["diamond-axe"], "diamond")
-woodpickaxe = Pickaxe(blocks["wood"], items["wooden-pickaxe"], "wood")
-stonepickaxe = Pickaxe(blocks["cobblestone"], items["stone-pickaxe"], "stone")
-ironpickaxe = Pickaxe(items["iron-ingot"], items["iron-pickaxe"], "iron")
-goldpickaxe = Pickaxe(items["gold-ingot"], items["gold-pickaxe"], "gold")
-diamondpickaxe = Pickaxe(items["diamond"], items["diamond-pickaxe"],
+woodaxe = axe(blocks["wood"], items["wooden-axe"], "wood")
+stoneaxe = axe(blocks["cobblestone"], items["stone-axe"], "stone")
+ironaxe = axe(items["iron-ingot"], items["iron-axe"], "iron")
+goldaxe = axe(items["gold-ingot"], items["gold-axe"], "gold")
+diamondaxe = axe(items["diamond"], items["diamond-axe"], "diamond")
+woodpickaxe = pickaxe(blocks["wood"], items["wooden-pickaxe"], "wood")
+stonepickaxe = pickaxe(blocks["cobblestone"], items["stone-pickaxe"], "stone")
+ironpickaxe = pickaxe(items["iron-ingot"], items["iron-pickaxe"], "iron")
+goldpickaxe = pickaxe(items["gold-ingot"], items["gold-pickaxe"], "gold")
+diamondpickaxe = pickaxe(items["diamond"], items["diamond-pickaxe"],
     "diamond")
-woodshovel = Shovel(blocks["wood"], items["wooden-shovel"], "wood")
-stoneshovel = Shovel(blocks["cobblestone"], items["stone-shovel"], "stone")
-ironshovel = Shovel(items["iron-ingot"], items["iron-shovel"], "iron")
-goldshovel = Shovel(items["gold-ingot"], items["gold-shovel"], "gold")
-diamondshovel = Shovel(items["diamond"], items["diamond-shovel"], "diamond")
-woodhoe = Hoe(blocks["wood"], items["wooden-hoe"], "wood")
-stonehoe = Hoe(blocks["cobblestone"], items["stone-hoe"], "stone")
-ironhoe = Hoe(items["iron-ingot"], items["iron-hoe"], "iron")
-goldhoe = Hoe(items["gold-ingot"], items["gold-hoe"], "gold")
-diamondhoe = Hoe(items["diamond"], items["diamond-hoe"], "diamond")
-clock = ClockCompass(items["iron-ingot"], items["clock"], "clock")
-compass = ClockCompass(items["gold-ingot"], items["compass"], "compass")
-bucket = BowlBucket(items["iron-ingot"], items["bucket"], 1, "bucket")
+woodshovel = shovel(blocks["wood"], items["wooden-shovel"], "wood")
+stoneshovel = shovel(blocks["cobblestone"], items["stone-shovel"], "stone")
+ironshovel = shovel(items["iron-ingot"], items["iron-shovel"], "iron")
+goldshovel = shovel(items["gold-ingot"], items["gold-shovel"], "gold")
+diamondshovel = shovel(items["diamond"], items["diamond-shovel"], "diamond")
+woodhoe = hoe(blocks["wood"], items["wooden-hoe"], "wood")
+stonehoe = hoe(blocks["cobblestone"], items["stone-hoe"], "stone")
+ironhoe = hoe(items["iron-ingot"], items["iron-hoe"], "iron")
+goldhoe = hoe(items["gold-ingot"], items["gold-hoe"], "gold")
+diamondhoe = hoe(items["diamond"], items["diamond-hoe"], "diamond")
+clock = clock_compass(items["iron-ingot"], items["clock"], "clock")
+compass = clock_compass(items["gold-ingot"], items["compass"], "compass")
+bucket = bowl_bucket(items["iron-ingot"], items["bucket"], 1, "bucket")
 
 #Weapon
-woodsword = Sword(blocks["wood"], items["wooden-sword"], "wood")
-cstonesword = Sword(blocks["cobblestone"], items["stone-sword"], "stone")
-ironsword = Sword(items["iron-ingot"], items["iron-sword"], "iron")
-goldsword = Sword(items["gold-ingot"], items["gold-sword"], "gold")
-diamondsword = Sword(items["diamond"], items["diamond-sword"], "diamond")
+woodsword = sword(blocks["wood"], items["wooden-sword"], "wood")
+cstonesword = sword(blocks["cobblestone"], items["stone-sword"], "stone")
+ironsword = sword(items["iron-ingot"], items["iron-sword"], "iron")
+goldsword = sword(items["gold-ingot"], items["gold-sword"], "gold")
+diamondsword = sword(items["diamond"], items["diamond-sword"], "diamond")
 
 #Armor
-leatherhelmet = Helmet(items["leather"], items["leather-helmet"], "leather")
-goldhelmet = Helmet(items["gold-ingot"], items["gold-helmet"], "gold")
-ironhelmet = Helmet(items["iron-ingot"], items["iron-helmet"], "iron")
-diamondhelmet = Helmet(items["diamond"], items["diamond-helmet"], "diamond")
-chainmailhelmet = Helmet(blocks["fire"], items["chainmail-helmet"],
+leatherhelmet = helmet(items["leather"], items["leather-helmet"], "leather")
+goldhelmet = helmet(items["gold-ingot"], items["gold-helmet"], "gold")
+ironhelmet = helmet(items["iron-ingot"], items["iron-helmet"], "iron")
+diamondhelmet = helmet(items["diamond"], items["diamond-helmet"], "diamond")
+chainmailhelmet = helmet(blocks["fire"], items["chainmail-helmet"],
     "chainmail")
-leatherchestplate = Chestplate(items["leather"], items["leather-chestplate"],
+leatherchestplate = chestplate(items["leather"], items["leather-chestplate"],
     "leather")
-goldchestplate = Chestplate(items["gold-ingot"], items["gold-chestplate"],
+goldchestplate = chestplate(items["gold-ingot"], items["gold-chestplate"],
     "gold")
-ironchestplate = Chestplate(items["iron-ingot"], items["iron-chestplate"],
+ironchestplate = chestplate(items["iron-ingot"], items["iron-chestplate"],
     "iron")
-diamondchestplate = Chestplate(items["diamond"], items["diamond-chestplate"],
+diamondchestplate = chestplate(items["diamond"], items["diamond-chestplate"],
     "diamond")
-chainmailchestplate = Chestplate(blocks["fire"],
+chainmailchestplate = chestplate(blocks["fire"],
     items["chainmail-chestplate"], "chainmail")
-leatherLeggings = Leggings(items["leather"], items["leather-leggings"],
+leatherleggings = leggings(items["leather"], items["leather-leggings"],
     "leather")
-goldleggings = Leggings(items["gold-ingot"], items["gold-leggings"], "gold")
-ironleggings = Leggings(items["iron-ingot"], items["iron-leggings"], "iron")
-diamondleggings = Leggings(items["diamond"], items["diamond-leggings"],
+goldleggings = leggings(items["gold-ingot"], items["gold-leggings"], "gold")
+ironleggings = leggings(items["iron-ingot"], items["iron-leggings"], "iron")
+diamondleggings = leggings(items["diamond"], items["diamond-leggings"],
     "diamond")
-chainmailleggings = Leggings(blocks["fire"], items["chainmail-leggings"],
+chainmailleggings = leggings(blocks["fire"], items["chainmail-leggings"],
     "chainmail")
-leatherboots = Boots(items["leather"], items["leather-boots"], "leather")
-goldboots = Boots(items["gold-ingot"], items["gold-boots"], "gold")
-ironboots = Boots(items["iron-ingot"], items["iron-boots"], "iron")
-diamondboots = Boots(items["diamond"], items["diamond-boots"], "diamond")
-chainmailboots = Boots(blocks["fire"], items["chainmail-boots"], "chainmail")
+leatherboots = boots(items["leather"], items["leather-boots"], "leather")
+goldboots = boots(items["gold-ingot"], items["gold-boots"], "gold")
+ironboots = boots(items["iron-ingot"], items["iron-boots"], "iron")
+diamondboots = boots(items["diamond"], items["diamond-boots"], "diamond")
+chainmailboots = boots(blocks["fire"], items["chainmail-boots"], "chainmail")
 
 #Transportation
-minecart = CartBoat(items["iron-ingot"], items["mine-cart"], "minecart")
+minecart = cart_boat(items["iron-ingot"], items["mine-cart"], "minecart")
 poweredmc = one_by_two(blocks["furnace"], items["mine-cart"],
     items["powered-minecart"], 1, "poweredmc")
 storagemc = one_by_two(blocks["chest"], items["mine-cart"],
     items["storage-minecart"], 1, "storagemc")
-boat = CartBoat(blocks["wood"], items["boat"], "boat")
+boat = cart_boat(blocks["wood"], items["boat"], "boat")
 
 #Mechanism
-wooddoor = Door(blocks["wood"], items["wooden-door"], "wood")
-irondoor = Door(items["iron-ingot"], items["iron-door"], "iron")
+wooddoor = door(blocks["wood"], items["wooden-door"], "wood")
+irondoor = door(items["iron-ingot"], items["iron-door"], "iron")
 woodpressure = two_by_one(blocks["wood"], blocks["wooden-plate"], 1,
     "wood-plate")
 stonepressure = two_by_one(blocks["stone"], blocks["stone-plate"], 1,
@@ -445,7 +370,7 @@ jukebox = three_by_three(blocks["wood"], items["diamond"], blocks["jukebox"],
     "jukebox")
 
 #Food
-bowl = BowlBucket(blocks["wood"], items["bowl"], 4, "bowl")
+bowl = bowl_bucket(blocks["wood"], items["bowl"], 4, "bowl")
 bread = three_by_one(items["wheat"], items["bread"], 1, "bread")
 goldenapple = three_by_three(blocks["gold"], items["apple"],
     items["golden-apple"], "goldapple")
