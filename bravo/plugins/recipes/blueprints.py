@@ -9,107 +9,72 @@ def one_by_two(top, bottom, provides, amount, name):
     return Blueprint(name, (1, 2), ((top.key, 1), (bottom.key,1)),
         (provides.key, amount))
 
-class Recipe: pass
+def two_by_one(material, provides, amount, name):
+    """
+    A simple recipe with a pair of blocks next to each other.
+    """
 
-class TwoByTwo(Recipe):
+    return Blueprint(name, (2, 1), ((material.key, 1),) * 2,
+        (provides.key, amount))
 
-    dimensions = (2, 2)
+def three_by_one(material, provides, amount, name):
+    """
+    A slightly involved recipe which looks a lot like Jenga, with blocks on
+    top of blocks on top of blocks.
+    """
 
-    def __init__(self, material, provides, name=None):
-        self.name = name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
+    return Blueprint(name, (3, 1), ((material.key, 1),) * 3,
+        (provides.key, amount))
+
+def two_by_two(material, provides, name):
+    """
+    A recipe involving turning four of one thing, into one of another thing.
+    """
+
+    return Blueprint(name, (2, 2), ((material.key, 1),) * 4,
+        (provides.key, 1))
+
+def three_by_three(outer, inner, provides, name):
+    """
+    A recipe which requires a single inner block surrounded by other blocks.
+
+    Think of it as like a chocolate-covered morsel.
+    """
+
+    blueprint = (
+            (outer.key, 1),
+            (outer.key, 1),
+            (outer.key, 1),
+            (outer.key, 1),
+            (inner.key, 1),
+            (outer.key, 1),
+            (outer.key, 1),
+            (outer.key, 1),
+            (outer.key, 1),
         )
-        self.provides = (provides.key, 1)
 
-class ChestFurnace(Recipe):
+    return Blueprint(name, (3, 3), blueprint, (provides.key, 1))
 
-    dimensions = (3, 3)
+def hollow_eight(outer, provides, name):
+    """
+    A recipe which requires an empty inner block surrounded by other blocks.
+    """
 
-    def __init__(self, material, provides, name=None):
-        self.name = name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
+    blueprint = (
+            (outer.key, 1),
+            (outer.key, 1),
+            (outer.key, 1),
+            (outer.key, 1),
             None,
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
+            (outer.key, 1),
+            (outer.key, 1),
+            (outer.key, 1),
+            (outer.key, 1),
         )
-        self.provides = (provides.key, 1)
 
+    return Blueprint(name, (3, 3), blueprint, (provides.key, 1))
 
-class ThreeByThree(Recipe):
-    """
-    A 3x3 recipe with a changeable center.
-    """
-
-    dimensions = (3, 3)
-
-    def __init__(self, material, center, provides, name=None):
-        self.name = name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (center.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-        )
-        self.provides = (provides.key, 1)
-
-class TNT(Recipe):
-
-    dimensions = (3, 3)
-
-    name = "tnt"
-
-    recipe = (
-        (items["sulphur"].key, 1),
-        (blocks["sand"].key, 1),
-        (items["sulphur"].key, 1),
-        (blocks["sand"].key, 1),
-        (items["sulphur"].key, 1),
-        (blocks["sand"].key, 1),
-        (items["sulphur"].key, 1),
-        (blocks["sand"].key, 1),
-        (items["sulphur"].key, 1),
-    )
-    provides = (blocks["tnt"].key, 1)
-
-class TwoByOne(Recipe):
-
-    dimensions = (2, 1)
-
-    def __init__(self, material, provides, amount, name=None):
-        self.name = name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-        )
-        self.provides = (provides.key, amount)
-
-class ThreeByOne(Recipe):
-
-    dimensions = (3, 1)
-
-    def __init__(self, material, provides, amount, name=None):
-        self.name = name
-        self.recipe = (
-            (material.key, 1),
-            (material.key, 1),
-            (material.key, 1),
-        )
-        self.provides = (provides.key, amount)
+class Recipe: pass
 
 class Stairs(Recipe):
 
@@ -129,25 +94,6 @@ class Stairs(Recipe):
             (material.key, 1),
         )
         self.provides = (provides.key, 1)
-
-class Bookshelf(Recipe):
-
-    dimensions = (3, 3)
-
-    name = "bookshelf"
-
-    recipe = (
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-        (items["book"].key, 1),
-        (items["book"].key, 1),
-        (items["book"].key, 1),
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-        (blocks["wood"].key, 1),
-    )
-    provides = (blocks["bookshelf"].key, 1)
 
 #Armor
 class Helmet(Recipe):
@@ -609,36 +555,34 @@ class Bed(Recipe):
 sticks = one_by_two(blocks["wood"], blocks["wood"], items["stick"], 4, "sticks")
 torches = one_by_two(items["coal"], items["stick"], blocks["torch"], 4,
     "torches")
-workbench = TwoByTwo(blocks["wood"], blocks["workbench"], "workbench")
-furnace = ChestFurnace(blocks["cobblestone"], blocks["furnace"], "furnace")
-chest = ChestFurnace(blocks["wood"], blocks["chest"], "chest")
+workbench = two_by_two(blocks["wood"], blocks["workbench"], "workbench")
+furnace = hollow_eight(blocks["cobblestone"], blocks["furnace"], "furnace")
+chest = hollow_eight(blocks["wood"], blocks["chest"], "chest")
 
 #Block
-ironblock = ThreeByThree(items["iron-ingot"], items["iron-ingot"],
+ironblock = three_by_three(items["iron-ingot"], items["iron-ingot"],
     blocks["iron"], "iron-block")
-goldblock = ThreeByThree(items["gold-ingot"], items["gold-ingot"],
+goldblock = three_by_three(items["gold-ingot"], items["gold-ingot"],
     blocks["gold"], "gold-block")
-diamondblock = ThreeByThree(items["diamond"], items["diamond"],
+diamondblock = three_by_three(items["diamond"], items["diamond"],
     blocks["diamond"], "diamond-block")
-glowstone = ThreeByThree(items["glowstone-dust"], items["glowstone-dust"],
+glowstone = three_by_three(items["glowstone-dust"], items["glowstone-dust"],
     blocks["lightstone"], "lightstone")
-lazuliblock = ThreeByThree(items["lapis-lazuli"], items["lapis-lazuli"],
+lazuliblock = three_by_three(items["lapis-lazuli"], items["lapis-lazuli"],
     blocks["lapis-lazuli"], "lapis-lazuli-block")
-wool = ThreeByThree(items["string"], items["string"], blocks["wool"], "wool")
-tnt = TNT()
-stoneslab = ThreeByOne(blocks["stone"], blocks["stone-step"], 3, "stone-step")
-cstoneslab = ThreeByOne(blocks["cobblestone"], blocks["cobblestone-step"], 3,
+wool = three_by_three(items["string"], items["string"], blocks["wool"], "wool")
+stoneslab = three_by_one(blocks["stone"], blocks["stone-step"], 3, "stone-step")
+cstoneslab = three_by_one(blocks["cobblestone"], blocks["cobblestone-step"], 3,
     "cobblestone-step")
-sstoneslab = ThreeByOne(blocks["sandstone"], blocks["sandstone-step"], 3,
+sstoneslab = three_by_one(blocks["sandstone"], blocks["sandstone-step"], 3,
     "sandstone-step")
-woodenslab = ThreeByOne(blocks["wood"], blocks["wooden-step"], 3, "wooden-step")
+woodenslab = three_by_one(blocks["wood"], blocks["wooden-step"], 3, "wooden-step")
 woodstairs = Stairs(blocks["wood"], blocks["wooden-stairs"], "wood")
 cstonestairs = Stairs(blocks["cobblestone"], blocks["stone-stairs"], "stone")
-snowblock = TwoByTwo(items["snowball"], blocks["snow-block"], "snow-block")
-clayblock = TwoByTwo(items["clay-balls"], blocks["clay"], "clay-block")
-brick = TwoByTwo(items["clay-brick"], blocks["brick"], "brick")
-bookshelf = Bookshelf()
-sandstone = TwoByTwo(blocks["sand"], blocks["sandstone"], "sandstone")
+snowblock = two_by_two(items["snowball"], blocks["snow-block"], "snow-block")
+clayblock = two_by_two(items["clay-balls"], blocks["clay"], "clay-block")
+brick = two_by_two(items["clay-brick"], blocks["brick"], "brick")
+sandstone = two_by_two(blocks["sand"], blocks["sandstone"], "sandstone")
 jackolantern = one_by_two(blocks["pumpkin"], items["stick"],
     blocks["jack-o-lantern"], 1, "jack-o-lantern")
 
@@ -722,9 +666,9 @@ boat = CartBoat(blocks["wood"], items["boat"], "boat")
 #Mechanism
 wooddoor = Door(blocks["wood"], items["wooden-door"], "wood")
 irondoor = Door(items["iron-ingot"], items["iron-door"], "iron")
-woodpressure = TwoByOne(blocks["wood"], blocks["wooden-plate"], 1,
+woodpressure = two_by_one(blocks["wood"], blocks["wooden-plate"], 1,
     "wood-plate")
-stonepressure = TwoByOne(blocks["stone"], blocks["stone-plate"], 1,
+stonepressure = two_by_one(blocks["stone"], blocks["stone-plate"], 1,
     "stone-plate")
 stonebtn = one_by_two(blocks["stone"], blocks["stone"], blocks["stone-button"],
     1, "stone-btn")
@@ -732,9 +676,9 @@ redstonetorch = one_by_two(items["redstone"], items["stick"],
     blocks["redstone-torch"], 1, "redstone-torch")
 lever = one_by_two(items["stick"], blocks["cobblestone"], blocks["lever"], 1,
     "lever")
-noteblock = ThreeByThree(blocks["wood"], items["redstone"],
+noteblock = three_by_three(blocks["wood"], items["redstone"],
     blocks["note-block"], "noteblock")
-jukebox = ThreeByThree(blocks["wood"], items["diamond"], blocks["jukebox"],
+jukebox = three_by_three(blocks["wood"], items["diamond"], blocks["jukebox"],
     "jukebox")
 dispenser = Dispenser()
 
@@ -742,16 +686,44 @@ dispenser = Dispenser()
 bowl = BowlBucket(blocks["wood"], items["bowl"], 4, "bowl")
 shroomsoup = MushroomSoup()
 shroomsoup2 = MushroomSoup2()
-bread = ThreeByOne(items["wheat"], items["bread"], 1, "bread")
+bread = three_by_one(items["wheat"], items["bread"], 1, "bread")
 cake = Cake()
-goldenapple = ThreeByThree(blocks["gold"], items["apple"],
+goldenapple = three_by_three(blocks["gold"], items["apple"],
     items["golden-apple"], "goldapple")
 
-painting = ThreeByThree(items["stick"], blocks["wool"], items["paintings"],
+painting = three_by_three(items["stick"], blocks["wool"], items["paintings"],
     "paintings")
 sign = Sign()
 ladder = Ladder()
-papers = ThreeByOne(blocks["sugar-cane"], items["paper"], 3, "paper")
+papers = three_by_one(blocks["sugar-cane"], items["paper"], 3, "paper")
 book = Book()
 fence = Fence()
 bed = Bed()
+
+bookshelf = Blueprint("bookshelf", (3, 3),
+    (
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (items["book"].key, 1),
+        (items["book"].key, 1),
+        (items["book"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+    ),
+    (blocks["bookshelf"].key, 1))
+
+tnt = Blueprint("tnt", (3, 3),
+    (
+        (items["sulphur"].key, 1),
+        (blocks["sand"].key, 1),
+        (items["sulphur"].key, 1),
+        (blocks["sand"].key, 1),
+        (items["sulphur"].key, 1),
+        (blocks["sand"].key, 1),
+        (items["sulphur"].key, 1),
+        (blocks["sand"].key, 1),
+        (items["sulphur"].key, 1),
+    ),
+    (blocks["tnt"].key, 1))
