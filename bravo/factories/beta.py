@@ -135,6 +135,10 @@ class BravoFactory(Factory):
         for automaton in self.automatons:
             automaton.stop()
 
+        # Evict plugins as soon as possible. Can't be done before stopping
+        # automatons.
+        self.unregister_plugins()
+
         self.time_loop.stop()
         self.entity_loop.stop()
         self.furnace_manager.stop()
@@ -267,6 +271,24 @@ class BravoFactory(Factory):
         for plugin in uh:
             for target in plugin.targets:
                 self.use_hooks[target].append(plugin)
+
+    def unregister_plugins(self):
+        log.msg("Unregistering client plugin hooks...")
+
+        for name in [
+            "automatons",
+            "generators",
+            "seasons",
+            "open_hooks",
+            "click_hooks",
+            "close_hooks",
+            "pre_build_hooks",
+            "post_build_hooks",
+            "dig_hooks",
+            "sign_hooks",
+            "use_hooks",
+            ]:
+            delattr(self, name)
 
     def create_entity(self, x, y, z, name, **kwargs):
         """
