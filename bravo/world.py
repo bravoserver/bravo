@@ -73,6 +73,14 @@ class World(object):
     exactly one file on disk. Worlds also contain saved player data.
     """
 
+    factory = None
+    """
+    The factory managing this world.
+
+    Worlds do not need to be owned by a factory, but will not callback to
+    surrounding objects without an owner.
+    """
+
     season = None
     """
     The current `ISeason`.
@@ -296,6 +304,11 @@ class World(object):
         # Thus, it should start out undamaged.
         chunk.clear_damage()
 
+        # Skip some of the spendier scans if we have no factory; for example,
+        # if we are generating chunks offline.
+        if not self.factory:
+            return chunk
+
         # Register the chunk's entities with our parent factory.
         for entity in chunk.entities:
             self.factory.register_entity(entity)
@@ -333,7 +346,8 @@ class World(object):
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
             self.postprocess_chunk(chunk)
-            self.factory.scan_chunk(chunk)
+            if self.factory:
+                self.factory.scan_chunk(chunk)
             returnValue(chunk)
 
         if self.async:
@@ -377,7 +391,8 @@ class World(object):
         # This one is for our return value.
         retval = pe.deferred()
         # This one is for scanning the chunk for automatons.
-        pe.deferred().addCallback(self.factory.scan_chunk)
+        if self.factory:
+            pe.deferred().addCallback(self.factory.scan_chunk)
         self._pending_chunks[x, z] = pe
 
         def pp(chunk):
