@@ -1,6 +1,6 @@
 from twisted.web.resource import Resource
 from twisted.web.server import Site, NOT_DONE_YET
-from twisted.web.template import flattenString, renderer, tags, Element, XMLString
+from twisted.web.template import flatten, renderer, tags, Element, XMLString
 
 from bravo import version
 from bravo.factories.beta import BravoFactory
@@ -120,12 +120,16 @@ class BravoResource(Resource):
         self.isLeaf = isLeaf
 
     def render_GET(self, request):
-        d = flattenString(request, self.element)
+        def write(s):
+            if not request._disconnected:
+                request.write(s)
+
+        d = flatten(request, self.element, write)
+        @d.addCallback
         def complete_request(html):
             if not request._disconnected:
-                request.write(html)
                 request.finish()
-        d.addCallback(complete_request)
+
         return NOT_DONE_YET
 
 def bravo_site(services):
