@@ -20,13 +20,8 @@ class Circuit(object):
     inputs, their outputs, and how to update themselves.
     """
 
-    __slots__ = (
-        "inputs",
-        "outputs",
-        "status",
-    )
-
     def __init__(self, coordinates):
+        self.coords = coordinates
         self.inputs = set()
         self.outputs = set()
 
@@ -45,6 +40,18 @@ class Circuit(object):
     def to_block(self, block, metadata):
         return truthify_block(self.status, block, metadata)
 
+class Wire(object):
+    """
+    The ubiquitous conductor of current.
+    """
+
+    name = "wire"
+
+    def __init__(self, coordinates):
+        self.coords = set([coordinates])
+        self.inputs = set()
+        self.outputs = set()
+
 class PlainBlock(Circuit):
     """
     Any block which doesn't contain redstone. Traditionally, a sand block, but
@@ -52,6 +59,8 @@ class PlainBlock(Circuit):
 
     Plain blocks do an OR operation across their inputs.
     """
+
+    name = "plain"
 
     op = staticmethod(any)
 
@@ -61,6 +70,8 @@ class Torch(Circuit):
 
     Torches do a NOT operation from their input.
     """
+
+    name = "torch"
 
     op = staticmethod(operator.not_)
 
