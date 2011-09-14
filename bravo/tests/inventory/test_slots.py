@@ -57,7 +57,6 @@ class TestCraftingWood(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, 0)
         self.assertEqual(self.i.crafted[0],
             (bravo.blocks.blocks["wood"].slot, 0, 4))
 
@@ -75,7 +74,6 @@ class TestCraftingWood(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, 1)
 
 class TestCraftingSticks(unittest.TestCase):
     """
@@ -95,7 +93,6 @@ class TestCraftingSticks(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, 0)
         self.assertEqual(self.i.crafted[0],
             (bravo.blocks.items["stick"].slot, 0, 4))
 
@@ -115,7 +112,6 @@ class TestCraftingSticks(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, 1)
 
 class TestCraftingTorches(unittest.TestCase):
     """
@@ -138,7 +134,6 @@ class TestCraftingTorches(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, 0)
         self.assertEqual(self.i.crafted[0],
             (bravo.blocks.blocks["torch"].slot, 0, 4))
 
@@ -158,7 +153,6 @@ class TestCraftingTorches(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, 1)
 
 class TestWorkbenchInternals(unittest.TestCase):
     def setUp(self):
@@ -191,7 +185,6 @@ class TestCraftingShovel(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, 0)
         self.assertEqual(self.i.crafted[0],
             (bravo.blocks.items["stone-shovel"].slot, 0, 1))
 
@@ -213,7 +206,6 @@ class TestCraftingShovel(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, 1)
 
 class TestCraftingFurnace(unittest.TestCase):
     """
@@ -243,7 +235,6 @@ class TestCraftingFurnace(unittest.TestCase):
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
-        self.assertEqual(self.i.recipe_offset, 0)
         self.assertEqual(self.i.crafted[0],
             (bravo.blocks.blocks["furnace"].slot, 0, 1))
 

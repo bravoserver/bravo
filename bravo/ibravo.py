@@ -171,55 +171,34 @@ class ChatToConsole(object):
 
 registerAdapter(ChatToConsole, IChatCommand, IConsoleCommand)
 
-def recipe_invariant(r):
-    # Size invariant.
-    if len(r.recipe) != r.dimensions[0] * r.dimensions[1]:
-        raise InvariantException("Recipe size is invalid")
-
 class IRecipe(IBravoPlugin):
     """
-    Recipe for crafting materials from other materials.
+    A description for creating materials from other materials.
     """
 
-    invariant(recipe_invariant)
+    def matches(table, stride):
+        """
+        Determine whether a given crafting table matches this recipe.
 
-    dimensions = Attribute("""
-        Tuple representing the size of the recipe.
-        """)
+        ``table`` is a list of slots.
+        ``stride`` is the stride of the table.
 
-    recipe = Attribute("""
-        Tuple representing the items of the recipe.
+        :returns: bool
+        """
 
-        Recipes need to be filled out left-to-right, top-to-bottom, with one
-        of two things:
+    def reduce(table, stride):
+        """
+        Remove items from a given crafting table corresponding to a single
+        match of this recipe. The table is modified in-place.
 
-         * A tuple (slot, count) for the item/block that needs to be present;
-         * None, if the slot needs to be empty.
-        """)
+        This method is meant to be used to subtract items from a crafting
+        table following a successful recipe match.
 
-    provides = Attribute("""
-        Tuple representing the yield of this recipe.
+        This method may assume that this recipe ``matches()`` the table.
 
-        This tuple must be of the format (slot, count).
-        """)
-
-def straight_recipe_invariant(sr):
-    # Sorted invariant.
-    if sorted(sr.ingredients) != list(sr.ingredients):
-        raise InvariantException("Recipe is not sorted")
-
-class IStraightRecipe(IBravoPlugin):
-    """
-    Recipe for crafting materials that do not have any stable form
-    and is just a list of ingredients (like dye and colored wool).
-    """
-
-    ingredients = Attribute("""
-        Tuple representing the items of the recipe.
-
-        A tuple (slot, count) for the item/block that needs to be present.
-        These ingredients must be sorted.
-        """)
+        ``table`` is a list of slots.
+        ``stride`` is the stride of the table.
+        """
 
     provides = Attribute("""
         Tuple representing the yield of this recipe.
