@@ -7,7 +7,7 @@ from PIL import Image
 
 from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
-from twisted.web.template import flattenString, renderer, tags, Element
+from twisted.web.template import flattenString, renderer, Element
 from twisted.web.template import XMLString, XMLFile
 from twisted.web.http import datetimeToString
 
@@ -153,6 +153,52 @@ automaton_stats_template = """
 </html>
 """
 
+class AutomatonElement(Element):
+    """
+    An automaton.
+    """
+
+    loader = XMLString("""
+        <div xmlns:t="http://twistedmatrix.com/ns/twisted.web.template/0.1">
+            <h2 t:render="name" />
+            <ul>
+                <li t:render="tracked" />
+                <li t:render="step" />
+            </ul>
+        </div>
+    """)
+
+    def __init__(self, automaton):
+        Element.__init__(self)
+        self.automaton = automaton
+
+    @renderer
+    def name(self, request, tag):
+        return tag(self.automaton.name)
+
+    @renderer
+    def tracked(self, request, tag):
+        if hasattr(self.automaton, "tracked"):
+            t = self.automaton.tracked
+            if isinstance(t, dict):
+                l = sum(len(i) for i in t.values())
+            else:
+                l = len(t)
+            s = "Currently tracking %d blocks" % l
+        else:
+            s = "<n/a>"
+
+        return tag(s)
+
+    @renderer
+    def step(self, request, tag):
+        if hasattr(self.automaton, "step"):
+            s = "Currently processing every %f seconds" % self.automaton.step
+        else:
+            s = "<n/a>"
+
+        return tag(s)
+
 class AutomatonStatsElement(Element):
     """
     Render some information about automatons.
@@ -162,26 +208,7 @@ class AutomatonStatsElement(Element):
 
     @renderer
     def main(self, request, tag):
-        retval = []
-        for automaton in factory.automatons:
-            title = tags.h2(automaton.name)
-            stats = []
-
-            # Discover tracked information.
-            if hasattr(automaton, "tracked"):
-                t = automaton.tracked
-                if isinstance(t, dict):
-                    l = sum(len(i) for i in t.values())
-                else:
-                    l = len(t)
-                stats.append(tags.li("Currently tracking %d blocks" % l))
-
-            if hasattr(automaton, "step"):
-                stats.append(tags.li("Currently processing every %f seconds" %
-                    automaton.step))
-
-            retval.append(tags.div(title, tags.ul(stats)))
-        return tags.div(*retval)
+        return tag(*(AutomatonElement(a) for a in factory.automatons))
 
 class AutomatonStats(Resource):
 
