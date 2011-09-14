@@ -403,7 +403,7 @@ wool_names = [
     "magenta-wool",
     "light-blue-wool",
     "yellow-wool",
-    "light-green-wool",
+    "lime-wool",
     "pink-wool",
     "gray-wool",
     "light-gray-wool",
