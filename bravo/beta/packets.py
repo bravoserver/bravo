@@ -1,10 +1,9 @@
 from collections import namedtuple
-import functools
 
 from construct import Struct, Container, Embed, Enum, MetaField
 from construct import MetaArray, If, Switch, Const, Peek
 from construct import OptionalGreedyRange, RepeatUntil
-from construct import PascalString, Adapter
+from construct import Flag, PascalString, Adapter
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
 from construct import SBInt8, SBInt16, SBInt32, SBInt64
 from construct import BFloat32, BFloat64
@@ -36,10 +35,9 @@ def AlphaString(name):
         encoding="ucs2",
     )
 
-# This one is a UTF8 string, which almost exactly handles writeUTF().
-UTFString = functools.partial(PascalString,
-    length_field=UBInt16("length"),
-    encoding="utf8")
+# Boolean converter.
+def Bool(*args, **kwargs):
+    return Flag(*args, default=True, **kwargs)
 
 # Flying, position, and orientation, reused in several places.
 grounded = Struct("grounded", UBInt8("grounded"))
@@ -394,7 +392,12 @@ packets = {
     ),
     38: Struct("status",
         UBInt32("eid"),
-        UBInt8("unknown1"),
+        Enum(UBInt8("status"),
+            damaged=2,
+            killed=3,
+            unknown1=4,
+            unknown2=5,
+        ),
     ),
     39: Struct("attach",
         UBInt32("eid"),
@@ -424,7 +427,7 @@ packets = {
     50: Struct("prechunk",
         SBInt32("x"),
         SBInt32("z"),
-        UBInt8("enabled"),
+        Bool("enabled"),
     ),
     51: Struct("chunk",
         SBInt32("x"),
@@ -464,12 +467,12 @@ packets = {
         UBInt8("pitch"),
     ),
     60: Struct("explosion",
-        BFloat64("unknown1"),
-        BFloat64("unknown2"),
-        BFloat64("unknown3"),
-        BFloat32("unknown4"),
+        BFloat64("x"),
+        BFloat64("y"),
+        BFloat64("z"),
+        BFloat32("radius"),
         UBInt32("count"),
-        MetaField("unknown5", lambda context: context["count"] * 3),
+        MetaField("blocks", lambda context: context["count"] * 3),
     ),
     61: Struct("sound",
         Enum(UBInt32("sid"),
@@ -498,7 +501,7 @@ packets = {
     ),
     71: Struct("thunderbolt",
         UBInt32("eid"),
-        UBInt8("unknown"),
+        Bool("unknown"),
         SBInt32("x"),
         SBInt32("y"),
         SBInt32("z"),
@@ -543,7 +546,7 @@ packets = {
     106: Struct("window-token",
         UBInt8("wid"),
         UBInt16("token"),
-        UBInt8("acknowledged"),
+        Bool("acknowledged"),
     ),
     107: Struct("window-quick",
         UBInt16("slot"),
@@ -561,8 +564,8 @@ packets = {
         AlphaString("line4"),
     ),
     131: Struct("map",
-        UBInt16("unknown1"),
-        UBInt16("unknown2"),
+        UBInt16("primary"),
+        UBInt16("secondary"),
         PascalString("data", length_field=UBInt8("length")),
     ),
     200: Struct("statistics",
@@ -571,7 +574,7 @@ packets = {
     ),
     201: Struct("players",
         AlphaString("name"),
-        UBInt8("online"),
+        Bool("online"),
         UBInt16("ping"),
     ),
     255: Struct("error",
