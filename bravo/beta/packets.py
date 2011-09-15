@@ -16,7 +16,7 @@ DUMP_ALL_PACKETS = False
 # Strings.
 # This one is a UCS2 string, which effectively decodes single writeChar()
 # invocations. We need to import the encoding for it first, though.
-from bravo.packets.encodings import ucs2
+from bravo.encodings import ucs2
 from codecs import register
 register(ucs2)
 
