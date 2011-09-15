@@ -7,7 +7,7 @@ from twisted.python import log
 from bravo.inventory import Inventory
 from bravo.inventory.slots import ChestStorage, FurnaceStorage
 from bravo.location import Location
-from bravo.packets.beta import make_packet
+from bravo.beta.packets import make_packet
 from bravo.utilities.coords import split_coords
 from bravo.utilities.geometry import gen_close_point
 

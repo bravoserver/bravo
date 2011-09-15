@@ -4,7 +4,6 @@ from twisted.trial import unittest
 import bravo.blocks
 import bravo.ibravo
 import bravo.plugin
-import bravo.protocols.beta
 
 class CommandsMockFactory(object):
 

@@ -1,4 +1,4 @@
-from bravo.packets.beta import make_packet
+from bravo.beta.packets import make_packet
 
 class WeatherVane(object):
     """

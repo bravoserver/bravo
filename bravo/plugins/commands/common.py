@@ -8,7 +8,7 @@ from bravo.config import configuration
 from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
 from bravo.plugin import (retrieve_plugins, retrieve_named_plugins,
     PluginException)
-from bravo.packets.beta import make_packet
+from bravo.beta.packets import make_packet
 from bravo.utilities.temporal import split_time
 
 from bravo.parameters import factory

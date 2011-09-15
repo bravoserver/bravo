@@ -1,6 +1,6 @@
 from bravo.ibravo import IRecipe
 from bravo.plugin import retrieve_plugins
-from bravo.packets.beta import make_packet
+from bravo.beta.packets import make_packet
 from bravo.inventory import Slot, SerializableSlots
 
 # XXX I am completely undocumented and untested; is this any way to go through

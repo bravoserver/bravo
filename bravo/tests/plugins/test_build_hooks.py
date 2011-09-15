@@ -3,10 +3,10 @@ from twisted.trial import unittest
 
 from twisted.internet.defer import inlineCallbacks, succeed
 
+from bravo.beta.protocol import BuildData
 import bravo.blocks
 from bravo.ibravo import IPreBuildHook
 import bravo.plugin
-import bravo.protocols.beta
 
 class TileMockFactory(object):
 
@@ -40,10 +40,7 @@ class TestTile(unittest.TestCase):
 
     @inlineCallbacks
     def test_sign(self):
-        builddata = bravo.protocols.beta.BuildData(
-            bravo.blocks.items["sign"],
-            0, 0, 0, 0, "+x"
-        )
+        builddata = BuildData(bravo.blocks.items["sign"], 0, 0, 0, 0, "+x")
         success, newdata, cancel = yield self.hook.pre_build_hook(None, builddata)
         self.assertTrue(success)
         self.assertFalse(cancel)
@@ -55,10 +52,7 @@ class TestTile(unittest.TestCase):
     def test_sign_floor(self):
         player = bravo.entity.Player()
 
-        builddata = bravo.protocols.beta.BuildData(
-            bravo.blocks.items["sign"],
-            0, 0, 0, 0, "+y"
-        )
+        builddata = BuildData(bravo.blocks.items["sign"], 0, 0, 0, 0, "+y")
         success, newdata, cancel = yield self.hook.pre_build_hook(player, builddata)
         self.assertTrue(success)
         self.assertFalse(cancel)
@@ -71,10 +65,7 @@ class TestTile(unittest.TestCase):
         player = bravo.entity.Player()
         player.location.yaw = 42
 
-        builddata = bravo.protocols.beta.BuildData(
-            bravo.blocks.items["sign"],
-            0, 0, 0, 0, "+y"
-        )
+        builddata = BuildData(bravo.blocks.items["sign"], 0, 0, 0, 0, "+y")
         success, newdata, cancel = yield self.hook.pre_build_hook(player, builddata)
         self.assertTrue(success)
         self.assertFalse(cancel)
@@ -90,10 +81,7 @@ class TestTile(unittest.TestCase):
         Using ladders because of #89.
         """
 
-        builddata = bravo.protocols.beta.BuildData(
-            bravo.blocks.blocks["ladder"],
-            0, 0, 0, 0, "+x"
-        )
+        builddata = BuildData(bravo.blocks.blocks["ladder"], 0, 0, 0, 0, "+x")
         success, newdata, cancel = yield self.hook.pre_build_hook(None, builddata)
         self.assertTrue(success)
         self.assertFalse(cancel)

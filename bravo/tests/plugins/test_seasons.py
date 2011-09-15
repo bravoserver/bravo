@@ -4,7 +4,6 @@ import bravo.blocks
 import bravo.chunk
 import bravo.ibravo
 import bravo.plugin
-import bravo.protocols.beta
 
 class TestWinter(unittest.TestCase):
 

@@ -5,8 +5,8 @@ from twisted.internet.task import deferLater
 
 from construct import Container
 
+from bravo.beta.protocol import BetaServerProtocol, BravoProtocol
 from bravo.errors import BetaClientError
-import bravo.protocols.beta
 
 class FakeTransport(object):
 
@@ -22,7 +22,7 @@ class FakeTransport(object):
 class TestBetaServerProtocol(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.protocols.beta.BetaServerProtocol()
+        self.p = BetaServerProtocol()
         self.p.transport = FakeTransport()
 
     def tearDown(self):
@@ -132,7 +132,7 @@ class TestBetaServerProtocol(unittest.TestCase):
 class TestBravoProtocol(unittest.TestCase):
 
     def setUp(self):
-        self.p = bravo.protocols.beta.BravoProtocol("unittest")
+        self.p = BravoProtocol("unittest")
 
     def tearDown(self):
         if self.p._TimeoutMixin__timeoutCall:

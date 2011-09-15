@@ -4,7 +4,7 @@ from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.location import Location
-from bravo.packets.beta import make_packet
+from bravo.beta.packets import make_packet
 from bravo.ibravo import IWindowOpenHook, IWindowClickHook, IWindowCloseHook, IDigHook
 from bravo.inventory.windows import WorkbenchWindow, ChestWindow, LargeChestWindow, FurnaceWindow
 from bravo.entity import Chest as ChestTile, Furnace as FurnaceTile

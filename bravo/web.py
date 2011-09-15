@@ -3,7 +3,7 @@ from twisted.web.server import Site, NOT_DONE_YET
 from twisted.web.template import flatten, renderer, tags, Element, XMLString
 
 from bravo import version
-from bravo.factories.beta import BravoFactory
+from bravo.beta.factory import BravoFactory
 from bravo.ibravo import IWorldResource
 from bravo.plugin import retrieve_plugins
 

@@ -25,7 +25,7 @@ from bravo.infini.factory import InfiniClientFactory
 from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location
 from bravo.motd import get_motd
-from bravo.packets.beta import parse_packets, make_packet, make_error_packet
+from bravo.beta.packets import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import adjust_coords_for_face, split_coords

@@ -6,7 +6,7 @@ from twisted.internet.task import Clock
 from twisted.trial import unittest
 
 import bravo.config
-import bravo.factories.beta
+from bravo.beta.factory import BravoFactory
 
 class MockProtocol(object):
 
@@ -25,7 +25,7 @@ class TestBravoFactory(unittest.TestCase):
         bravo.config.configuration.add_section("world unittest")
         bravo.config.configuration.set("world unittest", "port", "0")
 
-        self.f = bravo.factories.beta.BravoFactory(self.name)
+        self.f = BravoFactory(self.name)
 
     def tearDown(self):
         bravo.config.configuration.remove_section("world unittest")
@@ -183,7 +183,7 @@ class TestBravoFactoryStarted(unittest.TestCase):
         for k, v in d.items():
             bravo.config.configuration.set("world unittest", k, v)
 
-        self.f = bravo.factories.beta.BravoFactory(self.name)
+        self.f = BravoFactory(self.name)
         # And now start the factory.
         self.f.startFactory()
 
