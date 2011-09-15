@@ -2,8 +2,8 @@ from twisted.trial import unittest
 
 import bravo.blocks
 
+from bravo.beta.structures import Slot
 from bravo.ibravo import IRecipe
-from bravo.inventory import Slot
 from bravo.inventory.slots import comblist, Crafting, Workbench, ChestStorage
 from bravo.plugin import retrieve_plugins
 

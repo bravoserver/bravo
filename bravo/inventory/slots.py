@@ -1,7 +1,8 @@
+from bravo.beta.packets import make_packet
+from bravo.beta.structures import Slot
 from bravo.ibravo import IRecipe
 from bravo.plugin import retrieve_plugins
-from bravo.beta.packets import make_packet
-from bravo.inventory import Slot, SerializableSlots
+from bravo.inventory import SerializableSlots
 
 # XXX I am completely undocumented and untested; is this any way to go through
 # life? Test and document me!

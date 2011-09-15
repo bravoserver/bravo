@@ -2,8 +2,8 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 from twisted.python import log
 
+from bravo.beta.structures import Slot
 from bravo.blocks import blocks, items, furnace_fuel, unstackable
-from bravo.inventory import Slot
 from bravo.inventory.windows import FurnaceWindow
 
 COOCK_TICKS = 20

@@ -1,7 +1,7 @@
 import unittest
 
+from bravo.beta.structures import Slot
 from bravo.blocks import blocks, items
-from bravo.inventory import Slot
 from bravo.policy.dig import dig_policies
 
 class TestNotchyDigPolicy(unittest.TestCase):

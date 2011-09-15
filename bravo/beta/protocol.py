@@ -1,4 +1,3 @@
-from collections import namedtuple
 from itertools import product, chain
 from time import time
 from urlparse import urlunparse
@@ -14,6 +13,7 @@ from twisted.protocols.policies import TimeoutMixin
 from twisted.python import log
 from twisted.web.client import getPage
 
+from bravo.beta.structures import BuildData
 from bravo.blocks import blocks, items
 from bravo.config import configuration
 from bravo.entity import Sign
@@ -42,8 +42,6 @@ circle = [(i, j)
 """
 A list of points in a filled circle of radius 10.
 """
-
-BuildData = namedtuple("BuildData", "block, metadata, x, y, z, face")
 
 class BetaServerProtocol(object, Protocol, TimeoutMixin):
     """

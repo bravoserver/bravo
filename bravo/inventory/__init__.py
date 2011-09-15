@@ -1,59 +1,10 @@
-
 from itertools import chain
-from collections import namedtuple
 
 from bravo import blocks
+from bravo.beta.structures import Slot
 
 class NextLoop(Exception):
     pass
-
-class Slot(namedtuple("Slot", "primary, secondary, quantity")):
-    """
-    The class represents slot in an inventory.
-    """
-
-    __slots__ = tuple()
-
-    def holds(self, other):
-        """
-        Whether these slots hold the same item.
-
-        This method is comfortable with other ``Slot`` instances, and also
-        with regular {2,3}-tuples.
-        """
-
-        return self.primary == other[0] and self.secondary == other[1]
-
-    def decrement(self, quantity=1):
-        """
-        Return a copy of this slot, with quantity decremented, or None if the
-        slot is empty.
-        """
-
-        if quantity >= self.quantity:
-            return None
-
-        return self._replace(quantity=self.quantity - quantity)
-
-    def increment(self, quantity=1):
-        """
-        Return a copy of this slot, with quantity incremented.
-
-        For parity with ``decrement()``.
-        """
-
-        return self._replace(quantity=self.quantity + quantity)
-
-    def replace(self, **kwargs):
-        """
-        Exposed version of ``_replace()`` with slot semantics.
-        """
-
-        new = self._replace(**kwargs)
-        if new.quantity == 0:
-            return None
-
-        return new
 
 class SerializableSlots(object):
     '''

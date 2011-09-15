@@ -3,7 +3,8 @@ from construct import Container, ListContainer
 
 from bravo import blocks
 from bravo.beta.packets import make_packet
-from bravo.inventory import Slot, SerializableSlots
+from bravo.beta.structures import Slot
+from bravo.inventory import SerializableSlots
 from bravo.inventory.slots import Crafting, Workbench, LargeChestStorage
 
 class NextLoop(Exception):
