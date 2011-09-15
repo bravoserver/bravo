@@ -25,10 +25,12 @@ class Circuit(object):
     inputs, their outputs, and how to update themselves.
     """
 
-    def __init__(self, coordinates):
+    def __init__(self, coordinates, block, metadata):
         self.coords = coordinates
         self.inputs = set()
         self.outputs = set()
+
+        self.from_block(block, metadata)
 
     def connect(self, asic):
         """
@@ -114,6 +116,8 @@ class PlainBlock(Circuit):
 
     name = "plain"
 
+    traceables = ("torch",)
+
     op = staticmethod(any)
 
 class Torch(Circuit):
@@ -125,7 +129,24 @@ class Torch(Circuit):
 
     name = "torch"
 
+    traceables = ("wire",)
+
     op = staticmethod(operator.not_)
+
+block_to_circuit = {
+    blocks["redstone-torch"].slot: Torch,
+    blocks["redstone-torch-off"].slot: Torch,
+    blocks["redstone-wire"].slot: Wire,
+}
+
+def create_circuit(asic, coords):
+    block = factory.world.sync_get_block(coords)
+    metadata = factory.world.sync_get_metadata(coords)
+
+    cls = block_to_circuit.get(block, PlainBlock)
+
+    circuit = cls(coords, block, metadata)
+    circuit.connect(asic)
 
 class Redstone(object):
 
