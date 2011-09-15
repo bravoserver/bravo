@@ -10,7 +10,7 @@ from twisted.web.client import getPage
 from bravo import version as bravo_version
 from bravo.config import configuration
 from bravo.entity import Pickup, Player
-from bravo.protocols.infini import InfiniClientProtocol, InfiniNodeProtocol
+from bravo.infini.protocol import InfiniClientProtocol, InfiniNodeProtocol
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)

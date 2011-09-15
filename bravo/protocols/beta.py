@@ -18,10 +18,10 @@ from bravo.blocks import blocks, items
 from bravo.config import configuration
 from bravo.entity import Sign
 from bravo.errors import BetaClientError, BuildError
-from bravo.factories.infini import InfiniClientFactory
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
     IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
     IPreDigHook, IDigHook, ISignHook, IUseHook)
+from bravo.infini.factory import InfiniClientFactory
 from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location
 from bravo.motd import get_motd

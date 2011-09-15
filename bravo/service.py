@@ -7,7 +7,7 @@ from twisted.python import log
 from bravo.amp import ConsoleRPCFactory
 from bravo.config import configuration, read_configuration
 from bravo.factories.beta import BravoFactory
-from bravo.factories.infini import InfiniNodeFactory
+from bravo.infini.factory import InfiniNodeFactory
 from bravo.protocols.beta import BetaProxyProtocol
 
 class BetaProxyFactory(Factory):

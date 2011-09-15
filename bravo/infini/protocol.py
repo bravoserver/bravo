@@ -1,7 +1,7 @@
 from twisted.internet.protocol import Protocol
 from twisted.python import log
 
-from bravo.packets.infini import parse_packets
+from bravo.infini.packets import parse_packets
 
 class InfiniProtocol(Protocol):
 
