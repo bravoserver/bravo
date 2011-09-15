@@ -16,6 +16,17 @@ class Slot(namedtuple("Slot", "primary, secondary, quantity")):
 
     __slots__ = tuple()
 
+    @classmethod
+    def from_key(cls, key, quantity=1):
+        """
+        Alternative constructor which loads a key instead of a primary and
+        secondary.
+
+        This is meant to simplify code which wants to create slots from keys.
+        """
+
+        return cls(key[0], key[1], quantity)
+
     def holds(self, other):
         """
         Whether these slots hold the same item.

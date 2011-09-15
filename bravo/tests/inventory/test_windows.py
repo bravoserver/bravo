@@ -8,29 +8,6 @@ from bravo.inventory.slots import ChestStorage, FurnaceStorage
 from bravo.inventory.windows import (InventoryWindow, WorkbenchWindow, ChestWindow,
     FurnaceWindow, LargeChestWindow)
 
-class TestSlot(unittest.TestCase):
-    """
-    Double-check a few things about ``Slot``.
-    """
-
-    def test_decrement_none(self):
-        slot = Slot(0, 0, 1)
-        self.assertEqual(slot.decrement(), None)
-
-    def test_holds(self):
-        slot1 = Slot(4, 5, 1)
-        slot2 = Slot(4, 5, 1)
-        self.assertTrue(slot1.holds(slot2))
-
-    def test_holds_secondary(self):
-        """
-        Secondary attributes always matter for .holds.
-        """
-
-        slot1 = Slot(4, 5, 1)
-        slot2 = Slot(4, 6, 1)
-        self.assertFalse(slot1.holds(slot2))
-
 class TestInventoryInternals(unittest.TestCase):
     """
     The Inventory class internals
