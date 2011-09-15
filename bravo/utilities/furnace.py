@@ -6,20 +6,20 @@ from bravo.beta.structures import Slot
 from bravo.blocks import blocks, items, furnace_fuel, unstackable
 from bravo.inventory.windows import FurnaceWindow
 
-COOCK_TICKS = 20
+COOK_TICKS = 20
 
 # TODO: move this out of the module into plug-in
 furnace_recipes = {
-    blocks["gold-ore"].slot : Slot(items["gold-ingot"].slot, 0, 1),
-    blocks["iron-ore"].slot : Slot(items["iron-ingot"].slot, 0, 1),
-    blocks["diamond-ore"].slot : Slot(items["diamond"].slot, 0, 1),
-    blocks["log"].slot : Slot(items["coal"].slot, 1, 1), # charcoal
-    blocks["cactus"].slot : Slot(items["dye"].slot, 2, 1), # green dye
-    blocks["sand"].slot : Slot(blocks["glass"].slot, 0, 1),
-    blocks["cobblestone"].slot : Slot(blocks["stone"].slot, 0, 1),
-    items["clay-balls"].slot : Slot(items["clay-brick"].slot, 0, 1),
-    items["raw-porkchop"].slot : Slot(items["cooked-porkchop"].slot, 0, 1),
-    items["raw-fish"].slot : Slot(items["cooked-fish"].slot, 0, 1)
+    blocks["cactus"].slot     : Slot.from_key(items["green-dye"].key, 1),
+    blocks["cobblestone"].slot: Slot.from_key(blocks["stone"].key, 1),
+    blocks["diamond-ore"].slot: Slot.from_key(items["diamond"].key, 1),
+    blocks["gold-ore"].slot   : Slot.from_key(items["gold-ingot"].key, 1),
+    blocks["iron-ore"].slot   : Slot.from_key(items["iron-ingot"].key, 1),
+    blocks["log"].slot        : Slot.from_key(items["charcoal"].key, 1),
+    blocks["sand"].slot       : Slot.from_key(blocks["glass"].key, 1),
+    items["clay-balls"].slot  : Slot.from_key(items["clay-brick"].key, 1),
+    items["raw-fish"].slot    : Slot.from_key(items["cooked-fish"].key, 1),
+    items["raw-porkchop"].slot: Slot.from_key(items["cooked-porkchop"].key, 1),
 }
 
 class FurnaceManager(object):
@@ -99,7 +99,7 @@ class FurnaceProcess(object):
             if self.canCraft:
                 self.tile.cooktime += 1
                 # Notchian time is ~9.25-9.50 sec.
-                if self.tile.cooktime == COOCK_TICKS: # cooked!
+                if self.tile.cooktime == COOK_TICKS: # cooked!
                     source = self.tile.inventory.crafting[0]
                     product = furnace_recipes[source.primary]
                     self.tile.inventory.crafting[0] = source.decrement()
@@ -110,7 +110,7 @@ class FurnaceProcess(object):
                         self.tile.inventory.crafted[0] = item.increment(product.quantity)
                     self.update_all_windows_slot(0, self.tile.inventory.crafting[0])
                     self.update_all_windows_slot(2, self.tile.inventory.crafted[0])
-                    self.tile.cooktime -= COOCK_TICKS
+                    self.tile.cooktime -= COOK_TICKS
             else:
                 self.tile.cooktime = 0
 
@@ -137,7 +137,7 @@ class FurnaceProcess(object):
         # ----------------------------
         # --- update progress bars ---
         # ----------------------------
-        cook_progress = 185 * self.tile.cooktime / (COOCK_TICKS - 1)
+        cook_progress = 185 * self.tile.cooktime / (COOK_TICKS - 1)
         burn_progress = 250 * self.tile.burntime / self.burn_max
         self.update_all_windows_progress(0, cook_progress)
         self.update_all_windows_progress(1, burn_progress)
