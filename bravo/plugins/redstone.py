@@ -31,7 +31,7 @@ class Circuit(object):
         """
 
         inputs = [i.status for i in self.inputs]
-        status = self.op(*inputs)
+        self.status = self.op(*inputs)
         return self.outputs
 
     def from_block(self, block, metadata):
