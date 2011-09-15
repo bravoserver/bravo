@@ -12,6 +12,11 @@ from bravo.utilities.redstone import bbool, truthify_block
 
 from bravo.parameters import factory
 
+class RedstoneError(Exception):
+    """
+    A ghost in the shell.
+    """
+
 class Circuit(object):
     """
     A block or series of blocks conveying a basic composited transistor.
@@ -24,6 +29,53 @@ class Circuit(object):
         self.coords = coordinates
         self.inputs = set()
         self.outputs = set()
+
+    def connect(self, asic):
+        """
+        Add this circuit to an ASIC.
+        """
+
+        if self.coords in asic and asic[self.coords] is not self:
+            raise RedstoneError("Circuit trace already occupied!")
+
+        asic[self.coords] = self
+
+        for dx, dy, dz in ((-1, 0, 0), (1, 0, 0), (0, 0, -1), (0, 0, 1)):
+            x, y, z = self.coords
+            x += dx
+            y += dy
+            z += dz
+
+            if (x, y, z) not in asic:
+                continue
+
+            target = asic[x, y, z]
+            if target.name in self.traceables:
+                target.inputs.add(self)
+                self.outputs.add(target)
+            elif self.name in target.traceables:
+                self.inputs.add(target)
+                target.outputs.add(self)
+
+    def disconnect(self, asic):
+        """
+        Remove this circuit from an ASIC.
+        """
+
+        if self.coords not in asic:
+            raise RedstoneError("Circuit can't detach from ASIC!")
+        if asic[self.coords] is not self:
+            raise RedstoneError("Circuit can't detach another circuit!")
+
+        for circuit in self.inputs:
+            circuit.outputs.discard(self)
+        for circuit in self.outputs:
+            circuit.inputs.discard(self)
+
+        self.inputs.clear()
+        self.outputs.clear()
+
+        del asic[self.coords]
 
     def update(self):
         """
