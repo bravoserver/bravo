@@ -1,3 +1,38 @@
+
+def gen_close_point(point1, point2): # XXX This needs to be optimized
+    """
+    Generalization of Bresenham's line algorithm in 3d.
+
+    It returns the first block's coordinates in a one block wide line from
+    point1 to point2
+
+    It is a simplified version that does nothing fancy with integers or such:
+    all computation is done on float (maybe it should be changed?)
+    """
+
+    clamp = lambda n: max(min(.5, n), -.5)
+    tx, ty, tz = point1 # t is for temporary
+    ox, oy, oz = point2 # o is for objective
+
+    dx = ox - tx
+    dy = oy - ty
+    dz = oz - tz
+    if (dx,dy,dz) == (0,0,0):
+        return (0,0,0)
+
+    largest = max (abs (dx), abs (dy), abs (dz)) * 1. # We want a float
+    dx, dy, dz = dx / largest, dy / largest, dz / largest # We make a vector which maximum value is 1.0
+
+    while abs (ox - tx) > 1 or abs (oy - ty) > 1 or abs (oz - tz) > 1:
+        tx += dx
+        ty += dy
+        tz += dz
+        if (ty < 0 and dy < 0) or (ty >= 127 and dy > 0):
+            return (0,0,0)
+            break
+
+        return(dx,dy,dz)
+    return (0,0,0)
 def gen_line_simple(point1, point2):
     """
     Generalization of Bresenham's line algorithm in 3d.

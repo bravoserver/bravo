@@ -106,8 +106,6 @@ class BravoFactory(Factory):
         self.time_loop.start(2)
 
         log.msg("Starting entity updates...")
-        self.entity_loop = LoopingCall(self.update_entities)
-        self.entity_loop.start(.2)
 
         log.msg("Starting furnaces...")
         self.furnace_manager.start()
@@ -140,7 +138,6 @@ class BravoFactory(Factory):
         self.unregister_plugins()
 
         self.time_loop.stop()
-        self.entity_loop.stop()
         self.furnace_manager.stop()
 
         # Write back current world time. This must be done before stopping the
@@ -311,7 +308,8 @@ class BravoFactory(Factory):
         d = self.world.request_chunk(bigx, bigz)
         d.addCallback(lambda chunk: chunk.entities.add(entity))
         d.addCallback(lambda none: log.msg("Created entity %s" % entity))
-
+        if hasattr(entity,'loop'): # XXX Maybe just send the entity object to the manager?
+            self.world.mob_manager.start_mob(entity)
         return entity
 
     def register_entity(self, entity):
@@ -345,28 +343,6 @@ class BravoFactory(Factory):
             chunk.entities.discard(entity)
             chunk.dirty = True
             log.msg("Destroyed entity %s" % entity)
-
-
-    def update_entities(self):
-        """
-        Update all entities covered by this factory.
-        """
-
-        # XXX this method could cause chunks to be generated :c
-
-        points = set()
-
-        for player in self.protocols.itervalues():
-            x = player.location.x
-            z = player.location.z
-            bigx, chaff, bigz, chaff = split_coords(x, z)
-            new = set((i + bigx, j + bigz) for i, j in circle)
-            points.update(new)
-
-        for x, y in points:
-            d = self.world.request_chunk(x, y)
-            d.addCallback(lambda chunk: chunk.update_entities(self))
-
 
     def update_time(self):
         """

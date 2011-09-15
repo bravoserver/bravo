@@ -1,11 +1,15 @@
-from math import pi
+from math import pi, atan2
+from random import uniform
 
+from twisted.internet.task import LoopingCall
 from twisted.python import log
 
 from bravo.inventory import Inventory
 from bravo.inventory.slots import ChestStorage, FurnaceStorage
 from bravo.location import Location
 from bravo.packets.beta import make_packet
+from bravo.utilities.coords import split_coords
+from bravo.utilities.geometry import gen_close_point
 
 class Entity(object):
     """
@@ -185,11 +189,30 @@ class Mob(Entity):
     """
     A creature.
     """
+    def __init__(self, **kwargs):
+        """
+        Create a mob
+
+        This method calls super().
+        """
+        self.loop = None
+        super(Mob, self).__init__(**kwargs)
+        self.manager = None
 
     name = "Mob"
     type = "mob"
 
     metadata = {0: ("byte", 0)}
+
+    def run(self):
+        """
+        Starts a mob's loop process
+        """
+        xcoord, chaff, zcoord, chaff = split_coords(self.location.x,
+            self.location.z)
+        self.chunk_coords = (xcoord,1, zcoord) # XXX The one is redundant, fix it
+        self.loop = LoopingCall(self.update)
+        self.loop.start(.2)
 
     def save_to_packet(self):
         """
@@ -207,12 +230,73 @@ class Mob(Entity):
             metadata=self.metadata
         )
 
-    def update_location(self, factory):
+    def save_location_to_packet(self):
+        return make_packet("teleport",
+            eid=self.eid,
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=int(self.location.yaw),
+            pitch=int(self.location.pitch),
+        )
+
+    def update(self):
         """
         Update this mob's location with respect to a factory.
         """
+        clamp = lambda n: max(min(.4, n), -.4)
+        # XXX  Discuss appropriate style with MAD
+        player = self.manager.closest_player((self.location.x,
+                                 self.location.y,
+                                 self.location.z),
+                                 16)
 
-        # XXX IoC violation, WTF
+        if player == None:
+            vector = (uniform(-.4,.4),
+                      uniform(-.4,.4),
+                      uniform(-.4,.4))
+
+            target = (self.location.x + vector[0],
+                self.location.y + vector[1],
+                self.location.z + vector[2])
+        else:
+            target = (player.location.x,
+                player.location.y,
+                player.location.z)
+
+            self_pos = (self.location.x, self.location.y, self.location.z)
+            vector = gen_close_point(self_pos, target)
+
+            vector = (clamp(vector[0]),
+                clamp(vector[1]),
+                clamp(vector[2]))
+
+        new_position = (vector[0] + self.location.x,
+            vector[1] + self.location.y,
+            vector[2] + self.location.z,)
+
+        new_theta = int(atan2(
+            (self.location.z - new_position[2]),
+            (self.location.x - new_position[0] ))
+            + pi/2)
+
+        if new_theta < 0 :
+            new_theta = 0
+
+        can_go = self.manager.check_block_collision(self.location, (-.3, 0, -.3,), (.5, 1, .5))
+        self.location.theta = new_theta
+
+        if can_go:
+            self.slide = False
+            self.location.x = new_position[0]
+            self.location.y = new_position[1]
+            self.location.z = new_position[2]
+
+            self.manager.correct_origin_chunk(self)
+            self.manager.broadcast(self.save_location_to_packet())
+        else:
+            self.slide = self.manager.slide_vector(vector, )
+            self.manager.broadcast(self.save_location_to_packet())
 
 
 class Chuck(Mob):
@@ -222,6 +306,10 @@ class Chuck(Mob):
 
     name = "Chicken"
     type = "chuck"
+    offsetlist = ((.5, 0, .5),
+            (-.5, 0, .5),
+            (.5, 0, -.5),
+            (-.5, 0, -.5))
 
 class Cow(Mob):
     """
@@ -482,7 +570,7 @@ class Zombie(Mob):
 
     name = "Zombie"
     type = "zombie"
-
+    offsetlist = ((-.5,0,-.5), (-.5,0,.5), (.5,0,-.5), (.5,0,.5), (-.5,1,-.5), (-.5,1,.5), (.5,1,-.5), (.5,1,.5),)
 entities = dict((entity.name, entity)
     for entity in (
         Chuck,
@@ -497,6 +585,7 @@ entities = dict((entity.name, entity)
         Player,
         Sheep,
         Skeleton,
+        Slime,
         Spider,
         Squid,
         Wolf,

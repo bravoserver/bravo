@@ -1,10 +1,11 @@
+from copy import copy
 from functools import wraps
 from itertools import product
 import random
 import sys
 import weakref
 
-from numpy import fromstring
+from numpy import fromstring, uint8
 
 from twisted.internet import reactor
 from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
@@ -14,13 +15,14 @@ from twisted.python import log
 
 from bravo.chunk import Chunk
 from bravo.config import configuration
-from bravo.entity import Player, Furnace
+from bravo.entity import Player, Furnace, Mob
 from bravo.errors import ChunkNotLoaded, SerializerReadException
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import (retrieve_named_plugins, verify_plugin,
     PluginException)
 from bravo.utilities.coords import split_coords
 from bravo.utilities.temporal import PendingEvent
+from bravo.mobmanager import MobManager
 
 def coords_to_chunk(f):
     """
@@ -182,6 +184,9 @@ class World(object):
             (world_url, self.serializer.name))
         log.msg("Using Ampoule: %s" % self.async)
 
+        self.mob_manager = MobManager() # XXX Put this in init or here?
+        self.mob_manager.world = self # XXX  Put this in the managers constructor?
+
     def stop(self):
         """
         Stop managing the world.
@@ -311,6 +316,11 @@ class World(object):
 
         # Register the chunk's entities with our parent factory.
         for entity in chunk.entities:
+            if hasattr(entity,'loop'):
+                print "Started mob!"
+                self.mob_manager.start_mob(entity)
+            else:
+                print "I have no loop"
             self.factory.register_entity(entity)
 
         # Scan the chunk for burning furnaces and update thir processes
@@ -573,3 +583,13 @@ class World(object):
         """
 
         chunk.dirty = True
+
+    @sync_coords_to_chunk
+    def sync_request_chunk(self, chunk, coords):
+        """
+        Get an unknown chunk.
+
+        :returns: a ``Deferred`` with the requested value
+        """
+
+        return chunk
