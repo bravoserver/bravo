@@ -33,7 +33,7 @@ from bravo.utilities.chat import username_alternatives
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
-SUPPORTED_PROTOCOL = 14
+SUPPORTED_PROTOCOL = 17
 
 circle = [(i, j)
     for i, j in product(xrange(-10, 10), xrange(-10, 10))
