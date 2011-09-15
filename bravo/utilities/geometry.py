@@ -10,7 +10,6 @@ def gen_close_point(point1, point2): # XXX This needs to be optimized
     all computation is done on float (maybe it should be changed?)
     """
 
-    clamp = lambda n: max(min(.5, n), -.5)
     tx, ty, tz = point1 # t is for temporary
     ox, oy, oz = point2 # o is for objective
 

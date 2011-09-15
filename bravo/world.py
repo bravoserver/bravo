@@ -1,11 +1,10 @@
-from copy import copy
 from functools import wraps
 from itertools import product
 import random
 import sys
 import weakref
 
-from numpy import fromstring, uint8
+from numpy import fromstring
 
 from twisted.internet import reactor
 from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
@@ -15,7 +14,7 @@ from twisted.python import log
 
 from bravo.chunk import Chunk
 from bravo.config import configuration
-from bravo.entity import Player, Furnace, Mob
+from bravo.entity import Player, Furnace
 from bravo.errors import ChunkNotLoaded, SerializerReadException
 from bravo.ibravo import ISerializer, ISerializerFactory
 from bravo.plugin import (retrieve_named_plugins, verify_plugin,

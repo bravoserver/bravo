@@ -1,6 +1,5 @@
 from __future__ import division
 from zope.interface import implements
-import traceback
 from bravo.utilities.coords import polar_round_vector
 from bravo.ibravo import IConsoleCommand, IChatCommand
 

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 from sys import maxint
-from math import floor, ceil
+from math import floor
 from bravo.simplex import dot3
-from bravo.utilities.coords import polar_round_vector
 
 clamp = lambda n: max(min(1, n), -1)
 class MobManager(object):

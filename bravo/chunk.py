@@ -4,10 +4,7 @@ from warnings import warn
 from numpy import cast, logical_not, logical_and, transpose, where, zeros, amax
 from numpy import vectorize
 
-from twisted.internet.defer import maybeDeferred
-
 from bravo.blocks import blocks, glowing_blocks
-from bravo.entity import Mob
 from bravo.packets.beta import make_packet
 from bravo.utilities.bits import pack_nibbles
 
