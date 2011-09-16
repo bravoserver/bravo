@@ -8,24 +8,6 @@ from construct import ArrayError, MappingError
 from bravo.beta.packets import (make_packet, metadata, packets, parse_packets,
                                 packets_by_name, AlphaString, Metadata)
 
-class TestPacketDataStructures(unittest.TestCase):
-
-    def test_named_packets_exist(self):
-        for name, slot in packets_by_name.iteritems():
-            self.assertTrue(slot in packets,
-                    "%d is missing" % slot)
-
-    def test_packet_names_exist(self):
-        for slot in packets.iterkeys():
-            self.assertTrue(slot in packets_by_name.values(),
-                    "%d is missing" % slot)
-
-    test_packet_names_exist.todo = "Missing a couple packet names still"
-
-    def test_packet_names_match(self):
-        for name, slot in packets_by_name.iteritems():
-            self.assertEqual(name, packets[slot].name)
-
 class TestPacketParsing(unittest.TestCase):
 
     def test_ping(self):
