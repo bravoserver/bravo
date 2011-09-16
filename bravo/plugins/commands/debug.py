@@ -101,9 +101,11 @@ class Rain(object):
         from bravo.beta.packets import make_packet
         arg = "".join(parameters)
         if arg == "start":
-            factory.broadcast(make_packet("state", state="start_rain"))
+            factory.broadcast(make_packet("state", state="start_rain",
+                creative=False))
         elif arg == "stop":
-            factory.broadcast(make_packet("state", state="stop_rain"))
+            factory.broadcast(make_packet("state", state="stop_rain",
+                creative=False))
         else:
             return ("Couldn't understand you!",)
         return ("*%s did the rain dance*" % (username),)

@@ -25,8 +25,8 @@ class WeatherVane(object):
 
     def make_packet(self):
         if self.weather == "rainy":
-            return make_packet("state", state="start_rain")
+            return make_packet("state", state="start_rain", creative=False)
         elif self.weather == "sunny":
-            return make_packet("state", state="stop_rain")
+            return make_packet("state", state="stop_rain", creative=False)
         else:
             return ""
