@@ -99,13 +99,10 @@ class TestBetaServerProtocol(unittest.TestCase):
         The protocol should emit a health update when its health changes.
         """
 
-        # Health packet, 19 health
-        expected = "\x08\x00\x13"
-
         self.p.transport.data = []
         self.p.health = 19
         self.assertEqual(len(self.p.transport.data), 1)
-        self.assertEqual(self.p.transport.data[0], expected)
+        self.assertTrue(self.p.transport.data[0].startswith("\x08"))
 
     def test_health_no_change(self):
         """

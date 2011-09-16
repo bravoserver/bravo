@@ -29,17 +29,9 @@ class TestPacketDataStructures(unittest.TestCase):
 class TestPacketParsing(unittest.TestCase):
 
     def test_ping(self):
-        packet = ""
+        packet = "\x00\x00\x00\x00"
         parsed = packets[0].parse(packet)
-        self.assertTrue(parsed)
-
-    def test_login_signed_seed(self):
-        packet = """AAAACQAGAEMAbwByAGIAaQBu6SZCF/j8DlQA""".decode("base64")
-        parsed = packets[1].parse(packet)
-        self.assertEqual(parsed.protocol, 9)
-        self.assertEqual(parsed.username, "Corbin")
-        self.assertEqual(parsed.seed, -1646555943028388268)
-        self.assertEqual(parsed.dimension, "earth")
+        self.assertEqual(parsed.pid, 0)
 
     def test_handshake(self):
         packet = "\x00\x01\x00a"
@@ -114,7 +106,7 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.animation, "arm")
 
     def test_animate_bad_animation(self):
-        packet = "\x00\x00\x00\x03\x05"
+        packet = "\x00\x00\x00\x03\x09"
         self.assertRaises(MappingError, packets[18].parse,
             packet)
 
@@ -138,23 +130,9 @@ class TestPacketParsing(unittest.TestCase):
 class TestPacketAssembly(unittest.TestCase):
 
     def test_ping(self):
-        container = Container()
+        container = Container(pid=0)
         assembled = packets[0].build(container)
-        self.assertEqual(assembled, "")
-
-    def test_login(self):
-        container = Container(protocol=0, username="", seed=0,
-            dimension="earth")
-        assembled = packets[1].build(container)
-        self.assertEqual(assembled,
-            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
-
-    def test_login_nether(self):
-        container = Container(protocol=0, username="", seed=0,
-            dimension="nether")
-        assembled = packets[1].build(container)
-        self.assertEqual(assembled,
-            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff")
+        self.assertEqual(assembled, "\x00\x00\x00\x00")
 
     def test_time(self):
         container = Container(timestamp=42)
@@ -177,8 +155,8 @@ class TestPacketAssembly(unittest.TestCase):
 class TestPacketHelpers(unittest.TestCase):
 
     def test_make_packet(self):
-        packet = make_packet("ping")
-        self.assertEqual(packet, "\x00")
+        packet = make_packet("ping", pid=0)
+        self.assertEqual(packet, "\x00\x00\x00\x00\x00")
 
     def test_alphastring(self):
         s = "Just a test"

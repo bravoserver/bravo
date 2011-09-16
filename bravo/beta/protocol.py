@@ -414,7 +414,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             raise BetaClientError("Invalid health value %d" % value)
 
         if self._health != value:
-            self.write_packet("health", hp=value)
+            self.write_packet("health", hp=value, fp=0, saturation=0)
             self._health = value
 
 
