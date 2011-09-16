@@ -1,3 +1,5 @@
+# vim: set fileencoding=utf8 :
+
 from itertools import product, chain
 from time import time
 from urlparse import urlunparse
@@ -93,6 +95,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             104: self.inventory,
             106: self.wacknowledge,
             130: self.sign,
+            254: self.poll,
             255: self.quit,
         }
 
@@ -252,6 +255,23 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
         Hook for sign packets.
         """
+
+    def poll(self, container):
+        """
+        Hook for poll packets.
+
+        By default, queries the parent factory for some data, and replays it
+        in a specific format to the requester. The connection is then closed
+        at both ends. This functionality is used by Beta 1.8 clients to poll
+        servers for status.
+        """
+
+        motd = "FYI I am a Bravo server"
+        players = 0
+        max_players = 0
+
+        response = u"%s§%d§%d" % (motd, players, max_players)
+        self.error(response)
 
     def quit(self, container):
         """

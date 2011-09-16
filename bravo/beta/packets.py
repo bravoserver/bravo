@@ -580,6 +580,7 @@ packets = {
         Bool("online"),
         UBInt16("ping"),
     ),
+    254: Struct("poll"),
     255: Struct("error",
         AlphaString("message"),
     ),
