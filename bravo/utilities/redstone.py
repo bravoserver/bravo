@@ -70,6 +70,26 @@ class Circuit(object):
 
         self.from_block(block, metadata)
 
+    def iter_inputs(self):
+        """
+        Iterate over possible input coordinates.
+        """
+
+        x, y, z = self.coords
+
+        for dx, dy, dz in ((-1, 0, 0), (1, 0, 0), (0, 0, -1), (0, 0, 1)):
+            yield x + dx, y + dy, z + dz
+
+    def iter_outputs(self):
+        """
+        Iterate over possible output coordinates.
+        """
+
+        x, y, z = self.coords
+
+        for dx, dy, dz in ((-1, 0, 0), (1, 0, 0), (0, 0, -1), (0, 0, 1)):
+            yield x + dx, y + dy, z + dz
+
     def connect(self, asic):
         """
         Add this circuit to an ASIC.
@@ -80,22 +100,21 @@ class Circuit(object):
 
         asic[self.coords] = self
 
-        for dx, dy, dz in ((-1, 0, 0), (1, 0, 0), (0, 0, -1), (0, 0, 1)):
-            x, y, z = self.coords
-            x += dx
-            y += dy
-            z += dz
-
-            if (x, y, z) not in asic:
+        for coords in self.iter_inputs():
+            if coords not in asic:
                 continue
+            target = asic[coords]
+            if self.name in target.traceables:
+                self.inputs.add(target)
+                target.outputs.add(self)
 
-            target = asic[x, y, z]
+        for coords in self.iter_outputs():
+            if coords not in asic:
+                continue
+            target = asic[coords]
             if target.name in self.traceables:
                 target.inputs.add(self)
                 self.outputs.add(target)
-            elif self.name in target.traceables:
-                self.inputs.add(target)
-                target.outputs.add(self)
 
     def disconnect(self, asic):
         """
@@ -136,8 +155,10 @@ class Wire(Circuit):
     """
     The ubiquitous conductor of current.
     """
-.
+
     name = "wire"
+
+    traceables = ("plain",)
 
     def __init__(self, coordinates):
         super(Wire, self).__init__(coordinates, block, metadata)
@@ -166,6 +187,50 @@ class Torch(Circuit):
 
     Torches do a NOT operation from their input.
     """
+
+    def __init__(self, coords, block, metadata):
+        super(Torch, self).__init__(coords, block, metadata)
+        self.orientation = blocks[block].face(metadata)
+        if self.orientation is None:
+            raise RedstoneError("Bad metadata %d for torch!" % metadata)
+
+    def iter_inputs(self):
+        """
+        Provide the input corresponding to the block upon which this torch is
+        mounted.
+        """
+
+        x, y, z = self.coords
+
+        if self.orientation == "+x":
+            yield x + 1, y, z
+        elif self.orientation == "-x":
+            yield x - 1, y, z
+        elif self.orientation == "+z":
+            yield x, y, z + 1
+        elif self.orientation == "-z":
+            yield x, y, z - 1
+        elif self.orientation == "+y":
+            yield x, y + 1, z
+
+    def iter_outputs(self):
+        """
+        Provide the outputs corresponding to the block upon which this torch
+        is mounted.
+        """
+
+        x, y, z = self.coords
+
+        if self.orientation != "+x":
+            yield x + 1, y, z
+        elif self.orientation != "-x":
+            yield x - 1, y, z
+        elif self.orientation != "+z":
+            yield x, y, z + 1
+        elif self.orientation != "-z":
+            yield x, y, z - 1
+        elif self.orientation != "+y":
+            yield x, y + 1, z
 
     name = "torch"
 
