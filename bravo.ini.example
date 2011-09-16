@@ -42,6 +42,10 @@ limitPerIP = 0
 #url = file://relative/path/to/world
 url = file:///absolute/path/to/world
 
+# The gameplay mode for this server. Valid modes are "creative" and
+# "survival".
+mode = creative
+
 # Which seasons to enable for this world.
 # ~ winter: Spread snow over the world, and freeze bodies of water
 # ~ spring: Thaw everything

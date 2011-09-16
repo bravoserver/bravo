@@ -68,6 +68,10 @@ class BravoFactory(Factory):
         self.protocols = dict()
         self.connectedIPs = defaultdict(int)
 
+        self.mode = configuration.get(self.config_name, "mode")
+        if self.mode not in ("creative", "survival"):
+            raise Exception("Unsupported mode %s" % self.mode)
+
         self.limitConnections = configuration.getintdefault(self.config_name,
                                                             "limitConnections",
                                                             0)
