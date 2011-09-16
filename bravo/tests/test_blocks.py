@@ -1,14 +1,14 @@
 from twisted.trial import unittest
 
-import bravo.blocks
-from bravo.blocks import parse_block
+from bravo.blocks import (blocks, items, parse_block, block_names, item_names,
+                          special_item_names)
 
 class TestBlockNames(unittest.TestCase):
 
     def setUp(self):
-        self.bn = set(bravo.blocks.block_names)
-        self.ins = set(bravo.blocks.item_names)
-        self.sin = set(bravo.blocks.special_item_names)
+        self.bn = set(block_names)
+        self.ins = set(item_names)
+        self.sin = set(special_item_names)
 
     def test_trivial(self):
         pass
@@ -27,24 +27,23 @@ class TestBlockNames(unittest.TestCase):
 class TestBlockQuirks(unittest.TestCase):
 
     def test_ice_no_drops(self):
-        self.assertEqual(bravo.blocks.blocks["ice"].drop,
-            bravo.blocks.blocks["air"].slot)
+        self.assertEqual(blocks["ice"].drop, blocks["air"].slot)
 
     def test_sapling_drop_rate(self):
-        self.assertAlmostEqual(bravo.blocks.blocks["leaves"].ratio, 1/9.0)
+        self.assertAlmostEqual(blocks["leaves"].ratio, 1/9.0)
 
     def test_unbreakable_bedrock(self):
-        self.assertFalse(bravo.blocks.blocks["bedrock"].breakable)
+        self.assertFalse(blocks["bedrock"].breakable)
 
     def test_ladder_orientation(self):
-        self.assertTrue(bravo.blocks.blocks["ladder"].orientable())
-        self.assertEqual(bravo.blocks.blocks["ladder"].orientation("+x"), 0x5)
+        self.assertTrue(blocks["ladder"].orientable())
+        self.assertEqual(blocks["ladder"].orientation("+x"), 0x5)
 
     def test_ladder_face(self):
-        self.assertEqual(bravo.blocks.blocks["ladder"].face(0x5), "+x")
+        self.assertEqual(blocks["ladder"].face(0x5), "+x")
 
     def test_grass_secondary(self):
-        self.assertEqual(bravo.blocks.blocks["grass"].key[1], 0)
+        self.assertEqual(blocks["grass"].key[1], 0)
 
 class TestParseBlock(unittest.TestCase):
 
