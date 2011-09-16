@@ -241,6 +241,10 @@ def door(material, provides, name):
     return Blueprint("%s-door" % name, (2, 3), ((material.key, 1),) * 6,
         (provides.key, 1))
 
+def trapdoor(material, provides, name):
+    return Blueprint("%s-trapdoor" % name, (3, 2), ((material.key, 1),) * 6,
+        (provides.key, 2))
+
 # And now, having defined our helpers, we instantiate all of the recipes, in
 # no particular order.
 
@@ -354,6 +358,7 @@ boat = cart_boat(blocks["wood"], items["boat"], "boat")
 #Mechanism
 wooddoor = door(blocks["wood"], items["wooden-door"], "wood")
 irondoor = door(items["iron-ingot"], items["iron-door"], "iron")
+woodtrapdoor = trapdoor(blocks["wood"], blocks["trapdoor"], "wood")
 woodpressure = two_by_one(blocks["wood"], blocks["wooden-plate"], 1,
     "wood-plate")
 stonepressure = two_by_one(blocks["stone"], blocks["stone-plate"], 1,

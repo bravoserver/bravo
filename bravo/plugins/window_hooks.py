@@ -5,12 +5,12 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.location import Location
 from bravo.beta.packets import make_packet
-from bravo.ibravo import IWindowOpenHook, IWindowClickHook, IWindowCloseHook, IDigHook
+from bravo.ibravo import IWindowOpenHook, IWindowClickHook, IWindowCloseHook, IPreBuildHook, IDigHook
 from bravo.inventory.windows import WorkbenchWindow, ChestWindow, LargeChestWindow, FurnaceWindow
 from bravo.entity import Chest as ChestTile, Furnace as FurnaceTile
 
 from bravo.parameters import factory
-from bravo.utilities.coords import split_coords
+from bravo.utilities.coords import adjust_coords_for_face, split_coords
 from bravo.utilities.building import chestsAround
 
 def drop_items(location, items, y_offset = 0):
@@ -216,7 +216,7 @@ class Workbench(object):
 
 class Furnace(object):
 
-    implements(IWindowOpenHook, IWindowClickHook, IDigHook)
+    implements(IWindowOpenHook, IWindowClickHook, IPreBuildHook, IDigHook)
 
     def get_furnace_tile(self, chunk, coords):
         try:
@@ -276,6 +276,31 @@ class Furnace(object):
         # inform content of furnace was probably changed
         furnaces.update(window.coords)
 
+    @inlineCallbacks
+    def pre_build_hook(self, player, builddata):
+        item, metadata, x, y, z, face = builddata
+
+        print "furnace.pre-build"
+        if item.slot != blocks["furnace"].slot:
+            print "not a furnace"
+            returnValue((True, builddata, False))
+
+        x, y, z = adjust_coords_for_face((x, y, z), face)
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+
+        # the furnace cannot be oriented up or down
+        if face == "-y" or face == "+y":
+            orientation = ('+x', '+z', '-x', '-z')[((int(player.location.yaw) \
+                                                - 45 + 360) % 360) / 90]
+            metadata = blocks["furnace"].orientation(orientation)
+            builddata = builddata._replace(metadata=metadata)
+            print "fix metadata"
+
+        # Not much to do, just tell the chunk about this tile.
+        chunk = yield factory.world.request_chunk(bigx, bigz)
+        chunk.tiles[smallx, y, smallz] = FurnaceTile(smallx, y, smallz)
+        returnValue((True, builddata, False))
+
     def dig_hook(self, chunk, x, y, z, block):
         # NOTE: x, y, z - coords in chunk
         if block.slot not in (blocks["furnace"].slot, blocks["burning-furnace"].slot):
@@ -299,12 +324,12 @@ class Furnace(object):
 
     name = "furnace"
 
-    before = ("windows",) # plugins that comes before this plugin
+    before = ("windows", "build_snow") # plugins that comes before this plugin
     after = tuple()
 
 class Chest(object):
 
-    implements(IWindowOpenHook, IDigHook)
+    implements(IWindowOpenHook, IPreBuildHook, IDigHook)
 
     def get_chest_tile(self, chunk, coords):
         try:
@@ -317,6 +342,7 @@ class Chest(object):
             z = chunk.z * 16 + z
             log.msg("Chest at (%d, %d, %d) do not have tile or tile type mismatch" %
                     (x, y, z))
+            print chunk.tiles
             chest = None
         return chest
 
@@ -348,9 +374,14 @@ class Chest(object):
             # process second chest coordinates
             x2, y2, z2 = chests_around[0]
             bigx2, smallx2, bigz2, smallz2 = split_coords(x2, z2)
+            if bigx == bigx2 and bigz == bigz2:
+                # both chest blocks are in same chunk
+                chunk2 = chunk
+            else:
+                chunk2 = yield factory.world.request_chunk(bigx2, bigz2)
 
             chest1 = self.get_chest_tile(chunk, (smallx, container.y, smallz))
-            chest2 = self.get_chest_tile(chunk, (smallx2, container.y, smallz2))
+            chest2 = self.get_chest_tile(chunk2, (smallx2, container.y, smallz2))
             if chest1 is None or chest2 is None:
                 returnValue(None)
             c1 = bigx, smallx, bigz, smallz, container.y
@@ -370,6 +401,70 @@ class Chest(object):
         player.windows.append(window)
         returnValue(window)
 
+    @inlineCallbacks
+    def pre_build_hook(self, player, builddata):
+        item, metadata, x, y, z, face = builddata
+        print "chest.pre-build"
+
+        if item.slot != blocks["chest"].slot:
+            returnValue((True, builddata, False))
+
+        x, y, z = adjust_coords_for_face((x, y, z), face)
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+
+        # chest orientation according to players position
+        if face == "-y" or face == "+y":
+            orientation = ('+x', '+z', '-x', '-z')[((int(player.location.yaw) \
+                                                - 45 + 360) % 360) / 90]
+        else:
+            orientation = face
+
+        # Chests have some restrictions on building:
+        # you cannot connect more than two chests. (notchian)
+        ccs = chestsAround(factory, (x, y, z))
+        ccn = len(ccs)
+        if ccn > 1:
+            # cannot build three or more connected chests
+            returnValue((False, builddata, True))
+
+        chunk = yield factory.world.request_chunk(bigx, bigz)
+
+        if ccn == 0:
+            metadata = blocks["chest"].orientation(orientation)
+        elif ccn == 1:
+            # check gonna-be-connected chest is not connected already
+            n = len(chestsAround(factory, ccs[0]))
+            if n != 0:
+                returnValue((False, builddata, True))
+
+            # align both blocks correctly (since 1.8)
+            # get second block
+            x2, y2, z2 = ccs[0]
+            bigx2, smallx2, bigz2, smallz2 = split_coords(x2, z2)
+            # new chests orientation axis according to blocks position
+            pair = x - x2, z - z2
+            ornt = {(0, 1): "x", (0, -1): "x",
+                    (1, 0): "z", (-1, 0): "z"}[pair]
+            # if player is faced another direction, fix it
+            if orientation[1] != ornt:
+                # same sign with proper orientation
+                # XXX Probably notchian logic is different here
+                #     but this one works well enough
+                orientation = orientation[0] + ornt
+            metadata = blocks["chest"].orientation(orientation)
+            # update second block's metadata
+            if bigx == bigx2 and bigz == bigz2:
+                # both blocks are in same chunk
+                chunk2 = chunk
+            else:
+                chunk2 = yield factory.world.request_chunk(bigx2, bigz2)
+            chunk2.set_metadata((smallx2, y2, smallz2), metadata)
+
+        # Not much to do, just tell the chunk about this tile.
+        chunk.tiles[smallx, y, smallz] = ChestTile(smallx, y, smallz)
+        builddata = builddata._replace(metadata=metadata)
+        returnValue((True, builddata, False))
+
     def dig_hook(self, chunk, x, y, z, block):
         if block.slot != blocks["chest"].slot:
             return
@@ -388,7 +483,7 @@ class Chest(object):
 
     name = "chest"
 
-    before = tuple()
+    before = ("build_snow",)
     after = tuple()
 
 windows = Windows()
