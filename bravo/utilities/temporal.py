@@ -58,3 +58,16 @@ def split_time(timestamp):
     minutes = minutes * 6 // 100
 
     return hours, minutes
+
+def timestamp_from_clock(clock):
+    """
+    Craft an int-sized timestamp from a clock.
+
+    More precisely, the size of the timestamp is 4 bytes, and the clock must
+    be an implementor of IReactorTime. twisted.internet.reactor and
+    twisted.internet.task.Clock are the primary suspects.
+
+    This function's timestamps are millisecond-accurate.
+    """
+
+    return int(clock.seconds() * 1000) & 0xffffffff
