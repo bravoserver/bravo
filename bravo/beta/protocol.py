@@ -32,6 +32,7 @@ from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
 from bravo.utilities.chat import username_alternatives
+from bravo.utilities.temporal import timestamp_from_clock
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
@@ -67,6 +68,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     motd = "Bravo Generic Beta Server"
 
     _health = 20
+    _latency = 0
 
     def __init__(self):
         self.chunks = dict()
@@ -111,7 +113,15 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     def ping(self, container):
         """
         Hook for ping packets.
+
+        By default, this hook will examine the timestamps on incoming pings,
+        and use them to estimate the current latency of the connected client.
         """
+
+        now = timestamp_from_clock(reactor)
+        then = container.pid
+
+        self.latency = now - then
 
     def login(self, container):
         """
@@ -330,7 +340,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         self.state = STATE_AUTHENTICATED
 
-        self._ping_loop.start(5)
+        self._ping_loop.start(30)
 
     # Event callbacks
     # These are meant to be overriden.
@@ -368,9 +378,8 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Send a keepalive to the client.
         """
 
-        # XXX this function should track seen pings and attempt to measure
-        # latency somewhat
-        self.write_packet("ping", pid=0)
+        timestamp = timestamp_from_clock(reactor)
+        self.write_packet("ping", pid=timestamp)
 
     def error(self, message):
         """
@@ -436,6 +445,18 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         if self._health != value:
             self.write_packet("health", hp=value, fp=0, saturation=0)
             self._health = value
+
+    @property
+    def latency(self):
+        return self._latency
+
+    @latency.setter
+    def latency(self, value):
+        if self._latency != value:
+            packet = make_packet("players", name=self.username, online=True,
+                ping=value)
+            self.factory.broadcast(packet)
+            self._latency = value
 
 
 class KickedProtocol(BetaServerProtocol):
@@ -572,6 +593,8 @@ class BravoProtocol(BetaServerProtocol):
         # Announce our presence.
         packet = make_packet("chat",
             message="%s is joining the game..." % self.username)
+        packet += make_packet("players", name=self.username, online=True,
+            ping=0)
         self.factory.broadcast(packet)
 
         # Craft our avatar and send it to already-connected other players.
@@ -1210,6 +1233,8 @@ class BravoProtocol(BetaServerProtocol):
             self.factory.world.save_player(self.username, self.player)
             self.factory.destroy_entity(self.player)
             packet = make_packet("destroy", eid=self.player.eid)
+            packet += make_packet("players", name=self.username, online=False,
+                ping=0)
             self.factory.broadcast(packet)
             self.factory.chat("%s has left the game." % self.username)
 
