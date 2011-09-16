@@ -1,5 +1,3 @@
-import operator
-
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 from zope.interface import implements
@@ -8,72 +6,21 @@ from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
 from bravo.utilities.coords import adjust_coords_for_face
-from bravo.utilities.redstone import bbool, truthify_block
+from bravo.utilities.redstone import (PlainBlock, block_to_circuit, bbool,
+                                      truthify_block)
 
 from bravo.parameters import factory
 
-class Circuit(object):
-    """
-    A block or series of blocks conveying a basic composited transistor.
+def create_circuit(asic, coords):
+    block = factory.world.sync_get_block(coords)
+    metadata = factory.world.sync_get_metadata(coords)
 
-    Circuits form the base of speedily-evaluated redstone. They know their
-    inputs, their outputs, and how to update themselves.
-    """
+    cls = block_to_circuit.get(block, PlainBlock)
 
-    def __init__(self, coordinates):
-        self.coords = coordinates
-        self.inputs = set()
-        self.outputs = set()
+    circuit = cls(coords, block, metadata)
+    circuit.connect(asic)
 
-    def update(self):
-        """
-        Update outputs based on current state of inputs.
-        """
-
-        inputs = [i.status for i in self.inputs]
-        self.status = self.op(*inputs)
-        return self.outputs
-
-    def from_block(self, block, metadata):
-        self.status = bbool(block, metadata)
-
-    def to_block(self, block, metadata):
-        return truthify_block(self.status, block, metadata)
-
-class Wire(object):
-    """
-    The ubiquitous conductor of current.
-    """
-
-    name = "wire"
-
-    def __init__(self, coordinates):
-        self.coords = set([coordinates])
-        self.inputs = set()
-        self.outputs = set()
-
-class PlainBlock(Circuit):
-    """
-    Any block which doesn't contain redstone. Traditionally, a sand block, but
-    most blocks work for this.
-
-    Plain blocks do an OR operation across their inputs.
-    """
-
-    name = "plain"
-
-    op = staticmethod(any)
-
-class Torch(Circuit):
-    """
-    A redstone torch.
-
-    Torches do a NOT operation from their input.
-    """
-
-    name = "torch"
-
-    op = staticmethod(operator.not_)
+    return circuit
 
 class Redstone(object):
 

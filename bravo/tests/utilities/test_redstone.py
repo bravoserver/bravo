@@ -1,7 +1,8 @@
 from unittest import TestCase
 
 from bravo.blocks import blocks
-from bravo.utilities.redstone import bbool, truthify_block
+from bravo.utilities.redstone import (RedstoneError, PlainBlock, Torch, bbool,
+                                      truthify_block)
 
 class TestTruthifyBlock(TestCase):
     """
@@ -58,3 +59,51 @@ class TestBBool(TestCase):
 
     def test_torch_true(self):
         self.assertTrue(bbool(blocks["redstone-torch"].slot, 0x0))
+
+class TestCircuitTorch(TestCase):
+
+    def test_torch_bad_metadata(self):
+        """
+        Torch circuits know immediately if they have been fed bad metadata.
+        """
+
+        self.assertRaises(RedstoneError, Torch, (0, 0, 0),
+            blocks["redstone-torch"].slot, 0x0)
+
+    def test_torch_block_change(self):
+        """
+        Torches change block type depending on their status. They don't change
+        metadata, though.
+        """
+
+        metadata = blocks["redstone-torch"].orientation("-x")
+
+        torch = Torch((0, 0, 0), blocks["redstone-torch"].slot, metadata)
+        torch.status = False
+        self.assertEqual(
+            torch.to_block(blocks["redstone-torch"].slot, metadata),
+            (blocks["redstone-torch-off"].slot, metadata))
+
+class TestCircuitCouplings(TestCase):
+
+    def test_sand_torch(self):
+        """
+        A torch attached to a sand block will turn off when the sand block
+        turns on, and vice versa.
+        """
+
+        asic = {}
+        sand = PlainBlock((0, 0, 0), blocks["sand"].slot, 0x0)
+        torch = Torch((1, 0, 0), blocks["redstone-torch"].slot,
+            blocks["redstone-torch"].orientation("-x"))
+
+        sand.connect(asic)
+        torch.connect(asic)
+
+        sand.status = True
+        torch.update()
+        self.assertFalse(torch.status)
+
+        sand.status = False
+        torch.update()
+        self.assertTrue(torch.status)
