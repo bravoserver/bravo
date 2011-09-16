@@ -64,6 +64,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
     player = None
     username = None
+    motd = "Bravo Generic Beta Server"
 
     _health = 20
 
@@ -266,11 +267,10 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         servers for status.
         """
 
-        motd = "FYI I am a Bravo server"
-        players = 0
-        max_players = 0
+        players = len(self.factory.protocols)
+        max_players = self.factory.limitConnections or 1000000
 
-        response = u"%s§%d§%d" % (motd, players, max_players)
+        response = u"%s§%d§%d" % (self.motd, players, max_players)
         self.error(response)
 
     def quit(self, container):
@@ -533,7 +533,8 @@ class BravoProtocol(BetaServerProtocol):
         log.msg("Registering client hooks...")
 
         # Retrieve the MOTD. Only needs to be done once.
-        self.motd = configuration.getdefault(self.config_name, "motd", None)
+        self.motd = configuration.getdefault(self.config_name, "motd",
+            "BravoServer")
 
     def register_hooks(self):
 
