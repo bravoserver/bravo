@@ -9,6 +9,48 @@ from bravo.parameters import factory
 DOOR_TOP_BLOCK = 0x8
 DOOR_IS_SWUNG = 0x4
 
+class Trapdoor(object):
+    implements(IPreBuildHook, IPreDigHook)
+
+    def open_or_close(self, coords):
+        x, y, z = coords
+        bigx, x, bigz, z = split_coords(x, z)
+        d = factory.world.request_chunk(bigx, bigz)
+
+        @d.addCallback
+        def cb(chunk):
+            block = chunk.get_block((x, y, z))
+            if block != blocks["trapdoor"].slot: # already removed
+                return
+            metadata = chunk.get_metadata((x, y, z))
+            chunk.set_metadata((x, y, z), metadata ^ DOOR_IS_SWUNG)
+            factory.flush_chunk(chunk)
+
+    def pre_dig_hook(self, player, coords, block):
+        if block == blocks["trapdoor"].slot:
+            self.open_or_close(coords)
+
+    def pre_build_hook(self, player, builddata):
+        item, metadata, x, y, z, face = builddata
+
+        # If the block we are aiming at is a trapdoor, try to open/close it instead
+        # and stop the building process.
+        faced_block = factory.world.sync_get_block((x, y, z))
+        if faced_block == blocks["trapdoor"].slot:
+            self.open_or_close((x, y, z))
+            return False, builddata, True
+
+        if item.slot == blocks["trapdoor"].slot:
+            # No trapdoors on the walls or on the ceiling!
+            return False, builddata, (face == "+y" or face == "-y")
+
+        return True, builddata, False
+
+    name = "trapdoor"
+
+    before = tuple()
+    after = tuple()
+
 class Door(object):
     """
         Implements all the door logic.
@@ -137,3 +179,4 @@ class Door(object):
     after = tuple()
 
 door = Door()
+trapdoor = Trapdoor()

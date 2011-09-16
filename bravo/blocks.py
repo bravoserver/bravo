@@ -539,6 +539,8 @@ _add_block(Block(18, "leaves", drop=6, ratio=1 / 9, dim=1))
 _add_block(Block(26, "bed", drop=355, orientation=(None, None, 2, 0, 1, 3)))
 # Torches are orientable and don't dim.
 _add_block(Block(50, "torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
+# Chests are orientable.
+_add_block(Block(54, "chest", orientation=(None, None, 2, 3, 4, 5)))
 # Furnaces are orientable.
 _add_block(Block(61, "furnace", orientation=(None, None, 2, 3, 4, 5)))
 # Wooden Door is orientable and drops Wooden Door item
@@ -561,6 +563,8 @@ _add_block(Block(77, "stone-button", orientation=(None, None, 1, 2, 3, 4), dim=0
 _add_block(Block(79, "ice", drop=0, replace=9, dim=3))
 # Clay drops 4 clay balls.
 _add_block(Block(82, "clay", drop=337, quantity=4))
+# Trapdoor is orientable
+_add_block(Block(96, "trapdoor", orientation=(None, None, 0, 1, 2, 3)))
 
 for block in blocks.values():
     blocks[block.name] = block

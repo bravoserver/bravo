@@ -2,24 +2,18 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from zope.interface import implements
 
 from bravo.blocks import blocks, items
-from bravo.entity import Chest, Sign, Furnace
+from bravo.entity import Sign as SignTile
 from bravo.ibravo import IPreBuildHook
-from bravo.utilities.coords import adjust_coords_for_face, split_coords
-from bravo.utilities.building import chestsAround
+from bravo.utilities.coords import split_coords
 
 from bravo.parameters import factory
 
-class Tile(object):
+class Sign(object):
     """
-    Place tiles.
+    Place signs.
 
     You almost certainly want to enable this plugin.
     """
-
-    block_to_tile = {
-        blocks["chest"].slot : Chest,
-        blocks["furnace"].slot : Furnace
-    }
 
     implements(IPreBuildHook)
 
@@ -27,82 +21,51 @@ class Tile(object):
     def pre_build_hook(self, player, builddata):
         item, metadata, x, y, z, face = builddata
 
-        if item.slot == items["sign"].slot:
-            # Buildin' a sign, puttin' it on a wall...
-            builddata = builddata._replace(block=blocks["wall-sign"])
+        if item.slot != items["sign"].slot:
+            returnValue((True, builddata, False))
 
-            # Offset coords according to face.
-            if face == "-x":
-                builddata = builddata._replace(metadata=0x4)
-                x -= 1
-            elif face == "+x":
-                builddata = builddata._replace(metadata=0x5)
-                x += 1
-            elif face == "-y":
-                # Ceiling Sign is watching you read.
-                returnValue((False, builddata, False))
-            elif face == "+y":
-                # Put +Y signs on signposts. We're fancy that way. Also,
-                # calculate the proper orientation based on player
-                # orientation.
-                # 180 degrees around to orient the signs correctly, and then
-                # 23 degrees to get the sign to midpoint correctly.
-                metadata = ((player.location.yaw + 180) * 16 // 360) % 0xf
-                builddata = builddata._replace(block=blocks["signpost"],
-                    metadata=metadata)
-                y += 1
-            elif face == "-z":
-                builddata = builddata._replace(metadata=0x2)
-                z -= 1
-            elif face == "+z":
-                builddata = builddata._replace(metadata=0x3)
-                z += 1
+        # Buildin' a sign, puttin' it on a wall...
+        builddata = builddata._replace(block=blocks["wall-sign"])
 
-            bigx, smallx, bigz, smallz = split_coords(x, z)
+        # Offset coords according to face.
+        if face == "-x":
+            builddata = builddata._replace(metadata=0x4)
+            x -= 1
+        elif face == "+x":
+            builddata = builddata._replace(metadata=0x5)
+            x += 1
+        elif face == "-y":
+            # Ceiling Sign is watching you read.
+            returnValue((False, builddata, False))
+        elif face == "+y":
+            # Put +Y signs on signposts. We're fancy that way. Also,
+            # calculate the proper orientation based on player
+            # orientation.
+            # 180 degrees around to orient the signs correctly, and then
+            # 23 degrees to get the sign to midpoint correctly.
+            metadata = ((player.location.yaw + 180) * 16 // 360) % 0xf
+            builddata = builddata._replace(block=blocks["signpost"],
+                metadata=metadata)
+            y += 1
+        elif face == "-z":
+            builddata = builddata._replace(metadata=0x2)
+            z -= 1
+        elif face == "+z":
+            builddata = builddata._replace(metadata=0x3)
+            z += 1
 
-            # Let's build a sign!
-            chunk = yield factory.world.request_chunk(bigx, bigz)
-            s = Sign(smallx, y, smallz)
-            chunk.tiles[smallx, y, smallz] = s
+        bigx, smallx, bigz, smallz = split_coords(x, z)
 
-        elif item.slot in self.block_to_tile:
-            x, y, z = adjust_coords_for_face((x, y, z), face)
-            bigx, smallx, bigz, smallz = split_coords(x, z)
-
-            if item.slot == blocks["chest"].slot:
-                # Chests have some restrictions on building:
-                # you cannot connect more than two chests.
-                # (notchian)
-                ccs = chestsAround(factory, (x, y, z))
-                ccn = len(ccs)
-                if ccn == 1:
-                    # check gonna-be-connected chest is not connected already
-                    n = len(chestsAround(factory, ccs[0]))
-                    if n != 0:
-                        returnValue((False, builddata, True))
-                elif ccn > 1:
-                    # cannot build three or more connected chests
-                    returnValue((False, builddata, True))
-            elif item.slot == blocks["furnace"].slot:
-                # the furnace cannot be oriented up or down
-                if face == "-y" or face == "+y":
-                    orientation = ('+x', '+z', '-x', '-z')[((int(player.location.yaw) \
-                                                        - 45 + 360) % 360) / 90]
-                    metadata = blocks["furnace"].orientation(orientation)
-                    builddata = builddata._replace(metadata=metadata)
-
-            chunk = yield factory.world.request_chunk(bigx, bigz)
-
-            # Not much to do, just tell the chunk about this tile.
-            tileClass = self.block_to_tile[item.slot]
-            tile = tileClass(smallx, y, smallz)
-            chunk.tiles[smallx, y, smallz] = tile
+        # Let's build a sign!
+        chunk = yield factory.world.request_chunk(bigx, bigz)
+        s = SignTile(smallx, y, smallz)
+        chunk.tiles[smallx, y, smallz] = s
 
         returnValue((True, builddata, False))
 
-    name = "tile"
+    name = "sign"
 
-    before = tuple()
+    before = ("build_snow",)
     after = tuple()
 
 class BuildSnow(object):
@@ -133,5 +96,5 @@ class BuildSnow(object):
     before = tuple()
     after = tuple()
 
-tile = Tile()
+sign = Sign()
 build_snow = BuildSnow()
