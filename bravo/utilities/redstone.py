@@ -154,10 +154,14 @@ class Circuit(object):
 class Wire(Circuit):
     """
     The ubiquitous conductor of current.
+
+    Wires technically copy all of their inputs to their outputs, but the
+    operation isn't Boolean. Wires propagate the Boolean sum (OR) of their
+    inputs to any outputs which are relatively close to those inputs. It's
+    confusing.
     """
 
     name = "wire"
-
     traceables = ("plain",)
 
     def __init__(self, coordinates):
@@ -172,14 +176,13 @@ class PlainBlock(Circuit):
     Plain blocks do an OR operation across their inputs.
     """
 
+    name = "plain"
+    traceables = ("torch",)
+    op = staticmethod(any)
+
     def __init__(self, coords, block, metadata):
         super(PlainBlock, self).__init__(coords, block, metadata)
 
-    name = "plain"
-
-    traceables = ("torch",)
-
-    op = staticmethod(any)
 
 class Torch(Circuit):
     """
@@ -187,6 +190,10 @@ class Torch(Circuit):
 
     Torches do a NOT operation from their input.
     """
+
+    name = "torch"
+    traceables = ("wire",)
+    op = staticmethod(not_)
 
     def __init__(self, coords, block, metadata):
         super(Torch, self).__init__(coords, block, metadata)
@@ -231,12 +238,6 @@ class Torch(Circuit):
             yield x, y, z - 1
         elif self.orientation != "+y":
             yield x, y + 1, z
-
-    name = "torch"
-
-    traceables = ("wire",)
-
-    op = staticmethod(not_)
 
 block_to_circuit = {
     blocks["redstone-torch"].slot: Torch,
