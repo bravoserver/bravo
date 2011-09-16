@@ -29,6 +29,12 @@ class TestBlockQuirks(unittest.TestCase):
     def test_ice_no_drops(self):
         self.assertEqual(blocks["ice"].drop, blocks["air"].slot)
 
+    def test_lapis_ore_drops(self):
+        self.assertEqual(blocks["lapis-lazuli-ore"].drop,
+            items["lapis-lazuli"].slot)
+
+    test_lapis_ore_drops.todo = "Test for #357. Needs block drops to be keys."
+
     def test_sapling_drop_rate(self):
         self.assertAlmostEqual(blocks["leaves"].ratio, 1/9.0)
 
