@@ -72,9 +72,11 @@ dye_cyan = Ingredients("cyan-dye",
 dye_purple = Ingredients("purple-dye",
     (items["lapis-lazuli"].key, items["red-dye"].key),
     (items["purple-dye"].key, 2))
-# blue, brown, green?
+# Blue dye is a drop item from lapis lazuli ore and blocks.
+# Brown dye is a drop item from dungeon chests and brown sheep.
+# Green dye is made in furnaces, not crafting tables.
 dye_red = Ingredients("red-dye", (blocks["rose"].key,), (items["red-dye"], 2))
-# black?
+# Black dye is a drop item from squid and black sheep.
 
 # Wools. It'd be nice if we could loop these, but whatever.
 wool_orange  = wool("orange", items["orange-dye"].key)
