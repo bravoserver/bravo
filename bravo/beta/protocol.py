@@ -348,7 +348,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Send a keepalive to the client.
         """
 
-        self.write_packet("ping")
+        # XXX this function should track seen pings and attempt to measure
+        # latency somewhat
+        self.write_packet("ping", pid=0)
 
     def error(self, message):
         """
