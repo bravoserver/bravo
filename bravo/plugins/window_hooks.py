@@ -262,8 +262,6 @@ class Furnace(object):
         The ``container`` is a 0x66 message
         """
 
-        furnaces = factory.furnace_manager
-
         if container.wid == 0:
             return # skip inventory window
         elif player.windows:
@@ -274,7 +272,13 @@ class Furnace(object):
         if type(window) != FurnaceWindow:
             return
         # inform content of furnace was probably changed
-        furnaces.update(window.coords)
+        bigx, x, bigz, z, y = window.coords
+        d = factory.world.request_chunk(bigx, bigz)
+        @d.addCallback
+        def on_change(chunk):
+            furnace = self.get_furnace_tile(chunk, (x, y, z))
+            if furnace is not None:
+                furnace.changed(factory, window.coords)
 
     @inlineCallbacks
     def pre_build_hook(self, player, builddata):

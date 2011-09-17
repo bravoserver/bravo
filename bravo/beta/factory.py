@@ -18,7 +18,6 @@ from bravo.beta.packets import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
 from bravo.beta.protocol import BravoProtocol, KickedProtocol
 from bravo.utilities.chat import chat_name, sanitize_chat
-from bravo.utilities.furnace import FurnaceManager
 from bravo.weather import WeatherVane
 from bravo.world import World
 
@@ -78,7 +77,6 @@ class BravoFactory(Factory):
         self.limitPerIP = configuration.getintdefault(self.config_name,
                                                       "limitPerIP", 0)
 
-        self.furnace_manager = FurnaceManager(self)
         self.vane = WeatherVane(self)
 
     def startFactory(self):
@@ -110,9 +108,6 @@ class BravoFactory(Factory):
 
         log.msg("Starting entity updates...")
 
-        log.msg("Starting furnaces...")
-        self.furnace_manager.start()
-
         # Start automatons.
         for automaton in self.automatons:
             automaton.start()
@@ -141,7 +136,6 @@ class BravoFactory(Factory):
         self.unregister_plugins()
 
         self.time_loop.stop()
-        self.furnace_manager.stop()
 
         # Write back current world time. This must be done before stopping the
         # world.
@@ -249,8 +243,7 @@ class BravoFactory(Factory):
             "use_hooks": IUseHook,
         }
 
-        pp = {"factory": self,
-              "furnaces": self.furnace_manager}
+        pp = {"factory": self}
 
         for t, interface in plugin_types.iteritems():
             l = configuration.getlistdefault(self.config_name, t, [])
