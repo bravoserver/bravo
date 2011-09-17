@@ -280,9 +280,7 @@ class Furnace(object):
     def pre_build_hook(self, player, builddata):
         item, metadata, x, y, z, face = builddata
 
-        print "furnace.pre-build"
         if item.slot != blocks["furnace"].slot:
-            print "not a furnace"
             returnValue((True, builddata, False))
 
         x, y, z = adjust_coords_for_face((x, y, z), face)
@@ -404,7 +402,6 @@ class Chest(object):
     @inlineCallbacks
     def pre_build_hook(self, player, builddata):
         item, metadata, x, y, z, face = builddata
-        print "chest.pre-build"
 
         if item.slot != blocks["chest"].slot:
             returnValue((True, builddata, False))

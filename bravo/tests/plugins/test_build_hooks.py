@@ -23,17 +23,17 @@ class TileMockFactory(object):
 
         self.world = TileMockWorld()
 
-class TestTile(unittest.TestCase):
+class TestSign(unittest.TestCase):
 
     def setUp(self):
         self.f = TileMockFactory()
         self.p = bravo.plugin.retrieve_plugins(IPreBuildHook,
             parameters={"factory": self.f})
 
-        if "tile" not in self.p:
+        if "sign" not in self.p:
             raise unittest.SkipTest("Plugin not present")
 
-        self.hook = self.p["tile"]
+        self.hook = self.p["sign"]
 
     def test_trivial(self):
         pass
