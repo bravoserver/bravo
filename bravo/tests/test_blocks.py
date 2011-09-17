@@ -1,28 +1,19 @@
 from twisted.trial import unittest
 
-from bravo.blocks import (blocks, items, parse_block, block_names, item_names,
-                          special_item_names)
+from bravo.blocks import blocks, items, parse_block
 
 class TestBlockNames(unittest.TestCase):
-
-    def setUp(self):
-        self.bn = set(block_names)
-        self.ins = set(item_names)
-        self.sin = set(special_item_names)
 
     def test_trivial(self):
         pass
 
     def test_unique_blocks_and_items(self):
-        self.assertTrue(self.bn.isdisjoint(self.ins), repr(self.bn & self.ins))
+        block_names = set(blocks)
+        item_names = set(items)
+        self.assertTrue(block_names.isdisjoint(item_names),
+            repr(block_names & item_names))
 
     test_unique_blocks_and_items.todo = "Needs love and disambiguation"
-
-    def test_unique_blocks_and_special_items(self):
-        self.assertTrue(self.bn.isdisjoint(self.sin), repr(self.bn & self.sin))
-
-    def test_unique_items_and_special_items(self):
-        self.assertTrue(self.ins.isdisjoint(self.sin), repr(self.ins & self.sin))
 
 class TestBlockQuirks(unittest.TestCase):
 
