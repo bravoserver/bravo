@@ -24,6 +24,7 @@ class TestBravoFactory(unittest.TestCase):
 
         bravo.config.configuration.add_section("world unittest")
         bravo.config.configuration.set("world unittest", "port", "0")
+        bravo.config.configuration.set("world unittest", "mode", "creative")
 
         self.f = BravoFactory(self.name)
 
@@ -175,6 +176,7 @@ class TestBravoFactoryStarted(unittest.TestCase):
             "authenticator" : "offline",
             "automatons"    : "",
             "generators"    : "",
+            "mode"          : "creative",
             "port"          : "0",
             "seasons"       : "winter, spring",
             "serializer"    : "alpha",
