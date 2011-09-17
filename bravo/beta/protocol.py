@@ -83,6 +83,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             2: self.handshake,
             3: self.chat,
             7: self.use,
+            9: self.respawn,
             10: self.grounded,
             11: self.position,
             12: self.orientation,
@@ -155,6 +156,11 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     def use(self, container):
         """
         Hook for use packets.
+        """
+
+    def respawn(self, container):
+        """
+        Hook for respawn packets.
         """
 
     def grounded(self, container):
