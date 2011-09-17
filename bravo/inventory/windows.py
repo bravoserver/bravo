@@ -354,6 +354,22 @@ class InventoryWindow(Window):
         m += [self.inventory.armor, self.inventory.storage, self.inventory.holdables]
         return m
 
+    def creative(self, slot, primary, secondary, quantity):
+        ''' Process inventory changes made in creative mode
+        '''
+        try:
+            container, index = self.container_for_slot(slot)
+        except TypeError:
+            return False
+
+        # Current notchian implementation has only holdable slots.
+        # Prevent changes in other slots.
+        if container is self.inventory.holdables:
+            container[index] = Slot(primary, secondary, quantity)
+            return True
+        else:
+            return False
+
 class WorkbenchWindow(Window):
 
     def __init__(self, wid, inventory):
