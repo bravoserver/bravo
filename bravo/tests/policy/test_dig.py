@@ -2,7 +2,13 @@ import unittest
 
 from bravo.beta.structures import Slot
 from bravo.blocks import blocks, items
-from bravo.policy.dig import dig_policies
+from bravo.policy.dig import dig_policies, is_effective_against
+
+class TestEffectiveness(unittest.TestCase):
+
+    def test_wooden_pickaxe_is_effective_against_diamond(self):
+        self.assertTrue(is_effective_against(blocks["diamond-block"].slot,
+            Slot(items["wooden-pickaxe"].slot, 100, 1)))
 
 class TestNotchyDigPolicy(unittest.TestCase):
 
