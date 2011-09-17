@@ -191,7 +191,7 @@ block_names = [
     "sponge",
     "glass",
     "lapis-lazuli-ore",
-    "lapis-lazuli",
+    "lapis-lazuli-block",
     "dispenser",
     "sandstone",
     "note-block",
@@ -226,21 +226,21 @@ block_names = [
     "chest",
     "redstone-wire",
     "diamond-ore",
-    "diamond",
+    "diamond-block",
     "workbench",
     "crops",
     "soil",
     "furnace",
     "burning-furnace",
     "signpost",
-    "wooden-door", # 0x40
+    "wooden-door-block", # 0x40
     "ladder",
     "tracks",
     "stone-stairs",
     "wall-sign",
     "lever",
     "stone-plate",
-    "iron-door",
+    "iron-door-block",
     "wooden-plate",
     "redstone-ore",
     "glowing-redstone-ore",
@@ -252,7 +252,7 @@ block_names = [
     "snow-block", # 0x50
     "cactus",
     "clay",
-    "sugar-cane",
+    "reed",
     "jukebox",
     "fence",
     "pumpkin",
@@ -261,7 +261,7 @@ block_names = [
     "lightstone",
     "portal",
     "jack-o-lantern",
-    "cake",
+    "cake-block",
     "redstone-repeater-off",
     "redstone-repeater-on",
     "locked-chest",
@@ -368,7 +368,7 @@ item_names = [
     "bone",
     "sugar",
     "cake",
-    "bed",
+    "bed-block",
     "redstone-repeater",
     "cookie",
 ]
@@ -544,13 +544,15 @@ _add_block(Block(54, "chest", orientation=(None, None, 2, 3, 4, 5)))
 # Furnaces are orientable.
 _add_block(Block(61, "furnace", orientation=(None, None, 2, 3, 4, 5)))
 # Wooden Door is orientable and drops Wooden Door item
-_add_block(Block(64, "wooden-door", drop=324, orientation=(None, None, 1, 3, 0, 2)))
+_add_block(Block(64, "wooden-door-block", drop=324,
+    orientation=(None, None, 1, 3, 0, 2)))
 # Ladders are orientable and don't dim.
 _add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5), dim=0))
 # Levers are orientable and don't dim.
 _add_block(Block(69, "lever", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Iron Door is orientable and drops Iron Door item
-_add_block(Block(71, "iron-door", drop=330, orientation=(None, None, 1, 3, 0, 2)))
+_add_block(Block(71, "iron-door-block", drop=330,
+    orientation=(None, None, 1, 3, 0, 2)))
 # Redstone ore drops 5 redstone dusts.
 _add_block(Block(73, "redstone-ore", drop=331, quantity=5))
 _add_block(Block(74, "glowing-redstone-ore", drop=331, quantity=5))

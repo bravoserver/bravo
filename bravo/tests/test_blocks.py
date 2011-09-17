@@ -4,16 +4,11 @@ from bravo.blocks import blocks, items, parse_block
 
 class TestBlockNames(unittest.TestCase):
 
-    def test_trivial(self):
-        pass
-
     def test_unique_blocks_and_items(self):
         block_names = set(blocks)
         item_names = set(items)
         self.assertTrue(block_names.isdisjoint(item_names),
             repr(block_names & item_names))
-
-    test_unique_blocks_and_items.todo = "Needs love and disambiguation"
 
 class TestBlockQuirks(unittest.TestCase):
 
