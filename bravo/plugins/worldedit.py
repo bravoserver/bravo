@@ -16,8 +16,8 @@ empty_blocks_names = (
     "air", "snow", "sapling", "water", "spring",
     "flower", "rose", "brown-mushroom", "red-mushroom",
     "torch", "fire", "redstone-wire", "crops", "soil", "signpost",
-    "wooden-door", "iron-door", "wall-sign", "lever",
-    "stone-plate", "wooden-plate", "sugar-cane", "fence", "portal",
+    "wooden-door-block", "iron-door-block", "wall-sign", "lever",
+    "stone-plate", "wooden-plate", "reed", "fence", "portal",
     "redstone-repeater-on", "redstone-repeater-off",
 )
 

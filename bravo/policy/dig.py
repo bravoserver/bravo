@@ -119,9 +119,9 @@ class NotchyDigPolicy(object):
             blocks["redstone-torch"].slot,
             blocks["redstone-torch-off"].slot,
             blocks["redstone-wire"].slot,
+            blocks["reed"].slot,
             blocks["rose"].slot,
             blocks["sapling"].slot,
-            blocks["sugar-cane"].slot,
             blocks["tnt"].slot,
             blocks["torch"].slot,
             ):
