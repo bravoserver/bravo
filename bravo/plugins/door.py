@@ -63,7 +63,7 @@ class Door(object):
 
     implements(IPreBuildHook, IPreDigHook, IDigHook)
 
-    doors = (blocks["wooden-door"].slot, blocks["iron-door"].slot)
+    doors = (blocks["wooden-door-block"].slot, blocks["iron-door-block"].slot)
 
     @staticmethod
     def open_or_close(world, point):
@@ -160,7 +160,7 @@ class Door(object):
         return False, builddata, True
 
     def dig_hook(self, chunk, x, y, z, block):
-        if block.slot != blocks["wooden-door"].slot and block.slot != blocks["iron-door"].slot:
+        if block.slot != blocks["wooden-door-block"].slot and block.slot != blocks["iron-door-block"].slot:
             return
 
         # We get the coordinates of the other door block

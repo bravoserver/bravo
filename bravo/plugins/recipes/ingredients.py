@@ -23,9 +23,9 @@ iron_ingots = Ingredients("iron-ingots", (blocks["iron"].key,),
     (items["iron-ingot"].key, 9))
 gold_ingots = Ingredients("gold-ingots", (blocks["gold"].key,),
     (items["gold-ingot"].key, 9))
-diamonds = Ingredients("diamonds", (blocks["diamond"].key,),
+diamonds = Ingredients("diamonds", (blocks["diamond-block"].key,),
     (items["diamond"].key, 9))
-lapis_lazulis = Ingredients("lapis-lazulis", (blocks["lapis-lazuli"].key,),
+lapis_lazulis = Ingredients("lapis-lazulis", (blocks["lapis-lazuli-block"].key,),
     (items["lapis-lazuli"].key, 9))
 bone_meal = Ingredients("bone-meal", (items["bone"].key,),
     (items["bone-meal"].key, 3))

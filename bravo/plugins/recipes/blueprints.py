@@ -258,11 +258,11 @@ ironblock = three_by_three(items["iron-ingot"], items["iron-ingot"],
 goldblock = three_by_three(items["gold-ingot"], items["gold-ingot"],
     blocks["gold"], "gold-block")
 diamondblock = three_by_three(items["diamond"], items["diamond"],
-    blocks["diamond"], "diamond-block")
+    blocks["diamond-block"], "diamond-block")
 glowstone = three_by_three(items["glowstone-dust"], items["glowstone-dust"],
     blocks["lightstone"], "lightstone")
 lazuliblock = three_by_three(items["lapis-lazuli"], items["lapis-lazuli"],
-    blocks["lapis-lazuli"], "lapis-lazuli-block")
+    blocks["lapis-lazuli-block"], "lapis-lazuli-block")
 wool = three_by_three(items["string"], items["string"], blocks["wool"], "wool")
 stoneslab = three_by_one(blocks["stone"], blocks["stone-step"], 3, "stone-step")
 cstoneslab = three_by_one(blocks["cobblestone"], blocks["cobblestone-step"], 3,
@@ -380,7 +380,7 @@ goldenapple = three_by_three(blocks["gold"], items["apple"],
 
 painting = three_by_three(items["stick"], blocks["wool"], items["paintings"],
     "paintings")
-papers = three_by_one(blocks["sugar-cane"], items["paper"], 3, "paper")
+papers = three_by_one(blocks["reed"], items["paper"], 3, "paper")
 
 # Special items.
 # These recipes are only special in that their blueprints don't follow any
