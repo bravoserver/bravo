@@ -48,8 +48,8 @@ class Bed(object):
         if not player.inventory.consume((item.slot, 0), player.equipped):
             return False, builddata, False
 
-        factory.world.set_block((x, y, z), blocks["bed"].slot)
-        factory.world.set_block((x + dx, y, z + dz), blocks["bed"].slot)
+        factory.world.set_block((x, y, z), blocks["bed-block"].slot)
+        factory.world.set_block((x + dx, y, z + dz), blocks["bed-block"].slot)
         factory.world.set_metadata((x, y, z), metadata)
         factory.world.set_metadata((x + dx, y, z + dz), metadata | HEAD_PART)
 
@@ -60,12 +60,12 @@ class Bed(object):
         return False, builddata, True
 
     def dig_hook(self, chunk, x, y, z, block):
-        if block.slot != blocks["bed"].slot:
+        if block.slot != blocks["bed-block"].slot:
             return
 
         # Calculate offset for the second block according to the direction.
         metadata = chunk.get_metadata((x, y, z))
-        orientation = blocks["bed"].face(metadata & 0x3)
+        orientation = blocks["bed-block"].face(metadata & 0x3)
         dx, dz = self.deltas(orientation)
 
         # If the head of the bed was digged, look for the second block in

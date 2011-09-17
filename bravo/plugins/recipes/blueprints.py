@@ -403,7 +403,7 @@ bed = Blueprint("bed", (3, 2),
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
     ),
-    (blocks["bed"].key, 1))
+    (items["bed"].key, 1))
 
 book = Blueprint("book", (1, 3),
     (
