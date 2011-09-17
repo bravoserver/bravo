@@ -195,7 +195,7 @@ block_names = [
     "dispenser",
     "sandstone",
     "note-block",
-    "bed",
+    "bed-block",
     "powered-rail",
     "detector-rail",
     "",
@@ -368,7 +368,7 @@ item_names = [
     "bone",
     "sugar",
     "cake",
-    "bed-block",
+    "bed",
     "redstone-repeater",
     "cookie",
 ]
