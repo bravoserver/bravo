@@ -535,6 +535,8 @@ _add_block(Block(9, "spring", breakable=False, dim=3))
 _add_block(Block(13, "gravel", drop=(318, 0), ratio=1 / 10))
 # Leaves drop saplings, with 1 in 9 odds, and dims by 1.
 _add_block(Block(18, "leaves", drop=(6, 0), ratio=1 / 9, dim=1))
+# Lapis lazuli ore drops 6 lapis lazuli items.
+_add_block(Block(21, "lapis-lazuli-ore", drop=(351, 4), quantity=6))
 # Beds are orientable and drops Bed Item
 _add_block(Block(26, "bed-block", drop=(355, 0),
     orientation=(None, None, 2, 0, 1, 3)))
