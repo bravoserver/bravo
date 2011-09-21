@@ -1,3 +1,5 @@
+from __future__ import division
+
 from twisted.trial import unittest
 
 from bravo.blocks import blocks, items, parse_block
@@ -13,16 +15,16 @@ class TestBlockNames(unittest.TestCase):
 class TestBlockQuirks(unittest.TestCase):
 
     def test_ice_no_drops(self):
-        self.assertEqual(blocks["ice"].drop, blocks["air"].slot)
+        self.assertEqual(blocks["ice"].drop, blocks["air"].key)
 
     def test_lapis_ore_drops(self):
         self.assertEqual(blocks["lapis-lazuli-ore"].drop,
-            items["lapis-lazuli"].slot)
+            items["lapis-lazuli"].key)
 
     test_lapis_ore_drops.todo = "Test for #357. Needs block drops to be keys."
 
     def test_sapling_drop_rate(self):
-        self.assertAlmostEqual(blocks["leaves"].ratio, 1/9.0)
+        self.assertAlmostEqual(blocks["leaves"].ratio, 1 / 9)
 
     def test_unbreakable_bedrock(self):
         self.assertFalse(blocks["bedrock"].breakable)

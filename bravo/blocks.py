@@ -6,7 +6,7 @@ class Block(object):
     """
     A model for a block.
 
-    There are lots of rule and properties specific to different types of
+    There are lots of rules and properties specific to different types of
     blocks. This class encapsulates those properties in a singleton-style
     interface, allowing many blocks to be referenced in one location.
 
@@ -38,10 +38,10 @@ class Block(object):
         :param str name: A common name for this block.
         :param int secondary: The metadata/damage/secondary attribute for this
             block. Defaults to zero.
-        :param int drop: The type of block that should be dropped when an
-            instance of this block is destroyed. Defaults to the slot value, to
-            drop instances of this same type of block. To indicate that this
-            block does not drop anything, set to air.
+        :param tuple drop: The type of block that should be dropped when an
+            instance of this block is destroyed. Defaults to the block value,
+            to drop instances of this same type of block. To indicate that
+            this block does not drop anything, set to air (0, 0).
         :param int replace: The type of block to place in the map when
             instances of this block are destroyed. Defaults to air.
         :param float ratio: The probability of this block dropping a block
@@ -64,7 +64,7 @@ class Block(object):
         self.key = (self.slot, secondary)
 
         if drop is None:
-            self.drop = slot
+            self.drop = self.key
         else:
             self.drop = drop
 
@@ -94,8 +94,8 @@ class Block(object):
             attributes.append("translucent (%d)" % self.dim)
         if self.replace:
             attributes.append("becomes %d" % self.replace)
-        if self.ratio != 1 or self.quantity > 1 or self.drop != self.slot:
-            attributes.append("drops %d slot %d rate %2.2f%%" %
+        if self.ratio != 1 or self.quantity > 1 or self.drop != self.key:
+            attributes.append("drops %r slot %d rate %2.2f%%" %
                 (self.quantity, self.drop, self.ratio * 100))
         if attributes:
             attributes = ": %s" % ", ".join(attributes)
@@ -450,23 +450,23 @@ drops = {}
 
 # Block -> block drops.
 # If the drop block is zero, then it drops nothing.
-drops[1]  = 4   # Stone           -> Cobblestone
-drops[2]  = 3   # Grass           -> Dirt
-drops[20] = 0   # Glass
-drops[52] = 0   # Mob spawner
-drops[60] = 3   # Soil            -> Dirt
-drops[62] = 61  # Burning Furnace -> Furnace
-drops[78] = 0   # Snow
+drops[1]  = (4, 0)  # Stone           -> Cobblestone
+drops[2]  = (3, 0)  # Grass           -> Dirt
+drops[20] = (0, 0)  # Glass
+drops[52] = (0, 0)  # Mob spawner
+drops[60] = (3, 0)  # Soil            -> Dirt
+drops[62] = (61, 0) # Burning Furnace -> Furnace
+drops[78] = (0, 0)  # Snow
 
 # Block -> item drops.
-drops[16] = 263 # Coal Ore Block    -> Coal
-drops[56] = 264 # Diamond Ore Block -> Diamond
-drops[63] = 323 # Sign Post         -> Sign Item
-drops[68] = 323 # Wall Sign         -> Sign Item
-drops[83] = 338 # Reed              -> Reed Item
-drops[89] = 348 # Lightstone        -> Lightstone Dust
-drops[93] = 356 # Redstone-repeater-on  -> Redstone-repeater
-drops[94] = 356 # Redstone-repeater-off -> Redstone-repeater
+drops[16] = (263, 0) # Coal Ore Block         -> Coal
+drops[56] = (264, 0) # Diamond Ore Block      -> Diamond
+drops[63] = (323, 0) # Sign Post              -> Sign Item
+drops[68] = (323, 0) # Wall Sign              -> Sign Item
+drops[83] = (338, 0) # Reed                   -> Reed Item
+drops[89] = (348, 0) # Lightstone             -> Lightstone Dust
+drops[93] = (356, 0) # Redstone Repeater, on  -> Redstone Repeater
+drops[94] = (356, 0) # Redstone Repeater, off -> Redstone Repeater
 
 
 unbreakables = set()
@@ -532,11 +532,11 @@ def _add_block(block):
 _add_block(Block(8, "water", breakable=False, dim=3))
 _add_block(Block(9, "spring", breakable=False, dim=3))
 # Gravel drops flint, with 1 in 10 odds.
-_add_block(Block(13, "gravel", drop=318, ratio=1 / 10))
+_add_block(Block(13, "gravel", drop=(318, 0), ratio=1 / 10))
 # Leaves drop saplings, with 1 in 9 odds, and dims by 1.
-_add_block(Block(18, "leaves", drop=6, ratio=1 / 9, dim=1))
+_add_block(Block(18, "leaves", drop=(6, 0), ratio=1 / 9, dim=1))
 # Beds are orientable and drops Bed Item
-_add_block(Block(26, "bed-block", drop=355,
+_add_block(Block(26, "bed-block", drop=(355, 0),
     orientation=(None, None, 2, 0, 1, 3)))
 # Torches are orientable and don't dim.
 _add_block(Block(50, "torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
@@ -545,27 +545,27 @@ _add_block(Block(54, "chest", orientation=(None, None, 2, 3, 4, 5)))
 # Furnaces are orientable.
 _add_block(Block(61, "furnace", orientation=(None, None, 2, 3, 4, 5)))
 # Wooden Door is orientable and drops Wooden Door item
-_add_block(Block(64, "wooden-door-block", drop=324,
+_add_block(Block(64, "wooden-door-block", drop=(324, 0),
     orientation=(None, None, 1, 3, 0, 2)))
 # Ladders are orientable and don't dim.
 _add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5), dim=0))
 # Levers are orientable and don't dim.
 _add_block(Block(69, "lever", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Iron Door is orientable and drops Iron Door item
-_add_block(Block(71, "iron-door-block", drop=330,
+_add_block(Block(71, "iron-door-block", drop=(330, 0),
     orientation=(None, None, 1, 3, 0, 2)))
 # Redstone ore drops 5 redstone dusts.
-_add_block(Block(73, "redstone-ore", drop=331, quantity=5))
-_add_block(Block(74, "glowing-redstone-ore", drop=331, quantity=5))
+_add_block(Block(73, "redstone-ore", drop=(331, 0), quantity=5))
+_add_block(Block(74, "glowing-redstone-ore", drop=(331, 0), quantity=5))
 # Redstone torches are orientable and don't dim.
 _add_block(Block(75, "redstone-torch-off", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 _add_block(Block(76, "redstone-torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Stone buttons are orientable and don't dim.
 _add_block(Block(77, "stone-button", orientation=(None, None, 1, 2, 3, 4), dim=0))
 # Ice drops nothing, is replaced by springs, and dims by 3.
-_add_block(Block(79, "ice", drop=0, replace=9, dim=3))
+_add_block(Block(79, "ice", drop=(0, 0), replace=9, dim=3))
 # Clay drops 4 clay balls.
-_add_block(Block(82, "clay", drop=337, quantity=4))
+_add_block(Block(82, "clay", drop=(337, 0), quantity=4))
 # Trapdoor is orientable
 _add_block(Block(96, "trapdoor", orientation=(None, None, 0, 1, 2, 3)))
 

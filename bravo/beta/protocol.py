@@ -1008,7 +1008,7 @@ class BravoProtocol(BetaServerProtocol):
             self.player.equipped):
             # Okay, first one was a bust; maybe we can consume the related
             # block for dropping instead?
-            if not self.player.inventory.consume((block.drop, 0),
+            if not self.player.inventory.consume(block.drop,
                 self.player.equipped):
                 raise BuildError("Couldn't consume %r from inventory" % block)
 

@@ -41,7 +41,7 @@ class Give(object):
     implements(IDigHook)
 
     def dig_hook(self, chunk, x, y, z, block):
-        if block.drop == blocks["air"].slot:
+        if block.drop == blocks["air"].key:
             return
 
         # Block coordinates...
@@ -55,7 +55,7 @@ class Give(object):
         # remember that, for most blocks, the drop ratio is 1, so we should
         # have a short-circuit for those cases.
         if block.ratio == 1 or random.random() <= block.ratio:
-            factory.give(coords, (block.drop, 0), block.quantity)
+            factory.give(coords, block.drop, block.quantity)
 
     name = "give"
 
