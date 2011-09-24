@@ -53,8 +53,6 @@ class TestRecipes(unittest.TestCase):
         ]
         self.assertTrue(self.p["black-wool"].matches(table, 2))
 
-    test_black_wool_matches_lime.todo = "Wool colors matter in recipes"
-
     def test_bed_matches_tie_dye(self):
         """
         Three different colors of wool can be used to build beds.
@@ -75,5 +73,3 @@ class TestRecipes(unittest.TestCase):
             Slot.from_key(blocks["wood"].key, 1),
         ]
         self.assertTrue(self.p["bed"].matches(table, 3))
-
-    test_bed_matches_tie_dye.todo = "Test for #336"

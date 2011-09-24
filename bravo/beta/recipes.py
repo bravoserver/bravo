@@ -12,6 +12,7 @@ and do not need to inherit any class from this module.
 
 from zope.interface import implements
 
+from bravo.blocks import blocks
 from bravo.ibravo import IRecipe
 
 def grouper(n, iterable):
@@ -125,8 +126,14 @@ class Blueprint(object):
                     matches_needed -= 1
                 elif i is not None and j is not None:
                     skey, scount = i
-                    if j.holds(skey) and j.quantity >= scount:
-                        matches_needed -= 1
+                    if j.quantity >= scount:
+                        if j.holds(skey):
+                            matches_needed -= 1
+                        # Special case for wool, which should match on any
+                        # color. Woolhax.
+                        elif (skey[0] == blocks["wool"].slot and
+                              j.primary == blocks["wool"].slot):
+                            matches_needed -= 1
 
                 if matches_needed == 0:
                     # Jackpot!
@@ -179,6 +186,13 @@ class Ingredients(object):
         self.ingredients = sorted(ingredients)
         self.provides = provides
 
+        # Woolhax. If there's any wool in the ingredient list, rig it to be
+        # white wool, with secondary attribute zero. Shouldn't change the
+        # sorting order, so don't bother resorting.
+        for i, ingredient in enumerate(self.ingredients):
+            if ingredient[0] == blocks["wool"].slot:
+                self.ingredients[i] = blocks["wool"].slot, 0
+
     def matches(self, table, stride):
         """
         Figure out whether all the ingredients are in a given crafting table.
@@ -188,6 +202,12 @@ class Ingredients(object):
         """
 
         on_the_table = sorted((i.primary, i.secondary) for i in table if i)
+
+        # Woolhax. See __init__.
+        for i, ingredient in enumerate(on_the_table):
+            if ingredient[0] == blocks["wool"].slot:
+                on_the_table[i] = blocks["wool"].slot, 0
+
         return self.ingredients == on_the_table
 
     def reduce(self, table, stride):
