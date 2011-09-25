@@ -399,6 +399,8 @@ class IPostBuildHook(ISortedPlugin):
     def post_build_hook(player, coords, block):
         """
         Do things.
+
+        The coordinates for the given block have already been pre-adjusted.
         """
 
 class IPreDigHook(ISortedPlugin):
