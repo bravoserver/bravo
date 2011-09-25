@@ -61,7 +61,14 @@ class AlphaSandGravel(Fallables):
     """
 
     fallables = (blocks["sand"].slot, blocks["gravel"].slot)
-    whitespace = (blocks["air"].slot, blocks["snow"].slot)
+    whitespace = (
+        blocks["air"].slot,
+        blocks["lava"].slot,
+        blocks["lava-spring"].slot,
+        blocks["snow"].slot,
+        blocks["spring"].slot,
+        blocks["water"].slot,
+    )
 
     name = "alpha_sand_gravel"
 
