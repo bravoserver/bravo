@@ -965,7 +965,8 @@ class BravoProtocol(BetaServerProtocol):
             return
 
         newblock = builddata.block.slot
-        coords = builddata.x, builddata.y, builddata.z
+        coords = adjust_coords_for_face(
+            (builddata.x, builddata.y, builddata.z), builddata.face)
 
         # Run post-build hooks. These are merely callbacks which cannot
         # interfere with the build process, largely because the build process
@@ -977,7 +978,7 @@ class BravoProtocol(BetaServerProtocol):
         # Feed automatons.
         for automaton in self.factory.automatons:
             if newblock in automaton.blocks:
-                automaton.feed(adjust_coords_for_face((builddata.x, builddata.y, builddata.z), builddata.face))
+                automaton.feed(coords)
 
         # Re-send inventory.
         # XXX this could be optimized if/when inventories track damage.
