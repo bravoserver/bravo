@@ -1,11 +1,11 @@
 title: Bravo 1.8
 author: Corbin Simpson <MostAwesomeDude@gmail.com>
 category: index
-datetime: 2011-08-23T00:00:00
+datetime: 2011-09-25T00:00:00
 ---
-Bravo 1.8 is out, or it will be shortly. This is a massive release, with so
-many changes that it feels wrong to try to summarize them. Thus, the entire
-changelog is reproduced below.
+Bravo 1.8 is out! This is a massive release, with so many changes that it
+feels wrong to try to summarize them. Thus, the entire changelog is reproduced
+below.
 
 ::
 
