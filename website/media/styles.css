@@ -44,13 +44,19 @@ p {
     #header-right #navigation li:first-child:before {
       content: ""; }
 
-#main {
-  padding: 1em;
+#main, .entry {
+  padding-left: 1em;
+  padding-right: 1em;
   clear: both;
-  background-color: #eeffff;
+  background-color: #ddffff;
   border-color: #aaddbb;
   border-width: 2px;
   border-style: solid; }
+
+.entry {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  background-color: #eeffff; }
 
 #footer {
   background-color: #ffffff;

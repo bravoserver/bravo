@@ -5,8 +5,10 @@
 {% block main %}
 {{ super() }}
 {% for subpage in page.subpages|sort(reverse=True, attribute="datetime") %}
-    <h2>{{ subpage.title }}</h2>
-    {{ subpage.content }}
+    <div class="entry">
+        <h2>{{ subpage.title }}</h2>
+        {{ subpage.content }}
+    </div>
 {% else %}
 Huh, where'd the content go?
 {% endfor %}

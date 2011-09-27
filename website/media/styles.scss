@@ -5,7 +5,8 @@ $light-blue: #6ff;
 $dark-green: #7a5;
 $med-green: #9d7;
 $light-green: #adb;
-$pale-green: #eff;
+$pale-green: #dff;
+$paler-green: #eff;
 $white: #fff;
 
 body {
@@ -76,8 +77,9 @@ p {
     }
 }
 
-#main {
-    padding: 1em;
+#main, .entry {
+    padding-left: 1em;
+    padding-right: 1em;
     clear: both;
     background: {
         color: $pale-green;
@@ -86,6 +88,14 @@ p {
         color: $light-green;
         width: 2px;
         style: solid;
+    }
+}
+
+.entry {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    background: {
+        color: $paler-green;
     }
 }
 
