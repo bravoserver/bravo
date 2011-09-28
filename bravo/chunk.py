@@ -69,6 +69,37 @@ def composite_glow(target, strength, x, y, z):
     # Composite!
     target[sx:ex, sz:ez, sy:ey] += ambient[si:ei, sk:ek, sj:ej]
 
+def iter_neighbors(coords):
+    """
+    Iterate over the chunk-local coordinates surrounding the given
+    coordinates.
+
+    All coordinates are chunk-local.
+
+    Coordinates which are not valid chunk-local coordinates will not be
+    generated.
+    """
+
+    x, z, y = coords
+
+    for dx, dz, dy in (
+        (1, 0, 0),
+        (-1, 0, 0),
+        (0, 1, 0),
+        (0, -1, 0),
+        (0, 0, 1),
+        (0, 0, -1)):
+        nx = x + dx
+        nz = z + dz
+        ny = y + dy
+
+        if not (0 <= nx < 16 and
+            0 <= nz < 16 and
+            0 <= ny < 128):
+            continue
+
+        yield nx, nz, ny
+
 class Chunk(object):
     """
     A chunk of blocks.
@@ -218,24 +249,8 @@ class Chunk(object):
                     visited.add(coords)
                     continue
 
-                for dx, dz, dy in (
-                    (1, 0, 0),
-                    (-1, 0, 0),
-                    (0, 1, 0),
-                    (0, -1, 0),
-                    (0, 0, 1),
-                    (0, 0, -1)):
-                    x, z, y = coords
-                    x += dx
-                    z += dz
-                    y += dy
-                    target = x, z, y
-
-                    if not (0 <= x < 16 and
-                        0 <= z < 16 and
-                        0 <= y < 128):
-                        continue
-
+                for target in iter_neighbors(coords):
+                    # Skip targets that already have valid lighting.
                     if target in visited:
                         continue
 
