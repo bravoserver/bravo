@@ -4,12 +4,12 @@ import warnings
 from numpy import empty
 from numpy.testing import assert_array_equal
 
-import bravo.chunk
+from bravo.chunk import Chunk
 
 class TestChunkBlocks(unittest.TestCase):
 
     def setUp(self):
-        self.c = bravo.chunk.Chunk(0, 0)
+        self.c = Chunk(0, 0)
 
     def test_trivial(self):
         pass
@@ -58,7 +58,7 @@ class TestChunkBlocks(unittest.TestCase):
         self.assertEqual(self.c.get_block((3, 3, 3)), 3)
 
     def test_single_block_damage_packet(self):
-        chunk = bravo.chunk.Chunk(2, 1)
+        chunk = Chunk(2, 1)
         chunk.populated = True
         chunk.set_block((2, 4, 8), 1)
         chunk.set_metadata((2, 4, 8), 2)
@@ -98,7 +98,7 @@ class TestNumpyQuirks(unittest.TestCase):
 
     def test_get_damage_packet_single(self):
         # Create a chunk.
-        c = bravo.chunk.Chunk(0, 0)
+        c = Chunk(0, 0)
         # Damage the block.
         c.populated = True
         c.set_block((0, 0, 0), 1)
@@ -112,7 +112,7 @@ class TestNumpyQuirks(unittest.TestCase):
 
     def test_get_damage_packet_batch(self):
         # Create a chunk.
-        c = bravo.chunk.Chunk(0, 0)
+        c = Chunk(0, 0)
         # Damage the block so that it will generate a multi-block batch
         # packet.
         c.populated = True
@@ -129,7 +129,7 @@ class TestNumpyQuirks(unittest.TestCase):
 class TestLightmaps(unittest.TestCase):
 
     def setUp(self):
-        self.c = bravo.chunk.Chunk(0, 0)
+        self.c = Chunk(0, 0)
 
     def test_trivial(self):
         pass
