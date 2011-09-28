@@ -7,6 +7,7 @@ from numpy import vectorize
 from bravo.blocks import blocks, glowing_blocks
 from bravo.beta.packets import make_packet
 from bravo.utilities.bits import pack_nibbles
+from bravo.utilities.maths import clamp
 
 class ChunkWarning(Warning):
     """
@@ -211,7 +212,7 @@ class Chunk(object):
 
         # Run the actual glow loop. For each glow level, go over unvisited air
         # blocks and illuminate them.
-        for glow in range(14, 0, -1):
+        for glow in xrange(14, 0, -1):
             for coords in spread:
                 if lightmap[coords] <= glow:
                     visited.add(coords)
@@ -228,22 +229,27 @@ class Chunk(object):
                     x += dx
                     z += dz
                     y += dy
+                    target = x, z, y
 
                     if not (0 <= x < 16 and
                         0 <= z < 16 and
                         0 <= y < 128):
                         continue
 
-                    if (x, z, y) in visited:
+                    if target in visited:
                         continue
 
-                    if lightable[x, z, y] and lightmap[x, z, y] < glow:
-                        lightmap[x, z, y] = glow - blocks[self.blocks[x, z, y]].dim
-                        visited.add((x, z, y))
+                    # If the block's lightable and the lightmap isn't fully
+                    # lit up, then light the block appropriately and mark it
+                    # as visited.
+                    if lightable[target] and lightmap[target] < glow:
+                        light = glow - blocks[self.blocks[target]].dim
+                        lightmap[target] = clamp(light, 0, 15)
+                        visited.add(target)
             spread = visited
             visited = set()
 
-        self.skylight = lightmap.clip(0, 15)
+        self.skylight = lightmap
 
     def regenerate(self):
         """
