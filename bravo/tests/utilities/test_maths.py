@@ -1,6 +1,6 @@
 import unittest
 
-from bravo.utilities.maths import morton2
+from bravo.utilities.maths import clamp, morton2
 
 class TestMorton(unittest.TestCase):
 
@@ -18,3 +18,22 @@ class TestMorton(unittest.TestCase):
 
     def test_second_full(self):
         self.assertEqual(morton2(0x0, 0xffff), 0xaaaaaaaa)
+
+class TestClamp(unittest.TestCase):
+
+    def test_minimum(self):
+        self.assertEqual(clamp(-1, 0, 3), 0)
+
+    def test_maximum(self):
+        self.assertEqual(clamp(4, 0, 3), 3)
+
+    def test_middle(self):
+        self.assertEqual(clamp(2, 0, 3), 2)
+
+    def test_middle_polymorphic(self):
+        """
+        ``clamp()`` doesn't care too much about its arguments, and won't
+        modify types unnecessarily.
+        """
+
+        self.assertEqual(clamp(1.5, 0, 3), 1.5)

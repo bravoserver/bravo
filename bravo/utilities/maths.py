@@ -44,3 +44,14 @@ def morton2(x, y):
         gy = (gy | (gy << j)) & i
 
     return gx | (gy << 1)
+
+def clamp(x, low, high):
+    """
+    Clamp or saturate a number to be no lower than a minimum and no higher
+    than a maximum.
+
+    Implemented as its own function simply because it's so easy to mess up
+    when open-coded.
+    """
+
+    return min(max(x, low), high)
