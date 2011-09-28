@@ -435,12 +435,17 @@ class Chunk(object):
                 else:
                     self.heightmap[x, z] = max(self.heightmap[x, z], y)
 
-                # Add to lightmap at this coordinate.
+                # Do the blocklight at this coordinate, if appropriate.
                 if block in glowing_blocks:
                     composite_glow(self.blocklight, glowing_blocks[block],
                         x, y, z)
 
                     self.blocklight = cast["uint8"](self.blocklight.clip(0, 15))
+
+                # And the skylight.
+                glow = max(self.skylight[neighbor]
+                    for neighbor in iter_neighbors((x, z, y)))
+                self.skylight[x, z, y] = neighboring_light(glow, block)
 
                 self.dirty = True
                 self.damage(coords)

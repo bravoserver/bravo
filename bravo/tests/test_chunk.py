@@ -4,6 +4,7 @@ import warnings
 from numpy import empty
 from numpy.testing import assert_array_equal
 
+from bravo.blocks import blocks
 from bravo.chunk import Chunk
 
 class TestChunkBlocks(unittest.TestCase):
@@ -233,3 +234,34 @@ class TestLightmaps(unittest.TestCase):
         self.c.regenerate()
 
         self.assertEqual(self.c.skylight[1, 1, 1], 12)
+
+    def test_incremental_solid(self):
+        """
+        Regeneration isn't necessary to correctly light solid blocks.
+        """
+
+        # Initialize tables and enable set_block().
+        self.c.regenerate()
+        self.c.populated = True
+
+        # Any solid block with no dimming works. I choose dirt.
+        self.c.set_block((0, 0, 0), blocks["dirt"].slot)
+
+        self.assertEqual(self.c.skylight[0, 0, 0], 0)
+
+    def test_incremental_air(self):
+        """
+        Regeneration isn't necessary to correctly light dug blocks, which
+        leave behind air.
+        """
+
+        # Any solid block with no dimming works. I choose dirt.
+        self.c.blocks[0, 0, 0] = blocks["dirt"].slot
+
+        # Initialize tables and enable set_block().
+        self.c.regenerate()
+        self.c.populated = True
+
+        self.c.set_block((0, 0, 0), blocks["air"].slot)
+
+        self.assertEqual(self.c.skylight[0, 0, 0], 15)
