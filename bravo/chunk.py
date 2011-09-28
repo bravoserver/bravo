@@ -100,6 +100,18 @@ def iter_neighbors(coords):
 
         yield nx, nz, ny
 
+def neighboring_light(glow, block):
+    """
+    Calculate the amount of light that should be shone on a block.
+
+    ``glow`` is the brighest neighboring light. ``block`` is the slot of the
+    block being illuminated.
+
+    The return value is always a valid light value.
+    """
+
+    return clamp(glow - blocks[block].dim, 0, 15)
+
 class Chunk(object):
     """
     A chunk of blocks.
@@ -255,8 +267,8 @@ class Chunk(object):
                     # lit up, then light the block appropriately and mark it
                     # as visited.
                     if lightable[target] and lightmap[target] < glow:
-                        light = glow - blocks[self.blocks[target]].dim
-                        lightmap[target] = clamp(light, 0, 15)
+                        light = neighboring_light(glow, self.blocks[target])
+                        lightmap[target] = light
                         visited.add(target)
             spread = visited
             visited = set()
