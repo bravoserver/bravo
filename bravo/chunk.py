@@ -178,9 +178,6 @@ class Chunk(object):
 
         self.blocklight = cast["uint8"](lightmap.clip(0, 15))
 
-    def regenerate_metadata(self):
-        pass
-
     def regenerate_skylight(self):
         """
         Regenerate the ambient light map.
@@ -268,12 +265,11 @@ class Chunk(object):
 
     def regenerate(self):
         """
-        Regenerate all extraneous tables.
+        Regenerate all auxiliary tables.
         """
 
         self.regenerate_heightmap()
         self.regenerate_blocklight()
-        self.regenerate_metadata()
         self.regenerate_skylight()
 
         self.dirty = True
