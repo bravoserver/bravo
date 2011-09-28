@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from sys import maxint
 from math import floor
-from bravo.simplex import dot3
 
-clamp = lambda n: max(min(1, n), -1)
+from bravo.simplex import dot3
+from bravo.utilities.maths import clamp
+
 class MobManager(object):
 
     """
@@ -84,9 +85,9 @@ class MobManager(object):
             for y in xrange(min_point[1],max_point[1]):
                 for z in xrange(min_point[2],max_point[2]):
                     if self.world.sync_get_block((x,y,z)) != 0:
-                        normal = (clamp(int(location.x) - x),
-                                  clamp(int(location.y) - y),
-                                  clamp(int(location.z) - z))
+                        normal = (clamp(location.x - x, -1, 1),
+                                  clamp(location.y - y, -1, 1),
+                                  clamp(location.z - z, -1, 1))
                         return False, normal
 
         return True

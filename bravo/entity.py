@@ -10,6 +10,7 @@ from bravo.location import Location
 from bravo.beta.packets import make_packet
 from bravo.utilities.coords import split_coords
 from bravo.utilities.geometry import gen_close_point
+from bravo.utilities.maths import clamp
 
 class Entity(object):
     """
@@ -244,7 +245,7 @@ class Mob(Entity):
         """
         Update this mob's location with respect to a factory.
         """
-        clamp = lambda n: max(min(.4, n), -.4)
+
         # XXX  Discuss appropriate style with MAD
         player = self.manager.closest_player((self.location.x,
                                  self.location.y,
@@ -267,9 +268,11 @@ class Mob(Entity):
             self_pos = (self.location.x, self.location.y, self.location.z)
             vector = gen_close_point(self_pos, target)
 
-            vector = (clamp(vector[0]),
-                clamp(vector[1]),
-                clamp(vector[2]))
+            vector = (
+                clamp(vector[0], -0.4, 0.4),
+                clamp(vector[1], -0.4, 0.4),
+                clamp(vector[2], -0.4, 0.4),
+            )
 
         new_position = (vector[0] + self.location.x,
             vector[1] + self.location.y,
