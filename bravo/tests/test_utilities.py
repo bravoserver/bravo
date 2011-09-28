@@ -2,13 +2,13 @@
 
 import unittest
 
-from numpy import array
-from numpy.testing import assert_array_equal
+from array import array
 
 from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 from bravo.utilities.chat import sanitize_chat
 from bravo.utilities.coords import split_coords, taxicab2, taxicab3
 from bravo.utilities.temporal import split_time
+from bravo.tests.helpers import assert_array_equal
 
 class TestCoordHandling(unittest.TestCase):
 
@@ -49,9 +49,9 @@ class TestBitTwiddling(unittest.TestCase):
             [14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 6, 3, 7])
 
     def test_pack_nibbles(self):
-        self.assertEqual(pack_nibbles(array([1, 6])), "a")
+        self.assertEqual(pack_nibbles(array("B", [1, 6])), "a")
         self.assertEqual(
-            pack_nibbles(array([14, 6, 9, 6, 2, 6, 3, 7])),
+            pack_nibbles(array("B", [14, 6, 9, 6, 2, 6, 3, 7])),
             "nibs")
 
     def test_nibble_reflexivity(self):
@@ -69,7 +69,7 @@ class TestBitTwiddling(unittest.TestCase):
         there's a regression.
         """
 
-        pack_nibbles(array([0xff, 0xff]))
+        pack_nibbles([0xff, 0xff])
 
 class TestStringMunging(unittest.TestCase):
 

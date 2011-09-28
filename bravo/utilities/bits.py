@@ -1,4 +1,10 @@
-from numpy import cast, dstack, fromstring
+from array import array
+from itertools import izip_longest
+
+def grouper(n, iterable, fillvalue=None):
+    "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return izip_longest(fillvalue=fillvalue, *args)
 
 """
 Bit-twiddling devices.
@@ -20,8 +26,13 @@ def unpack_nibbles(l):
 
     :returns: list of nibbles
     """
-    data = fromstring(l, dtype="uint8")
-    return dstack((data & 0xf, data >> 4)).flat
+
+    data = array("B")
+    for d in l:
+        i = ord(d)
+        data.append(i & 0xf)
+        data.append(i >> 4)
+    return data
 
 def pack_nibbles(a):
     """
@@ -34,6 +45,6 @@ def pack_nibbles(a):
     :returns: packed nibbles as a string of bytes
     """
 
-    a = a.reshape(-1, 2)
-    a = cast["uint8"](a)
-    return ((a[:, 1] << 4) | a[:, 0]).tostring()
+    packed = array("B",
+                   (((y & 0xf) << 4) | (x & 0xf) for x, y in grouper(2, a)))
+    return packed.tostring()

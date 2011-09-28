@@ -1,7 +1,5 @@
 from itertools import product
 
-from numpy import transpose
-
 def naive_scan(automaton, chunk):
     """
     Utility function which can be used to implement a naive, slow, but
@@ -11,10 +9,9 @@ def naive_scan(automaton, chunk):
     provide the `scan()` interface.
     """
 
-    for block in automaton.blocks:
-        for coords in transpose((chunk.blocks == block).nonzero()):
-            # Swizzle and discard numpy-ness.
-            coords = coords[0], coords[2], coords[1]
+    for i, block in enumerate(chunk.blocks):
+        if block in automaton.blocks:
+            coords = i >> 11, (i >> 7) & 0xf, i & 0x7f
             automaton.feed(coords)
 
 def column_scan(automaton, chunk):

@@ -1,12 +1,11 @@
 from __future__ import division
 
+from array import array
 from gzip import GzipFile
 import os
 from StringIO import StringIO
 from struct import pack, unpack
 from urlparse import urlparse
-
-from numpy import array, fromstring
 
 from twisted.python import log
 from twisted.python.filepath import FilePath
@@ -287,16 +286,16 @@ class Alpha(object):
 
         # These are designed to raise if there are any issues, but still be
         # speedy.
-        chunk.blocks = fromstring(level["Blocks"].value,
-            dtype="uint8").reshape(chunk.blocks.shape)
-        chunk.heightmap = fromstring(level["HeightMap"].value,
-            dtype="uint8").reshape(chunk.heightmap.shape)
-        chunk.blocklight = array(unpack_nibbles(
-            level["BlockLight"].value)).reshape(chunk.blocklight.shape)
-        chunk.metadata = array(unpack_nibbles(
-            level["Data"].value)).reshape(chunk.metadata.shape)
-        chunk.skylight = array(unpack_nibbles(
-            level["SkyLight"].value)).reshape(chunk.skylight.shape)
+        chunk.blocks = array("B")
+        chunk.blocks.fromstring(level["Blocks"].value)
+        chunk.heightmap = array("B")
+        chunk.heightmap.fromstring(level["HeightMap"].value)
+        chunk.blocklight = array("B",
+            unpack_nibbles(level["BlockLight"].value))
+        chunk.metadata = array("B",
+            unpack_nibbles(level["Data"].value))
+        chunk.skylight = array("B",
+            unpack_nibbles(level["SkyLight"].value))
 
         chunk.populated = bool(level["TerrainPopulated"])
 

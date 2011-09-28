@@ -2,7 +2,8 @@ from twisted.trial import unittest
 
 from twisted.internet.defer import inlineCallbacks
 
-import numpy
+from array import array
+import os
 import shutil
 import tempfile
 
@@ -39,9 +40,8 @@ class TestWorldChunks(unittest.TestCase):
         chunk = yield self.w.request_chunk(0, 0)
 
         # Fill the chunk with random stuff.
-        chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
-            dtype=numpy.uint8)
-        chunk.blocks.shape = (16, 16, 128)
+        chunk.blocks = array("B")
+        chunk.blocks.fromstring(os.urandom(32768))
 
         for x, y, z in product(xrange(2), repeat=3):
             # This works because the chunk is at (0, 0) so the coords don't
@@ -54,9 +54,8 @@ class TestWorldChunks(unittest.TestCase):
         chunk = yield self.w.request_chunk(0, 0)
 
         # Fill the chunk with random stuff.
-        chunk.metadata = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
-            dtype=numpy.uint8)
-        chunk.metadata.shape = (16, 16, 128)
+        chunk.metadata = array("B")
+        chunk.metadata.fromstring(os.urandom(32768))
 
         for x, y, z in product(xrange(2), repeat=3):
             # This works because the chunk is at (0, 0) so the coords don't
@@ -69,9 +68,8 @@ class TestWorldChunks(unittest.TestCase):
         chunk = yield self.w.request_chunk(0, 0)
 
         # Fill the chunk with random stuff.
-        chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
-            dtype=numpy.uint8)
-        chunk.blocks.shape = (16, 16, 128)
+        chunk.blocks = array("B")
+        chunk.blocks.fromstring(os.urandom(32768))
 
         # Evict the chunk and grab it again.
         self.w.save_chunk(chunk)
@@ -91,9 +89,8 @@ class TestWorldChunks(unittest.TestCase):
         chunk = yield self.w.request_chunk(-1, -1)
 
         # Fill the chunk with random stuff.
-        chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
-            dtype=numpy.uint8)
-        chunk.blocks.shape = (16, 16, 128)
+        chunk.blocks = array("B")
+        chunk.blocks.fromstring(os.urandom(32768))
 
         # Evict the chunk and grab it again.
         self.w.save_chunk(chunk)
@@ -111,9 +108,8 @@ class TestWorldChunks(unittest.TestCase):
         chunk = yield self.w.request_chunk(0, 0)
 
         # Fill the chunk with random stuff.
-        chunk.metadata = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
-            dtype=numpy.uint8)
-        chunk.metadata.shape = (16, 16, 128)
+        chunk.metadata = array("B")
+        chunk.metadata.fromstring(os.urandom(32768))
 
         # Evict the chunk and grab it again.
         self.w.save_chunk(chunk)
@@ -165,9 +161,8 @@ class TestWorldChunks(unittest.TestCase):
         chunk = yield self.w.request_chunk(0, 0)
 
         # Fill the chunk with random stuff.
-        chunk.blocks = numpy.fromstring(numpy.random.bytes(chunk.blocks.size),
-            dtype=numpy.uint8)
-        chunk.blocks.shape = (16, 16, 128)
+        chunk.blocks = array("B")
+        chunk.blocks.fromstring(os.urandom(32768))
 
         for x, y, z in product(xrange(2), repeat=3):
             # This works because the chunk is at (0, 0) so the coords don't

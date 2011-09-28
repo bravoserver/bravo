@@ -3,14 +3,13 @@ from twisted.trial import unittest
 import shutil
 import tempfile
 
-from numpy.testing import assert_array_equal
-
 from twisted.internet.defer import inlineCallbacks
 
 from bravo.blocks import blocks
 from bravo.config import BravoConfigParser
 from bravo.ibravo import IDigHook
 import bravo.plugin
+from bravo.tests.helpers import assert_array_equal
 from bravo.world import ChunkNotLoaded, World
 
 class PhysicsMockFactory(object):

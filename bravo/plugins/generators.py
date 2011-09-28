@@ -1,5 +1,6 @@
 from __future__ import division
 
+from array import array
 from itertools import combinations, product
 from random import Random
 
@@ -26,7 +27,11 @@ class BoringGenerator(object):
         Fill the bottom half of the chunk with stone.
         """
 
-        chunk.blocks[:, :, :64].fill(blocks["stone"].slot)
+        # Optimized fill. Go to each offset of 128, in order, and do a fill of
+        # 64.
+        stone = array("B", [blocks["stone"].slot] * 64)
+        for offset in xrange(0, 32768, 128):
+            chunk.blocks[offset:offset + 64] = stone
 
     name = "boring"
 
@@ -70,8 +75,10 @@ class SimplexGenerator(object):
             height *= 15
             height = int(height + 70)
 
-            column = chunk.get_column(x, z)
-            column[:height + 1].fill([blocks["stone"].slot])
+            # Make our chunk offset, and render into the chunk.
+            offset = x * 16 + z
+            stone = array("B", [blocks["stone"].slot] * height)
+            chunk.blocks[offset:offset + height] = stone
 
     name = "simplex"
 

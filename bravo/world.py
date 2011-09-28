@@ -1,10 +1,9 @@
+from array import array
 from functools import wraps
 from itertools import product
 import random
 import sys
 import weakref
-
-from numpy import fromstring
 
 from twisted.internet import reactor
 from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
@@ -380,17 +379,16 @@ class World(object):
 
             # Get chunk data into our chunk object.
             def fill_chunk(kwargs):
-                chunk.blocks = fromstring(kwargs["blocks"],
-                    dtype="uint8").reshape(chunk.blocks.shape)
-                chunk.heightmap = fromstring(kwargs["heightmap"],
-                    dtype="uint8").reshape(chunk.heightmap.shape)
-                chunk.metadata = fromstring(kwargs["metadata"],
-                    dtype="uint8").reshape(chunk.metadata.shape)
-                chunk.skylight = fromstring(kwargs["skylight"],
-                    dtype="uint8").reshape(chunk.skylight.shape)
-                chunk.blocklight = fromstring(kwargs["blocklight"],
-                    dtype="uint8").reshape(chunk.blocklight.shape)
-
+                chunk.blocks = array("B")
+                chunk.blocks.fromstring(kwargs["blocks"])
+                chunk.heightmap = array("B")
+                chunk.heightmap.fromstring(kwargs["heightmap"])
+                chunk.metadata = array("B")
+                chunk.metadata.fromstring(kwargs["metadata"])
+                chunk.skylight = array("B")
+                chunk.skylight.fromstring(kwargs["skylight"])
+                chunk.blocklight = array("B")
+                chunk.blocklight.fromstring(kwargs["blocklight"])
                 return chunk
             d.addCallback(fill_chunk)
         else:

@@ -40,7 +40,8 @@ class TestGenerators(unittest.TestCase):
 
         # Prepare chunk.
         for i in range(5):
-            self.chunk.blocks[i, i, 61 + i] = bravo.blocks.blocks["dirt"].slot
+            self.chunk.set_block((i, 61 + i, i),
+                                 bravo.blocks.blocks["dirt"].slot)
 
         plugin.populate(self.chunk, 0)
         for i in range(5):
@@ -63,9 +64,12 @@ class TestGenerators(unittest.TestCase):
         plugin = self.p["beaches"]
 
         # Prepare chunk.
-        self.chunk.blocks[:, :, 60:64].fill(bravo.blocks.blocks["spring"].slot)
+        for x, z, y in product(xrange(16), xrange(16), xrange(60, 64)):
+            self.chunk.set_block((x, y, z),
+                                 bravo.blocks.blocks["spring"].slot)
         for i in range(5):
-            self.chunk.blocks[i, i, 61 + i] = bravo.blocks.blocks["dirt"].slot
+            self.chunk.set_block((i, 61 + i, i),
+                                 bravo.blocks.blocks["dirt"].slot)
 
         plugin.populate(self.chunk, 0)
         for i in range(5):
