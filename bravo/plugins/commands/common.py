@@ -123,10 +123,11 @@ class Time(object):
     def dispatch(self, factory):
         hours, minutes = split_time(factory.time)
 
-        # Check if the world has seasons enabled
-        seasons = retrieve_plugins(ISeason).values()
-        if seasons:
-            season = factory.world.season
+        # If the factory's got seasons enabled, then the world will have
+        # a season, and we can examine it. Otherwise, just print the day as-is
+        # for the date.
+        season = factory.world.season
+        if season:
             day_of_season = factory.day - season.day
             while day_of_season < 0:
                 day_of_season += 360
@@ -134,7 +135,8 @@ class Time(object):
                     season.name)
         else:
             date = "%d" % factory.day
-        yield "%02d:%02d, %s" % (hours, minutes, date)
+
+        return ("%02d:%02d, %s" % (hours, minutes, date),)
 
     def chat_command(self, username, parameters):
         if len(parameters) >= 1:

@@ -1,3 +1,11 @@
+next
+====
+
+Bugfixes
+--------
+
+* Fixed /time command failing when no seasons are enabled
+
 1.8
 ===
 
