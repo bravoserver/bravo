@@ -215,6 +215,8 @@ def get_plugins(interface, package, parameters=None):
                             yield adapted
             except ImportError, ie:
                 log.msg(ie)
+            except SyntaxError, se:
+                log.msg(se)
 
 def retrieve_plugins(interface, parameters=None):
     """
