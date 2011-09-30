@@ -557,14 +557,12 @@ class BravoProtocol(BetaServerProtocol):
 
         self.config_name = "world %s" % name
 
-        log.msg("Registering client hooks...")
-
         # Retrieve the MOTD. Only needs to be done once.
         self.motd = configuration.getdefault(self.config_name, "motd",
             "BravoServer")
 
     def register_hooks(self):
-
+        log.msg("Registering client hooks...")
         plugin_types = {
             "open_hooks": IWindowOpenHook,
             "click_hooks": IWindowClickHook,
@@ -581,7 +579,10 @@ class BravoProtocol(BetaServerProtocol):
             setattr(self, t, getattr(self.factory, t))
 
         log.msg("Registering policies...")
-        self.dig_policy = dig_policies["notchy"]
+        if self.factory.mode == "creative":
+            self.dig_policy = dig_policies["speedy"]
+        else:
+            self.dig_policy = dig_policies["notchy"]
 
         log.msg("Registered client plugin hooks!")
 
