@@ -4,17 +4,18 @@ from twisted.trial import unittest
 import bravo.blocks
 import bravo.ibravo
 import bravo.plugin
+from bravo.entity import Player
 
 class CommandsMockFactory(object):
 
     time = 0
+    day = 0
 
     def __init__(self):
         class CommandsMockProtocol(object):
 
             def __init__(self):
-                self.player = bravo.entity.Player(bravo.location.Location(),
-                    eid=0)
+                self.player = Player(bravo.location.Location(), eid=0)
 
             def update_time(self):
                 pass
@@ -22,6 +23,12 @@ class CommandsMockFactory(object):
         self.protocols = {
             "unittest": CommandsMockProtocol(),
         }
+
+        class CommandsMockWorld(object):
+
+            season = None
+
+        self.world = CommandsMockWorld()
 
     def give(self, coords, block, count):
         pass
