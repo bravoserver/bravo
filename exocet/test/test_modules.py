@@ -5,6 +5,7 @@
 Tests for L{modules}, abstract access to imported or importable objects.
 """
 
+import os
 import sys
 import itertools
 import zipfile
@@ -22,12 +23,25 @@ from twisted.trial.unittest import TestCase
 # depend on Twisted for TestCase anyway so there's scarcely a point.
 from twisted.python.reflect import namedAny
 
-from exocet._filepath import FilePath
-# XXX Check out zipit and see if we should copy it or what.
-from exocet.test.test_paths import zipit
+from twisted.python.filepath import FilePath
 
 import exocet._modules as modules
 from exocet._modules import _isPythonIdentifier, _ImportExportFinder
+
+
+def zipit(dirname, zfname):
+    """
+    create a zipfile on zfname, containing the contents of dirname'
+    """
+    zf = zipfile.ZipFile(zfname, "w")
+    for root, ignored, files, in os.walk(dirname):
+        for fname in files:
+            fspath = os.path.join(root, fname)
+            arcpath = os.path.join(root, fname)[len(dirname)+1:]
+            # print fspath, '=>', arcpath
+            zf.write(fspath, arcpath)
+    zf.close()
+
 
 class PySpaceTestCase(TestCase):
 

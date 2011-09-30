@@ -70,11 +70,11 @@ except ImportError:
 
 from zope.interface import Interface, implements
 
-from exocet._filepath import UnlistableError, FilePath
-from exocet._zippath import  ZipArchive
+from twisted.python.filepath import UnlistableError, FilePath
+from twisted.python.zippath import  ZipArchive
 
-from exocet._reflect import namedAny
-from exocet._components import registerAdapter
+from twisted.python.components import registerAdapter
+from twisted.python.reflect import namedAny
 
 
 _nothing = object()
