@@ -5,26 +5,24 @@ import tempfile
 from twisted.python.filepath import FilePath
 
 import bravo.chunk
-import bravo.plugins.serializers
+from bravo.plugins.serializers import Alpha
 from bravo.nbt import TAG_Compound, TAG_List, TAG_String
 from bravo.nbt import TAG_Double, TAG_Byte, TAG_Short
 
 class TestAlphaSerializerInit(unittest.TestCase):
 
     def test_not_url(self):
-        self.assertRaises(Exception, bravo.plugins.serializers.Alpha,
-            "/i/am/not/a/url")
+        self.assertRaises(Exception, Alpha, "/i/am/not/a/url")
 
     def test_wrong_scheme(self):
-        self.assertRaises(Exception, bravo.plugins.serializers.Alpha,
-            "http://www.example.com/")
+        self.assertRaises(Exception, Alpha, "http://www.example.com/")
 
 class TestAlphaSerializer(unittest.TestCase):
 
     def setUp(self):
         self.d = tempfile.mkdtemp()
         self.folder = FilePath(self.d)
-        self.serializer = bravo.plugins.serializers.Alpha('file://' + self.folder.path)
+        self.serializer = Alpha('file://' + self.folder.path)
 
     def tearDown(self):
         shutil.rmtree(self.d)
