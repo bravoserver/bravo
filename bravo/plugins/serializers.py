@@ -21,6 +21,7 @@ from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 from bravo.utilities.bits import unpack_nibbles, pack_nibbles
+from bravo.utilities.paths import names_for_chunk, name_for_region
 
 # Due to technical limitations in the way Twisted discovers plugins, here is
 # how this file works:
@@ -30,52 +31,6 @@ from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 # Twisted discovers ISerializerFactories for us, and Bravo produces
 # ISerializer instances as needed, internally.
 # XXX we might be able to fix this now that Exocet is the loader.
-
-def base36(i):
-    """
-    Return the string representation of i in base 36, using lowercase letters.
-
-    This isn't optimal, but it covers all of the Notchy corner cases.
-    """
-
-    letters = "0123456789abcdefghijklmnopqrstuvwxyz"
-
-    if i < 0:
-        i = -i
-        signed = True
-    elif i == 0:
-        return "0"
-    else:
-        signed = False
-
-    s = ""
-
-    while i:
-        i, digit = divmod(i, 36)
-        s = letters[digit] + s
-
-    if signed:
-        s = "-" + s
-
-    return s
-
-def names_for_chunk(x, z):
-    """
-    Calculate the folder and file names for given chunk coordinates.
-    """
-
-    first = base36(x & 63)
-    second = base36(z & 63)
-    third = "c.%s.%s.dat" % (base36(x), base36(z))
-
-    return first, second, third
-
-def name_for_region(x, z):
-    """
-    Figure out the name for a region file, given chunk coordinates.
-    """
-
-    return "r.%s.%s.mcr" % (x // 32, z // 32)
 
 class Alpha(object):
     """
