@@ -322,12 +322,14 @@ class World(object):
                 print "I have no loop"
             self.factory.register_entity(entity)
 
-        # Scan the chunk for burning furnaces and update thir processes
+        # Scan the chunk for burning furnaces
         for coords, tile in chunk.tiles.iteritems():
+            # If the furnace was saved while burning ...
             if type(tile) == Furnace and tile.burntime != 0:
                 x, y, z = coords
                 coords = chunk.x, x, chunk.z, z, y
-                reactor.callLater(2, self.factory.furnace_manager.update, coords)
+                # ... start it's burning loop
+                reactor.callLater(2, tile.changed, self.factory, coords)
 
         # Return the chunk, in case we are in a Deferred chain.
         return chunk

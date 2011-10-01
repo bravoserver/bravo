@@ -1,4 +1,5 @@
 from twisted.trial import unittest
+from twisted.internet import defer
 from twisted.internet.task import Clock
 
 from bravo.beta.structures import Slot
@@ -6,11 +7,29 @@ from bravo.blocks import items, blocks
 from bravo.inventory import Inventory
 from bravo.entity import Furnace as FurnaceTile
 from bravo.inventory.windows import FurnaceWindow
-from bravo.utilities.furnace import FurnaceProcess
+from bravo.utilities.furnace import update_all_windows_slot, update_all_windows_progress
+
+class FakeChunk(object):
+    def __init__(self):
+        self.states = []
+
+    def set_block(self, coords, itemid):
+        self.states.append(itemid)
+
+class FakeWorld(object):
+    def __init__(self):
+        self.chunk = FakeChunk()
+
+    def request_chunk(self, x, z):
+        return defer.succeed(self.chunk)
 
 class FakeFactory(object):
     def __init__(self):
         self.protocols = []
+        self.world = FakeWorld()
+
+    def flush_chunk(self, chunk):
+        pass
 
 class FakeProtocol(object):
     def __init__(self):
@@ -28,37 +47,35 @@ class TestFurnaceProcessInternals(unittest.TestCase):
     def setUp(self):
         self.tile = FurnaceTile(0, 0, 0)
         self.factory = FakeFactory()
-        self.process = FurnaceProcess(self.tile, coords)
-        self.process.factory = self.factory
 
     def test_fuel_slot(self):
         # empty slot
-        self.assertFalse(self.process.hasFuel)
+        self.assertFalse(self.tile.hasFuel)
         # non-fuel item
         self.tile.inventory.fuel[0] = Slot(blocks['rose'].slot, 0, 1)
-        self.assertFalse(self.process.hasFuel)
+        self.assertFalse(self.tile.hasFuel)
         # fuel item
         self.tile.inventory.fuel[0] = Slot(items['coal'].slot, 0, 1)
-        self.assertTrue(self.process.hasFuel)
+        self.assertTrue(self.tile.hasFuel)
 
     def test_crafting_slot(self):
         # empty slots
-        self.assertFalse(self.process.canCraft)
+        self.assertFalse(self.tile.canCraft)
         # have no recipe
         self.tile.inventory.crafting[0] = Slot(blocks['rose'].slot, 0, 1)
-        self.assertFalse(self.process.canCraft)
+        self.assertFalse(self.tile.canCraft)
         # have recipe
         self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 1)
-        self.assertTrue(self.process.canCraft)
+        self.assertTrue(self.tile.canCraft)
         # crating/crafted mismatch
         self.tile.inventory.crafted[0] = Slot(blocks['rose'].slot, 0, 1)
-        self.assertFalse(self.process.canCraft)
+        self.assertFalse(self.tile.canCraft)
         # crating/crafted match
         self.tile.inventory.crafted[0] = Slot(blocks['glass'].slot, 0, 1)
-        self.assertTrue(self.process.canCraft)
+        self.assertTrue(self.tile.canCraft)
         # match but no space left
         self.tile.inventory.crafted[0] = Slot(blocks['glass'].slot, 0, 64)
-        self.assertFalse(self.process.canCraft)
+        self.assertFalse(self.tile.canCraft)
         # TODO: test unstackable items when they are defined
 
 class TestFurnaceProcessWindowsUpdate(unittest.TestCase):
@@ -84,12 +101,10 @@ class TestFurnaceProcessWindowsUpdate(unittest.TestCase):
             2: self.protocol2,
             3: self.protocol3
         }
-        self.process = FurnaceProcess(self.tile, coords)
-        self.process.factory = self.factory
 
     def test_slot_update(self):
-        self.process.update_all_windows_slot(1, None)
-        self.process.update_all_windows_slot(2, Slot(blocks['glass'].slot, 0, 13))
+        update_all_windows_slot(self.factory, coords, 1, None)
+        update_all_windows_slot(self.factory, coords, 2, Slot(blocks['glass'].slot, 0, 13))
         self.assertEqual(self.protocol1.write_packet_calls, [])
         self.assertEqual(self.protocol2.write_packet_calls, [])
         self.assertEqual(len(self.protocol3.write_packet_calls), 2)
@@ -99,7 +114,7 @@ class TestFurnaceProcessWindowsUpdate(unittest.TestCase):
             (('window-slot',), {'wid': 2, 'slot': 2, 'primary': 20, 'secondary': 0, 'count': 13}))
 
     def test_bar_update(self):
-        self.process.update_all_windows_progress(0, 55)
+        update_all_windows_progress(self.factory, coords, 0, 55)
         self.assertEqual(self.protocol1.write_packet_calls, [])
         self.assertEqual(self.protocol2.write_packet_calls, [])
         self.assertEqual(self.protocol3.write_packet_calls,
@@ -108,22 +123,15 @@ class TestFurnaceProcessWindowsUpdate(unittest.TestCase):
 class TestFurnaceProcessCrafting(unittest.TestCase):
 
     def setUp(self):
-        self.states = []
-        def fake_on_off(state):
-            self.states.append(state)
-
         self.tile = FurnaceTile(0, 0, 0)
         self.protocol = FakeProtocol()
         self.protocol.windows.append(FurnaceWindow(7, Inventory(),
             self.tile.inventory, coords))
         self.factory = FakeFactory()
         self.factory.protocols = {1: self.protocol}
-        self.process = FurnaceProcess(self.tile, coords)
-        self.process.factory = self.factory
-        self.process.on_off = fake_on_off
 
     def tearDown(self):
-        self.states = []
+        self.factory.world.chunk.states = []
         self.protocol.write_packet_calls = []
 
     def test_glass_from_sand_on_wood(self):
@@ -133,17 +141,19 @@ class TestFurnaceProcessCrafting(unittest.TestCase):
 
         # Patch the clock.
         clock = Clock()
-        self.process.burning.clock = clock
+        self.tile.burning.clock = clock
 
         self.tile.inventory.fuel[0] = Slot(blocks['wood'].slot, 0, 1)
         self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 1)
-        self.process.update()
+        self.tile.changed(self.factory, coords)
 
         # Pump the clock. Burn time is 15s.
-        clock.advance(15)
+        clock.pump([0.5] * 30)
 
-        self.assertTrue(self.states[0]) # it was started...
-        self.assertFalse(self.states[-1]) # ...and stopped at the end
+        self.assertEqual(self.factory.world.chunk.states[0],
+                         blocks["burning-furnace"].slot) # it was started...
+        self.assertEqual(self.factory.world.chunk.states[1],
+                         blocks["furnace"].slot) # ...and stopped at the end
         self.assertEqual(self.tile.inventory.fuel[0], None)
         self.assertEqual(self.tile.inventory.crafting[0], None)
         self.assertEqual(self.tile.inventory.crafted[0], (blocks['glass'].slot, 0, 1))
@@ -156,22 +166,19 @@ class TestFurnaceProcessCrafting(unittest.TestCase):
 
         # Patch the clock.
         clock = Clock()
-        self.process.burning.clock = clock
+        self.tile.burning.clock = clock
 
         self.tile.inventory.fuel[0] = Slot(blocks['wood'].slot, 0, 1)
         self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 1)
-        self.process.update()
+        self.tile.changed(self.factory, coords)
 
         # Pump the clock. Burn time is 15s.
-        clock.advance(15)
+        clock.pump([0.5] * 30)
 
         self.assertEqual(len(self.protocol.write_packet_calls), 64)
         headers = [header[0] for header, params in self.protocol.write_packet_calls]
         self.assertEqual(headers.count('window-slot'), 3)
         self.assertEqual(headers.count('window-progress'), 61)
-
-    test_glass_from_sand_on_wood_packets.todo = (
-        "Furnace doesn't like being rushed")
 
     def test_glass_from_sand_on_wood_multiple(self):
         """
@@ -181,17 +188,19 @@ class TestFurnaceProcessCrafting(unittest.TestCase):
 
         # Patch the clock.
         clock = Clock()
-        self.process.burning.clock = clock
+        self.tile.burning.clock = clock
 
         self.tile.inventory.fuel[0] = Slot(blocks['sapling'].slot, 0, 10)
         self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 2)
-        self.process.update()
+        self.tile.changed(self.factory, coords)
 
         # Pump the clock. Burn time is 20s.
-        clock.advance(20)
+        clock.pump([0.5] * 40)
 
-        self.assertTrue(self.states[0]) # it was started...
-        self.assertFalse(self.states[-1]) # ...and stopped at the end
+        self.assertEqual(self.factory.world.chunk.states[0],
+                         blocks["burning-furnace"].slot) # it was started...
+        self.assertEqual(self.factory.world.chunk.states[1],
+                         blocks["furnace"].slot) # ...and stopped at the end
         # 2 sands take 20s to smelt, only 4 saplings needed
         self.assertEqual(self.tile.inventory.fuel[0], (blocks['sapling'].slot, 0, 6))
         self.assertEqual(self.tile.inventory.crafting[0], None)
@@ -205,14 +214,14 @@ class TestFurnaceProcessCrafting(unittest.TestCase):
 
         # Patch the clock.
         clock = Clock()
-        self.process.burning.clock = clock
+        self.tile.burning.clock = clock
 
         self.tile.inventory.fuel[0] = Slot(blocks['sapling'].slot, 0, 10)
         self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 2)
-        self.process.update()
+        self.tile.changed(self.factory, coords)
 
         # Pump the clock. Burn time is 20s.
-        clock.advance(20)
+        clock.pump([0.5] * 40)
 
         self.assertEqual(len(self.protocol.write_packet_calls), 89)
         headers = [header[0] for header, params in self.protocol.write_packet_calls]
@@ -222,26 +231,25 @@ class TestFurnaceProcessCrafting(unittest.TestCase):
         self.assertEqual(headers.count('window-slot'), 8)
         self.assertEqual(headers.count('window-progress'), 81)
 
-    test_glass_from_sand_on_wood_multiple_packets.todo = (
-        "Furnace doesn't like being rushed")
-
     def test_timer_mega_drift(self):
         # Patch the clock.
         clock = Clock()
-        self.process.burning.clock = clock
+        self.tile.burning.clock = clock
 
         # we have more wood than we need and we can process 2 blocks
         # but we have space only for one
         self.tile.inventory.fuel[0] = Slot(blocks['sapling'].slot, 0, 10)
         self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 2)
         self.tile.inventory.crafted[0] = Slot(blocks['glass'].slot, 0, 63)
-        self.process.update()
+        self.tile.changed(self.factory, coords)
 
         # Pump the clock. Burn time is 20s.
         clock.advance(20)
 
-        self.assertTrue(self.states[0]) # it was started...
-        self.assertFalse(self.states[-1]) # ...and stopped at the end
+        self.assertEqual(self.factory.world.chunk.states[0],
+                         blocks["burning-furnace"].slot) # it was started...
+        self.assertEqual(self.factory.world.chunk.states[1],
+                         blocks["furnace"].slot) # ...and stopped at the end
         self.assertEqual(self.tile.inventory.fuel[0], (blocks['sapling'].slot, 0, 8))
         self.assertEqual(self.tile.inventory.crafting[0], (blocks['sand'].slot, 0, 1))
         self.assertEqual(self.tile.inventory.crafted[0], (blocks['glass'].slot, 0, 64))

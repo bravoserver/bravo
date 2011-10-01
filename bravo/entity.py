@@ -11,6 +11,9 @@ from bravo.beta.packets import make_packet
 from bravo.utilities.coords import split_coords
 from bravo.utilities.geometry import gen_close_point
 from bravo.utilities.maths import clamp
+from bravo.utilities.furnace import (furnace_recipes, furnace_on_off,
+    update_all_windows_slot, update_all_windows_progress)
+from bravo.blocks import furnace_fuel, unstackable
 
 class Entity(object):
     """
@@ -644,7 +647,140 @@ class Furnace(Tile):
 
         self.burntime = 0
         self.cooktime = 0
+        self.running = False
         self.inventory = FurnaceStorage()
+        self.burning = LoopingCall.withCount(self.burn)
+
+    def changed(self, factory, coords):
+        '''
+        Called from outside by event handler to inform the tile
+        that the content was changed. If the furnace meet the requirements
+        the method starts ``burn`` process. The ``burn`` stops the
+        looping call when it's out of fuel or no need to burn more.
+
+        We get furnace coords from outer side as the tile does not know
+        about own chunk. If self.chunk is implemented the parameter
+        can be removed and self.coords will be:
+
+        >>> self.coords = self.chunk.x, self.x, self.chunk.z, self.z, self.y
+
+        :param `BravoFactory` factory: The factory
+        :param tuple coords: (bigx, smallx, bigz, smallz, y) - coords of this furnace
+        '''
+        self.coords = coords
+        self.factory = factory
+
+        if not self.running:
+            if self.burntime != 0:
+                # Burning furnace was just loaded with the chunk.
+                # Continue it's burning process.
+                self.running = True
+                self.burn_max = self.burntime
+                self.burning.start(0.5)
+            elif self.hasFuel and self.canCraft:
+                # Start burning loop.
+                self.burntime = 0
+                self.cooktime = 0
+                self.burning.start(0.5)
+
+    def burn(self, ticks):
+        '''
+        Main furnace loop
+
+        :param int ticks: number of calls that should have been invoked
+        '''
+        # Usually it's only one iteration but if something blocks the server
+        # for long period we shall process skipped ticks.
+        # Note: progress bars will lag anyway.
+        if ticks > 1:
+            log.msg("Furnace process drifts. %s ticks skipped." % (ticks - 1,))
+        for iteration in xrange(ticks):
+            # -----------------------------
+            # ---     item crafting     ---
+            # -----------------------------
+            if self.canCraft:
+                self.cooktime += 1
+                # Notchian time is ~9.25-9.50 sec.
+                if self.cooktime == 20: # cooked!
+                    source = self.inventory.crafting[0]
+                    product = furnace_recipes[source.primary]
+                    self.inventory.crafting[0] = source.decrement()
+                    if self.inventory.crafted[0] is None:
+                        self.inventory.crafted[0] = product
+                    else:
+                        item = self.inventory.crafted[0]
+                        self.inventory.crafted[0] = item.increment(product.quantity)
+                    update_all_windows_slot(self.factory, self.coords, 0, self.inventory.crafting[0])
+                    update_all_windows_slot(self.factory, self.coords, 2, self.inventory.crafted[0])
+                    self.cooktime = 0
+            else:
+                self.cooktime = 0
+
+            # ----------------------------
+            # ---     fuel consume     ---
+            # ----------------------------
+            if self.burntime == 0:
+                if self.hasFuel and self.canCraft: # burn next portion of the fuel
+                    fuel = self.inventory.fuel[0]
+                    self.burntime = self.burn_max = furnace_fuel[fuel.primary]
+                    self.inventory.fuel[0] = fuel.decrement()
+                    if not self.running:
+                        self.running = True
+                        furnace_on_off(self.factory, self.coords, True)
+                    update_all_windows_slot(self.factory, self.coords, 1, self.inventory.fuel[0])
+                else: # out of fuel or no need to burn more
+                    self.burning.stop()
+                    self.running = False
+                    furnace_on_off(self.factory, self.coords, False)
+                    # reset cook time
+                    self.cooktime = 0
+                    update_all_windows_progress(self.factory, self.coords, 0, 0)
+                    return
+            self.burntime -= 1
+
+        # ----------------------------
+        # --- update progress bars ---
+        # ----------------------------
+        cook_progress = 185 * self.cooktime / 19
+        burn_progress = 250 * self.burntime / self.burn_max
+        update_all_windows_progress(self.factory, self.coords, 0, cook_progress)
+        update_all_windows_progress(self.factory, self.coords, 1, burn_progress)
+
+    @property
+    def hasFuel(self):
+        '''
+        :returns: True if the furnace has something to burn
+        '''
+        if self.inventory.fuel[0] is None:
+            return False
+        else:
+            return self.inventory.fuel[0].primary in furnace_fuel
+
+    @property
+    def canCraft(self):
+        '''
+        :returns: True if the furnace can cratf an item
+        '''
+        # if has somethig to craft from...
+        if self.inventory.crafting[0] is None:
+            return False
+        if self.inventory.crafting[0].primary in furnace_recipes:
+            #...and has space for it
+            if self.inventory.crafted[0] is None:
+                return True
+            else:
+                crafting = self.inventory.crafting[0]
+                crafted = self.inventory.crafted[0]
+                if furnace_recipes[crafting.primary][0] != crafted.primary:
+                    return False
+                elif crafted.primary in unstackable:
+                    return False
+                elif crafted.quantity + furnace_recipes[crafting.primary].quantity > 64:
+                    return False
+                else:
+                    return True
+        else:
+            return False
 
 class MobSpawner(Tile):
     """
