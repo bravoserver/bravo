@@ -142,6 +142,9 @@ class Circuit(object):
         """
 
         inputs = [i.status for i in self.inputs]
+        if not inputs:
+            return ()
+
         self.status = self.op(*inputs)
         return self.outputs
 
@@ -164,9 +167,9 @@ class Wire(Circuit):
     name = "wire"
     traceables = ("plain",)
 
-    def __init__(self, coordinates):
-        super(Wire, self).__init__(coordinates, block, metadata)
-        self.coords = set([coordinates])
+    def __init__(self, coords, block, metadata):
+        super(Wire, self).__init__(coords, block, metadata)
+        self.coords = set([coords])
 
 class PlainBlock(Circuit):
     """
@@ -179,10 +182,6 @@ class PlainBlock(Circuit):
     name = "plain"
     traceables = ("torch",)
     op = staticmethod(any)
-
-    def __init__(self, coords, block, metadata):
-        super(PlainBlock, self).__init__(coords, block, metadata)
-
 
 class Torch(Circuit):
     """
@@ -210,15 +209,15 @@ class Torch(Circuit):
         x, y, z = self.coords
 
         if self.orientation == "+x":
-            yield x + 1, y, z
-        elif self.orientation == "-x":
             yield x - 1, y, z
+        elif self.orientation == "-x":
+            yield x + 1, y, z
         elif self.orientation == "+z":
-            yield x, y, z + 1
-        elif self.orientation == "-z":
             yield x, y, z - 1
+        elif self.orientation == "-z":
+            yield x, y, z + 1
         elif self.orientation == "+y":
-            yield x, y + 1, z
+            yield x, y - 1, z
 
     def iter_outputs(self):
         """
@@ -229,15 +228,15 @@ class Torch(Circuit):
         x, y, z = self.coords
 
         if self.orientation != "+x":
-            yield x + 1, y, z
-        elif self.orientation != "-x":
             yield x - 1, y, z
+        elif self.orientation != "-x":
+            yield x + 1, y, z
         elif self.orientation != "+z":
-            yield x, y, z + 1
-        elif self.orientation != "-z":
             yield x, y, z - 1
+        elif self.orientation != "-z":
+            yield x, y, z + 1
         elif self.orientation != "+y":
-            yield x, y + 1, z
+            yield x, y - 1, z
 
 block_to_circuit = {
     blocks["redstone-torch"].slot: Torch,

@@ -70,6 +70,16 @@ class TestCircuitTorch(TestCase):
         self.assertRaises(RedstoneError, Torch, (0, 0, 0),
             blocks["redstone-torch"].slot, 0x0)
 
+    def test_torch_plus_y_iter_inputs(self):
+        """
+        A torch with +y orientation sits on top of a block.
+        """
+
+        torch = Torch((0, 1, 0), blocks["redstone-torch"].slot,
+            blocks["redstone-torch"].orientation("+y"))
+
+        self.assertTrue((0, 0, 0) in torch.iter_inputs())
+
     def test_torch_block_change(self):
         """
         Torches change block type depending on their status. They don't change
@@ -95,7 +105,7 @@ class TestCircuitCouplings(TestCase):
         asic = {}
         sand = PlainBlock((0, 0, 0), blocks["sand"].slot, 0x0)
         torch = Torch((1, 0, 0), blocks["redstone-torch"].slot,
-            blocks["redstone-torch"].orientation("-x"))
+            blocks["redstone-torch"].orientation("+x"))
 
         sand.connect(asic)
         torch.connect(asic)
