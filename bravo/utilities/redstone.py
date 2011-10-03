@@ -70,6 +70,11 @@ class Circuit(object):
 
         self.from_block(block, metadata)
 
+    def __str__(self):
+        return "<%s(%s)>" % (self.__class__.__name__, self.status)
+
+    __repr__ = __str__
+
     def iter_inputs(self):
         """
         Iterate over possible input coordinates.
@@ -259,6 +264,11 @@ class Lever(OrientedCircuit):
         # Levers need to have the top of their metadata shaved because it is
         # reused to provide the lever's truth state.
         super(Lever, self).__init__(coords, block, metadata & ~0x8)
+
+    def iter_inputs(self):
+        # Optimization: Just return an empty tuple. Levers will never take
+        # inputs.
+        return ()
 
     def op(self, *inputs):
         if inputs:
