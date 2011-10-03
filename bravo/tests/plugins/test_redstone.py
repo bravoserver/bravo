@@ -201,19 +201,18 @@ class TestRedstone(unittest.TestCase):
                 # Attach the lever to the sand block, and throw it. For sanity
                 # purposes, grab the orientation metadata from the block
                 # definition.
-                orientation = blocks["lever"].orientation("+x")
+                orientation = blocks["lever"].orientation("-x")
                 iblock, imetadata = truthify_block(i, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
 
                 # Attach the torch to the sand block too.
-                orientation = blocks["redstone-torch"].orientation("-x")
+                orientation = blocks["redstone-torch"].orientation("+x")
                 chunk.set_metadata((3, 1, 1), orientation)
 
                 # Run the circuit, starting at the switch.
                 self.hook.feed((1, 1, 1))
-                self.hook.feed((3, 1, 1))
 
                 # Lever, torch, sand.
                 self.hook.process()
@@ -261,24 +260,16 @@ class TestRedstone(unittest.TestCase):
                 chunk.set_block((1, 1, 3), iblock)
                 chunk.set_metadata((1, 1, 3), imetadata)
                 # Attach the torch to the sand block too.
-                orientation = blocks["redstone-torch"].orientation("-x")
+                orientation = blocks["redstone-torch"].orientation("+x")
                 chunk.set_metadata((2, 1, 2), orientation)
 
                 # Run the circuit, starting at the switches. Three times:
                 # Lever (x2), sand, torch.
                 self.hook.feed((1, 1, 1))
                 self.hook.feed((1, 1, 3))
-                print self.hook.asic
-                print self.hook.active_circuits
                 self.hook.process()
-                print self.hook.asic
-                print self.hook.active_circuits
                 self.hook.process()
-                print self.hook.asic
-                print self.hook.active_circuits
                 self.hook.process()
-                print self.hook.asic
-                print self.hook.active_circuits
 
                 block = chunk.get_block((2, 1, 2))
                 metadata = chunk.get_metadata((2, 1, 2))
