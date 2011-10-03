@@ -116,14 +116,19 @@ class TestRedstone(unittest.TestCase):
             orientation = blocks["lever"].orientation("+x")
             chunk.set_metadata((1, 1, 1), orientation | 0x8)
 
-            # Run the circuit, starting at the switch.
-            circuit = list(self.hook.run_circuit(1, 1, 1))[0]
-            self.hook.run_circuit(*circuit)
+            # Run the circuit, starting at the switch. Three times: Lever,
+            # sand, wire.
+            self.hook.feed((1, 1, 1))
+            self.hook.process()
+            self.hook.process()
+            self.hook.process()
 
             metadata = chunk.get_metadata((3, 1, 1))
             self.assertEqual(metadata, 0xf)
 
         return d
+
+    test_switch.todo = "Need to finish wire circuitry"
 
     def test_or_gate(self):
         """
@@ -140,6 +145,9 @@ class TestRedstone(unittest.TestCase):
                 (False, True, True),
                 (True, True, True),
                 ):
+                # Reset the hook.
+                self.hook.asic = {}
+
                 # The tableau.
                 chunk.set_block((1, 1, 2), blocks["sand"].slot)
                 chunk.set_block((2, 1, 2), blocks["redstone-wire"].slot)
@@ -156,11 +164,13 @@ class TestRedstone(unittest.TestCase):
                 chunk.set_block((1, 1, 3), iblock)
                 chunk.set_metadata((1, 1, 3), imetadata)
 
-                # Run the circuit, starting at the switches.
-                circuit = list(self.hook.run_circuit(1, 1, 1))[0]
-                self.hook.run_circuit(*circuit)
-                circuit = list(self.hook.run_circuit(1, 1, 3))[0]
-                self.hook.run_circuit(*circuit)
+                # Run the circuit, starting at the switches. Three times:
+                # Lever (x2), sand, wire.
+                self.hook.feed((1, 1, 1))
+                self.hook.feed((1, 1, 3))
+                self.hook.process()
+                self.hook.process()
+                self.hook.process()
 
                 block = chunk.get_block((2, 1, 2))
                 metadata = chunk.get_metadata((2, 1, 2))
@@ -169,7 +179,7 @@ class TestRedstone(unittest.TestCase):
 
         return d
 
-    test_or_gate.todo = "Doesn't work yet."
+    test_or_gate.todo = "Wire doesn't work yet."
 
     def test_not_gate(self):
         """
@@ -232,17 +242,20 @@ class TestRedstone(unittest.TestCase):
                 (False, True, False),
                 (True, True, False),
                 ):
+                # Reset the hook.
+                self.hook.asic = {}
+
                 # The tableau.
                 chunk.set_block((1, 1, 2), blocks["sand"].slot)
                 chunk.set_block((2, 1, 2), blocks["redstone-torch"].slot)
 
                 # Attach the levers to the sand block.
-                orientation = blocks["lever"].orientation("+z")
+                orientation = blocks["lever"].orientation("-z")
                 iblock, imetadata = truthify_block(i1, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
-                orientation = blocks["lever"].orientation("-z")
+                orientation = blocks["lever"].orientation("+z")
                 iblock, imetadata = truthify_block(i2, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 3), iblock)
@@ -251,11 +264,21 @@ class TestRedstone(unittest.TestCase):
                 orientation = blocks["redstone-torch"].orientation("-x")
                 chunk.set_metadata((2, 1, 2), orientation)
 
-                # Run the circuit, starting at the switches.
-                circuit = list(self.hook.run_circuit(1, 1, 1))[0]
-                self.hook.run_circuit(*circuit)
-                circuit = list(self.hook.run_circuit(1, 1, 3))[0]
-                self.hook.run_circuit(*circuit)
+                # Run the circuit, starting at the switches. Three times:
+                # Lever (x2), sand, torch.
+                self.hook.feed((1, 1, 1))
+                self.hook.feed((1, 1, 3))
+                print self.hook.asic
+                print self.hook.active_circuits
+                self.hook.process()
+                print self.hook.asic
+                print self.hook.active_circuits
+                self.hook.process()
+                print self.hook.asic
+                print self.hook.active_circuits
+                self.hook.process()
+                print self.hook.asic
+                print self.hook.active_circuits
 
                 block = chunk.get_block((2, 1, 2))
                 metadata = chunk.get_metadata((2, 1, 2))

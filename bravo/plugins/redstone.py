@@ -1,4 +1,3 @@
-from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
@@ -35,9 +34,6 @@ class Redstone(object):
     )
 
     def __init__(self):
-        self.tracked = set()
-        self.powered = set()
-
         self.asic = {}
         self.active_circuits = set()
 
@@ -52,7 +48,7 @@ class Redstone(object):
             self.loop.stop()
 
     def schedule(self):
-        if self.tracked or self.asic:
+        if self.asic:
             self.start()
         else:
             self.stop()
@@ -95,100 +91,6 @@ class Redstone(object):
             if level:
                 level -= 1
 
-    def update_powered_block(self, x, y, z, enabled):
-        """
-        Update a powered non-redstone block.
-        """
-
-        neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
-            (x, y, z + 1))
-
-        affected = []
-
-        for neighbor in neighbors:
-            block = factory.world.sync_get_block(neighbor)
-            if block == blocks["redstone-wire"].slot:
-                args = neighbor + (enabled,)
-                self.update_wires(*args)
-            elif block == blocks["redstone-torch"].slot and enabled:
-                metadata = factory.world.sync_get_metadata(neighbor)
-                face = blocks["redstone-torch"].face(metadata)
-                target = adjust_coords_for_face(neighbor, face)
-                if target == (x, y, z):
-                    # We should turn off this torch.
-                    factory.world.sync_set_block(neighbor,
-                        blocks["redstone-torch-off"].slot)
-                    affected.append(neighbor)
-
-        return affected
-
-    def run_circuit(self, x, y, z):
-        """
-        Iterate through a circuit, starting at the given block, and return a
-        list of circuits which have been affected.
-        """
-
-        world = factory.world
-        block = factory.world.sync_get_block((x, y, z))
-        neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
-            (x, y, z + 1))
-
-        affected = set()
-
-        if block == blocks["lever"].slot:
-            # Power/depower the block the lever is attached to.
-            metadata = factory.world.sync_get_metadata((x, y, z))
-            powered = metadata & 0x8
-            face = blocks["lever"].face(metadata & ~0x8)
-            target = adjust_coords_for_face((x, y, z), face)
-
-            if powered:
-                self.powered.add(target)
-            else:
-                self.powered.discard(target)
-
-            affected.add(target)
-
-        else:
-            # Let's update anything around us.
-            l = self.update_powered_block(x, y, z, (x, y, z) in self.powered)
-            affected.update(l)
-
-        if block == blocks["redstone-torch"].slot:
-            # Turn on neighboring wires, as appropriate.
-            for coords in neighbors:
-                if (world.get_block(coords) ==
-                    blocks["redstone-wire"].slot):
-                    self.update_wires(factory, coords[0], coords[1],
-                        coords[2], True)
-
-        if block == blocks["redstone-torch-off"].slot:
-            # Turn off neighboring wires, as appropriate.
-            for coords in neighbors:
-                if (world.get_block(coords) ==
-                    blocks["redstone-wire"].slot):
-                    self.update_wires(factory, coords[0], coords[1],
-                        coords[2], False)
-
-        elif block == blocks["redstone-wire"].slot:
-            # Get wire status from neighbors.
-            if any(world.get_block(coords) ==
-                blocks["redstone-torch"].slot
-                for coords in neighbors):
-                # We should probably be lit.
-                self.update_wires(factory, x, y, z, True)
-            else:
-                # Find the strongest neighboring wire, and use that.
-                new_level = max(factory.world.get_metadata(coords)
-                    for coords in neighbors
-                    if factory.world.get_block(coords) ==
-                        blocks["redstone-wire"].slot)
-                if new_level > 0x0:
-                    new_level -= 1
-                world.set_metadata((x, y, z), new_level)
-
-        return affected
-
     def process(self):
         affected = set()
 
@@ -222,15 +124,6 @@ class Redstone(object):
     def feed(self, coords):
         circuit = create_circuit(self.asic, coords)
         self.active_circuits.add(circuit)
-
-        self.tracked.add(coords)
-
-        # Wire wants state updates from its neighbors.
-        block = factory.world.sync_get_block(coords)
-        if block == blocks["redstone-wire"].slot:
-            x, y, z = coords
-            self.tracked.update(((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
-                (x, y, z + 1)))
 
     scan = naive_scan
 
