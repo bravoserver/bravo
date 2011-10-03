@@ -6,8 +6,7 @@ from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
 from bravo.utilities.coords import adjust_coords_for_face
-from bravo.utilities.redstone import (PlainBlock, block_to_circuit, bbool,
-                                      truthify_block)
+from bravo.utilities.redstone import PlainBlock, block_to_circuit
 
 from bravo.parameters import factory
 
@@ -28,11 +27,19 @@ class Redstone(object):
 
     step = 0.2
 
-    blocks = (blocks["redstone-wire"].slot,)
+    blocks = (
+        blocks["lever"].slot,
+        blocks["redstone-torch"].slot,
+        blocks["redstone-torch-off"].slot,
+        blocks["redstone-wire"].slot,
+    )
 
     def __init__(self):
         self.tracked = set()
         self.powered = set()
+
+        self.asic = {}
+        self.active_circuits = set()
 
         self.loop = LoopingCall(self.process)
 
@@ -45,7 +52,7 @@ class Redstone(object):
             self.loop.stop()
 
     def schedule(self):
-        if self.tracked:
+        if self.tracked or self.asic:
             self.start()
         else:
             self.stop()
@@ -183,15 +190,43 @@ class Redstone(object):
         return affected
 
     def process(self):
-        pass
+        affected = set()
 
-    @inlineCallbacks
+        for circuit in self.active_circuits:
+            # Add circuits if necessary. This can happen quite easily, e.g. on
+            # fed circuitry.
+            for coords in circuit.iter_outputs():
+                if (coords not in self.asic and
+                    factory.world.sync_get_block(coords)):
+                    # Create a new circuit for this plain block and set it to
+                    # be updated next tick.
+                    affected.add(create_circuit(self.asic, coords))
+
+            # Update the circuit, and capture the circuits for the next tick.
+            affected.update(circuit.update())
+
+            # Get the world data...
+            coords = circuit.coords
+            block = factory.world.sync_get_block(coords)
+            metadata = factory.world.sync_get_metadata(coords)
+
+            # ...truthify it...
+            block, metadata = circuit.to_block(block, metadata)
+
+            # ...and send it back out.
+            factory.world.sync_set_block(coords, block)
+            factory.world.sync_set_metadata(coords, metadata)
+
+        self.active_circuits = affected
+
     def feed(self, coords):
+        circuit = create_circuit(self.asic, coords)
+        self.active_circuits.add(circuit)
 
         self.tracked.add(coords)
 
         # Wire wants state updates from its neighbors.
-        block = yield factory.world.get_block(coords)
+        block = factory.world.sync_get_block(coords)
         if block == blocks["redstone-wire"].slot:
             x, y, z = coords
             self.tracked.update(((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),

@@ -181,6 +181,9 @@ class TestRedstone(unittest.TestCase):
         @d.addCallback
         def cb(chunk):
             for i, o in ((True, False), (False, True)):
+                # Reset the hook.
+                self.hook.asic = {}
+
                 # The tableau.
                 chunk.set_block((2, 1, 1), blocks["sand"].slot)
                 chunk.set_block((3, 1, 1), blocks["redstone-torch"].slot)
@@ -193,13 +196,19 @@ class TestRedstone(unittest.TestCase):
                     orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
+
                 # Attach the torch to the sand block too.
                 orientation = blocks["redstone-torch"].orientation("-x")
                 chunk.set_metadata((3, 1, 1), orientation)
 
                 # Run the circuit, starting at the switch.
-                circuit = list(self.hook.run_circuit(1, 1, 1))[0]
-                self.hook.run_circuit(*circuit)
+                self.hook.feed((1, 1, 1))
+                self.hook.feed((3, 1, 1))
+
+                # Lever, torch, sand.
+                self.hook.process()
+                self.hook.process()
+                self.hook.process()
 
                 block = chunk.get_block((3, 1, 1))
                 metadata = chunk.get_metadata((3, 1, 1))
