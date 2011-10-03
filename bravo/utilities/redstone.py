@@ -141,10 +141,10 @@ class Circuit(object):
         Update outputs based on current state of inputs.
         """
 
-        inputs = [i.status for i in self.inputs]
-        if not inputs:
+        if not self.inputs:
             return ()
 
+        inputs = [i.status for i in self.inputs]
         self.status = self.op(*inputs)
         return self.outputs
 
@@ -183,22 +183,18 @@ class PlainBlock(Circuit):
     traceables = ("torch",)
     op = staticmethod(any)
 
-class Torch(Circuit):
+class OrientedCircuit(Circuit):
     """
-    A redstone torch.
+    A circuit which cares about its orientation.
 
-    Torches do a NOT operation from their input.
+    Examples include torches and levers.
     """
-
-    name = "torch"
-    traceables = ("wire",)
-    op = staticmethod(not_)
 
     def __init__(self, coords, block, metadata):
-        super(Torch, self).__init__(coords, block, metadata)
+        super(OrientedCircuit, self).__init__(coords, block, metadata)
         self.orientation = blocks[block].face(metadata)
         if self.orientation is None:
-            raise RedstoneError("Bad metadata %d for torch!" % metadata)
+            raise RedstoneError("Bad metadata %d for %r!" % (metadata, self))
 
     def iter_inputs(self):
         """
@@ -238,7 +234,39 @@ class Torch(Circuit):
         elif self.orientation != "+y":
             yield x, y - 1, z
 
+class Torch(OrientedCircuit):
+    """
+    A redstone torch.
+
+    Torches do a NOT operation from their input.
+    """
+
+    name = "torch"
+    traceables = ("wire",)
+    op = staticmethod(not_)
+
+class Lever(OrientedCircuit):
+    """
+    A settable lever.
+
+    Levers only provide output, to a single block.
+    """
+
+    name = "lever"
+    traceables = ("plain",)
+
+    def __init__(self, coords, block, metadata):
+        # Levers need to have the top of their metadata shaved because it is
+        # reused to provide the lever's truth state.
+        super(Lever, self).__init__(coords, block, metadata & ~0x8)
+
+    def op(self, *inputs):
+        if inputs:
+            raise RedstoneError("Levers don't take inputs!")
+        return self.status
+
 block_to_circuit = {
+    blocks["lever"].slot: Lever,
     blocks["redstone-torch"].slot: Torch,
     blocks["redstone-torch-off"].slot: Torch,
     blocks["redstone-wire"].slot: Wire,

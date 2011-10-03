@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 from bravo.blocks import blocks
-from bravo.utilities.redstone import (RedstoneError, PlainBlock, Torch, bbool,
-                                      truthify_block)
+from bravo.utilities.redstone import (RedstoneError, Lever, PlainBlock, Torch,
+                                      bbool, truthify_block)
 
 class TestTruthifyBlock(TestCase):
     """
@@ -93,6 +93,18 @@ class TestCircuitTorch(TestCase):
         self.assertEqual(
             torch.to_block(blocks["redstone-torch"].slot, metadata),
             (blocks["redstone-torch-off"].slot, metadata))
+
+class TestCircuitLever(TestCase):
+
+    def test_lever_metadata_extra(self):
+        """
+        Levers have double orientation flags depending on whether they are
+        flipped. If the extra flag is added, the lever should still be
+        constructible.
+        """
+
+        metadata = blocks["lever"].orientation("-x")
+        Lever((0, 0, 0), blocks["lever"].slot, metadata | 0x8)
 
 class TestCircuitCouplings(TestCase):
 
