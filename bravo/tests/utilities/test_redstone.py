@@ -129,3 +129,25 @@ class TestCircuitCouplings(TestCase):
         sand.status = False
         torch.update()
         self.assertTrue(torch.status)
+
+    def test_lever_sand(self):
+        """
+        A lever attached to a sand block will cause the sand block to have the
+        same value as the lever.
+        """
+
+        asic = {}
+        lever = Lever((0, 0, 0), blocks["lever"].slot,
+            blocks["lever"].orientation("-x"))
+        sand = PlainBlock((1, 0, 0), blocks["sand"].slot, 0x0)
+
+        lever.connect(asic)
+        sand.connect(asic)
+
+        lever.status = False
+        sand.update()
+        self.assertFalse(sand.status)
+
+        lever.status = True
+        sand.update()
+        self.assertTrue(sand.status)

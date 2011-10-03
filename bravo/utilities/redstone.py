@@ -150,8 +150,13 @@ class Circuit(object):
             return ()
 
         inputs = [i.status for i in self.inputs]
-        self.status = self.op(*inputs)
-        return self.outputs
+        status = self.op(*inputs)
+
+        if self.status != status:
+            self.status = status
+            return self.outputs
+        else:
+            return ()
 
     def from_block(self, block, metadata):
         self.status = bbool(block, metadata)
@@ -186,7 +191,10 @@ class PlainBlock(Circuit):
 
     name = "plain"
     traceables = ("torch",)
-    op = staticmethod(any)
+
+    @staticmethod
+    def op(*inputs):
+        return any(inputs)
 
 class OrientedCircuit(Circuit):
     """
