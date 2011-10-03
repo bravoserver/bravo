@@ -38,6 +38,9 @@ class TestBlockQuirks(unittest.TestCase):
     def test_grass_secondary(self):
         self.assertEqual(blocks["grass"].key[1], 0)
 
+    def test_lever_extra_valid_metadata(self):
+        self.assertEqual(blocks["lever"].face(5), blocks["lever"].face(13))
+
 class TestParseBlock(unittest.TestCase):
 
     def test_parse_block(self):

@@ -260,11 +260,6 @@ class Lever(OrientedCircuit):
     name = "lever"
     traceables = ("plain",)
 
-    def __init__(self, coords, block, metadata):
-        # Levers need to have the top of their metadata shaved because it is
-        # reused to provide the lever's truth state.
-        super(Lever, self).__init__(coords, block, metadata & ~0x8)
-
     def iter_inputs(self):
         # Optimization: Just return an empty tuple. Levers will never take
         # inputs.

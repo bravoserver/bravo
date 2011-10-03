@@ -551,8 +551,11 @@ _add_block(Block(64, "wooden-door-block", drop=(324, 0),
     orientation=(None, None, 1, 3, 0, 2)))
 # Ladders are orientable and don't dim.
 _add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5), dim=0))
-# Levers are orientable and don't dim.
+# Levers are orientable and don't dim. Additionally, levers have special hax
+# to be orientable two different ways.
 _add_block(Block(69, "lever", orientation=(None, 5, 4, 3, 2, 1), dim=0))
+blocks["lever"]._f_dict.update(
+    {13: "+y", 12: "-z", 11: "+z", 10: "-x", 9: "+x"})
 # Iron Door is orientable and drops Iron Door item
 _add_block(Block(71, "iron-door-block", drop=(330, 0),
     orientation=(None, None, 1, 3, 0, 2)))
