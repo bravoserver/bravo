@@ -209,6 +209,17 @@ class OrientedCircuit(Circuit):
         if self.orientation is None:
             raise RedstoneError("Bad metadata %d for %r!" % (metadata, self))
 
+class Torch(OrientedCircuit):
+    """
+    A redstone torch.
+
+    Torches do a NOT operation from their input.
+    """
+
+    name = "torch"
+    traceables = ("wire",)
+    op = staticmethod(not_)
+
     def iter_inputs(self):
         """
         Provide the input corresponding to the block upon which this torch is
@@ -247,17 +258,6 @@ class OrientedCircuit(Circuit):
         elif self.orientation != "+y":
             yield x, y - 1, z
 
-class Torch(OrientedCircuit):
-    """
-    A redstone torch.
-
-    Torches do a NOT operation from their input.
-    """
-
-    name = "torch"
-    traceables = ("wire",)
-    op = staticmethod(not_)
-
 class Lever(OrientedCircuit):
     """
     A settable lever.
@@ -269,9 +269,27 @@ class Lever(OrientedCircuit):
     traceables = ("plain",)
 
     def iter_inputs(self):
-        # Optimization: Just return an empty tuple. Levers will never take
-        # inputs.
+        # Just return an empty tuple. Levers will never take inputs.
         return ()
+
+    def iter_outputs(self):
+        """
+        Provide the output corresponding to the block upon which this lever is
+        mounted.
+        """
+
+        x, y, z = self.coords
+
+        if self.orientation == "+x":
+            yield x - 1, y, z
+        elif self.orientation == "-x":
+            yield x + 1, y, z
+        elif self.orientation == "+z":
+            yield x, y, z - 1
+        elif self.orientation == "-z":
+            yield x, y, z + 1
+        elif self.orientation == "+y":
+            yield x, y - 1, z
 
     def op(self, *inputs):
         if inputs:
