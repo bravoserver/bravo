@@ -265,7 +265,26 @@ block_names = [
     "redstone-repeater-off",
     "redstone-repeater-on",
     "locked-chest",
-    "trapdoor", #0x60
+    "trapdoor", 
+    "hidden-silverfish",
+    "stone-brick",
+    "huge-brown-mushroom",
+    "huge-red-mushroom",
+    "iron-bars",
+    "glass-pane",
+    "melon",
+    "pumpkin-stem",
+    "melon-stem",
+    "vine",
+    "fence-gate",
+    "brick-stairs",
+    "stone-brick-stairs",
+    "mycelium",
+    "lily-pad",
+    "nether-brick",
+    "nether-brick-fence",
+    "nether-brick-stairs",
+    "nether-wart",#0x73
 ]
 
 item_names = [
@@ -371,11 +390,34 @@ item_names = [
     "bed",
     "redstone-repeater",
     "cookie",
+    "map",
+    "shears",
+    "melon-slice",
+    "raw-beef",
+    "steak",
+    "raw-chicken",
+    "cooked-chicken",
+    "rotten-flesh",
+    "ender-pearl",
+    "blaze-rod",
+    "ghast-tear",
+    "gold-nugget",
+    "nether-wart",
+    "potions",
+    "glass-bottle",
+    "spider-eye",
+    "fermented-spider-eye",
+    "blaze-powder",
+    "magma-cream",#0x180
+    
 ]
 
 special_item_names = [
     "gold-music-disc",
     "green-music-disc",
+    "blocks-music-disc",
+    "chirp-music-disc",
+    "far-music-disc"
 ]
 
 dye_names = [
@@ -467,6 +509,12 @@ drops[83] = (338, 0) # Reed                   -> Reed Item
 drops[89] = (348, 0) # Lightstone             -> Lightstone Dust
 drops[93] = (356, 0) # Redstone Repeater, on  -> Redstone Repeater
 drops[94] = (356, 0) # Redstone Repeater, off -> Redstone Repeater
+
+drops[97] = (0, 0)    #Hiden Silverfish
+drops[110] = (3, 0)   # Mycelium               -> Dirt
+drops[111] = (0, 0)   #Lily Pad
+drops[115] = (372, 0) # Nether Wart BLock      -> Nether Wart
+
 
 
 unbreakables = set()
@@ -573,6 +621,11 @@ _add_block(Block(79, "ice", drop=(0, 0), replace=9, dim=3))
 _add_block(Block(82, "clay", drop=(337, 0), quantity=4))
 # Trapdoor is orientable
 _add_block(Block(96, "trapdoor", orientation=(None, None, 0, 1, 2, 3)))
+
+_add_block(Block(99, "giant-brown-mushroom", drop=(39, 0), quantity=2))
+_add_block(Block(100, "giant-red-mushroom", drop=(40, 0), quantity=2))
+_add_block(Block(103, "pumpkin-stem", drop=(361, 0), quantity=2))
+_add_block(Block(104, "giant-red-mushroom", drop=(362, 0), quantity=2))
 
 for block in blocks.values():
     blocks[block.name] = block
