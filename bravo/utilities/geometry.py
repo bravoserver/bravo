@@ -42,14 +42,13 @@ def gen_close_point(point1, point2): # XXX This needs to be optimized
 
 def gen_line_simple(point1, point2):
     """
-    Generalization of Bresenham's line algorithm in 3d.
+    An adaptation of Bresenham's line algorithm in three dimensions.
 
-    It yields blocks coordinates along a line that is at all times only one
-    block in width.
-
-    It is a simplified version that does nothing fancy with integers or such:
-    all computation is done on float (maybe it should be changed?)
+    This function returns an iterable of integer coordinates along the line
+    from the first point to the second point. No points are omitted.
     """
+
+    # XXX should be done with ints instead of floats
 
     tx, ty, tz = point1.x, point1.y, point1.z # t is for temporary
     rx, ry, rz = int(tx), int(ty), int(tz) # r is for rounded
