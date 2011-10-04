@@ -95,7 +95,7 @@ class Block(object):
         if self.replace:
             attributes.append("becomes %d" % self.replace)
         if self.ratio != 1 or self.quantity > 1 or self.drop != self.key:
-            attributes.append("drops %r slot %d rate %2.2f%%" %
+            attributes.append("drops %r (key %r, rate %2.2f%%)" %
                 (self.quantity, self.drop, self.ratio * 100))
         if attributes:
             attributes = ": %s" % ", ".join(attributes)
