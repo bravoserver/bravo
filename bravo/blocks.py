@@ -284,11 +284,11 @@ block_names = [
     "nether-brick", # 0x70
     "nether-brick-fence",
     "nether-brick-stairs",
-    "nether-wart", # 0x73
+    "nether-wart-block", # 0x73
 ]
 
 item_names = [
-    "iron-shovel",
+    "iron-shovel", # 0x100
     "iron-pickaxe",
     "iron-axe",
     "flint-and-steel",
@@ -304,7 +304,7 @@ item_names = [
     "wooden-shovel",
     "wooden-pickaxe",
     "wooden-axe",
-    "stone-sword",
+    "stone-sword", # 0x110
     "stone-shovel",
     "stone-pickaxe",
     "stone-axe",
@@ -320,7 +320,7 @@ item_names = [
     "gold-pickaxe",
     "gold-axe",
     "string",
-    "feather",
+    "feather", # 0x120
     "sulphur",
     "wooden-hoe",
     "stone-hoe",
@@ -336,7 +336,7 @@ item_names = [
     "leather-boots",
     "chainmail-helmet",
     "chainmail-chestplate",
-    "chainmail-leggings",
+    "chainmail-leggings", # 0x130
     "chainmail-boots",
     "iron-helmet",
     "iron-chestplate",
@@ -352,7 +352,7 @@ item_names = [
     "gold-boots",
     "flint",
     "raw-porkchop",
-    "cooked-porkchop",
+    "cooked-porkchop", # 0x140
     "paintings",
     "golden-apple",
     "sign",
@@ -368,7 +368,7 @@ item_names = [
     "boat",
     "leather",
     "milk",
-    "clay-brick",
+    "clay-brick", # 0x150
     "clay-balls",
     "sugar-cane",
     "paper",
@@ -384,7 +384,7 @@ item_names = [
     "raw-fish",
     "cooked-fish",
     "dye",
-    "bone",
+    "bone", # 0x160
     "sugar",
     "cake",
     "bed",
@@ -393,12 +393,14 @@ item_names = [
     "map",
     "shears",
     "melon-slice",
+    "pumpkin-seeds",
+    "melon-seeds",
     "raw-beef",
     "steak",
     "raw-chicken",
     "cooked-chicken",
     "rotten-flesh",
-    "ender-pearl",
+    "ender-pearl", # 0x170
     "blaze-rod",
     "ghast-tear",
     "gold-nugget",
@@ -408,7 +410,7 @@ item_names = [
     "spider-eye",
     "fermented-spider-eye",
     "blaze-powder",
-    "magma-cream",
+    "magma-cream", # 0x17a
 ]
 
 special_item_names = [
@@ -624,9 +626,9 @@ _add_block(Block(99, "huge-brown-mushroom", drop=(39, 0), quantity=2))
 # Giant red mushrooms drop red mushrooms.
 _add_block(Block(100, "huge-red-mushroom", drop=(40, 0), quantity=2))
 # Pumpkin stems drop pumpkin seeds.
-_add_block(Block(104, "pumpkin-stem", drop=(361, 0), quantity=2))
+_add_block(Block(104, "pumpkin-stem", drop=(361, 0), quantity=3))
 # Melon stems drop melon seeds.
-_add_block(Block(105, "melon-stem", drop=(362, 0), quantity=2))
+_add_block(Block(105, "melon-stem", drop=(362, 0), quantity=3))
 
 for block in blocks.values():
     blocks[block.name] = block
