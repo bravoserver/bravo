@@ -1,4 +1,8 @@
+"""
+Simple pixel graphics helpers.
+"""
 
+# XXX can this be expressed in terms of gen_line_simple?
 def gen_close_point(point1, point2): # XXX This needs to be optimized
     """
     Generalization of Bresenham's line algorithm in 3d.
@@ -16,22 +20,26 @@ def gen_close_point(point1, point2): # XXX This needs to be optimized
     dx = ox - tx
     dy = oy - ty
     dz = oz - tz
-    if (dx,dy,dz) == (0,0,0):
-        return (0,0,0)
+    if (dx, dy, dz) == (0, 0, 0):
+        return 0, 0, 0
 
-    largest = max (abs (dx), abs (dy), abs (dz)) * 1. # We want a float
+    largest = float(max(abs(dx), abs(dy), abs(dz)))
     dx, dy, dz = dx / largest, dy / largest, dz / largest # We make a vector which maximum value is 1.0
 
-    while abs (ox - tx) > 1 or abs (oy - ty) > 1 or abs (oz - tz) > 1:
+    # XXX while...return?
+    while abs(ox - tx) > 1 or abs(oy - ty) > 1 or abs(oz - tz) > 1:
         tx += dx
         ty += dy
         tz += dz
         if (ty < 0 and dy < 0) or (ty >= 127 and dy > 0):
-            return (0,0,0)
+            return 0, 0, 0
+            # XXX why break?
             break
 
-        return(dx,dy,dz)
-    return (0,0,0)
+        return dx, dy, dz
+
+    return 0, 0, 0
+
 def gen_line_simple(point1, point2):
     """
     Generalization of Bresenham's line algorithm in 3d.
@@ -44,24 +52,23 @@ def gen_line_simple(point1, point2):
     """
 
     tx, ty, tz = point1.x, point1.y, point1.z # t is for temporary
-    rx, ry, rz = int (tx), int (ty), int (tz) # r is for rounded
+    rx, ry, rz = int(tx), int(ty), int(tz) # r is for rounded
     ox, oy, oz = point2.x, point2.y, point2.z # o is for objective
 
     dx = ox - tx
     dy = oy - ty
     dz = oz - tz
 
-    largest = max (abs (dx), abs (dy), abs (dz)) * 1. # We want a float
+    largest = float(max(abs(dx), abs(dy), abs(dz)))
     dx, dy, dz = dx / largest, dy / largest, dz / largest # We make a vector which maximum value is 1.0
 
-    while abs (ox - tx) > 1 or abs (oy - ty) > 1 or abs (oz - tz) > 1:
+    while abs(ox - tx) > 1 or abs(oy - ty) > 1 or abs(oz - tz) > 1:
         tx += dx
         ty += dy
         tz += dz
         if (ty < 0 and dy < 0) or (ty >= 127 and dy > 0):
             break
-        rx, ry, rz = int (tx), int (ty), int (tz)
-        yield rx, ry, rz
+        yield int(tx), int(ty), int(tz)
 
 def gen_line_covered(point1, point2):
     """
@@ -70,25 +77,25 @@ def gen_line_covered(point1, point2):
     """
 
     tx, ty, tz = point1.x, point1.y, point1.z # t is for temporary
-    rx, ry, rz = int (tx), int (ty), int (tz) # r is for rounded
+    rx, ry, rz = int(tx), int(ty), int(tz) # r is for rounded
     ox, oy, oz = point2.x, point2.y, point2.z # o is for objective
 
     dx = ox - tx
     dy = oy - ty
     dz = oz - tz
 
-    largest = max (abs (dx), abs (dy), abs (dz)) * 1. # We want a float
+    largest = float(max(abs(dx), abs(dy), abs(dz)))
     dx, dy, dz = dx / largest, dy / largest, dz / largest # We make a vector which maximum value is 1.0
-    adx, ady, adz = abs (dx), abs (dy), abs (dz)
+    adx, ady, adz = abs(dx), abs(dy), abs(dz)
 
     px, py, pz = rx, ry, rz
-    while abs (ox - tx) > 1 or abs (oy - ty) > 1 or abs (oz - tz) > 1:
+    while abs(ox - tx) > 1 or abs(oy - ty) > 1 or abs(oz - tz) > 1:
         tx += dx
         ty += dy
         tz += dz
         if (ty < 0 and dy < 0) or (ty >= 127 and dy > 0):
             break
-        rx, ry, rz = int (tx), int (ty), int (tz)
+        rx, ry, rz = int(tx), int(ty), int(tz)
 
         yield rx, ry, rz
 
