@@ -2,16 +2,13 @@
 Simple pixel graphics helpers.
 """
 
-# XXX can this be expressed in terms of gen_line_simple?
-def gen_close_point(point1, point2): # XXX This needs to be optimized
+def gen_close_point(point1, point2):
     """
-    Generalization of Bresenham's line algorithm in 3d.
+    Retrieve the first integer set of coordinates on the line from the first
+    point to the second point.
 
-    It returns the first block's coordinates in a one block wide line from
-    point1 to point2
-
-    It is a simplified version that does nothing fancy with integers or such:
-    all computation is done on float (maybe it should be changed?)
+    The set of coordinates corresponding to the first point will not be
+    retrieved.
     """
 
     tx, ty, tz = point1 # t is for temporary
