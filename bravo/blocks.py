@@ -265,7 +265,7 @@ block_names = [
     "redstone-repeater-off",
     "redstone-repeater-on",
     "locked-chest",
-    "trapdoor", 
+    "trapdoor", # 0x60
     "hidden-silverfish",
     "stone-brick",
     "huge-brown-mushroom",
@@ -281,10 +281,10 @@ block_names = [
     "stone-brick-stairs",
     "mycelium",
     "lily-pad",
-    "nether-brick",
+    "nether-brick", # 0x70
     "nether-brick-fence",
     "nether-brick-stairs",
-    "nether-wart",#0x73
+    "nether-wart", # 0x73
 ]
 
 item_names = [
@@ -408,8 +408,7 @@ item_names = [
     "spider-eye",
     "fermented-spider-eye",
     "blaze-powder",
-    "magma-cream",#0x180
-    
+    "magma-cream",
 ]
 
 special_item_names = [
@@ -501,18 +500,17 @@ drops[62] = (61, 0) # Burning Furnace -> Furnace
 drops[78] = (0, 0)  # Snow
 
 # Block -> item drops.
-drops[16] = (263, 0) # Coal Ore Block         -> Coal
-drops[56] = (264, 0) # Diamond Ore Block      -> Diamond
-drops[63] = (323, 0) # Sign Post              -> Sign Item
-drops[68] = (323, 0) # Wall Sign              -> Sign Item
-drops[83] = (338, 0) # Reed                   -> Reed Item
-drops[89] = (348, 0) # Lightstone             -> Lightstone Dust
-drops[93] = (356, 0) # Redstone Repeater, on  -> Redstone Repeater
-drops[94] = (356, 0) # Redstone Repeater, off -> Redstone Repeater
-
-drops[97] = (0, 0)    #Hiden Silverfish
+drops[16] = (263, 0)  # Coal Ore Block         -> Coal
+drops[56] = (264, 0)  # Diamond Ore Block      -> Diamond
+drops[63] = (323, 0)  # Sign Post              -> Sign Item
+drops[68] = (323, 0)  # Wall Sign              -> Sign Item
+drops[83] = (338, 0)  # Reed                   -> Reed Item
+drops[89] = (348, 0)  # Lightstone             -> Lightstone Dust
+drops[93] = (356, 0)  # Redstone Repeater, on  -> Redstone Repeater
+drops[94] = (356, 0)  # Redstone Repeater, off -> Redstone Repeater
+drops[97] = (0, 0)    # Hidden Silverfish
 drops[110] = (3, 0)   # Mycelium               -> Dirt
-drops[111] = (0, 0)   #Lily Pad
+drops[111] = (0, 0)   # Lily Pad
 drops[115] = (372, 0) # Nether Wart BLock      -> Nether Wart
 
 
@@ -621,11 +619,14 @@ _add_block(Block(79, "ice", drop=(0, 0), replace=9, dim=3))
 _add_block(Block(82, "clay", drop=(337, 0), quantity=4))
 # Trapdoor is orientable
 _add_block(Block(96, "trapdoor", orientation=(None, None, 0, 1, 2, 3)))
-
-_add_block(Block(99, "giant-brown-mushroom", drop=(39, 0), quantity=2))
-_add_block(Block(100, "giant-red-mushroom", drop=(40, 0), quantity=2))
-_add_block(Block(103, "pumpkin-stem", drop=(361, 0), quantity=2))
-_add_block(Block(104, "giant-red-mushroom", drop=(362, 0), quantity=2))
+# Giant brown mushrooms drop brown mushrooms.
+_add_block(Block(99, "huge-brown-mushroom", drop=(39, 0), quantity=2))
+# Giant red mushrooms drop red mushrooms.
+_add_block(Block(100, "huge-red-mushroom", drop=(40, 0), quantity=2))
+# Pumpkin stems drop pumpkin seeds.
+_add_block(Block(104, "pumpkin-stem", drop=(361, 0), quantity=2))
+# Melon stems drop melon seeds.
+_add_block(Block(105, "melon-stem", drop=(362, 0), quantity=2))
 
 for block in blocks.values():
     blocks[block.name] = block
