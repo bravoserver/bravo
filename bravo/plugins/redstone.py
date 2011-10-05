@@ -4,7 +4,6 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
-from bravo.utilities.coords import adjust_coords_for_face
 from bravo.utilities.redstone import PlainBlock, block_to_circuit
 
 from bravo.parameters import factory
@@ -18,7 +17,7 @@ def create_circuit(asic, coords):
     circuit = cls(coords, block, metadata)
     circuit.connect(asic)
 
-    return circuit
+    return asic[coords]
 
 class Redstone(object):
 
