@@ -1,10 +1,27 @@
-next
-====
+1.8.1
+=====
+
+Compatibility
+-------------
+
+* Syntax errors in plugins are now caught and logged
+
+Features
+--------
+
+* Cleaned up furnaces to be slightly more efficient (#361)
+* Added new blocks for 1.7/1.8 (#364)
+* Sped up chunk lighting slightly
+* Added redstone circuit for levers
+* Rewrote redstone to be enabled for torches, plain blocks, and levers
 
 Bugfixes
 --------
 
-* Fixed /time command failing when no seasons are enabled
+* Fixed lighting not being regenerated after block changes (#132)
+* Fixed blocks not being diggable in creative mode (#349)
+* Fixed /time command failing when no seasons are enabled (#360)
+* Fixed block representations not being printable
 
 1.8
 ===
