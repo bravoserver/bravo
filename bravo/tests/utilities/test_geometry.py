@@ -22,8 +22,6 @@ class TestGenLineSimple(unittest.TestCase):
         coords = [(0, 0, 0), (0, 0, 1), (0, 0, 2), (0, 0, 3)]
         self.assertEqual(coords, list(gen_line_simple(src, dest)))
 
-    test_straight_line.todo = "Endpoints are missing"
-
     def test_perfect_diagonal_3d(self):
         src = Location()
         src.x, src.y, src.z = 0, 0, 0
@@ -32,8 +30,6 @@ class TestGenLineSimple(unittest.TestCase):
 
         coords = [(0, 0, 0), (1, 1, 1), (2, 2, 2), (3, 3, 3)]
         self.assertEqual(coords, list(gen_line_simple(src, dest)))
-
-    test_perfect_diagonal_3d.todo = "Endpoints are missing"
 
     def test_straight_line_float(self):
         """
@@ -48,5 +44,3 @@ class TestGenLineSimple(unittest.TestCase):
 
         coords = [(0, 0, 0), (0, 0, 1), (0, 0, 2), (0, 0, 3)]
         self.assertEqual(coords, list(gen_line_simple(src, dest)))
-
-    test_straight_line_float.todo = "Endpoints are missing"

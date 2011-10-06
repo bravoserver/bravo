@@ -2,41 +2,6 @@
 Simple pixel graphics helpers.
 """
 
-def gen_close_point(point1, point2):
-    """
-    Retrieve the first integer set of coordinates on the line from the first
-    point to the second point.
-
-    The set of coordinates corresponding to the first point will not be
-    retrieved.
-    """
-
-    tx, ty, tz = point1 # t is for temporary
-    ox, oy, oz = point2 # o is for objective
-
-    dx = ox - tx
-    dy = oy - ty
-    dz = oz - tz
-    if (dx, dy, dz) == (0, 0, 0):
-        return 0, 0, 0
-
-    largest = float(max(abs(dx), abs(dy), abs(dz)))
-    dx, dy, dz = dx / largest, dy / largest, dz / largest # We make a vector which maximum value is 1.0
-
-    # XXX while...return?
-    while abs(ox - tx) > 1 or abs(oy - ty) > 1 or abs(oz - tz) > 1:
-        tx += dx
-        ty += dy
-        tz += dz
-        if (ty < 0 and dy < 0) or (ty >= 127 and dy > 0):
-            return 0, 0, 0
-            # XXX why break?
-            break
-
-        return dx, dy, dz
-
-    return 0, 0, 0
-
 def gen_line_simple(point1, point2):
     """
     An adaptation of Bresenham's line algorithm in three dimensions.
@@ -58,6 +23,8 @@ def gen_line_simple(point1, point2):
     largest = float(max(abs(dx), abs(dy), abs(dz)))
     dx, dy, dz = dx / largest, dy / largest, dz / largest # We make a vector which maximum value is 1.0
 
+    yield rx, ry, rz
+
     while abs(ox - tx) > 1 or abs(oy - ty) > 1 or abs(oz - tz) > 1:
         tx += dx
         ty += dy
@@ -65,6 +32,29 @@ def gen_line_simple(point1, point2):
         if (ty < 0 and dy < 0) or (ty >= 127 and dy > 0):
             break
         yield int(tx), int(ty), int(tz)
+
+    yield ox, oy, oz
+
+class HurpPoint(object):
+
+    def __init__(self, t):
+        self.x, self.y, self.z = t
+
+def gen_close_point(point1, point2):
+    """
+    Retrieve the first integer set of coordinates on the line from the first
+    point to the second point.
+
+    The set of coordinates corresponding to the first point will not be
+    retrieved.
+    """
+
+    point1 = HurpPoint(point1)
+    point2 = HurpPoint(point2)
+
+    g = gen_line_simple(point1, point2)
+    next(g)
+    return next(g)
 
 def gen_line_covered(point1, point2):
     """
