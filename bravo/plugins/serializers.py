@@ -10,12 +10,12 @@ from numpy import array, fromstring
 
 from twisted.python import log
 from twisted.python.filepath import FilePath
-from zope.interface import implements, classProvides
+from zope.interface import implements
 
 from bravo.beta.structures import Slot
 from bravo.entity import entities, tiles
 from bravo.errors import SerializerReadException, SerializerWriteException
-from bravo.ibravo import ISerializer, ISerializerFactory
+from bravo.ibravo import ISerializer
 from bravo.location import Location
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
@@ -23,14 +23,7 @@ from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 from bravo.utilities.paths import names_for_chunk, name_for_region
 
-# Due to technical limitations in the way Twisted discovers plugins, here is
-# how this file works:
-# Define classes implementing ISerializer, as usual. Also make the class
-# provide ISerializerFactory directly. Do not instantiate the class at the end
-# of the file.
-# Twisted discovers ISerializerFactories for us, and Bravo produces
-# ISerializer instances as needed, internally.
-# XXX we might be able to fix this now that Exocet is the loader.
+from bravo.parameters import world_url
 
 class Alpha(object):
     """
@@ -41,7 +34,6 @@ class Alpha(object):
     """
 
     implements(ISerializer)
-    classProvides(ISerializerFactory)
 
     name = "alpha"
 
@@ -545,8 +537,6 @@ class Beta(Alpha):
     Beta and the MCRegion mod.
     """
 
-    classProvides(ISerializerFactory)
-
     name = "beta"
 
     def __init__(self, url):
@@ -713,3 +703,9 @@ class Beta(Alpha):
         handle.seek(offset)
         handle.write(pack(">L", position))
         handle.close()
+
+try:
+    alpha = Alpha(world_url)
+    beta = Beta(world_url)
+except Exception:
+    pass

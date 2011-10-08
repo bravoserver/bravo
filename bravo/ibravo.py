@@ -286,13 +286,6 @@ class ISerializer(IBravoPlugin):
         May return a ``Deferred`` that will fire on completion.
         """
 
-class ISerializerFactory(IBravoPlugin):
-    """
-    Factory for ``ISerializer`` instances.
-
-    I am so sorry for this.
-    """
-
 # Hooks
 
 class IWindowOpenHook(ISortedPlugin):

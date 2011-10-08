@@ -5,24 +5,36 @@ import tempfile
 from twisted.python.filepath import FilePath
 
 import bravo.chunk
-from bravo.plugins.serializers import Alpha
+from bravo.ibravo import ISerializer
 from bravo.nbt import TAG_Compound, TAG_List, TAG_String
 from bravo.nbt import TAG_Double, TAG_Byte, TAG_Short
+from bravo.plugin import retrieve_plugins
 
 class TestAlphaSerializerInit(unittest.TestCase):
+    """
+    The Alpha serializer can't even get started without a valid URL.
+    """
 
     def test_not_url(self):
-        self.assertRaises(Exception, Alpha, "/i/am/not/a/url")
+        parameters = {"world_url": "/i/am/not/a/url"}
+        self.assertFalse("alpha" in retrieve_plugins(ISerializer, parameters))
 
     def test_wrong_scheme(self):
-        self.assertRaises(Exception, Alpha, "http://www.example.com/")
+        parameters = {"world_url": "http://www.example.com/"}
+        self.assertFalse("alpha" in retrieve_plugins(ISerializer, parameters))
 
 class TestAlphaSerializer(unittest.TestCase):
 
     def setUp(self):
         self.d = tempfile.mkdtemp()
         self.folder = FilePath(self.d)
-        self.serializer = Alpha('file://' + self.folder.path)
+
+        parameters = {"world_url": "file://" + self.folder.path}
+        plugins = retrieve_plugins(ISerializer, parameters)
+        if "alpha" not in plugins:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.serializer = plugins["alpha"]
 
     def tearDown(self):
         shutil.rmtree(self.d)
