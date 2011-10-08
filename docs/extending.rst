@@ -60,6 +60,12 @@ compared to, Twisted's own systems:
  * thread
  * threading
 
+Of course, since ``os`` and ``sys`` are available (for now), a sufficiently
+cunning programmer can definitely bypass the blacklist. The blacklist is meant
+largely to protect novice extension authors from making bad choices about how
+their code runs. It is *not* able to protect servers from malicious or
+deviously-crafted code.
+
 Parameters
 ----------
 
@@ -91,6 +97,7 @@ optional, the following is legal and works fine::
 The following parameters might be available:
 
  * ``factory``: The factory owning this instance of the plugin.
+ * ``world_url``: The URL for the world owning this instance of the plugin.
 
 The Flexibility of Commands
 ===========================
