@@ -197,36 +197,3 @@ class TestWorldChunks(unittest.TestCase):
                               self.w.sync_get_metadata, (16, 0, 0))
 
         return d
-
-class TestWorldInit(unittest.TestCase):
-
-    def setUp(self):
-        self.name = "unittest"
-        self.d = tempfile.mkdtemp()
-
-        bravo.config.configuration.add_section("world unittest")
-        bravo.config.configuration.set("world unittest", "url", "file://%s" % self.d)
-        bravo.config.configuration.set("world unittest", "serializer",
-            "alpha")
-
-    def tearDown(self):
-        shutil.rmtree(self.d)
-        bravo.config.configuration.remove_section("world unittest")
-
-    def test_trivial(self):
-        pass
-
-    def test_load_level_exception(self):
-        """
-        Exceptions raised during serializer reads should be handled during the
-        world startup.
-        """
-
-        from bravo.plugins.serializers import Alpha
-        def raiser(self, level):
-            raise SerializerReadException("testing")
-        self.patch(Alpha, "load_level", raiser)
-
-        w = bravo.world.World(self.name)
-        w.start()
-        w.stop()

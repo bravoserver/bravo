@@ -16,7 +16,7 @@ from bravo.chunk import Chunk
 from bravo.config import configuration
 from bravo.entity import Player, Furnace
 from bravo.errors import ChunkNotLoaded, SerializerReadException
-from bravo.ibravo import ISerializer, ISerializerFactory
+from bravo.ibravo import ISerializer
 from bravo.plugin import (retrieve_named_plugins, verify_plugin,
     PluginException)
 from bravo.utilities.coords import split_coords
@@ -144,12 +144,9 @@ class World(object):
         world_url = configuration.get(self.config_name, "url")
         world_sf_name = configuration.get(self.config_name, "serializer")
 
-        try:
-            sf = retrieve_named_plugins(ISerializerFactory, [world_sf_name])[0]
-            self.serializer = verify_plugin(ISerializer, sf(world_url))
-        except PluginException, pe:
-            log.msg(pe)
-            raise RuntimeError("Fatal error: Couldn't set up serializer!")
+        serializers = retrieve_named_plugins(ISerializer, [world_sf_name],
+                parameters={"world_url": world_url})
+        self.serializer = serializers[0]
 
         self.seed = random.randint(0, sys.maxint)
 
