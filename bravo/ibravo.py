@@ -230,6 +230,17 @@ class ISerializer(IBravoPlugin):
     implementation of their serialization technique.
     """
 
+    def connect(url):
+        """
+        Connect this serializer to a serialization resource, as defined in
+        ``url``.
+
+        Bravo uses URLs to specify all serialization resources. While there is
+        no strict enforcement of the identifier being a URL, most popular
+        database libraries can understand URL-based resources, and thus it is
+        a useful *de facto* standard.
+        """
+
     def save_chunk(chunk):
         """
         Save a chunk.

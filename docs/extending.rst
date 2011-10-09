@@ -97,7 +97,6 @@ optional, the following is legal and works fine::
 The following parameters might be available:
 
  * ``factory``: The factory owning this instance of the plugin.
- * ``world_url``: The URL for the world owning this instance of the plugin.
 
 The Flexibility of Commands
 ===========================

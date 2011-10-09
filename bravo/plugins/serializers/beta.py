@@ -23,8 +23,6 @@ from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 from bravo.utilities.paths import names_for_chunk, name_for_region
 
-from bravo.parameters import world_url
-
 class Alpha(object):
     """
     Minecraft Alpha world serializer.
@@ -37,21 +35,7 @@ class Alpha(object):
 
     name = "alpha"
 
-    def __init__(self, url):
-        parsed = urlparse(url)
-        if not parsed.scheme:
-            raise Exception("I need to be handed a URL, not a path")
-        if parsed.scheme != "file":
-            raise Exception("I am not okay with scheme %s" % parsed.scheme)
-
-        self.folder = FilePath(parsed.path)
-        if not self.folder.exists():
-            log.msg("Creating new world in %s" % self.folder)
-            try:
-                self.folder.makedirs()
-            except os.error:
-                raise Exception("Could not create world in %s" % self.folder)
-
+    def __init__(self):
         self._entity_loaders = {
             "Chicken": lambda entity, tag: None,
             "Cow": lambda entity, tag: None,
@@ -428,6 +412,21 @@ class Alpha(object):
 
     # ISerializer API.
 
+    def connect(self, url):
+        parsed = urlparse(url)
+        if not parsed.scheme:
+            raise Exception("I need to be handed a URL, not a path")
+        if parsed.scheme != "file":
+            raise Exception("I am not okay with scheme %s" % parsed.scheme)
+
+        self.folder = FilePath(parsed.path)
+        if not self.folder.exists():
+            log.msg("Creating new world in %s" % self.folder)
+            try:
+                self.folder.makedirs()
+            except os.error:
+                raise Exception("Could not create world in %s" % self.folder)
+
     def load_chunk(self, chunk):
         first, second, filename = names_for_chunk(chunk.x, chunk.z)
         fp = self.folder.child(first).child(second)
@@ -539,8 +538,8 @@ class Beta(Alpha):
 
     name = "beta"
 
-    def __init__(self, url):
-        Alpha.__init__(self, url)
+    def __init__(self):
+        super(Beta, self).__init__()
 
         self.regions = dict()
 
@@ -704,8 +703,5 @@ class Beta(Alpha):
         handle.write(pack(">L", position))
         handle.close()
 
-try:
-    alpha = Alpha(world_url)
-    beta = Beta(world_url)
-except Exception:
-    pass
+alpha = Alpha()
+beta = Beta()

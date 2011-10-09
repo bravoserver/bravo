@@ -15,13 +15,20 @@ class TestAlphaSerializerInit(unittest.TestCase):
     The Alpha serializer can't even get started without a valid URL.
     """
 
+    def setUp(self):
+        plugins = retrieve_plugins(ISerializer)
+        if "alpha" not in plugins:
+            raise unittest.SkipTest("Plugin not present")
+
+        self.serializer = plugins["alpha"]
+
     def test_not_url(self):
-        parameters = {"world_url": "/i/am/not/a/url"}
-        self.assertFalse("alpha" in retrieve_plugins(ISerializer, parameters))
+        self.assertRaises(Exception, self.serializer.connect,
+            "/i/am/not/a/url")
 
     def test_wrong_scheme(self):
-        parameters = {"world_url": "http://www.example.com/"}
-        self.assertFalse("alpha" in retrieve_plugins(ISerializer, parameters))
+        self.assertRaises(Exception, self.serializer.connect,
+            "http://www.example.com/")
 
 class TestAlphaSerializer(unittest.TestCase):
 
@@ -29,12 +36,12 @@ class TestAlphaSerializer(unittest.TestCase):
         self.d = tempfile.mkdtemp()
         self.folder = FilePath(self.d)
 
-        parameters = {"world_url": "file://" + self.folder.path}
-        plugins = retrieve_plugins(ISerializer, parameters)
+        plugins = retrieve_plugins(ISerializer)
         if "alpha" not in plugins:
             raise unittest.SkipTest("Plugin not present")
 
         self.serializer = plugins["alpha"]
+        self.serializer.connect("file://" + self.folder.path)
 
     def tearDown(self):
         shutil.rmtree(self.d)

@@ -17,8 +17,7 @@ from bravo.config import configuration
 from bravo.entity import Player, Furnace
 from bravo.errors import ChunkNotLoaded, SerializerReadException
 from bravo.ibravo import ISerializer
-from bravo.plugin import (retrieve_named_plugins, verify_plugin,
-    PluginException)
+from bravo.plugin import retrieve_named_plugins
 from bravo.utilities.coords import split_coords
 from bravo.utilities.temporal import PendingEvent
 from bravo.mobmanager import MobManager
@@ -144,9 +143,14 @@ class World(object):
         world_url = configuration.get(self.config_name, "url")
         world_sf_name = configuration.get(self.config_name, "serializer")
 
-        serializers = retrieve_named_plugins(ISerializer, [world_sf_name],
-                parameters={"world_url": world_url})
+        # Get the current serializer list, and attempt to connect our
+        # serializer of choice to our resource.
+        # This could fail. Each of these lines (well, only the first and
+        # third) could raise a variety of exceptions. They should *all* be
+        # fatal.
+        serializers = retrieve_named_plugins(ISerializer, [world_sf_name])
         self.serializer = serializers[0]
+        self.serializer.connect(world_url)
 
         self.seed = random.randint(0, sys.maxint)
 
