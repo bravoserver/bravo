@@ -310,6 +310,7 @@ class World(object):
         if not self.factory:
             return chunk
 
+        # XXX slightly icky, print statements are bad
         # Register the chunk's entities with our parent factory.
         for entity in chunk.entities:
             if hasattr(entity,'loop'):
@@ -319,6 +320,7 @@ class World(object):
                 print "I have no loop"
             self.factory.register_entity(entity)
 
+        # XXX why is this for furnaces only? :T
         # Scan the chunk for burning furnaces
         for coords, tile in chunk.tiles.iteritems():
             # If the furnace was saved while burning ...

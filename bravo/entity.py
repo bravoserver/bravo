@@ -668,80 +668,89 @@ class Furnace(Tile):
         :param `BravoFactory` factory: The factory
         :param tuple coords: (bigx, smallx, bigz, smallz, y) - coords of this furnace
         '''
+
         self.coords = coords
         self.factory = factory
 
         if not self.running:
             if self.burntime != 0:
-                # Burning furnace was just loaded with the chunk.
-                # Continue it's burning process.
+                # This furnace was already burning, but not started. This
+                # usually means that the furnace was serialized while burning.
                 self.running = True
                 self.burn_max = self.burntime
                 self.burning.start(0.5)
             elif self.hasFuel and self.canCraft:
-                # Start burning loop.
+                # This furnace could be burning, but isn't. Let's start it!
                 self.burntime = 0
                 self.cooktime = 0
                 self.burning.start(0.5)
 
     def burn(self, ticks):
         '''
-        Main furnace loop
+        The main furnace loop.
 
-        :param int ticks: number of calls that should have been invoked
+        :param int ticks: number of furnace iterations to perform
         '''
+
         # Usually it's only one iteration but if something blocks the server
         # for long period we shall process skipped ticks.
         # Note: progress bars will lag anyway.
         if ticks > 1:
-            log.msg("Furnace process drifts. %s ticks skipped." % (ticks - 1,))
+            log.msg("Lag detected; skipping %d furnace ticks" % (ticks - 1))
+
         for iteration in xrange(ticks):
-            # -----------------------------
-            # ---     item crafting     ---
-            # -----------------------------
+            # Craft items, if we can craft them.
             if self.canCraft:
                 self.cooktime += 1
+
                 # Notchian time is ~9.25-9.50 sec.
-                if self.cooktime == 20: # cooked!
+                if self.cooktime == 20:
+                    # Looks like things were successfully crafted.
                     source = self.inventory.crafting[0]
                     product = furnace_recipes[source.primary]
                     self.inventory.crafting[0] = source.decrement()
+
                     if self.inventory.crafted[0] is None:
                         self.inventory.crafted[0] = product
                     else:
                         item = self.inventory.crafted[0]
                         self.inventory.crafted[0] = item.increment(product.quantity)
+
                     update_all_windows_slot(self.factory, self.coords, 0, self.inventory.crafting[0])
                     update_all_windows_slot(self.factory, self.coords, 2, self.inventory.crafted[0])
                     self.cooktime = 0
             else:
                 self.cooktime = 0
 
-            # ----------------------------
-            # ---     fuel consume     ---
-            # ----------------------------
+            # Consume fuel, if applicable.
             if self.burntime == 0:
-                if self.hasFuel and self.canCraft: # burn next portion of the fuel
+                if self.hasFuel and self.canCraft:
+                    # We have fuel and stuff to craft, so burn a bit of fuel
+                    # and craft some stuff.
                     fuel = self.inventory.fuel[0]
                     self.burntime = self.burn_max = furnace_fuel[fuel.primary]
                     self.inventory.fuel[0] = fuel.decrement()
+
                     if not self.running:
                         self.running = True
                         furnace_on_off(self.factory, self.coords, True)
+
                     update_all_windows_slot(self.factory, self.coords, 1, self.inventory.fuel[0])
-                else: # out of fuel or no need to burn more
+                else:
+                    # We're finished burning. Turn ourselves off.
                     self.burning.stop()
                     self.running = False
                     furnace_on_off(self.factory, self.coords, False)
-                    # reset cook time
+
+                    # Reset the cooking time, just because.
                     self.cooktime = 0
                     update_all_windows_progress(self.factory, self.coords, 0, 0)
                     return
+
             self.burntime -= 1
 
-        # ----------------------------
-        # --- update progress bars ---
-        # ----------------------------
+        # Update progress bars for the window.
+        # XXX magic numbers
         cook_progress = 185 * self.cooktime / 19
         burn_progress = 250 * self.burntime / self.burn_max
         update_all_windows_progress(self.factory, self.coords, 0, cook_progress)
