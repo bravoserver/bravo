@@ -283,16 +283,16 @@ class ISerializer(IBravoPlugin):
         May return a ``Deferred`` that will fire on completion.
         """
 
-    def load_plugin_data(name):
+    def save_plugin_data(name, value):
         """
-        Load plugin-specific data.
+        Save plugin-specific data.
 
         May return a ``Deferred`` that will fire on completion.
         """
 
-    def save_plugin_data(name, value):
+    def load_plugin_data(name):
         """
-        Save plugin-specific data.
+        Load plugin-specific data.
 
         May return a ``Deferred`` that will fire on completion.
         """
