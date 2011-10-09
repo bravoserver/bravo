@@ -1,5 +1,7 @@
 from twisted.trial import unittest
 
+import warnings
+
 from twisted.internet import reactor
 from twisted.internet.task import deferLater
 
@@ -19,10 +21,16 @@ class FakeTransport(object):
     def loseConnection(self):
         self.lost = True
 
+class FakeFactory(object):
+
+    def broadcast(self, packet):
+        pass
+
 class TestBetaServerProtocol(unittest.TestCase):
 
     def setUp(self):
         self.p = BetaServerProtocol()
+        self.p.factory = FakeFactory()
         self.p.transport = FakeTransport()
 
     def tearDown(self):
@@ -124,6 +132,21 @@ class TestBetaServerProtocol(unittest.TestCase):
 
         d = deferLater(reactor, 31, cb)
         return d
+
+    def test_latency_overflow(self):
+        """
+        Massive latencies should not cause exceptions to be raised.
+        """
+
+        # Set the username to avoid a packet generation problem.
+        self.p.username = "unittest"
+
+        # Turn on warning context and warning->error filter; otherwise, only a
+        # warning will be emitted on Python 2.6 and older, and we want the
+        # test to always fail in that case.
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            self.p.latency = 70000
 
 
 class TestBravoProtocol(unittest.TestCase):
