@@ -32,6 +32,7 @@ from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
 from bravo.utilities.chat import username_alternatives
+from bravo.utilities.maths import clamp
 from bravo.utilities.temporal import timestamp_from_clock
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
@@ -458,6 +459,11 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
     @latency.setter
     def latency(self, value):
+        # Clamp the value to not exceed the boundaries of the packet. This is
+        # necessary even though, in theory, a ping this high is bad news.
+        value = clamp(value, 0, 65535)
+
+        # Check to see if this is a new value, and if so, alert everybody.
         if self._latency != value:
             packet = make_packet("players", name=self.username, online=True,
                 ping=value)
