@@ -775,26 +775,38 @@ class Furnace(Tile):
         :returns: bool
         '''
 
-        # if has somethig to craft from...
-        if self.inventory.crafting[0] is None:
+        crafting = self.inventory.crafting[0]
+        crafted = self.inventory.crafted[0]
+
+        # Nothing to craft?
+        if crafting is None:
             return False
-        if self.inventory.crafting[0].primary in furnace_recipes:
-            #...and has space for it
-            if self.inventory.crafted[0] is None:
-                return True
-            else:
-                crafting = self.inventory.crafting[0]
-                crafted = self.inventory.crafted[0]
-                if furnace_recipes[crafting.primary][0] != crafted.primary:
-                    return False
-                elif crafted.primary in unstackable:
-                    return False
-                elif crafted.quantity + furnace_recipes[crafting.primary].quantity > 64:
-                    return False
-                else:
-                    return True
-        else:
+
+        # No matching recipe?
+        if crafting.primary not in furnace_recipes:
             return False
+
+        # Something to craft and no current output? This is a success
+        # condition.
+        if crafted is None:
+            return True
+
+        # Unstackable output?
+        if crafted.primary in unstackable:
+            return False
+
+        recipe = furnace_recipes[crafting.primary]
+
+        # Recipe doesn't match current output?
+        if recipe[0] != crafted.primary:
+            return False
+
+        # Crafting would overflow current output?
+        if crafted.quantity + recipe.quantity > 64:
+            return False
+
+        # By default, yes, you can craft.
+        return True
 
 class MobSpawner(Tile):
     """
