@@ -48,35 +48,47 @@ class TestFurnaceProcessInternals(unittest.TestCase):
         self.tile = FurnaceTile(0, 0, 0)
         self.factory = FakeFactory()
 
-    def test_fuel_slot(self):
-        # empty slot
+    def test_has_fuel_empty(self):
         self.assertFalse(self.tile.has_fuel())
-        # non-fuel item
+
+    def test_has_fuel_not_fuel(self):
         self.tile.inventory.fuel[0] = Slot(blocks['rose'].slot, 0, 1)
         self.assertFalse(self.tile.has_fuel())
-        # fuel item
+
+    def test_has_fuel_fuel(self):
         self.tile.inventory.fuel[0] = Slot(items['coal'].slot, 0, 1)
         self.assertTrue(self.tile.has_fuel())
 
-    def test_crafting_slot(self):
-        # empty slots
+    def test_can_craft_empty(self):
         self.assertFalse(self.tile.can_craft())
-        # have no recipe
+
+    def test_can_craft_no_recipe(self):
+        """
+        Furnaces can't craft if there is no known recipe matching an input in
+        the crafting slot.
+        """
+
         self.tile.inventory.crafting[0] = Slot(blocks['rose'].slot, 0, 1)
         self.assertFalse(self.tile.can_craft())
-        # have recipe
+
+    def test_can_craft_empty_output(self):
         self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 1)
         self.assertTrue(self.tile.can_craft())
-        # crating/crafted mismatch
+
+    def test_can_craft_mismatch(self):
+        self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 1)
         self.tile.inventory.crafted[0] = Slot(blocks['rose'].slot, 0, 1)
         self.assertFalse(self.tile.can_craft())
-        # crating/crafted match
+
+    def test_can_craft_match(self):
+        self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 1)
         self.tile.inventory.crafted[0] = Slot(blocks['glass'].slot, 0, 1)
         self.assertTrue(self.tile.can_craft())
-        # match but no space left
+
+    def test_can_craft_overflow(self):
+        self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 1)
         self.tile.inventory.crafted[0] = Slot(blocks['glass'].slot, 0, 64)
         self.assertFalse(self.tile.can_craft())
-        # TODO: test unstackable items when they are defined
 
 class TestFurnaceProcessWindowsUpdate(unittest.TestCase):
 
