@@ -642,12 +642,13 @@ class Furnace(Tile):
 
     name = "Furnace"
 
+    burntime = 0
+    cooktime = 0
+    running = False
+
     def __init__(self, *args, **kwargs):
         super(Furnace, self).__init__(*args, **kwargs)
 
-        self.burntime = 0
-        self.cooktime = 0
-        self.running = False
         self.inventory = FurnaceStorage()
         self.burning = LoopingCall.withCount(self.burn)
 
