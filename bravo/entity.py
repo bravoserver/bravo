@@ -679,7 +679,7 @@ class Furnace(Tile):
                 self.running = True
                 self.burn_max = self.burntime
                 self.burning.start(0.5)
-            elif self.hasFuel and self.canCraft:
+            elif self.has_fuel() and self.can_craft():
                 # This furnace could be burning, but isn't. Let's start it!
                 self.burntime = 0
                 self.cooktime = 0
@@ -700,7 +700,7 @@ class Furnace(Tile):
 
         for iteration in xrange(ticks):
             # Craft items, if we can craft them.
-            if self.canCraft:
+            if self.can_craft():
                 self.cooktime += 1
 
                 # Notchian time is ~9.25-9.50 sec.
@@ -724,7 +724,7 @@ class Furnace(Tile):
 
             # Consume fuel, if applicable.
             if self.burntime == 0:
-                if self.hasFuel and self.canCraft:
+                if self.has_fuel() and self.can_craft():
                     # We have fuel and stuff to craft, so burn a bit of fuel
                     # and craft some stuff.
                     fuel = self.inventory.fuel[0]
@@ -756,21 +756,25 @@ class Furnace(Tile):
         update_all_windows_progress(self.factory, self.coords, 0, cook_progress)
         update_all_windows_progress(self.factory, self.coords, 1, burn_progress)
 
-    @property
-    def hasFuel(self):
+    def has_fuel(self):
         '''
-        :returns: True if the furnace has something to burn
-        '''
-        if self.inventory.fuel[0] is None:
-            return False
-        else:
-            return self.inventory.fuel[0].primary in furnace_fuel
+        Determine whether this furnace is fueled.
 
-    @property
-    def canCraft(self):
+        :returns: bool
         '''
-        :returns: True if the furnace can cratf an item
+
+        return (self.inventory.fuel[0] is not None and
+                self.inventory.fuel[0].primary in furnace_fuel)
+
+    def can_craft(self):
         '''
+        Determine whether this furnace is capable of outputting items.
+
+        Note that this is independent of whether the furnace is fueled.
+
+        :returns: bool
+        '''
+
         # if has somethig to craft from...
         if self.inventory.crafting[0] is None:
             return False

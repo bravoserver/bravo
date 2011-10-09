@@ -50,32 +50,32 @@ class TestFurnaceProcessInternals(unittest.TestCase):
 
     def test_fuel_slot(self):
         # empty slot
-        self.assertFalse(self.tile.hasFuel)
+        self.assertFalse(self.tile.has_fuel())
         # non-fuel item
         self.tile.inventory.fuel[0] = Slot(blocks['rose'].slot, 0, 1)
-        self.assertFalse(self.tile.hasFuel)
+        self.assertFalse(self.tile.has_fuel())
         # fuel item
         self.tile.inventory.fuel[0] = Slot(items['coal'].slot, 0, 1)
-        self.assertTrue(self.tile.hasFuel)
+        self.assertTrue(self.tile.has_fuel())
 
     def test_crafting_slot(self):
         # empty slots
-        self.assertFalse(self.tile.canCraft)
+        self.assertFalse(self.tile.can_craft())
         # have no recipe
         self.tile.inventory.crafting[0] = Slot(blocks['rose'].slot, 0, 1)
-        self.assertFalse(self.tile.canCraft)
+        self.assertFalse(self.tile.can_craft())
         # have recipe
         self.tile.inventory.crafting[0] = Slot(blocks['sand'].slot, 0, 1)
-        self.assertTrue(self.tile.canCraft)
+        self.assertTrue(self.tile.can_craft())
         # crating/crafted mismatch
         self.tile.inventory.crafted[0] = Slot(blocks['rose'].slot, 0, 1)
-        self.assertFalse(self.tile.canCraft)
+        self.assertFalse(self.tile.can_craft())
         # crating/crafted match
         self.tile.inventory.crafted[0] = Slot(blocks['glass'].slot, 0, 1)
-        self.assertTrue(self.tile.canCraft)
+        self.assertTrue(self.tile.can_craft())
         # match but no space left
         self.tile.inventory.crafted[0] = Slot(blocks['glass'].slot, 0, 64)
-        self.assertFalse(self.tile.canCraft)
+        self.assertFalse(self.tile.can_craft())
         # TODO: test unstackable items when they are defined
 
 class TestFurnaceProcessWindowsUpdate(unittest.TestCase):
