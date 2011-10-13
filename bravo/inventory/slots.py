@@ -106,7 +106,7 @@ class SlotsSet(SerializableSlots):
 
 class Crafting(SlotsSet):
     '''
-    Base crafting class. Never shall be instantinated directly.
+    Base crafting class. Never shall be instantiated directly.
     '''
 
     crafting = 4
@@ -128,10 +128,15 @@ class Crafting(SlotsSet):
         """
         Handle a slot selection on a crafted output.
 
-        Returns: ( True/False, new selection )
+        :param index: index of the selection
+        :param alternate: whether this was an alternate selection
+        :param shift: whether this was a shifted selection
+        :param selected: the current selection
+
+        :returns: a tuple of a bool indicating whether the selection was
+                  valid, and the newly selected slot
         """
 
-        # XXX my docstring bites
         if self.recipe and self.crafted[0]:
             if selected is None:
                 selected = self.crafted[0]
