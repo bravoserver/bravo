@@ -200,13 +200,15 @@ class Mob(Entity):
 
     Names are used to identify mobs during serialization, just like for all
     other entities.
+
+    This mob might not be serialized if this name is not overriden.
     """
 
     metadata = {0: ("byte", 0)}
 
     def __init__(self, **kwargs):
         """
-        Create a mob
+        Create a mob.
 
         This method calls super().
         """
@@ -215,13 +217,27 @@ class Mob(Entity):
         super(Mob, self).__init__(**kwargs)
         self.manager = None
 
+    def update_metadata(self):
+        """
+        Overrideable hook for general metadata updates.
+
+        This method is necessary because metadata generally only needs to be
+        updated prior to certain events, not necessarily in response to
+        external events.
+
+        This hook will always be called prior to saving this mob's data for
+        serialization or wire transfer.
+        """
+
     def run(self):
         """
         Starts a mob's loop process
         """
+
         xcoord, chaff, zcoord, chaff = split_coords(self.location.x,
             self.location.z)
-        self.chunk_coords = (xcoord, 1, zcoord) # XXX The one is redundant, fix it
+        # XXX The one is redundant, fix it
+        self.chunk_coords = xcoord, 1, zcoord
         self.loop = LoopingCall(self.update)
         self.loop.start(.2)
 
@@ -229,6 +245,9 @@ class Mob(Entity):
         """
         Create a "mob" packet representing this entity.
         """
+
+        # Update metadata from instance variables.
+        self.update_metadata()
 
         return make_packet("mob",
             eid=self.eid,
@@ -337,8 +356,6 @@ class Creeper(Mob):
 
     name = "Creeper"
 
-    metadata = {0: ("byte", 0), 17: ("byte", 0)}
-
     def __init__(self, aura=False, **kwargs):
         """
         Create a creeper.
@@ -350,35 +367,22 @@ class Creeper(Mob):
 
         self.aura = aura
 
-    def save_to_packet(self):
-        metadata = self.metadata.copy()
-
-        aura = 0
-        if self.aura:
-            aura |= 0x1
-        metadata[17] = "byte", aura
-
-        return make_packet("mob",
-            eid=self.eid,
-            type=self.name,
-            x=self.location.x * 32 + 16,
-            y=self.location.y * 32,
-            z=self.location.z * 32 + 16,
-            yaw=0,
-            pitch=0,
-            metadata=metadata
-        )
+    def update_metadata(self):
+        self.metadata = {
+            0: ("byte", 0),
+            17: ("byte", int(self.aura)),
+        }
 
 class Ghast(Mob):
     """
-    A sad ghost
+    A very melancholy ghost.
     """
 
     name = "Ghast"
 
 class GiantZombie(Mob):
     """
-    A giant zombie
+    Like a regular zombie, but far larger.
     """
 
     name = "GiantZombie"
@@ -390,34 +394,22 @@ class Pig(Mob):
 
     name = "Pig"
 
-    metadata = {0: ("byte", 0), 16: ("byte", 0)}
-
     def __init__(self, saddle=False, **kwargs):
         """
         Create a pig.
 
-        This method calls super()
+        This method calls super().
         """
 
         super(Pig, self).__init__(**kwargs)
 
         self.saddle = saddle
 
-    def save_to_packet(self):
-        # Prepare metadata.
-        metadata = self.metadata.copy()
-        metadata[16] = "byte", self.saddle
-
-        return make_packet("mob",
-            eid=self.eid,
-            type=self.name,
-            x=self.location.x * 32 + 16,
-            y=self.location.y * 32,
-            z=self.location.z * 32 + 16,
-            yaw=0,
-            pitch=0,
-            metadata=metadata
-        )
+    def update_metadata(self):
+        self.metadata = {
+            0: ("byte", 0),
+            16: ("byte", int(self.saddle)),
+        }
 
 class ZombiePigman(Mob):
     """
@@ -428,12 +420,10 @@ class ZombiePigman(Mob):
 
 class Sheep(Mob):
     """
-    A wooly mob.
+    A woolly mob.
     """
 
     name = "Sheep"
-
-    metadata = {0: ("byte", 0), 16: ("byte", 0)}
 
     def __init__(self, sheared=False, color=0, **kwargs):
         """
@@ -447,24 +437,15 @@ class Sheep(Mob):
         self.sheared = sheared
         self.color = color
 
-    def save_to_packet(self):
-        # Prepare metadata.
-        metadata = self.metadata.copy()
+    def update_metadata(self):
         color = self.color
         if self.sheared:
             color |= 0x10
-        metadata[16] = "byte", color
 
-        return make_packet("mob",
-            eid=self.eid,
-            type=self.name,
-            x=self.location.x * 32 + 16,
-            y=self.location.y * 32,
-            z=self.location.z * 32 + 16,
-            yaw=0,
-            pitch=0,
-            metadata=metadata
-        )
+        self.metadata = {
+            0: ("byte", 0),
+            16: ("byte", color),
+        }
 
 class Skeleton(Mob):
     """
@@ -480,8 +461,6 @@ class Slime(Mob):
 
     name = "Slime"
 
-    metadata = {0: ("byte", 0), 16: ("byte", 0)}
-
     def __init__(self, size=1, **kwargs):
         """
         Create a slime.
@@ -493,21 +472,11 @@ class Slime(Mob):
 
         self.size = size
 
-    def save_to_packet(self):
-        # Prepare metadata.
-        metadata = self.metadata.copy()
-        metadata[16] = "byte", self.size
-
-        return make_packet("mob",
-            eid=self.eid,
-            type=self.name,
-            x=self.location.x * 32 + 16,
-            y=self.location.y * 32,
-            z=self.location.z * 32 + 16,
-            yaw=0,
-            pitch=0,
-            metadata=metadata
-        )
+    def update_metadata(self):
+        self.metadata = {
+            0: ("byte", 0),
+            16: ("byte", self.size),
+        }
 
 class Spider(Mob):
     """
@@ -530,8 +499,6 @@ class Wolf(Mob):
 
     name = "Wolf"
 
-    metadata = {0: ("byte", 0), 16: ("byte", 0)}
-
     def __init__(self, owner=None, angry=False, sitting=False, **kwargs):
         """
         Create a wolf.
@@ -545,28 +512,19 @@ class Wolf(Mob):
         self.angry = angry
         self.sitting = sitting
 
-    def save_to_packet(self):
-        # Prepare metadata.
-        metadata = self.metadata.copy()
-        props = 0
+    def update_metadata(self):
+        flags = 0
         if self.sitting:
-            props |= 0x1
+            flags |= 0x1
         if self.angry:
-            props |= 0x2
+            flags |= 0x2
         if self.owner:
-            props |= 0x4
-        metadata[16] = "byte", props
+            flags |= 0x4
 
-        return make_packet("mob",
-            eid=self.eid,
-            type=self.name,
-            x=self.location.x * 32 + 16,
-            y=self.location.y * 32,
-            z=self.location.z * 32 + 16,
-            yaw=0,
-            pitch=0,
-            metadata=metadata
-        )
+        self.metadata = {
+            0: ("byte", 0),
+            16: ("byte", flags),
+        }
 
 class Zombie(Mob):
     """
