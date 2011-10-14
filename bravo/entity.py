@@ -419,7 +419,7 @@ class Pig(Mob):
             metadata=metadata
         )
 
-class PigZombie(Mob):
+class ZombiePigman(Mob):
     """
     A zombie pigman.
     """
@@ -586,7 +586,6 @@ entities = dict((entity.name, entity)
         Painting,
         Pickup,
         Pig,
-        PigZombie,
         Player,
         Sheep,
         Skeleton,
@@ -595,6 +594,7 @@ entities = dict((entity.name, entity)
         Squid,
         Wolf,
         Zombie,
+        ZombiePigman,
     )
 )
 
