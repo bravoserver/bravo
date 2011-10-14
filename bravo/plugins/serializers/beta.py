@@ -308,9 +308,9 @@ class Alpha(object):
                     entity = self._load_entity_from_tag(tag)
                     chunk.entities.add(entity)
                 except KeyError:
-                    print "Unknown entity %s" % tag["id"].value
-                    print "Tag for entity:"
-                    print tag.pretty_tree()
+                    log.msg("Unknown entity %s" % tag["id"].value)
+                    log.msg("Tag for entity:")
+                    log.msg(tag.pretty_tree())
 
         if "TileEntities" in level:
             for tag in level["TileEntities"].tags:
@@ -318,9 +318,9 @@ class Alpha(object):
                     tile = self._load_tile_from_tag(tag)
                     chunk.tiles[tile.x, tile.y, tile.z] = tile
                 except KeyError:
-                    print "Unknown tile entity %s" % tag["id"].value
-                    print "Tag for tile:"
-                    print tag.pretty_tree()
+                    log.msg("Unknown tile entity %s" % tag["id"].value)
+                    log.msg("Tag for tile:")
+                    log.msg(tag.pretty_tree())
 
         chunk.dirty = not chunk.populated
 
@@ -354,7 +354,7 @@ class Alpha(object):
                 entitytag = self._save_entity_to_tag(entity)
                 level["Entities"].tags.append(entitytag)
             except KeyError:
-                print "Unknown entity %s" % entity.name
+                log.msg("Unknown entity %s" % entity.name)
 
         level["TileEntities"] = TAG_List(type=TAG_Compound)
         for tile in chunk.tiles.itervalues():
@@ -362,7 +362,7 @@ class Alpha(object):
                 tiletag = self._save_tile_to_tag(tile)
                 level["TileEntities"].tags.append(tiletag)
             except KeyError:
-                print "Unknown tile entity %s" % tile.name
+                log.msg("Unknown tile entity %s" % tile.name)
 
         return tag
 
