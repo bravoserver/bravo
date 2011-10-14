@@ -202,16 +202,6 @@ class Mob(Entity):
     other entities.
     """
 
-    type = "mob"
-    """
-    The type of this mob.
-
-    This is used to identify the mob name on the wire. It is stupid and should
-    be unified with name.
-
-    XXX no, really.
-    """
-
     metadata = {0: ("byte", 0)}
 
     def __init__(self, **kwargs):
@@ -242,7 +232,7 @@ class Mob(Entity):
 
         return make_packet("mob",
             eid=self.eid,
-            type=self.type,
+            type=self.name,
             x=self.location.x * 32 + 16,
             y=self.location.y * 32,
             z=self.location.z * 32 + 16,
@@ -328,7 +318,6 @@ class Chuck(Mob):
     """
 
     name = "Chicken"
-    type = "chuck"
     offsetlist = ((.5, 0, .5),
             (-.5, 0, .5),
             (.5, 0, -.5),
@@ -340,7 +329,6 @@ class Cow(Mob):
     """
 
     name = "Cow"
-    type = "cow"
 
 class Creeper(Mob):
     """
@@ -372,7 +360,7 @@ class Creeper(Mob):
 
         return make_packet("mob",
             eid=self.eid,
-            type="creeper",
+            type=self.name,
             x=self.location.x * 32 + 16,
             y=self.location.y * 32,
             z=self.location.z * 32 + 16,
@@ -387,7 +375,6 @@ class Ghast(Mob):
     """
 
     name = "Ghast"
-    type = "ghast"
 
 class GiantZombie(Mob):
     """
@@ -395,7 +382,6 @@ class GiantZombie(Mob):
     """
 
     name = "GiantZombie"
-    type = "giant_zombie"
 
 class Pig(Mob):
     """
@@ -424,7 +410,7 @@ class Pig(Mob):
 
         return make_packet("mob",
             eid=self.eid,
-            type="pig",
+            type=self.name,
             x=self.location.x * 32 + 16,
             y=self.location.y * 32,
             z=self.location.z * 32 + 16,
@@ -439,7 +425,6 @@ class PigZombie(Mob):
     """
 
     name = "PigZombie"
-    type = "pigman"
 
 class Sheep(Mob):
     """
@@ -472,7 +457,7 @@ class Sheep(Mob):
 
         return make_packet("mob",
             eid=self.eid,
-            type="sheep",
+            type=self.name,
             x=self.location.x * 32 + 16,
             y=self.location.y * 32,
             z=self.location.z * 32 + 16,
@@ -487,7 +472,6 @@ class Skeleton(Mob):
     """
 
     name = "Skeleton"
-    type = "skeleton"
 
 class Slime(Mob):
     """
@@ -516,7 +500,7 @@ class Slime(Mob):
 
         return make_packet("mob",
             eid=self.eid,
-            type="slime",
+            type=self.name,
             x=self.location.x * 32 + 16,
             y=self.location.y * 32,
             z=self.location.z * 32 + 16,
@@ -531,7 +515,6 @@ class Spider(Mob):
     """
 
     name = "Spider"
-    type = "spider"
 
 class Squid(Mob):
     """
@@ -539,7 +522,6 @@ class Squid(Mob):
     """
 
     name = "Squid"
-    type = "squid"
 
 class Wolf(Mob):
     """
@@ -577,7 +559,7 @@ class Wolf(Mob):
 
         return make_packet("mob",
             eid=self.eid,
-            type="wolf",
+            type=self.name,
             x=self.location.x * 32 + 16,
             y=self.location.y * 32,
             z=self.location.z * 32 + 16,
@@ -592,8 +574,8 @@ class Zombie(Mob):
     """
 
     name = "Zombie"
-    type = "zombie"
     offsetlist = ((-.5,0,-.5), (-.5,0,.5), (.5,0,-.5), (.5,0,.5), (-.5,1,-.5), (-.5,1,.5), (.5,1,-.5), (.5,1,.5),)
+
 entities = dict((entity.name, entity)
     for entity in (
         Chuck,

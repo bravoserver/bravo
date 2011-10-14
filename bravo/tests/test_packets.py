@@ -6,7 +6,7 @@ from construct import Container
 from construct import ArrayError, MappingError
 
 from bravo.beta.packets import (make_packet, metadata, packets, parse_packets,
-                                packets_by_name, AlphaString, Metadata)
+                                AlphaString, Metadata)
 
 class TestPacketParsing(unittest.TestCase):
 
@@ -96,7 +96,7 @@ class TestPacketParsing(unittest.TestCase):
         packet = "AAAPb1z///4wAAAH5v//9ZP3AAAEfw==".decode("base64")
         parsed = packets[24].parse(packet)
         self.assertEqual(parsed.eid, 3951)
-        self.assertEqual(parsed.type, "cow")
+        self.assertEqual(parsed.type, "Cow")
         self.assertEqual(parsed.x, -464)
         self.assertEqual(parsed.y, 2022)
         self.assertEqual(parsed.z, -2669)
@@ -104,7 +104,13 @@ class TestPacketParsing(unittest.TestCase):
         self.assertEqual(parsed.pitch, 0)
         # Not testing metadata; those tests are completely separate.
 
-    def test_mob_pig(self):
+    def test_mob_metadata(self):
+        """
+        A mob packet with mob metadata can be parsed.
+
+        We use pig here.
+        """
+
         packet = "AAih/lr///YwAAAIYAAB/hCzAAAAEAB/".decode("base64")
         parsed = packets[24].parse(packet)
         self.assertEqual(parsed.metadata, {0: ("byte", 0), 16: ("byte", 0)})
