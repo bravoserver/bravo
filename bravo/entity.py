@@ -193,20 +193,37 @@ class Mob(Entity):
     """
     A creature.
     """
+
+    name = "Mob"
+    """
+    The name of this mob.
+
+    Names are used to identify mobs during serialization, just like for all
+    other entities.
+    """
+
+    type = "mob"
+    """
+    The type of this mob.
+
+    This is used to identify the mob name on the wire. It is stupid and should
+    be unified with name.
+
+    XXX no, really.
+    """
+
+    metadata = {0: ("byte", 0)}
+
     def __init__(self, **kwargs):
         """
         Create a mob
 
         This method calls super().
         """
+
         self.loop = None
         super(Mob, self).__init__(**kwargs)
         self.manager = None
-
-    name = "Mob"
-    type = "mob"
-
-    metadata = {0: ("byte", 0)}
 
     def run(self):
         """
@@ -214,7 +231,7 @@ class Mob(Entity):
         """
         xcoord, chaff, zcoord, chaff = split_coords(self.location.x,
             self.location.z)
-        self.chunk_coords = (xcoord,1, zcoord) # XXX The one is redundant, fix it
+        self.chunk_coords = (xcoord, 1, zcoord) # XXX The one is redundant, fix it
         self.loop = LoopingCall(self.update)
         self.loop.start(.2)
 
