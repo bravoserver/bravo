@@ -379,8 +379,6 @@ class FloatGenerator(object):
 class CaveGenerator(object):
     """
     Carve caves and seams out of terrain.
-
-    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(ITerrainGenerator)
