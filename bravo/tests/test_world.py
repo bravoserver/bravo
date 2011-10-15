@@ -105,7 +105,7 @@ class TestWorldChunks(unittest.TestCase):
         self.w.dirty_chunk_cache.clear()
         chunk = yield self.w.request_chunk(-1, -1)
 
-        for x, y, z in product(xrange(2), xrange(2), xrange(2)):
+        for x, y, z in product(xrange(2), repeat=3):
             block = yield self.w.get_block((x - 16, y, z - 16))
             self.assertEqual(block, chunk.get_block((x, y, z)))
 
