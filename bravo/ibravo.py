@@ -238,7 +238,8 @@ class ISerializer(IBravoPlugin):
         Bravo uses URLs to specify all serialization resources. While there is
         no strict enforcement of the identifier being a URL, most popular
         database libraries can understand URL-based resources, and thus it is
-        a useful *de facto* standard.
+        a useful *de facto* standard. If a URL is not passed, or the URL is
+        invalid, this method may raise an exception.
         """
 
     def save_chunk(chunk):
@@ -250,7 +251,7 @@ class ISerializer(IBravoPlugin):
 
     def load_chunk(chunk):
         """
-        Load a chunk.
+        Load a chunk. The chunk must exist.
 
         May return a ``Deferred`` that will fire on completion.
         """
@@ -264,7 +265,7 @@ class ISerializer(IBravoPlugin):
 
     def load_level(level):
         """
-        Load a level.
+        Load a level. The level must exist.
 
         May return a ``Deferred`` that will fire on completion.
         """
@@ -278,21 +279,22 @@ class ISerializer(IBravoPlugin):
 
     def load_player(player):
         """
-        Load a player.
+        Load a player. The player must exist.
 
         May return a ``Deferred`` that will fire on completion.
         """
 
     def save_plugin_data(name, value):
         """
-        Save plugin-specific data.
+        Save plugin-specific data. The data must be a bytestring.
 
         May return a ``Deferred`` that will fire on completion.
         """
 
     def load_plugin_data(name):
         """
-        Load plugin-specific data.
+        Load plugin-specific data. If no data is found, an empty bytestring
+        will be returned.
 
         May return a ``Deferred`` that will fire on completion.
         """
