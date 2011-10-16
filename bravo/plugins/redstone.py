@@ -5,7 +5,8 @@ from bravo.blocks import blocks
 from bravo.errors import ChunkNotLoaded
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
-from bravo.utilities.redstone import PlainBlock, block_to_circuit
+from bravo.utilities.redstone import (RedstoneError, PlainBlock,
+                                      block_to_circuit)
 
 from bravo.parameters import factory
 
@@ -16,7 +17,17 @@ def create_circuit(asic, coords):
     cls = block_to_circuit.get(block, PlainBlock)
 
     circuit = cls(coords, block, metadata)
-    circuit.connect(asic)
+
+    # What I'm about to do probably seems a bit, well, extravagant, but until
+    # the real cause can properly be dissected, it's the right thing to do,
+    # and maybe in general, it's the right thing.
+    # Try to connect the circuit. If it fails, disconnect the current circuit
+    # on the asic, and try again.
+    try:
+        circuit.connect(asic)
+    except RedstoneError:
+        asic[coords].disconnect(asic)
+        circuit.connect(asic)
 
     return asic[coords]
 
