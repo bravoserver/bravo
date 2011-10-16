@@ -180,6 +180,10 @@ class Wire(Circuit):
     def __init__(self, coords, block, metadata):
         super(Wire, self).__init__(coords, block, metadata)
 
+    @staticmethod
+    def op(*inputs):
+        return any(inputs)
+
 class PlainBlock(Circuit):
     """
     Any block which doesn't contain redstone. Traditionally, a sand block, but
