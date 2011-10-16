@@ -179,7 +179,6 @@ class Wire(Circuit):
 
     def __init__(self, coords, block, metadata):
         super(Wire, self).__init__(coords, block, metadata)
-        self.coords = set([coords])
 
 class PlainBlock(Circuit):
     """
