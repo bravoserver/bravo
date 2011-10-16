@@ -1249,6 +1249,37 @@ class BravoProtocol(BetaServerProtocol):
         self.write_packet("time", timestamp=int(self.factory.time))
 
     def connectionLost(self, reason):
+        """
+        Cleanup after a lost connection.
+
+        Most of the time, these connections are lost cleanly; we don't have
+        any cleanup to do in the unclean case since clients don't have any
+        kind of pending state which must be recovered.
+
+        Remember, the connection can be lost before identification and
+        authentication, so ``self.username`` and ``self.player`` can be None.
+        """
+
+        if self.username and self.player:
+            self.factory.world.save_player(self.username, self.player)
+
+        if self.player:
+            self.factory.destroy_entity(self.player)
+            packet = make_packet("destroy", eid=self.player.eid)
+            self.factory.broadcast(packet)
+
+        if self.username:
+            packet = make_packet("players", name=self.username, online=False,
+                ping=0)
+            self.factory.broadcast(packet)
+            self.factory.chat("%s has left the game." % self.username)
+
+        self.factory.teardown_protocol(self)
+
+        # We are now torn down. After this point, there will be no more
+        # factory stuff, just our own personal stuff.
+        del self.factory
+
         if self.time_loop:
             self.time_loop.stop()
 
@@ -1258,20 +1289,3 @@ class BravoProtocol(BetaServerProtocol):
                     task.stop()
                 except (TaskDone, TaskFailed):
                     pass
-
-        if self.player:
-            self.factory.world.save_player(self.username, self.player)
-            self.factory.destroy_entity(self.player)
-            packet = make_packet("destroy", eid=self.player.eid)
-            packet += make_packet("players", name=self.username, online=False,
-                ping=0)
-            self.factory.broadcast(packet)
-            self.factory.chat("%s has left the game." % self.username)
-
-        if self.username in self.factory.protocols:
-            del self.factory.protocols[self.username]
-
-        self.factory.connectedIPs[self.host] -= 1
-
-        if self.factory.connectedIPs[self.host] <= 0:
-            del self.factory.connectedIPs[self.host]

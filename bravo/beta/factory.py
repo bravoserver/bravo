@@ -175,11 +175,9 @@ class BravoFactory(Factory):
             p.factory = self
             return p
 
-        # This probably a needs cleanup. We need to see if that IP has
-        # connected already, check if +1 connections is ok, and ignore
-        # values less than 1.
-        if (self.limitPerIP and addr.host in self.connectedIPs.keys()
-            and self.connectedIPs[addr.host] >= self.limitPerIP):
+        # Do our connection-per-IP check.
+        if (self.limitPerIP and
+            self.connectedIPs[addr.host] >= self.limitPerIP):
             log.msg("At maximum connections for %s already, dropping." % addr.host)
             p = KickedProtocol("There are too many players connected from this IP.")
             p.factory = self
@@ -199,6 +197,23 @@ class BravoFactory(Factory):
         p.register_hooks()
 
         return p
+
+    def teardown_protocol(self, protocol):
+        """
+        Do internal bookkeeping on behalf of a protocol which has been
+        disconnected.
+
+        Did you know that "bookkeeping" is one of the few words in English
+        which has three pairs of double letters in a row?
+        """
+
+        username = protocol.username
+        host = protocol.host
+
+        if username in self.protocols:
+            del self.protocols[username]
+
+        self.connectedIPs[host] -= 1
 
     def set_username(self, protocol, username):
         """
