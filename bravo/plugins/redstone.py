@@ -2,6 +2,7 @@ from twisted.internet.task import LoopingCall
 from zope.interface import implements
 
 from bravo.blocks import blocks
+from bravo.errors import ChunkNotLoaded
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
 from bravo.utilities.redstone import PlainBlock, block_to_circuit
@@ -97,11 +98,17 @@ class Redstone(object):
             # Add circuits if necessary. This can happen quite easily, e.g. on
             # fed circuitry.
             for coords in circuit.iter_outputs():
-                if (coords not in self.asic and
-                    factory.world.sync_get_block(coords)):
-                    # Create a new circuit for this plain block and set it to
-                    # be updated next tick.
-                    affected.add(create_circuit(self.asic, coords))
+                try:
+                    if (coords not in self.asic and
+                        factory.world.sync_get_block(coords)):
+                        # Create a new circuit for this plain block and set it
+                        # to be updated next tick.
+                        affected.add(create_circuit(self.asic, coords))
+                except ChunkNotLoaded:
+                    # If the chunk's not loaded, then it doesn't really affect
+                    # us if we're unable to extend the ASIC into that chunk,
+                    # does it?
+                    pass
 
             # Update the circuit, and capture the circuits for the next tick.
             affected.update(circuit.update())
