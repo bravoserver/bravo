@@ -61,6 +61,16 @@ class TestBitTwiddling(unittest.TestCase):
             )
         )
 
+    def test_unpack_nibbles_overflow(self):
+        """
+        No spurious OverflowErrors should occur when packing nibbles.
+
+        This test doesn't even assert anything; it will raise instead if
+        there's a regression.
+        """
+
+        pack_nibbles(array([0xff, 0xff]))
+
 class TestStringMunging(unittest.TestCase):
 
     def test_sanitize_chat_color_control_at_end(self):
