@@ -445,7 +445,9 @@ class Chunk(object):
                 return
 
             # Regenerate heightmap at this coordinate.
-            if not block:
+            if block:
+                self.heightmap[x, z] = max(self.heightmap[x, z], y)
+            else:
                 # If we replace the highest block with air, we need to go
                 # through all blocks below it to find the new top block.
                 height = self.heightmap[x, z]
@@ -454,8 +456,6 @@ class Chunk(object):
                         if self.blocks[x, z, y]:
                             break
                     self.heightmap[x, z] = y
-            else:
-                self.heightmap[x, z] = max(self.heightmap[x, z], y)
 
             # Do the blocklight at this coordinate, if appropriate.
             if block in glowing_blocks:
