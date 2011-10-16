@@ -61,7 +61,7 @@ class TestWorldChunks(unittest.TestCase):
             dtype=numpy.uint8)
         chunk.metadata.shape = (16, 16, 128)
 
-        for x, y, z in product(xrange(2), xrange(2), xrange(2)):
+        for x, y, z in product(xrange(2), repeat=3):
             # This works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
             metadata = yield self.w.get_metadata((x, y, z))
@@ -83,7 +83,7 @@ class TestWorldChunks(unittest.TestCase):
         self.w.dirty_chunk_cache.clear()
         chunk = yield self.w.request_chunk(0, 0)
 
-        for x, y, z in product(xrange(2), xrange(2), xrange(2)):
+        for x, y, z in product(xrange(2), repeat=3):
             # This works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
             block = yield self.w.get_block((x, y, z))
@@ -125,7 +125,7 @@ class TestWorldChunks(unittest.TestCase):
         self.w.dirty_chunk_cache.clear()
         chunk = yield self.w.request_chunk(0, 0)
 
-        for x, y, z in product(xrange(2), xrange(2), xrange(2)):
+        for x, y, z in product(xrange(2), repeat=3):
             # This works because the chunk is at (0, 0) so the coords don't
             # need to be adjusted.
             metadata = yield self.w.get_metadata((x, y, z))
