@@ -1,3 +1,4 @@
+from functools import wraps
 from itertools import product
 from warnings import warn
 
@@ -14,6 +15,32 @@ class ChunkWarning(Warning):
     Somebody did something inappropriate to this chunk, but it probably isn't
     lethal, so the chunk is issuing a warning instead of an exception.
     """
+
+def check_bounds(f):
+    """
+    Decorate a function or method to have its first positional argument be
+    treated as an (x, y, z) tuple which must fit inside chunk boundaries of
+    16, 128, and 16, respectively.
+
+    A warning will be raised if the bounds check fails.
+    """
+
+    @wraps(f)
+    def deco(chunk, coords, *args, **kwargs):
+        x, y, z = coords
+
+        # Coordinates were out-of-bounds; warn and run away.
+        if not (0 <= x < 16 or 0 <= z < 16 or 0 <= y < 128):
+            warn("Coordinates %s are OOB in %s() of %s, ignoring call"
+                % (coords, f.func_name, chunk), ChunkWarning)
+            # A concession towards where this decorator will be used. The
+            # value is likely to be discarded either way, but if the value is
+            # used, we shouldn't horribly die because of None/0 mismatch.
+            return 0
+
+        return f(chunk, coords, *args, **kwargs)
+
+    return deco
 
 # Set up glow tables.
 # These tables provide glow maps for illuminated points.
@@ -387,6 +414,7 @@ class Chunk(object):
             x_size=15, y_size=127, z_size=15, data=array)
         return packet
 
+    @check_bounds
     def get_block(self, coords):
         """
         Look up a block value.
@@ -396,15 +424,10 @@ class Chunk(object):
         :returns: int representing block type
         """
 
-        try:
-            x, y, z = coords
-            return self.blocks[x, z, y]
-        except IndexError:
-            # Coordinates were out-of-bounds; warn and pretend it's air.
-            warn("Coordinates %s are out-of-bounds in %s" % (coords, self),
-                 ChunkWarning)
-            return 0
+        x, y, z = coords
+        return self.blocks[x, z, y]
 
+    @check_bounds
     def set_block(self, coords, block):
         """
         Update a block value.
@@ -415,45 +438,41 @@ class Chunk(object):
 
         x, y, z = coords
 
-        try:
-            if self.blocks[x, z, y] != block:
-                self.blocks[x, z, y] = block
+        if self.blocks[x, z, y] != block:
+            self.blocks[x, z, y] = block
 
-                if not self.populated:
-                    return
+            if not self.populated:
+                return
 
-                # Regenerate heightmap at this coordinate.
-                if not block:
-                    # If we replace the highest block with air, we need to go
-                    # through all blocks below it to find the new top block.
-                    height = self.heightmap[x, z]
-                    if y == height:
-                        for y in range(height, -1, -1):
-                            if self.blocks[x, z, y]:
-                                break
-                        self.heightmap[x, z] = y
-                else:
-                    self.heightmap[x, z] = max(self.heightmap[x, z], y)
+            # Regenerate heightmap at this coordinate.
+            if not block:
+                # If we replace the highest block with air, we need to go
+                # through all blocks below it to find the new top block.
+                height = self.heightmap[x, z]
+                if y == height:
+                    for y in range(height, -1, -1):
+                        if self.blocks[x, z, y]:
+                            break
+                    self.heightmap[x, z] = y
+            else:
+                self.heightmap[x, z] = max(self.heightmap[x, z], y)
 
-                # Do the blocklight at this coordinate, if appropriate.
-                if block in glowing_blocks:
-                    composite_glow(self.blocklight, glowing_blocks[block],
-                        x, y, z)
+            # Do the blocklight at this coordinate, if appropriate.
+            if block in glowing_blocks:
+                composite_glow(self.blocklight, glowing_blocks[block],
+                    x, y, z)
 
-                    self.blocklight = cast["uint8"](self.blocklight.clip(0, 15))
+                self.blocklight = cast["uint8"](self.blocklight.clip(0, 15))
 
-                # And the skylight.
-                glow = max(self.skylight[neighbor]
-                    for neighbor in iter_neighbors((x, z, y)))
-                self.skylight[x, z, y] = neighboring_light(glow, block)
+            # And the skylight.
+            glow = max(self.skylight[neighbor]
+                for neighbor in iter_neighbors((x, z, y)))
+            self.skylight[x, z, y] = neighboring_light(glow, block)
 
-                self.dirty = True
-                self.damage(coords)
-        except IndexError:
-            # Coordinates were out-of-bounds; warn and run away.
-            warn("Coordinates %s are out-of-bounds in %s" % (coords, self),
-                 ChunkWarning)
+            self.dirty = True
+            self.damage(coords)
 
+    @check_bounds
     def get_metadata(self, coords):
         """
         Look up metadata.
@@ -463,15 +482,9 @@ class Chunk(object):
         """
 
         x, y, z = coords
+        return self.metadata[x, z, y]
 
-        try:
-            return self.metadata[x, z, y]
-        except IndexError:
-            # Coordinates were out-of-bounds; warn.
-            warn("Coordinates %s are out-of-bounds in %s" % (coords, self),
-                 ChunkWarning)
-            return 0
-
+    @check_bounds
     def set_metadata(self, coords, metadata):
         """
         Update metadata.
@@ -482,17 +495,13 @@ class Chunk(object):
 
         x, y, z = coords
 
-        try:
-            if self.metadata[x, z, y] != metadata:
-                self.metadata[x, z, y] = metadata
+        if self.metadata[x, z, y] != metadata:
+            self.metadata[x, z, y] = metadata
 
-                self.dirty = True
-                self.damage(coords)
-        except IndexError:
-            # Coordinates were out-of-bounds; warn.
-            warn("Coordinates %s are out-of-bounds in %s" % (coords, self),
-                 ChunkWarning)
+            self.dirty = True
+            self.damage(coords)
 
+    @check_bounds
     def destroy(self, coords):
         """
         Destroy the block at the given coordinates.
