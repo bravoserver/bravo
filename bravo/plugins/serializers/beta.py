@@ -432,16 +432,21 @@ class Alpha(object):
         fp = self.folder.child(first).child(second)
         if not fp.exists():
             fp.makedirs()
+
         fp = fp.child(filename)
+        if not fp.exists():
+            raise SerializerReadException("%r doesn't exist!" % chunk)
 
         tag = self._read_tag(fp)
         if not tag:
-            return
+            raise SerializerReadException("%r (in %s) is corrupt!" %
+                    (chunk, fp.path))
 
         try:
             self._load_chunk_from_tag(chunk, tag)
         except Exception, e:
-            raise SerializerReadException(e)
+            raise SerializerReadException("%r couldn't be loaded: %s" %
+                    (chunk, e))
 
     def save_chunk(self, chunk):
         try:
@@ -458,9 +463,14 @@ class Alpha(object):
         self._write_tag(fp, tag)
 
     def load_level(self, level):
+        fp = self.folder.child("level.dat")
+        if not fp.exists():
+            raise SerializerReadException("Level doesn't exist!")
+
         tag = self._read_tag(self.folder.child("level.dat"))
         if not tag:
-            return
+            raise SerializerReadException("Level (in %s) is corrupt!" %
+                    fp.path)
 
         try:
             level.spawn = (tag["Data"]["SpawnX"].value,
@@ -469,9 +479,9 @@ class Alpha(object):
 
             level.seed = tag["Data"]["RandomSeed"].value
             level.time = tag["Data"]["Time"].value
-        except KeyError:
+        except KeyError, e:
             # Just raise. It's probably gonna be caught and ignored anyway.
-            raise SerializerReadException("Incomplete level data")
+            raise SerializerReadException("Level couldn't be loaded: %s" % e)
 
     def save_level(self, level):
         tag = self._save_level_to_tag(level)
@@ -480,18 +490,27 @@ class Alpha(object):
 
     def load_player(self, player):
         fp = self.folder.child("players").child("%s.dat" % player.username)
+        if not fp.exists():
+            raise SerializerReadException("%r doesn't exist!" % player)
+
         tag = self._read_tag(fp)
         if not tag:
-            return
+            raise SerializerReadException("%r (in %s) is corrupt!" %
+                    (player, fp.path))
 
-        player.location.x, player.location.y, player.location.z = [
-            i.value for i in tag["Pos"].tags]
+        try:
+            player.location.x, player.location.y, player.location.z = [
+                i.value for i in tag["Pos"].tags]
 
-        player.location.yaw = tag["Rotation"].tags[0].value
-        player.location.pitch = tag["Rotation"].tags[1].value
+            player.location.yaw = tag["Rotation"].tags[0].value
+            player.location.pitch = tag["Rotation"].tags[1].value
 
-        if "Inventory" in tag:
-            self._load_inventory_from_tag(player.inventory, tag["Inventory"])
+            if "Inventory" in tag:
+                self._load_inventory_from_tag(player.inventory,
+                        tag["Inventory"])
+        except KeyError, e:
+            raise SerializerReadException("%r couldn't be loaded: %s" %
+                    (player, e))
 
     def save_player(self, player):
         tag = NBTFile()
