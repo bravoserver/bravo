@@ -254,6 +254,8 @@ class ISerializer(IBravoPlugin):
         Load a chunk. The chunk must exist.
 
         May return a ``Deferred`` that will fire on completion.
+
+        :raises: SerializerReadException if the chunk doesn't exist
         """
 
     def save_level(level):
@@ -268,6 +270,8 @@ class ISerializer(IBravoPlugin):
         Load a level. The level must exist.
 
         May return a ``Deferred`` that will fire on completion.
+
+        :raises: SerializerReadException if the level doesn't exist
         """
 
     def save_player(player):
@@ -282,6 +286,8 @@ class ISerializer(IBravoPlugin):
         Load a player. The player must exist.
 
         May return a ``Deferred`` that will fire on completion.
+
+        :raises: SerializerReadException if the player doesn't exist
         """
 
     def save_plugin_data(name, value):
