@@ -67,6 +67,12 @@ class Player(Entity):
 
         self.equipped = 0
 
+    def __repr__(self):
+        return ("%s(eid=%d, location=%s, username=%s)" %
+                (self.name, self.eid, self.location, self.username))
+
+    __str__ = __repr__
+
     def save_to_packet(self):
         """
         Create a "player" packet representing this entity.
