@@ -197,3 +197,42 @@ class TestWorldChunks(unittest.TestCase):
                               self.w.sync_get_metadata, (16, 0, 0))
 
         return d
+
+class TestWorld(unittest.TestCase):
+
+    def setUp(self):
+        self.name = "unittest"
+        self.d = tempfile.mkdtemp()
+
+        bravo.config.configuration.add_section("world unittest")
+        bravo.config.configuration.set("world unittest", "url", "file://%s" % self.d)
+        bravo.config.configuration.set("world unittest", "serializer",
+            "alpha")
+
+        self.w = World(self.name)
+        self.w.pipeline = []
+        self.w.start()
+
+    def tearDown(self):
+        self.w.stop()
+        del self.w
+
+        shutil.rmtree(self.d)
+        bravo.config.configuration.remove_section("world unittest")
+
+    def test_trivial(self):
+        pass
+
+    def test_load_player_initial(self):
+        """
+        Calling load_player() on a player which has never been loaded should
+        not result in an exception. Instead, the player should be returned,
+        wrapped in a Deferred.
+        """
+
+        # For bonus points, assert that the player's username is correct.
+        d = self.w.load_player("unittest")
+        @d.addCallback
+        def cb(player):
+            self.assertEqual(player.username, "unittest")
+        return d

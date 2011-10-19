@@ -355,7 +355,12 @@ class World(object):
             returnValue(retval)
 
         chunk = Chunk(x, z)
-        yield maybeDeferred(self.serializer.load_chunk, chunk)
+        try:
+            yield maybeDeferred(self.serializer.load_chunk, chunk)
+        except SerializerReadException:
+            # Looks like the chunk wasn't already on disk. Guess we're gonna
+            # need to keep going.
+            pass
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
@@ -457,6 +462,12 @@ class World(object):
         player.location.z = self.spawn[2]
 
         d = maybeDeferred(self.serializer.load_player, player)
+        @d.addErrback
+        def eb(failure):
+            failure.trap(SerializerReadException)
+            log.msg("Couldn't load player %r" % username)
+        # Add a callback to return the player, since ISerializer.load_player()
+        # doesn't return the player.
         d.addCallback(lambda none: player)
         return d
 
