@@ -6,16 +6,16 @@ These modules comprise the core functionality of Bravo.
 
 .. toctree::
 
+   beta
    blocks
    chunk
    entity
-   factory
-   ibravo
-   inventory
    furnace
+   ibravo
+   infini
+   inventory
    location
    packets
    plugin
-   protocol
    stdio
    world
