@@ -15,7 +15,6 @@ These modules comprise the core functionality of Bravo.
    infini
    inventory
    location
-   packets
    plugin
    stdio
    world

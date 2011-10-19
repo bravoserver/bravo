@@ -4,6 +4,11 @@
 
 Protocols and factories for InfiniCraft.
 
+Packets
+=======
+
+.. automodule:: bravo.infini.packets
+
 Protocols
 =========
 
