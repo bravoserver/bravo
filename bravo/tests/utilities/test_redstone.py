@@ -80,6 +80,20 @@ class TestCircuitTorch(TestCase):
 
         self.assertTrue((0, 0, 0) in torch.iter_inputs())
 
+    def test_torch_plus_z_input_output(self):
+        """
+        A torch with +z orientation accepts input from one block, and sends
+        output to three blocks around it.
+        """
+
+        torch = Torch((0, 0, 0), blocks["redstone-torch"].slot,
+            blocks["redstone-torch"].orientation("+z"))
+
+        self.assertTrue((0, 0, -1) in torch.iter_inputs())
+        self.assertTrue((0, 0, 1) in torch.iter_outputs())
+        self.assertTrue((1, 0, 0) in torch.iter_outputs())
+        self.assertTrue((-1, 0, 0) in torch.iter_outputs())
+
     def test_torch_block_change(self):
         """
         Torches change block type depending on their status. They don't change
@@ -152,6 +166,22 @@ class TestCircuitCouplings(TestCase):
         sand.update()
         self.assertTrue(sand.status)
 
+    def test_torch_wire(self):
+        """
+        Wires will connect to torches.
+        """
+
+        asic = Asic()
+        wire = Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0)
+        torch = Torch((0, 0, 1), blocks["redstone-torch"].slot,
+            blocks["redstone-torch"].orientation("-z"))
+
+        wire.connect(asic)
+        torch.connect(asic)
+
+        self.assertTrue(wire in torch.outputs)
+        self.assertTrue(torch in wire.inputs)
+
 class TestAsic(TestCase):
 
     def setUp(self):
@@ -167,7 +197,7 @@ class TestAsic(TestCase):
         for wire in wires:
             wire.connect(self.asic)
 
-        self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0)[1])
 
     def test_find_wires_plural(self):
         wires = set([
@@ -177,7 +207,7 @@ class TestAsic(TestCase):
         for wire in wires:
             wire.connect(self.asic)
 
-        self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0)[1])
 
     def test_find_wires_many(self):
         wires = set([
@@ -189,7 +219,7 @@ class TestAsic(TestCase):
         for wire in wires:
             wire.connect(self.asic)
 
-        self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0)[1])
 
     def test_find_wires_cross(self):
         """
@@ -207,4 +237,27 @@ class TestAsic(TestCase):
         for wire in wires:
             wire.connect(self.asic)
 
-        self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0)[1])
+
+    def test_find_wires_inputs_many(self):
+        inputs = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((2, 0, 1), blocks["redstone-wire"].slot, 0x0),
+        ])
+        wires = set([
+            Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((2, 0, 0), blocks["redstone-wire"].slot, 0x0),
+        ])
+        wires.update(inputs)
+        torches = set([
+            Torch((0, 0, 1), blocks["redstone-torch"].slot,
+                blocks["redstone-torch"].orientation("-z")),
+            Torch((3, 0, 1), blocks["redstone-torch"].slot,
+                blocks["redstone-torch"].orientation("-x")),
+        ])
+        for wire in wires:
+            wire.connect(self.asic)
+        for torch in torches:
+            torch.connect(self.asic)
+
+        self.assertEqual(inputs, set(self.asic.find_wires(0, 0, 0)[0]))

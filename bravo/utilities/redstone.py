@@ -79,6 +79,9 @@ class Asic(object):
         Collate a group of neighboring wires, starting at a certain point.
 
         This function does a simple breadth-first search to find wires.
+
+        The returned data is a tuple of an iterable of wires in the group with
+        inputs, and an iterable of all wires in the group.
         """
 
         if (x, y, z) not in self.circuits:
@@ -90,7 +93,8 @@ class Asic(object):
             return None
 
         d = deque([root])
-        wires = set([root])
+        wires = set()
+        heads = []
 
         while d:
             # Breadth-first search. Push on the left, pop on the right. Search
@@ -106,8 +110,10 @@ class Asic(object):
 
             # If any additional munging needs to be done, do it here.
             wires.add(w)
+            if w.inputs:
+                heads.append(w)
 
-        return wires
+        return heads, wires
 
     def add_wire(self, x, y, z):
         pass
