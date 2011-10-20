@@ -1,3 +1,5 @@
+from collections import deque
+from itertools import chain
 from operator import not_
 
 from bravo.blocks import blocks
@@ -54,6 +56,64 @@ class RedstoneError(Exception):
     """
     A ghost in the shell.
     """
+
+class Asic(object):
+    """
+    An integrated circuit.
+
+    Asics are aware of all of the circuits hooked into them, and store some
+    additional data for speeding up certain calculations.
+
+    The name "asic" comes from the acronym "ASIC", meaning
+    "application-specific integrated circuit."
+    """
+
+    level_marker = object()
+
+    def __init__(self):
+        self.circuits = {}
+        self._wire_cache = {}
+
+    def find_wires(self, x, y, z):
+        """
+        Collate a group of neighboring wires, starting at a certain point.
+
+        This function does a simple breadth-first search to find wires.
+        """
+
+        if (x, y, z) not in self.circuits:
+            return None
+
+        root = self.circuits[x, y, z]
+
+        if root.name != "wire":
+            return None
+
+        d = deque([root])
+        wires = set([root])
+
+        while d:
+            # Breadth-first search. Push on the left, pop on the right. Search
+            # ends when the deque is empty.
+            w = d.pop()
+            for neighbor in chain(w.iter_inputs(), w.iter_outputs()):
+                if neighbor not in self.circuits:
+                    continue
+
+                circuit = self.circuits[neighbor]
+                if circuit.name == "wire" and circuit not in wires:
+                    d.appendleft(circuit)
+
+            # If any additional munging needs to be done, do it here.
+            wires.add(w)
+
+        return wires
+
+    def add_wire(self, x, y, z):
+        pass
+
+    def remove_wire(self, x, y, z):
+        pass
 
 class Circuit(object):
     """

@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 from bravo.blocks import blocks
-from bravo.utilities.redstone import (RedstoneError, Lever, PlainBlock, Torch,
-                                      bbool, truthify_block)
+from bravo.utilities.redstone import (RedstoneError, Asic, Lever, PlainBlock,
+                                      Torch, Wire, bbool, truthify_block)
 
 class TestTruthifyBlock(TestCase):
     """
@@ -151,3 +151,60 @@ class TestCircuitCouplings(TestCase):
         lever.status = True
         sand.update()
         self.assertTrue(sand.status)
+
+class TestAsic(TestCase):
+
+    def setUp(self):
+        self.asic = Asic()
+
+    def test_trivial(self):
+        pass
+
+    def test_find_wires_single(self):
+        wires = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+        ])
+        for wire in wires:
+            wire.connect(self.asic.circuits)
+
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
+
+    def test_find_wires_plural(self):
+        wires = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+        ])
+        for wire in wires:
+            wire.connect(self.asic.circuits)
+
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
+
+    def test_find_wires_many(self):
+        wires = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((2, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((2, 0, 1), blocks["redstone-wire"].slot, 0x0),
+        ])
+        for wire in wires:
+            wire.connect(self.asic.circuits)
+
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
+
+    def test_find_wires_cross(self):
+        """
+        Finding wires works when the starting point is inside a cluster of
+        wires.
+        """
+
+        wires = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((-1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((0, 0, 1), blocks["redstone-wire"].slot, 0x0),
+            Wire((0, 0, -1), blocks["redstone-wire"].slot, 0x0),
+        ])
+        for wire in wires:
+            wire.connect(self.asic.circuits)
+
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
