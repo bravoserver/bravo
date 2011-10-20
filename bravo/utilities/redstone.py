@@ -320,13 +320,13 @@ class Torch(OrientedCircuit):
 
         if self.orientation != "+x":
             yield x - 1, y, z
-        elif self.orientation != "-x":
+        if self.orientation != "-x":
             yield x + 1, y, z
-        elif self.orientation != "+z":
+        if self.orientation != "+z":
             yield x, y, z - 1
-        elif self.orientation != "-z":
+        if self.orientation != "-z":
             yield x, y, z + 1
-        elif self.orientation != "+y":
+        if self.orientation != "+y":
             yield x, y - 1, z
 
 class Lever(OrientedCircuit):
