@@ -8,7 +8,7 @@ import bravo.config
 from bravo.ibravo import IDigHook
 from bravo.plugin import retrieve_plugins
 from bravo.world import World
-from bravo.utilities.redstone import truthify_block
+from bravo.utilities.redstone import Asic, truthify_block
 
 class RedstoneMockFactory(object):
     pass
@@ -146,7 +146,7 @@ class TestRedstone(unittest.TestCase):
                 (True, True, True),
                 ):
                 # Reset the hook.
-                self.hook.asic = {}
+                self.hook.asic = Asic()
 
                 # The tableau.
                 chunk.set_block((1, 1, 2), blocks["sand"].slot)
@@ -192,7 +192,7 @@ class TestRedstone(unittest.TestCase):
         def cb(chunk):
             for i, o in ((True, False), (False, True)):
                 # Reset the hook.
-                self.hook.asic = {}
+                self.hook.asic = Asic()
 
                 # The tableau.
                 chunk.set_block((2, 1, 1), blocks["sand"].slot)
@@ -242,7 +242,7 @@ class TestRedstone(unittest.TestCase):
                 (True, True, False),
                 ):
                 # Reset the hook.
-                self.hook.asic = {}
+                self.hook.asic = Asic()
 
                 # The tableau.
                 chunk.set_block((1, 1, 2), blocks["sand"].slot)

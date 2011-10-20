@@ -160,23 +160,25 @@ class Circuit(object):
         Add this circuit to an ASIC.
         """
 
-        if self.coords in asic and asic[self.coords] is not self:
+        circuits = asic.circuits
+
+        if self.coords in circuits and circuits[self.coords] is not self:
             raise RedstoneError("Circuit trace already occupied!")
 
-        asic[self.coords] = self
+        circuits[self.coords] = self
 
         for coords in self.iter_inputs():
-            if coords not in asic:
+            if coords not in circuits:
                 continue
-            target = asic[coords]
+            target = circuits[coords]
             if self.name in target.traceables:
                 self.inputs.add(target)
                 target.outputs.add(self)
 
         for coords in self.iter_outputs():
-            if coords not in asic:
+            if coords not in circuits:
                 continue
-            target = asic[coords]
+            target = circuits[coords]
             if target.name in self.traceables:
                 target.inputs.add(self)
                 self.outputs.add(target)
@@ -186,9 +188,9 @@ class Circuit(object):
         Remove this circuit from an ASIC.
         """
 
-        if self.coords not in asic:
+        if self.coords not in asic.circuits:
             raise RedstoneError("Circuit can't detach from ASIC!")
-        if asic[self.coords] is not self:
+        if asic.circuits[self.coords] is not self:
             raise RedstoneError("Circuit can't detach another circuit!")
 
         for circuit in self.inputs:
@@ -199,7 +201,7 @@ class Circuit(object):
         self.inputs.clear()
         self.outputs.clear()
 
-        del asic[self.coords]
+        del asic.circuits[self.coords]
 
     def update(self):
         """

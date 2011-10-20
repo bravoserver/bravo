@@ -114,7 +114,7 @@ class TestCircuitCouplings(TestCase):
         turns on, and vice versa.
         """
 
-        asic = {}
+        asic = Asic()
         sand = PlainBlock((0, 0, 0), blocks["sand"].slot, 0x0)
         torch = Torch((1, 0, 0), blocks["redstone-torch"].slot,
             blocks["redstone-torch"].orientation("+x"))
@@ -136,7 +136,7 @@ class TestCircuitCouplings(TestCase):
         same value as the lever.
         """
 
-        asic = {}
+        asic = Asic()
         lever = Lever((0, 0, 0), blocks["lever"].slot,
             blocks["lever"].orientation("-x"))
         sand = PlainBlock((1, 0, 0), blocks["sand"].slot, 0x0)
@@ -165,7 +165,7 @@ class TestAsic(TestCase):
             Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
         ])
         for wire in wires:
-            wire.connect(self.asic.circuits)
+            wire.connect(self.asic)
 
         self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
 
@@ -175,7 +175,7 @@ class TestAsic(TestCase):
             Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
         ])
         for wire in wires:
-            wire.connect(self.asic.circuits)
+            wire.connect(self.asic)
 
         self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
 
@@ -187,7 +187,7 @@ class TestAsic(TestCase):
             Wire((2, 0, 1), blocks["redstone-wire"].slot, 0x0),
         ])
         for wire in wires:
-            wire.connect(self.asic.circuits)
+            wire.connect(self.asic)
 
         self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
 
@@ -205,6 +205,6 @@ class TestAsic(TestCase):
             Wire((0, 0, -1), blocks["redstone-wire"].slot, 0x0),
         ])
         for wire in wires:
-            wire.connect(self.asic.circuits)
+            wire.connect(self.asic)
 
         self.assertEqual(wires, self.asic.find_wires(0, 0, 0))
