@@ -1,5 +1,5 @@
-# -*- test-case-name: modules.test.test_modules -*-
-# Copyright (c) 2006-2010 Twisted Matrix Laboratories.
+# -*- test-case-name: twisted.test.test_modules -*-
+# Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
 
 """
@@ -44,7 +44,7 @@ the modules outside the standard library's python-files directory::
     import os
     stdlibdir = os.path.dirname(os.__file__)
 
-    from exocet._modules import iterModules
+    from twisted.python.modules import iterModules
 
     for modinfo in iterModules():
         if (modinfo.pathEntry.filePath.path != stdlibdir
@@ -70,12 +70,10 @@ except ImportError:
 
 from zope.interface import Interface, implements
 
-from twisted.python.filepath import UnlistableError, FilePath
-from twisted.python.zippath import  ZipArchive
-
 from twisted.python.components import registerAdapter
+from twisted.python.filepath import FilePath, UnlistableError
+from twisted.python.zippath import ZipArchive
 from twisted.python.reflect import namedAny
-
 
 _nothing = object()
 
@@ -103,12 +101,6 @@ def _isPythonIdentifier(string):
         return False
 
 
-class NotLoadedError(Exception):
-    """
-    Attempt to access a value that hasn't been loaded yet.
-
-    @since: 10.2
-    """
 
 def _isPackagePath(fpath):
     # Determine if a FilePath-like object is a Python package.  TODO: deal with
@@ -176,7 +168,7 @@ class _ModuleIteratorHelper:
                     modname = self._subModuleName(potentialTopLevel.basename())
                     for ext in PYTHON_EXTENSIONS:
                         initpy = potentialTopLevel.child("__init__"+ext)
-                        if initpy.exists():
+                        if initpy.exists() and modname not in yielded:
                             yielded[modname] = True
                             pm = PythonModule(modname, initpy, self._getEntry())
                             assert pm != self
@@ -231,7 +223,7 @@ class _ModuleIteratorHelper:
 
             twistedPackageObj['python']['modules']
 
-        to retrieve the Twisted-supplied version of this module.
+        to retrieve this module.
 
         @raise: KeyError if the module is not found.
 
@@ -375,6 +367,9 @@ class PythonAttribute:
         """
         Return a boolean describing whether the attribute this describes has
         actually been loaded into memory by importing its module.
+
+        Note: this currently always returns true; there is no Python parser
+        support in this module yet.
         """
         return self._loaded
 
@@ -391,7 +386,6 @@ class PythonAttribute:
             self._loaded = True
         return self.pythonValue
 
-
     def iterAttributes(self):
         """
         Iterate over the attributes of the value named by this
@@ -403,9 +397,7 @@ class PythonAttribute:
             raise NotImplementedError("Static inspection of attributes doesn't"
                                       " go beyond the top level of the module.")
         for name, val in inspect.getmembers(self.load()):
-            yield PythonAttribute(self.name + '.' + name, self, True, val)
-
-
+            yield PythonAttribute(self.name+'.'+name, self, True, val)
 
 class PythonModule(_ModuleIteratorHelper):
     """
