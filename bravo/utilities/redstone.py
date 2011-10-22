@@ -435,10 +435,14 @@ class Lever(OrientedCircuit):
         elif self.orientation == "+y":
             yield x, y - 1, z
 
-    def op(self, *inputs):
-        if inputs:
-            raise RedstoneError("Levers don't take inputs!")
-        return self.status
+    def update(self):
+        """
+        Specialized update routine just for levers.
+
+        This could probably be shared with switches later.
+        """
+
+        return (self,), self.outputs
 
 block_to_circuit = {
     blocks["lever"].slot: Lever,

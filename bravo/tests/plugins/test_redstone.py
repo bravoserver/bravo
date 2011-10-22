@@ -153,12 +153,12 @@ class TestRedstone(unittest.TestCase):
                 chunk.set_block((2, 1, 2), blocks["redstone-wire"].slot)
 
                 # Attach the levers to the sand block.
-                orientation = blocks["lever"].orientation("+z")
+                orientation = blocks["lever"].orientation("-z")
                 iblock, imetadata = truthify_block(i1, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
-                orientation = blocks["lever"].orientation("-z")
+                orientation = blocks["lever"].orientation("+z")
                 iblock, imetadata = truthify_block(i2, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 3), iblock)

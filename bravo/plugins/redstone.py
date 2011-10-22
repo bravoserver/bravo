@@ -104,13 +104,13 @@ class Redstone(object):
 
     def process(self):
         affected = set()
-        skipset = set()
+        changed = set()
 
         for circuit in self.active_circuits:
             # Should we skip this circuit? This could happen if the circuit
             # was already updated due to a side effect (e.g., a wire group
             # update).
-            if circuit in skipset:
+            if circuit in changed:
                 continue
 
             # Add circuits if necessary. This can happen quite easily, e.g. on
@@ -131,9 +131,10 @@ class Redstone(object):
 
             # Update the circuit, and capture the circuits for the next tick.
             updated, outputs = circuit.update()
-            skipset.update(updated)
+            changed.update(updated)
             affected.update(outputs)
 
+        for circuit in changed:
             # Get the world data...
             coords = circuit.coords
             block = factory.world.sync_get_block(coords)
