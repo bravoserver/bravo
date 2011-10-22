@@ -158,17 +158,26 @@ class Asic(object):
         # Breadth-first search, for each glow value, and then flush the
         # remaining wires when we finish.
         for level in xrange(15, 0, -1):
+            if not visited:
+                # Early out. We're out of wires to visit, and we won't be
+                # getting any more since the next round of visitors is
+                # completely dependent on this round.
+                break
+
             to_visit = set()
             for wire in visited:
                 wire.status = True
+                wire.metadata = level
                 for neighbor in self._get_wire_neighbors(wire):
-                    to_visit.add(neighbor)
+                    if neighbor in wires:
+                        to_visit.add(neighbor)
             wires -= visited
             visited = to_visit
 
         # Anything left after *that* must have a level of zero.
         for wire in wires:
             wire.status = False
+            wire.metadata = 0
 
         return retval
 
@@ -190,7 +199,8 @@ class Circuit(object):
         self.from_block(block, metadata)
 
     def __str__(self):
-        return "<%s(%s)>" % (self.__class__.__name__, self.status)
+        return "<%s(%d, %d, %d, %s)>" % (self.__class__.__name__,
+            self.coords[0], self.coords[1], self.coords[2], self.status)
 
     __repr__ = __str__
 

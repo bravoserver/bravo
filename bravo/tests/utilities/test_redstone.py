@@ -284,7 +284,7 @@ class TestAsic(TestCase):
         self.assertEqual(outputs, set(self.asic.find_wires(0, 0, 0)[2]))
 
     def test_update_wires_single(self):
-        torch = Torch((0, 0, 0), blocks["redstone-torch"].slot,
+        torch = Torch((0, 0, 0), blocks["redstone-torch-off"].slot,
             blocks["redstone-torch"].orientation("-x"))
         wire = Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0)
         plain = PlainBlock((2, 0, 0), blocks["sand"].slot, 0x0)
@@ -297,6 +297,8 @@ class TestAsic(TestCase):
 
         self.assertTrue(wire in wires)
         self.assertTrue(plain in outputs)
+        self.assertFalse(wire.status)
+        self.assertEqual(wire.metadata, 0)
 
     def test_update_wires_single_powered(self):
         torch = Torch((0, 0, 0), blocks["redstone-torch"].slot,
@@ -315,9 +317,10 @@ class TestAsic(TestCase):
         self.assertTrue(wire in wires)
         self.assertTrue(plain in outputs)
         self.assertTrue(wire.status)
+        self.assertEqual(wire.metadata, 15)
 
     def test_update_wires_multiple(self):
-        torch = Torch((0, 0, 0), blocks["redstone-torch"].slot,
+        torch = Torch((0, 0, 0), blocks["redstone-torch-off"].slot,
             blocks["redstone-torch"].orientation("-x"))
         wire = Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0)
         wire2 = Wire((1, 0, 1), blocks["redstone-wire"].slot, 0x0)
@@ -333,6 +336,10 @@ class TestAsic(TestCase):
         self.assertTrue(wire in wires)
         self.assertTrue(wire2 in wires)
         self.assertTrue(plain in outputs)
+        self.assertFalse(wire.status)
+        self.assertEqual(wire.metadata, 0)
+        self.assertFalse(wire2.status)
+        self.assertEqual(wire2.metadata, 0)
 
     def test_update_wires_multiple_powered(self):
         torch = Torch((0, 0, 0), blocks["redstone-torch"].slot,
@@ -354,4 +361,6 @@ class TestAsic(TestCase):
         self.assertTrue(wire2 in wires)
         self.assertTrue(plain in outputs)
         self.assertTrue(wire.status)
+        self.assertEqual(wire.metadata, 15)
         self.assertTrue(wire2.status)
+        self.assertEqual(wire2.metadata, 14)
