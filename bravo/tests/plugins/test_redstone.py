@@ -8,7 +8,7 @@ import bravo.config
 from bravo.ibravo import IDigHook
 from bravo.plugin import retrieve_plugins
 from bravo.world import World
-from bravo.utilities.redstone import truthify_block
+from bravo.utilities.redstone import Asic, truthify_block
 
 class RedstoneMockFactory(object):
     pass
@@ -146,19 +146,19 @@ class TestRedstone(unittest.TestCase):
                 (True, True, True),
                 ):
                 # Reset the hook.
-                self.hook.asic = {}
+                self.hook.asic = Asic()
 
                 # The tableau.
                 chunk.set_block((1, 1, 2), blocks["sand"].slot)
                 chunk.set_block((2, 1, 2), blocks["redstone-wire"].slot)
 
                 # Attach the levers to the sand block.
-                orientation = blocks["lever"].orientation("+z")
+                orientation = blocks["lever"].orientation("-z")
                 iblock, imetadata = truthify_block(i1, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
-                orientation = blocks["lever"].orientation("-z")
+                orientation = blocks["lever"].orientation("+z")
                 iblock, imetadata = truthify_block(i2, blocks["lever"].slot,
                     orientation)
                 chunk.set_block((1, 1, 3), iblock)
@@ -192,7 +192,7 @@ class TestRedstone(unittest.TestCase):
         def cb(chunk):
             for i, o in ((True, False), (False, True)):
                 # Reset the hook.
-                self.hook.asic = {}
+                self.hook.asic = Asic()
 
                 # The tableau.
                 chunk.set_block((2, 1, 1), blocks["sand"].slot)
@@ -242,7 +242,7 @@ class TestRedstone(unittest.TestCase):
                 (True, True, False),
                 ):
                 # Reset the hook.
-                self.hook.asic = {}
+                self.hook.asic = Asic()
 
                 # The tableau.
                 chunk.set_block((1, 1, 2), blocks["sand"].slot)

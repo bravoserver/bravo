@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 from bravo.blocks import blocks
-from bravo.utilities.redstone import (RedstoneError, Lever, PlainBlock, Torch,
-                                      bbool, truthify_block)
+from bravo.utilities.redstone import (RedstoneError, Asic, Lever, PlainBlock,
+                                      Torch, Wire, bbool, truthify_block)
 
 class TestTruthifyBlock(TestCase):
     """
@@ -80,6 +80,20 @@ class TestCircuitTorch(TestCase):
 
         self.assertTrue((0, 0, 0) in torch.iter_inputs())
 
+    def test_torch_plus_z_input_output(self):
+        """
+        A torch with +z orientation accepts input from one block, and sends
+        output to three blocks around it.
+        """
+
+        torch = Torch((0, 0, 0), blocks["redstone-torch"].slot,
+            blocks["redstone-torch"].orientation("+z"))
+
+        self.assertTrue((0, 0, -1) in torch.iter_inputs())
+        self.assertTrue((0, 0, 1) in torch.iter_outputs())
+        self.assertTrue((1, 0, 0) in torch.iter_outputs())
+        self.assertTrue((-1, 0, 0) in torch.iter_outputs())
+
     def test_torch_block_change(self):
         """
         Torches change block type depending on their status. They don't change
@@ -114,7 +128,7 @@ class TestCircuitCouplings(TestCase):
         turns on, and vice versa.
         """
 
-        asic = {}
+        asic = Asic()
         sand = PlainBlock((0, 0, 0), blocks["sand"].slot, 0x0)
         torch = Torch((1, 0, 0), blocks["redstone-torch"].slot,
             blocks["redstone-torch"].orientation("+x"))
@@ -136,7 +150,7 @@ class TestCircuitCouplings(TestCase):
         same value as the lever.
         """
 
-        asic = {}
+        asic = Asic()
         lever = Lever((0, 0, 0), blocks["lever"].slot,
             blocks["lever"].orientation("-x"))
         sand = PlainBlock((1, 0, 0), blocks["sand"].slot, 0x0)
@@ -151,3 +165,202 @@ class TestCircuitCouplings(TestCase):
         lever.status = True
         sand.update()
         self.assertTrue(sand.status)
+
+    def test_torch_wire(self):
+        """
+        Wires will connect to torches.
+        """
+
+        asic = Asic()
+        wire = Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0)
+        torch = Torch((0, 0, 1), blocks["redstone-torch"].slot,
+            blocks["redstone-torch"].orientation("-z"))
+
+        wire.connect(asic)
+        torch.connect(asic)
+
+        self.assertTrue(wire in torch.outputs)
+        self.assertTrue(torch in wire.inputs)
+
+class TestAsic(TestCase):
+
+    def setUp(self):
+        self.asic = Asic()
+
+    def test_trivial(self):
+        pass
+
+    def test_find_wires_single(self):
+        wires = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+        ])
+        for wire in wires:
+            wire.connect(self.asic)
+
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0)[1])
+
+    def test_find_wires_plural(self):
+        wires = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+        ])
+        for wire in wires:
+            wire.connect(self.asic)
+
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0)[1])
+
+    def test_find_wires_many(self):
+        wires = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((2, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((2, 0, 1), blocks["redstone-wire"].slot, 0x0),
+        ])
+        for wire in wires:
+            wire.connect(self.asic)
+
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0)[1])
+
+    def test_find_wires_cross(self):
+        """
+        Finding wires works when the starting point is inside a cluster of
+        wires.
+        """
+
+        wires = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((-1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((0, 0, 1), blocks["redstone-wire"].slot, 0x0),
+            Wire((0, 0, -1), blocks["redstone-wire"].slot, 0x0),
+        ])
+        for wire in wires:
+            wire.connect(self.asic)
+
+        self.assertEqual(wires, self.asic.find_wires(0, 0, 0)[1])
+
+    def test_find_wires_inputs_many(self):
+        inputs = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((2, 0, 1), blocks["redstone-wire"].slot, 0x0),
+        ])
+        wires = set([
+            Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((2, 0, 0), blocks["redstone-wire"].slot, 0x0),
+        ])
+        wires.update(inputs)
+        torches = set([
+            Torch((0, 0, 1), blocks["redstone-torch"].slot,
+                blocks["redstone-torch"].orientation("-z")),
+            Torch((3, 0, 1), blocks["redstone-torch"].slot,
+                blocks["redstone-torch"].orientation("-x")),
+        ])
+        for wire in wires:
+            wire.connect(self.asic)
+        for torch in torches:
+            torch.connect(self.asic)
+
+        self.assertEqual(inputs, set(self.asic.find_wires(0, 0, 0)[0]))
+
+    def test_find_wires_outputs_many(self):
+        wires = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((2, 0, 0), blocks["redstone-wire"].slot, 0x0),
+        ])
+        outputs = set([
+            Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((3, 0, 0), blocks["redstone-wire"].slot, 0x0),
+        ])
+        wires.update(outputs)
+        plains = set([
+            PlainBlock((1, 0, 1), blocks["sand"].slot, 0x0),
+            PlainBlock((4, 0, 0), blocks["sand"].slot, 0x0),
+        ])
+        for wire in wires:
+            wire.connect(self.asic)
+        for plain in plains:
+            plain.connect(self.asic)
+
+        self.assertEqual(outputs, set(self.asic.find_wires(0, 0, 0)[2]))
+
+    def test_update_wires_single(self):
+        torch = Torch((0, 0, 0), blocks["redstone-torch-off"].slot,
+            blocks["redstone-torch"].orientation("-x"))
+        wire = Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0)
+        plain = PlainBlock((2, 0, 0), blocks["sand"].slot, 0x0)
+
+        torch.connect(self.asic)
+        wire.connect(self.asic)
+        plain.connect(self.asic)
+
+        wires, outputs = self.asic.update_wires(1, 0, 0)
+
+        self.assertTrue(wire in wires)
+        self.assertTrue(plain in outputs)
+        self.assertFalse(wire.status)
+        self.assertEqual(wire.metadata, 0)
+
+    def test_update_wires_single_powered(self):
+        torch = Torch((0, 0, 0), blocks["redstone-torch"].slot,
+            blocks["redstone-torch"].orientation("-x"))
+        wire = Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0)
+        plain = PlainBlock((2, 0, 0), blocks["sand"].slot, 0x0)
+
+        torch.connect(self.asic)
+        wire.connect(self.asic)
+        plain.connect(self.asic)
+
+        torch.status = True
+
+        wires, outputs = self.asic.update_wires(1, 0, 0)
+
+        self.assertTrue(wire in wires)
+        self.assertTrue(plain in outputs)
+        self.assertTrue(wire.status)
+        self.assertEqual(wire.metadata, 15)
+
+    def test_update_wires_multiple(self):
+        torch = Torch((0, 0, 0), blocks["redstone-torch-off"].slot,
+            blocks["redstone-torch"].orientation("-x"))
+        wire = Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0)
+        wire2 = Wire((1, 0, 1), blocks["redstone-wire"].slot, 0x0)
+        plain = PlainBlock((2, 0, 0), blocks["sand"].slot, 0x0)
+
+        torch.connect(self.asic)
+        wire.connect(self.asic)
+        wire2.connect(self.asic)
+        plain.connect(self.asic)
+
+        wires, outputs = self.asic.update_wires(1, 0, 0)
+
+        self.assertTrue(wire in wires)
+        self.assertTrue(wire2 in wires)
+        self.assertTrue(plain in outputs)
+        self.assertFalse(wire.status)
+        self.assertEqual(wire.metadata, 0)
+        self.assertFalse(wire2.status)
+        self.assertEqual(wire2.metadata, 0)
+
+    def test_update_wires_multiple_powered(self):
+        torch = Torch((0, 0, 0), blocks["redstone-torch"].slot,
+            blocks["redstone-torch"].orientation("-x"))
+        wire = Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0)
+        wire2 = Wire((1, 0, 1), blocks["redstone-wire"].slot, 0x0)
+        plain = PlainBlock((2, 0, 0), blocks["sand"].slot, 0x0)
+
+        torch.connect(self.asic)
+        wire.connect(self.asic)
+        wire2.connect(self.asic)
+        plain.connect(self.asic)
+
+        torch.status = True
+
+        wires, outputs = self.asic.update_wires(1, 0, 0)
+
+        self.assertTrue(wire in wires)
+        self.assertTrue(wire2 in wires)
+        self.assertTrue(plain in outputs)
+        self.assertTrue(wire.status)
+        self.assertEqual(wire.metadata, 15)
+        self.assertTrue(wire2.status)
+        self.assertEqual(wire2.metadata, 14)

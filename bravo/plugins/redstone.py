@@ -5,7 +5,7 @@ from bravo.blocks import blocks
 from bravo.errors import ChunkNotLoaded
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
-from bravo.utilities.redstone import (RedstoneError, PlainBlock,
+from bravo.utilities.redstone import (RedstoneError, Asic, PlainBlock,
                                       block_to_circuit)
 
 from bravo.parameters import factory
@@ -26,10 +26,10 @@ def create_circuit(asic, coords):
     try:
         circuit.connect(asic)
     except RedstoneError:
-        asic[coords].disconnect(asic)
+        asic.circuits[coords].disconnect(asic)
         circuit.connect(asic)
 
-    return asic[coords]
+    return circuit
 
 class Redstone(object):
 
@@ -45,7 +45,7 @@ class Redstone(object):
     )
 
     def __init__(self):
-        self.asic = {}
+        self.asic = Asic()
         self.active_circuits = set()
 
         self.loop = LoopingCall(self.process)
@@ -59,7 +59,7 @@ class Redstone(object):
             self.loop.stop()
 
     def schedule(self):
-        if self.asic:
+        if self.asic.circuits:
             self.start()
         else:
             self.stop()
@@ -104,16 +104,24 @@ class Redstone(object):
 
     def process(self):
         affected = set()
+        changed = set()
 
         for circuit in self.active_circuits:
+            # Should we skip this circuit? This could happen if the circuit
+            # was already updated due to a side effect (e.g., a wire group
+            # update).
+            if circuit in changed:
+                continue
+
             # Add circuits if necessary. This can happen quite easily, e.g. on
             # fed circuitry.
             for coords in circuit.iter_outputs():
                 try:
-                    if (coords not in self.asic and
+                    if (coords not in self.asic.circuits and
                         factory.world.sync_get_block(coords)):
                         # Create a new circuit for this plain block and set it
-                        # to be updated next tick.
+                        # to be updated next tick. Odds are good it's a plain
+                        # block anyway.
                         affected.add(create_circuit(self.asic, coords))
                 except ChunkNotLoaded:
                     # If the chunk's not loaded, then it doesn't really affect
@@ -122,8 +130,11 @@ class Redstone(object):
                     pass
 
             # Update the circuit, and capture the circuits for the next tick.
-            affected.update(circuit.update())
+            updated, outputs = circuit.update()
+            changed.update(updated)
+            affected.update(outputs)
 
+        for circuit in changed:
             # Get the world data...
             coords = circuit.coords
             block = factory.world.sync_get_block(coords)
