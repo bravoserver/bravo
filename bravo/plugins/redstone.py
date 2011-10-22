@@ -104,8 +104,15 @@ class Redstone(object):
 
     def process(self):
         affected = set()
+        skipset = set()
 
         for circuit in self.active_circuits:
+            # Should we skip this circuit? This could happen if the circuit
+            # was already updated due to a side effect (e.g., a wire group
+            # update).
+            if circuit in skipset:
+                continue
+
             # Add circuits if necessary. This can happen quite easily, e.g. on
             # fed circuitry.
             for coords in circuit.iter_outputs():
@@ -113,7 +120,8 @@ class Redstone(object):
                     if (coords not in self.asic.circuits and
                         factory.world.sync_get_block(coords)):
                         # Create a new circuit for this plain block and set it
-                        # to be updated next tick.
+                        # to be updated next tick. Odds are good it's a plain
+                        # block anyway.
                         affected.add(create_circuit(self.asic, coords))
                 except ChunkNotLoaded:
                     # If the chunk's not loaded, then it doesn't really affect
@@ -122,7 +130,9 @@ class Redstone(object):
                     pass
 
             # Update the circuit, and capture the circuits for the next tick.
-            affected.update(circuit.update())
+            updated, outputs = circuit.update()
+            skipset.update(updated)
+            affected.update(outputs)
 
             # Get the world data...
             coords = circuit.coords

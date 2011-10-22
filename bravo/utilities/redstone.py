@@ -147,7 +147,10 @@ class Asic(object):
         # Update all of the head wires, then figure out which ones are
         # conveying current and use those as the starters.
         for head in heads:
-            head.update()
+            # Wirehax: Use Wire's superclass, Circuit, to do the update,
+            # because Wire.update() calls this method; Circuit.update()
+            # contains the actual updating logic.
+            Circuit.update(head)
 
         starters = [head for head in heads if head.status]
         visited = set(starters)
@@ -169,12 +172,6 @@ class Asic(object):
 
         return retval
 
-    def add_wire(self, x, y, z):
-        pass
-
-    def remove_wire(self, x, y, z):
-        pass
-
 class Circuit(object):
     """
     A block or series of blocks conveying a basic composited transistor.
@@ -182,6 +179,8 @@ class Circuit(object):
     Circuits form the base of speedily-evaluated redstone. They know their
     inputs, their outputs, and how to update themselves.
     """
+
+    asic = None
 
     def __init__(self, coordinates, block, metadata):
         self.coords = coordinates
@@ -226,6 +225,7 @@ class Circuit(object):
             raise RedstoneError("Circuit trace already occupied!")
 
         circuits[self.coords] = self
+        self.asic = asic
 
         for coords in self.iter_inputs():
             if coords not in circuits:
@@ -262,6 +262,7 @@ class Circuit(object):
         self.outputs.clear()
 
         del asic.circuits[self.coords]
+        self.asic = None
 
     def update(self):
         """
@@ -269,16 +270,16 @@ class Circuit(object):
         """
 
         if not self.inputs:
-            return ()
+            return (), ()
 
         inputs = [i.status for i in self.inputs]
         status = self.op(*inputs)
 
         if self.status != status:
             self.status = status
-            return self.outputs
+            return (self,), self.outputs
         else:
-            return ()
+            return (), ()
 
     def from_block(self, block, metadata):
         self.status = bbool(block, metadata)
@@ -301,10 +302,18 @@ class Wire(Circuit):
 
     def __init__(self, coords, block, metadata):
         super(Wire, self).__init__(coords, block, metadata)
+        self.metadata = metadata
+
+    def update(self):
+        x, y, z = self.coords
+        return self.asic.update_wires(x, y, z)
 
     @staticmethod
     def op(*inputs):
         return any(inputs)
+
+    def to_block(self, block, metadata):
+        return block, self.metadata
 
 class PlainBlock(Circuit):
     """
