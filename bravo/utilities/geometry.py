@@ -29,8 +29,6 @@ def gen_line_simple(point1, point2):
         tx += dx
         ty += dy
         tz += dz
-        if (ty < 0 and dy < 0) or (ty >= 127 and dy > 0):
-            break
         yield int(tx), int(ty), int(tz)
 
     yield ox, oy, oz
