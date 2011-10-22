@@ -74,6 +74,16 @@ class Asic(object):
         self.circuits = {}
         self._wire_cache = {}
 
+    def _get_wire_neighbors(self, wire):
+        for neighbor in chain(wire.iter_inputs(), wire.iter_outputs()):
+            if neighbor not in self.circuits:
+                continue
+
+            circuit = self.circuits[neighbor]
+            if circuit.name == "wire":
+                yield circuit
+
+
     def find_wires(self, x, y, z):
         """
         Collate a group of neighboring wires, starting at a certain point.
@@ -85,35 +95,79 @@ class Asic(object):
         """
 
         if (x, y, z) not in self.circuits:
-            return None
+            raise RedstoneError("Unmanaged coords!")
 
         root = self.circuits[x, y, z]
 
         if root.name != "wire":
-            return None
+            raise RedstoneError("Non-wire in find_wires")
 
         d = deque([root])
         wires = set()
         heads = []
+        tails = []
 
         while d:
             # Breadth-first search. Push on the left, pop on the right. Search
             # ends when the deque is empty.
             w = d.pop()
-            for neighbor in chain(w.iter_inputs(), w.iter_outputs()):
-                if neighbor not in self.circuits:
-                    continue
-
-                circuit = self.circuits[neighbor]
-                if circuit.name == "wire" and circuit not in wires:
-                    d.appendleft(circuit)
+            for neighbor in self._get_wire_neighbors(w):
+                if neighbor not in wires:
+                    d.appendleft(neighbor)
 
             # If any additional munging needs to be done, do it here.
             wires.add(w)
             if w.inputs:
                 heads.append(w)
+            if w.outputs:
+                tails.append(w)
 
-        return heads, wires
+        return heads, wires, tails
+
+    def update_wires(self, x, y, z):
+        """
+        Find all the wires in a group and update them all, by force if
+        necessary.
+
+        Returns a list of outputs belonging to this wire group, for
+        convenience.
+        """
+
+        heads, wires, tails = self.find_wires(x, y, z)
+
+        # First, collate our output target blocks. These will be among the
+        # blocks fired on the tick after this tick.
+        outputs = set()
+        for wire in tails:
+            outputs.update(wire.outputs)
+
+        # Save our retvals before we get down to business.
+        retval = wires.copy(), outputs
+
+        # Update all of the head wires, then figure out which ones are
+        # conveying current and use those as the starters.
+        for head in heads:
+            head.update()
+
+        starters = [head for head in heads if head.status]
+        visited = set(starters)
+
+        # Breadth-first search, for each glow value, and then flush the
+        # remaining wires when we finish.
+        for level in xrange(15, 0, -1):
+            to_visit = set()
+            for wire in visited:
+                wire.status = True
+                for neighbor in self._get_wire_neighbors(wire):
+                    to_visit.add(neighbor)
+            wires -= visited
+            visited = to_visit
+
+        # Anything left after *that* must have a level of zero.
+        for wire in wires:
+            wire.status = False
+
+        return retval
 
     def add_wire(self, x, y, z):
         pass

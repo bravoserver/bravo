@@ -261,3 +261,24 @@ class TestAsic(TestCase):
             torch.connect(self.asic)
 
         self.assertEqual(inputs, set(self.asic.find_wires(0, 0, 0)[0]))
+
+    def test_find_wires_outputs_many(self):
+        wires = set([
+            Wire((0, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((2, 0, 0), blocks["redstone-wire"].slot, 0x0),
+        ])
+        outputs = set([
+            Wire((1, 0, 0), blocks["redstone-wire"].slot, 0x0),
+            Wire((3, 0, 0), blocks["redstone-wire"].slot, 0x0),
+        ])
+        wires.update(outputs)
+        plains = set([
+            PlainBlock((1, 0, 1), blocks["sand"].slot, 0x0),
+            PlainBlock((4, 0, 0), blocks["sand"].slot, 0x0),
+        ])
+        for wire in wires:
+            wire.connect(self.asic)
+        for plain in plains:
+            plain.connect(self.asic)
+
+        self.assertEqual(outputs, set(self.asic.find_wires(0, 0, 0)[2]))
