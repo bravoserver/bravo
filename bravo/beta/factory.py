@@ -324,6 +324,7 @@ class BravoFactory(Factory):
             # XXX Maybe just send the entity object to the manager instead of
             # the following?
             if hasattr(entity,'loop'):
+                self.world.entity_manager.start_entity(entity)
                 self.world.mob_manager.start_mob(entity)
 
         return entity

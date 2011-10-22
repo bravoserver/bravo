@@ -1,5 +1,8 @@
 from math import cos, sin
 
+clamp = lambda n, minimum, maximum : max(min(maximum, n), minimum)
+
+
 def rotated_cosine(x, y, theta, lambd):
     r"""
     Evaluate a rotated 3D sinusoidal wave at a given point, angle, and

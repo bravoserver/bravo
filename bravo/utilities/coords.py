@@ -2,26 +2,16 @@
 Utilities for coordinate handling and munging.
 """
 from math import floor, ceil
-def polar_round_vector(vector):
+from itertools import product
+
+def xrange3(min_coords, max_coords):
     """
-    Rounds a vector towards zero
+    Returns a generator object that generates a 3d range of coordinates.
+    Note that, like xrange, the range doesn't return the upper boundary
     """
-    if vector[0] >= 0:
-        calculated_x = floor(vector[0])
-    else:
-        calculated_x = ceil(vector[0])
-
-    if vector[1] >= 0:
-        calculated_y = floor(vector[1])
-    else:
-        calculated_y = ceil(vector[1])
-
-    if vector[2] >= 0:
-        calculated_z = floor(vector[2])
-    else:
-        calculated_z = ceil(vector[2])
-
-    return calculated_x, calculated_y, calculated_z
+    return product( xrange(min_coords[0], max_coords[0]),
+                    xrange(min_coords[1], max_coords[1]),
+                    xrange(min_coords[2], max_coords[2]))
 
 def split_coords(x, z):
     """

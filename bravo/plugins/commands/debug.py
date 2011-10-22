@@ -1,6 +1,5 @@
 from __future__ import division
 from zope.interface import implements
-from bravo.utilities.coords import polar_round_vector
 from bravo.ibravo import IConsoleCommand, IChatCommand
 
 from bravo.parameters import factory
@@ -139,7 +138,7 @@ class CreateMob(object):
                 print mob, number
                 entity = factory.create_entity(position.x,position.y,position.z,mob)
                 factory.broadcast(entity.save_to_packet())
-                factory.world.mob_manager.start_mob(entity)
+                factory.world.entity_manager.start_entity(entity)
             return ("Made mob!",)
 #            except:
 #                return ("Couldn't make mob!",)
@@ -148,36 +147,6 @@ class CreateMob(object):
     aliases = tuple()
     usage = "<state>"
 
-class CheckCoords(object):
-    """
-    Create a mob
-    """
-
-    implements(IChatCommand)
-
-    def chat_command(self, username, parameters):
-        position = factory.protocols[username].location
-        offset = set()
-        calc_offset = set()
-        for x in range(-1,2):
-            for y in range(0,2):
-                for z in range(-1,2):
-                    i = x/2
-                    j = y
-                    k = z/2
-                    offset.add((i,j,k))
-        for i in offset:
-            calc_offset.add(polar_round_vector(i))
-        for i in calc_offset:
-            factory.world.sync_set_block(i,8)
-        print 'offset', offset
-        print 'offsetlist', calc_offset
-        return "Done"
-    name = "check"
-    aliases = tuple()
-    usage = "<state>"
-
-check = CheckCoords()
 
 hello = Hello()
 meliae = Meliae()

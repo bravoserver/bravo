@@ -13,13 +13,13 @@ from twisted.internet.task import coiterate, LoopingCall
 from twisted.python import log
 
 from bravo.chunk import Chunk
-from bravo.entity import Player, Furnace
+from bravo.entity import Player, Furnace, Mob
+from bravo.entitymanager import EntityManager
 from bravo.errors import ChunkNotLoaded, SerializerReadException
 from bravo.ibravo import ISerializer
 from bravo.plugin import retrieve_named_plugins
 from bravo.utilities.coords import split_coords
 from bravo.utilities.temporal import PendingEvent
-from bravo.mobmanager import MobManager
 
 def coords_to_chunk(f):
     """
@@ -135,6 +135,8 @@ class World(object):
 
         self._pending_chunks = dict()
 
+        self.entity_manager = EntityManager(self)
+
     def start(self):
         """
         Load a world from disk.
@@ -182,9 +184,6 @@ class World(object):
         log.msg("World started on %s, using serializer %s" %
             (world_url, self.serializer.name))
         log.msg("Using Ampoule: %s" % self.async)
-
-        self.mob_manager = MobManager() # XXX Put this in init or here?
-        self.mob_manager.world = self # XXX  Put this in the managers constructor?
 
     def stop(self):
         """
@@ -316,11 +315,9 @@ class World(object):
         # XXX slightly icky, print statements are bad
         # Register the chunk's entities with our parent factory.
         for entity in chunk.entities:
-            if hasattr(entity,'loop'):
-                print "Started mob!"
-                self.mob_manager.start_mob(entity)
-            else:
-                print "I have no loop"
+            if isinstance(entity, Mob):
+                log.msg("Started mob!")
+                self.entity_manager.start_entity(entity)
             self.factory.register_entity(entity)
 
         # XXX why is this for furnaces only? :T

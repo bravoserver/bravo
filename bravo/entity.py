@@ -216,16 +216,16 @@ class Mob(Entity):
         serialization or wire transfer.
         """
 
-    def run(self):
+    def start(self, manager):
         """
         Starts a mob's loop process
         """
 
         xcoord, chaff, zcoord, chaff = split_coords(self.location.pos.x,
                 self.location.pos.z)
-        # XXX The one is redundant, fix it
         # XXX also, WTF are chunk_coords and why aren't they doc'd?
-        self.chunk_coords = xcoord, 1, zcoord
+        self.chunk_coords = xcoord, zcoord
+        self.manager = manager
         self.loop = LoopingCall(self.update)
         self.loop.start(.2)
 
@@ -268,47 +268,55 @@ class Mob(Entity):
                       uniform(-.4,.4))
 
             target = (self.location.x + vector[0],
-                self.location.y + vector[1],
-                self.location.z + vector[2])
+                      self.location.y + vector[1],
+                      self.location.z + vector[2])
         else:
             target = (player.location.x,
-                player.location.y,
-                player.location.z)
+                      player.location.y,
+                      player.location.z)
 
-            self_pos = (self.location.x, self.location.y, self.location.z)
-            vector = gen_close_point(self_pos, target)
 
-            vector = (
-                clamp(vector[0], -0.4, 0.4),
-                clamp(vector[1], -0.4, 0.4),
-                clamp(vector[2], -0.4, 0.4),
-            )
+            coords = (self.location.x,
+                      self.location.y,
+                      self.location.z)
+            try:
+                vector = gen_close_point(coords, target)
+                vector = (vector[0] - coords[0],
+                          vector[1] - coords[1],
+                          vector[2] - coords[2])
+            except ZeroDivisionError:
+                vector = (0,0,0)
+
+
+            vector = (clamp(vector[0], -0.2, 0.2),
+                      clamp(vector[1], -0.2, 0.2),
+                      clamp(vector[2], -0.2, 0.2))
 
         new_position = (vector[0] + self.location.x,
-            vector[1] + self.location.y,
-            vector[2] + self.location.z,)
+                        vector[1] + self.location.y,
+                        vector[2] + self.location.z,)
 
         new_theta = int(atan2(
-            (self.location.z - new_position[2]),
-            (self.location.x - new_position[0] ))
-            + pi/2)
+                (self.location.z - new_position[2]),
+                (self.location.x - new_position[0] ))
+                + pi/2)
 
         if new_theta < 0 :
             new_theta = 0
 
-        can_go = self.manager.check_block_collision(self.location, (-.3, 0, -.3,), (.5, 1, .5))
+        can_go = self.manager.check_block_collision(self.location,
+                    (-.3, 0, -.3,), (.5, 1, .5))
         self.location.theta = new_theta
 
         if can_go:
             self.slide = False
             self.location.x = new_position[0]
-            self.location.y = new_position[1]
+#            self.location.y = new_position[1]
             self.location.z = new_position[2]
 
             self.manager.correct_origin_chunk(self)
             self.manager.broadcast(self.save_location_to_packet())
         else:
-            self.slide = self.manager.slide_vector(vector, )
             self.manager.broadcast(self.save_location_to_packet())
 
 
@@ -513,7 +521,6 @@ class Zombie(Mob):
     """
 
     name = "Zombie"
-    offsetlist = ((-.5,0,-.5), (-.5,0,.5), (.5,0,-.5), (.5,0,.5), (-.5,1,-.5), (-.5,1,.5), (.5,1,-.5), (.5,1,.5),)
 
 entities = dict((entity.name, entity)
     for entity in (

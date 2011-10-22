@@ -522,6 +522,110 @@ class IAutomaton(IBravoPlugin):
         processing data; it needs to stop immediately.
         """
 
+class IEntity(IBravoPlugin):
+    """
+    A constantly changing and dynamic entity.
+
+    A dynamic entity is any entity that needs to constantly update itself
+    and react to outside variables or conditions.
+
+    Plugins implementing this interface don't need to be instanciated,
+    as the plugin will be used as a blueprint to instanciate entities on demand.
+    """
+
+    type = Attribute(""" One of the base mob types""")
+
+    location = Attribute("""
+        A location object
+        """)
+
+    loop = Attribute("""
+        The main loop object that calls the entities update code.
+
+        It is *highly* advised to use twisted's loopingCall to call the update
+        function.
+        """)
+
+    def __init__(location=None, eid=0, **kwargs):
+        """
+        The init method for a providing plugin.
+
+        Note that if subclassing any base entity class,
+        super(Parent Entity, self).__init__ should probably be called.
+        """
+
+    def update_metadata(self):
+        """
+        Overrideable hook for general metadata updates.
+
+        This method is necessary because metadata generally only needs to be
+        updated prior to certain events, not necessarily in response to
+        external events.
+
+        This hook will always be called prior to saving this mob's data for
+        serialization or wire transfer.
+        """
+
+    def update():
+        """
+        The main function called by the entities internal update loop.
+
+        This function should update the state and processes of the entity,
+        and only be called by the entities internal loop.
+        """
+
+    def start():
+        """
+        Signal to the entity that it needs to start.
+
+        This function is called to signal to entity that it needs to start it's
+        update loop and set up any run-time specific configurations.
+        """
+
+    def stop():
+        """
+        Signal to the entity that it needs to stop.
+
+        This function is called to signal to the entity that it needs to stop
+        any of its' running processes and save any data.
+        """
+
+class IMob(IEntity):
+    """
+    A dynamic mob
+    """
+    eid = Attribute("""
+        The mob's entity id.
+
+        This attribute should be set sometime during the execution of the
+        the entity's __init__ function.
+        """)
+
+    metadata = Attribute("""
+        The mob's metadata to be sent over the wire
+        """)
+
+class ITile(IEntity):
+    """
+    A dynamic tile
+    """
+    name = Attribute("A name")
+
+    def __init__(x, y, z):
+        """
+        The tile's __init__ method.
+        """
+
+    def load_from_packet(container):
+        """
+        Called to inform a mob to load data from a packet.
+        """
+
+    def save_to_packet():
+        """
+        Called to inform a mob to load data from a packet.
+        """
+
 class IWorldResource(IBravoPlugin, IResource):
     """
     Interface for a world specific web resource.
