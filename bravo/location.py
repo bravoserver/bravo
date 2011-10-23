@@ -5,6 +5,38 @@ from construct import Container
 
 from bravo.beta.packets import make_packet
 
+"""
+``location`` provides various coordinate systems for different specialized
+tasks in Bravo.
+
+There are several different kinds of coordinates::
+
+ * Global
+   * Absolute (pixel)
+   * Block
+   * Chunk
+ * Local
+   * Chunk-local
+
+Block coordinates are the basic system for locating blocks in the world. They
+start at an origin and go indefinitely in the X and Z axes, and from 0 to 127
+in the Y axis. The orientation is somewhat confusing; X and Z are oriented on
+the north-south and east-west compass points, and Y is the height.
+
+Absolute coordinates, sometimes called pixel coordinates, represent the
+smallest fixed-point unit of measurement in the world. They are equivalent to
+block coordinates, but with 32x the precision. Absolute coordinates are used
+to position entities.
+
+Chunk coordinates are used to position chunks of geometry. They only consist
+of X and Z coordinates, and the coordinates are always on block coordinate
+boundaries of 16 blocks.
+
+Chunk-local coordinates are regular block coordinates, but they are relative
+to a parent chunk. As such, in addition to the Y axis limitation, the X and Z
+axes are limited to the range [0, 15].
+"""
+
 class Location(object):
     """
     The position and orientation of an entity.
