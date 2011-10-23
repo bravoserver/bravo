@@ -123,9 +123,10 @@ If you are tight on space, you can install only part of Twisted.
 A Note about Ubuntu
 ^^^^^^^^^^^^^^^^^^^
 
-You will need Ubuntu 11.04, for Twisted 10.2. Ubuntu 10.04 LTS is not
-suitable, unless the Twisted 10.2 package from Ubuntu 11.04 is installed. In
-other words, that cheap VPS you own will require some upgrades. :3
+If you are using Ubuntu 10.04 LTS, you will need a more recent Twisted than
+Ubuntu provides. There is a PPA at
+http://launchpad.net/~twisted-dev/+archive/ppa which provides recent versions
+of all Twisted packages.
 
 Fedora
 ------
