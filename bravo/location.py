@@ -6,8 +6,9 @@ from construct import Container
 from bravo.beta.packets import make_packet
 
 """
-``location`` provides various coordinate systems for different specialized
-tasks in Bravo.
+The ``location`` module provides various coordinate systems for different
+specialized tasks in Bravo, and objects for tracking and analyzing those
+coordinates.
 
 There are several different kinds of coordinates::
 

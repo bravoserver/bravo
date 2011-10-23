@@ -1,7 +1,5 @@
-=========================
-``location`` -- Locations
-=========================
-
-The ``location`` module contains objects for tracking and analyzing locations.
+==================================
+``location`` -- Coordinate objects
+==================================
 
 .. automodule:: bravo.location
