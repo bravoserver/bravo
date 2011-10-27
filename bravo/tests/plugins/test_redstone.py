@@ -150,7 +150,14 @@ class TestRedstone(unittest.TestCase):
 
                 # The tableau.
                 chunk.set_block((1, 1, 2), blocks["sand"].slot)
-                chunk.set_block((2, 1, 2), blocks["redstone-wire"].slot)
+                chunk.set_block((1, 2, 2), blocks["redstone-torch"].slot)
+                chunk.set_metadata((1, 2, 2),
+                    blocks["redstone-torch"].orientation("+y"))
+                chunk.set_block((2, 2, 2), blocks["redstone-wire"].slot)
+                chunk.set_block((2, 1, 2), blocks["sand"].slot)
+                chunk.set_block((3, 1, 2), blocks["redstone-torch"].slot)
+                chunk.set_metadata((3, 1, 2),
+                    blocks["redstone-torch"].orientation("+x"))
 
                 # Attach the levers to the sand block.
                 orientation = blocks["lever"].orientation("-z")
@@ -164,22 +171,23 @@ class TestRedstone(unittest.TestCase):
                 chunk.set_block((1, 1, 3), iblock)
                 chunk.set_metadata((1, 1, 3), imetadata)
 
-                # Run the circuit, starting at the switches. Three times:
-                # Lever (x2), sand, wire.
+                # Run the circuit, starting at the switches. Six times:
+                # Lever (x2), sand, torch, wire, sand, torch.
                 self.hook.feed((1, 1, 1))
                 self.hook.feed((1, 1, 3))
                 self.hook.process()
                 self.hook.process()
                 self.hook.process()
+                self.hook.process()
+                self.hook.process()
+                self.hook.process()
 
-                block = chunk.get_block((2, 1, 2))
-                metadata = chunk.get_metadata((2, 1, 2))
+                block = chunk.get_block((3, 1, 2))
+                metadata = chunk.get_metadata((3, 1, 2))
                 self.assertEqual((block, metadata),
                     truthify_block(o, block, metadata))
 
         return d
-
-    test_or_gate.todo = "Wire doesn't work yet."
 
     def test_not_gate(self):
         """
