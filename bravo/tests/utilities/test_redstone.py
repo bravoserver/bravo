@@ -60,6 +60,17 @@ class TestBBool(TestCase):
     def test_torch_true(self):
         self.assertTrue(bbool(blocks["redstone-torch"].slot, 0x0))
 
+class TestCircuitPlain(TestCase):
+
+    def test_sand_iter_outputs(self):
+        """
+        Sand has several outputs.
+        """
+
+        sand = PlainBlock((0, 0, 0), blocks["sand"].slot, 0x0)
+
+        self.assertTrue((0, 1, 0) in sand.iter_outputs())
+
 class TestCircuitTorch(TestCase):
 
     def test_torch_bad_metadata(self):
@@ -132,6 +143,28 @@ class TestCircuitCouplings(TestCase):
         sand = PlainBlock((0, 0, 0), blocks["sand"].slot, 0x0)
         torch = Torch((1, 0, 0), blocks["redstone-torch"].slot,
             blocks["redstone-torch"].orientation("+x"))
+
+        sand.connect(asic)
+        torch.connect(asic)
+
+        sand.status = True
+        torch.update()
+        self.assertFalse(torch.status)
+
+        sand.status = False
+        torch.update()
+        self.assertTrue(torch.status)
+
+    def test_sand_torch_above(self):
+        """
+        A torch on top of a sand block will turn off when the sand block
+        turns on, and vice versa.
+        """
+
+        asic = Asic()
+        sand = PlainBlock((0, 0, 0), blocks["sand"].slot, 0x0)
+        torch = Torch((0, 1, 0), blocks["redstone-torch"].slot,
+            blocks["redstone-torch"].orientation("+y"))
 
         sand.connect(asic)
         torch.connect(asic)

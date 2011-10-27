@@ -211,7 +211,8 @@ class Circuit(object):
 
         x, y, z = self.coords
 
-        for dx, dy, dz in ((-1, 0, 0), (1, 0, 0), (0, 0, -1), (0, 0, 1)):
+        for dx, dy, dz in ((-1, 0, 0), (1, 0, 0), (0, 0, -1), (0, 0, 1),
+                (0, -1, 0), (0, 1, 0)):
             yield x + dx, y + dy, z + dz
 
     def iter_outputs(self):
@@ -221,7 +222,8 @@ class Circuit(object):
 
         x, y, z = self.coords
 
-        for dx, dy, dz in ((-1, 0, 0), (1, 0, 0), (0, 0, -1), (0, 0, 1)):
+        for dx, dy, dz in ((-1, 0, 0), (1, 0, 0), (0, 0, -1), (0, 0, 1),
+                (0, -1, 0), (0, 1, 0)):
             yield x + dx, y + dy, z + dz
 
     def connect(self, asic):
