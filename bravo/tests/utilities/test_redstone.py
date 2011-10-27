@@ -215,6 +215,26 @@ class TestCircuitCouplings(TestCase):
         self.assertTrue(wire in torch.outputs)
         self.assertTrue(torch in wire.inputs)
 
+    def test_wire_sand_below(self):
+        """
+        Wire will power the plain block beneath it.
+        """
+
+        asic = Asic()
+        sand = PlainBlock((0, 0, 0), blocks["sand"].slot, 0x0)
+        wire = Wire((0, 1, 0), blocks["redstone-wire"].slot, 0x0)
+
+        sand.connect(asic)
+        wire.connect(asic)
+
+        wire.status = True
+        sand.update()
+        self.assertTrue(wire.status)
+
+        wire.status = False
+        sand.update()
+        self.assertFalse(wire.status)
+
 class TestAsic(TestCase):
 
     def setUp(self):
