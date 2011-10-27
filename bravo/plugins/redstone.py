@@ -64,44 +64,6 @@ class Redstone(object):
         else:
             self.stop()
 
-    def update_wires(self, x, y, z, enabled):
-        """
-        Trace the wires starting at a certain point, and either enable or
-        disable them.
-        """
-
-        level = 0xf if enabled else 0x0
-        traveled = set()
-        traveling = set([(x, y, z)])
-
-        while traveling:
-            # Visit nodes.
-            for coords in traveling:
-                metadata = factory.world.sync_get_metadata(coords)
-                if metadata != level:
-                    factory.world.set_metadata(coords, level)
-                    traveled.add(coords)
-
-            # Rotate the nodes from last time into the old list, generate the
-            # new list again, and then do a difference update to avoid
-            # visiting previously touched nodes.
-            nodes = [(
-                (i - 1, j, k    ),
-                (i + 1, j, k    ),
-                (i,     j, k - 1),
-                (i,     j, k + 1))
-                for (i, j, k) in traveling]
-            traveling.clear()
-            for l in nodes:
-                for coords in l:
-                    block = factory.world.sync_get_block(coords)
-                    if block == blocks["redstone-wire"].slot:
-                        traveling.add(coords)
-            traveling.difference_update(traveled)
-
-            if level:
-                level -= 1
-
     def process(self):
         affected = set()
         changed = set()

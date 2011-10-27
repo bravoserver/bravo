@@ -51,49 +51,71 @@ class TestRedstone(unittest.TestCase):
     def test_trivial(self):
         pass
 
-    def test_update_wires_enable(self):
+    def test_and_gate(self):
         """
-        update_wires() should correctly light up a wire.
-        """
+        AND gates should work.
 
-        d = self.w.request_chunk(0, 0)
-
-        @d.addCallback
-        def cb(chunk):
-            for i in range(1, 15):
-                chunk.set_block((i, 1, 1),
-                    blocks["redstone-wire"].slot)
-                chunk.set_metadata((i, 1, 1), 0x0)
-
-            # Enable wires.
-            self.hook.update_wires(1, 1, 1, True)
-
-            for i in range(1, 15):
-                metadata = chunk.get_metadata((i, 1, 1))
-                self.assertEqual(metadata, 0xf - i + 1)
-
-        return d
-
-    def test_update_wires_disable(self):
-        """
-        update_wires() should correctly drain a wire.
+        This test also bumps up against a chunk boundary intentionally.
         """
 
         d = self.w.request_chunk(0, 0)
 
         @d.addCallback
         def cb(chunk):
-            for i in range(1, 15):
-                chunk.set_block((i, 1, 1),
-                    blocks["redstone-wire"].slot)
-                chunk.set_metadata((i, 1, 1), i)
+            for i1, i2, o in (
+                (False, False, False),
+                (True, False, False),
+                (False, True, False),
+                (True, True, True),
+                ):
+                # Reset the hook.
+                self.hook.asic = Asic()
 
-            # Enable wires.
-            self.hook.update_wires(1, 1, 1, False)
+                # The tableau.
+                chunk.set_block((1, 1, 1), blocks["sand"].slot)
+                chunk.set_block((1, 1, 2), blocks["sand"].slot)
+                chunk.set_block((1, 1, 3), blocks["sand"].slot)
 
-            for i in range(1, 15):
-                metadata = chunk.get_metadata((i, 1, 1))
-                self.assertEqual(metadata, 0x0)
+                chunk.set_block((1, 2, 1), blocks["redstone-torch"].slot)
+                chunk.set_metadata((1, 2, 1),
+                    blocks["redstone-torch"].orientation("+y"))
+                chunk.set_block((1, 2, 3), blocks["redstone-torch"].slot)
+                chunk.set_metadata((1, 2, 3),
+                    blocks["redstone-torch"].orientation("+y"))
+
+                chunk.set_block((1, 2, 2), blocks["redstone-wire"].slot)
+
+                # Output torch.
+                chunk.set_block((2, 1, 2), blocks["redstone-torch"].slot)
+                chunk.set_metadata((2, 1, 2),
+                    blocks["redstone-torch"].orientation("+x"))
+
+                # Attach the levers to the sand block.
+                orientation = blocks["lever"].orientation("-x")
+                iblock, imetadata = truthify_block(i1, blocks["lever"].slot,
+                    orientation)
+                chunk.set_block((0, 1, 1), iblock)
+                chunk.set_metadata((0, 1, 1), imetadata)
+                iblock, imetadata = truthify_block(i2, blocks["lever"].slot,
+                    orientation)
+                chunk.set_block((0, 1, 3), iblock)
+                chunk.set_metadata((0, 1, 3), imetadata)
+
+                # Run the circuit, starting at the switches. Six times:
+                # Lever (x2), sand (x2), torch (x2), wire, block, torch.
+                self.hook.feed((0, 1, 1))
+                self.hook.feed((0, 1, 3))
+                self.hook.process()
+                self.hook.process()
+                self.hook.process()
+                self.hook.process()
+                self.hook.process()
+                self.hook.process()
+
+                block = chunk.get_block((2, 1, 2))
+                metadata = chunk.get_metadata((2, 1, 2))
+                self.assertEqual((block, metadata),
+                    truthify_block(o, block, metadata))
 
         return d
 
@@ -156,51 +178,6 @@ class TestRedstone(unittest.TestCase):
 
         return d
 
-    def test_not_gate(self):
-        """
-        NOT gates should work.
-        """
-
-        d = self.w.request_chunk(0, 0)
-
-        @d.addCallback
-        def cb(chunk):
-            for i, o in ((True, False), (False, True)):
-                # Reset the hook.
-                self.hook.asic = Asic()
-
-                # The tableau.
-                chunk.set_block((2, 1, 1), blocks["sand"].slot)
-                chunk.set_block((3, 1, 1), blocks["redstone-torch"].slot)
-
-                # Attach the lever to the sand block, and throw it. For sanity
-                # purposes, grab the orientation metadata from the block
-                # definition.
-                orientation = blocks["lever"].orientation("-x")
-                iblock, imetadata = truthify_block(i, blocks["lever"].slot,
-                    orientation)
-                chunk.set_block((1, 1, 1), iblock)
-                chunk.set_metadata((1, 1, 1), imetadata)
-
-                # Attach the torch to the sand block too.
-                orientation = blocks["redstone-torch"].orientation("+x")
-                chunk.set_metadata((3, 1, 1), orientation)
-
-                # Run the circuit, starting at the switch.
-                self.hook.feed((1, 1, 1))
-
-                # Lever, torch, sand.
-                self.hook.process()
-                self.hook.process()
-                self.hook.process()
-
-                block = chunk.get_block((3, 1, 1))
-                metadata = chunk.get_metadata((3, 1, 1))
-                self.assertEqual((block, metadata),
-                    truthify_block(o, block, metadata))
-
-        return d
-
     def test_nor_gate(self):
         """
         NOR gates should work.
@@ -248,6 +225,51 @@ class TestRedstone(unittest.TestCase):
 
                 block = chunk.get_block((2, 1, 2))
                 metadata = chunk.get_metadata((2, 1, 2))
+                self.assertEqual((block, metadata),
+                    truthify_block(o, block, metadata))
+
+        return d
+
+    def test_not_gate(self):
+        """
+        NOT gates should work.
+        """
+
+        d = self.w.request_chunk(0, 0)
+
+        @d.addCallback
+        def cb(chunk):
+            for i, o in ((True, False), (False, True)):
+                # Reset the hook.
+                self.hook.asic = Asic()
+
+                # The tableau.
+                chunk.set_block((2, 1, 1), blocks["sand"].slot)
+                chunk.set_block((3, 1, 1), blocks["redstone-torch"].slot)
+
+                # Attach the lever to the sand block, and throw it. For sanity
+                # purposes, grab the orientation metadata from the block
+                # definition.
+                orientation = blocks["lever"].orientation("-x")
+                iblock, imetadata = truthify_block(i, blocks["lever"].slot,
+                    orientation)
+                chunk.set_block((1, 1, 1), iblock)
+                chunk.set_metadata((1, 1, 1), imetadata)
+
+                # Attach the torch to the sand block too.
+                orientation = blocks["redstone-torch"].orientation("+x")
+                chunk.set_metadata((3, 1, 1), orientation)
+
+                # Run the circuit, starting at the switch.
+                self.hook.feed((1, 1, 1))
+
+                # Lever, torch, sand.
+                self.hook.process()
+                self.hook.process()
+                self.hook.process()
+
+                block = chunk.get_block((3, 1, 1))
+                metadata = chunk.get_metadata((3, 1, 1))
                 self.assertEqual((block, metadata),
                     truthify_block(o, block, metadata))
 
