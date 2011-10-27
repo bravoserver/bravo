@@ -97,39 +97,6 @@ class TestRedstone(unittest.TestCase):
 
         return d
 
-    def test_switch(self):
-        """
-        Levers should work.
-        """
-
-        d = self.w.request_chunk(0, 0)
-
-        @d.addCallback
-        def cb(chunk):
-            chunk.set_block((1, 1, 1), blocks["lever"].slot)
-            chunk.set_block((2, 1, 1), blocks["sand"].slot)
-            chunk.set_block((3, 1, 1), blocks["redstone-wire"].slot)
-
-            # Attach the lever to the sand block, and throw it. For sanity
-            # purposes, grab the orientation metadata from the block
-            # definition.
-            orientation = blocks["lever"].orientation("+x")
-            chunk.set_metadata((1, 1, 1), orientation | 0x8)
-
-            # Run the circuit, starting at the switch. Three times: Lever,
-            # sand, wire.
-            self.hook.feed((1, 1, 1))
-            self.hook.process()
-            self.hook.process()
-            self.hook.process()
-
-            metadata = chunk.get_metadata((3, 1, 1))
-            self.assertEqual(metadata, 0xf)
-
-        return d
-
-    test_switch.todo = "Need to finish wire circuitry"
-
     def test_or_gate(self):
         """
         OR gates should work.
