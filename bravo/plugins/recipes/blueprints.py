@@ -574,3 +574,21 @@ track = Blueprint("track", (3, 3),
         (items["iron-ingot"].key, 1),
     ),
     (blocks["tracks"].key, 16))
+
+piston = Blueprint("piston", (3, 3),
+    (
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["wood"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (items["iron-ingot"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+        (items["redstone"].key, 1),
+        (blocks["cobblestone"].key, 1),
+    ),
+    (blocks["piston"].key, 1))
+
+sticky_piston = Blueprint("sticky-piston", (1, 2),
+    ((items["slimeball"].key, 1), (blocks["piston"].key, 1)),
+    (blocks["sticky-piston"].key, 1))

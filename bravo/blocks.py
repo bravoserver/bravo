@@ -198,11 +198,11 @@ block_names = [
     "bed-block",
     "powered-rail",
     "detector-rail",
-    "",
+    "sticky-piston",
     "spider-web",
     "tall-grass",
     "shrub", # 0x20
-    "",
+    "piston",
     "",
     "wool",
     "",
