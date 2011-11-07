@@ -1,6 +1,7 @@
 # -*- test-case-name: exocet.test.test_exocet -*-
 # Copyright (c) 2010-2011 Allen Short. See LICENSE file for details.
 
+from warnings import catch_warnings, simplefilter
 
 import sys, __builtin__, itertools, traceback
 from exocet._modules import getModule
@@ -782,9 +783,15 @@ def redirectLocalImports(name, globals=None, *a, **kw):
             trace("isolated __import__ of", name,  "called in exocet module", mf, mf.mapper)
             return _isolateImports(mf, _originalImport, name, globals, *a, **kw)
         else:
-            return _originalImport(name, globals, *a, **kw)
+            # Mute RuntimeWarning, which can be tossed by the standard builtin
+            # hook, and possibly other import hooks as well.
+            with catch_warnings():
+                simplefilter("ignore")
+                return _originalImport(name, globals, *a, **kw)
     else:
-        return _originalImport(name, globals, *a, **kw)
+        with catch_warnings():
+            simplefilter("ignore")
+            return _originalImport(name, globals, *a, **kw)
 
 
 _originalImport = None
