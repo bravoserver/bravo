@@ -61,7 +61,7 @@ class BravoFactory(Factory):
         self.config = config
         self.config_name = "world %s" % name
 
-        self.world = World(self.name)
+        self.world = World(self.config, self.name)
         self.world.factory = self
 
         self.protocols = dict()

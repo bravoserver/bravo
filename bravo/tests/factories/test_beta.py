@@ -27,7 +27,7 @@ class TestBravoFactory(unittest.TestCase):
         self.bcp.set("world unittest", "port", "0")
         self.bcp.set("world unittest", "mode", "creative")
 
-        self.f = BravoFactory(self.name)
+        self.f = BravoFactory(self.bcp, self.name)
 
     def test_trivial(self):
         pass
@@ -184,7 +184,7 @@ class TestBravoFactoryStarted(unittest.TestCase):
         for k, v in d.items():
             self.bcp.set("world unittest", k, v)
 
-        self.f = BravoFactory(self.name)
+        self.f = BravoFactory(self.bcp, self.name)
         # And now start the factory.
         self.f.startFactory()
 
