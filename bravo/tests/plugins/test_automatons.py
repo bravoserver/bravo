@@ -6,7 +6,7 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.trial import unittest
 
 from bravo.blocks import blocks
-from bravo.config import configuration
+from bravo.config import BravoConfigParser
 from bravo.ibravo import IAutomaton
 from bravo.plugin import retrieve_plugins
 from bravo.world import World
@@ -26,12 +26,13 @@ class TestGrass(unittest.TestCase):
 
     def setUp(self):
         self.d = tempfile.mkdtemp()
+        self.bcp = BravoConfigParser()
 
-        configuration.add_section("world unittest")
-        configuration.set("world unittest", "url", "file://%s" % self.d)
-        configuration.set("world unittest", "serializer", "alpha")
+        self.bcp.add_section("world unittest")
+        self.bcp.set("world unittest", "url", "file://%s" % self.d)
+        self.bcp.set("world unittest", "serializer", "alpha")
 
-        self.w = World("unittest")
+        self.w = World(self.bcp, "unittest")
         self.w.pipeline = []
         self.w.start()
 
@@ -50,9 +51,7 @@ class TestGrass(unittest.TestCase):
 
     def tearDown(self):
         self.w.stop()
-
         shutil.rmtree(self.d)
-        configuration.remove_section("world unittest")
 
     def test_trivial(self):
         pass
