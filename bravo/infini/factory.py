@@ -8,7 +8,6 @@ from twisted.python import log
 from twisted.web.client import getPage
 
 from bravo import version as bravo_version
-from bravo.config import configuration
 from bravo.entity import Pickup, Player
 from bravo.infini.protocol import InfiniClientProtocol, InfiniNodeProtocol
 
@@ -27,8 +26,9 @@ class InfiniClientFactory(Factory):
 
     protocol = InfiniClientProtocol
 
-    def __init__(self, name):
+    def __init__(self, config, name):
         self.protocols = set()
+        self.config = config
 
         log.msg("InfiniClient started")
 
@@ -50,13 +50,13 @@ class InfiniNodeFactory(Factory):
 
     private_key = None
 
-    def __init__(self, name):
+    def __init__(self, config, name):
         self.name = name
-        self.port = configuration.getint("infininode %s" % name, "port")
-        self.gateway = configuration.get("infininode %s" % name, "gateway")
+        self.port = self.config.getint("infininode %s" % name, "port")
+        self.gateway = self.config.get("infininode %s" % name, "gateway")
 
-        if configuration.has_option("infininode %s" % name, "private_key"):
-            self.private_key = configuration.get("infininode %s" % name,
+        if self.config.has_option("infininode %s" % name, "private_key"):
+            self.private_key = self.config.get("infininode %s" % name,
                 "private_key")
 
         self.broadcast_loop = LoopingCall(self.broadcast)

@@ -87,7 +87,7 @@ class BravoService(MultiService):
                 for service in services_for_endpoints(interfaces, factory):
                     self.addService(service)
             elif section.startswith("infininode "):
-                factory = InfiniNodeFactory(section[11:])
+                factory = InfiniNodeFactory(self.config, section[11:])
                 interfaces = self.config.getlist(section, "interfaces")
 
                 for service in services_for_endpoints(interfaces, factory):
