@@ -8,7 +8,6 @@ from twisted.internet.task import LoopingCall
 from twisted.python import log
 from zope.interface import implements
 
-from bravo.config import configuration
 from bravo.entity import entities
 from bravo.ibravo import (ISortedPlugin, IAutomaton, IAuthenticator, ISeason,
     ITerrainGenerator, IUseHook, ISignHook, IPreDigHook, IDigHook, IPreBuildHook,
@@ -48,17 +47,18 @@ class BravoFactory(Factory):
 
     interfaces = []
 
-    def __init__(self, name):
+    def __init__(self, config, name):
         """
         Create a factory and world.
 
         ``name`` is the string used to look up factory-specific settings from
-        the configuration.
+        the self.config.
 
         :param str name: internal name of this factory
         """
 
         self.name = name
+        self.config = config
         self.config_name = "world %s" % name
 
         self.world = World(self.name)
@@ -67,14 +67,14 @@ class BravoFactory(Factory):
         self.protocols = dict()
         self.connectedIPs = defaultdict(int)
 
-        self.mode = configuration.get(self.config_name, "mode")
+        self.mode = self.config.get(self.config_name, "mode")
         if self.mode not in ("creative", "survival"):
             raise Exception("Unsupported mode %s" % self.mode)
 
-        self.limitConnections = configuration.getintdefault(self.config_name,
+        self.limitConnections = self.config.getintdefault(self.config_name,
                                                             "limitConnections",
                                                             0)
-        self.limitPerIP = configuration.getintdefault(self.config_name,
+        self.limitPerIP = self.config.getintdefault(self.config_name,
                                                       "limitPerIP", 0)
 
         self.vane = WeatherVane(self)
@@ -82,7 +82,7 @@ class BravoFactory(Factory):
     def startFactory(self):
         log.msg("Initializing factory for world '%s'..." % self.name)
 
-        authenticator = configuration.get(self.config_name, "authenticator")
+        authenticator = self.config.get(self.config_name, "authenticator")
         selected = retrieve_named_plugins(IAuthenticator, [authenticator])[0]
 
         log.msg("Using authenticator %s" % selected.name)
@@ -95,8 +95,8 @@ class BravoFactory(Factory):
         log.msg("Starting world...")
         self.world.start()
 
-        if configuration.has_option(self.config_name, "perm_cache"):
-            cache_level = configuration.getint(self.config_name, "perm_cache")
+        if self.config.has_option(self.config_name, "perm_cache"):
+            cache_level = self.config.getint(self.config_name, "perm_cache")
             self.world.enable_cache(cache_level)
 
         log.msg("Starting timekeeping...")
@@ -187,7 +187,7 @@ class BravoFactory(Factory):
 
         # If the player wasn't kicked, let's continue!
         log.msg("Starting connection for %s" % addr)
-        p = self.protocol(self.name)
+        p = self.protocol(self.config, self.name)
         p.host = addr.host
         p.factory = self
 
@@ -261,7 +261,7 @@ class BravoFactory(Factory):
         pp = {"factory": self}
 
         for t, interface in plugin_types.iteritems():
-            l = configuration.getlistdefault(self.config_name, t, [])
+            l = self.config.getlistdefault(self.config_name, t, [])
             if issubclass(interface, ISortedPlugin):
                 plugins = retrieve_sorted_plugins(interface, l, parameters=pp)
             else:

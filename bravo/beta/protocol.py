@@ -17,7 +17,6 @@ from twisted.web.client import getPage
 
 from bravo.beta.structures import BuildData
 from bravo.blocks import blocks, items
-from bravo.config import configuration
 from bravo.entity import Sign
 from bravo.errors import BetaClientError, BuildError
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
@@ -558,13 +557,14 @@ class BravoProtocol(BetaServerProtocol):
 
     last_dig = None
 
-    def __init__(self, name):
+    def __init__(self, config, name):
         BetaServerProtocol.__init__(self)
 
+        self.config = config
         self.config_name = "world %s" % name
 
         # Retrieve the MOTD. Only needs to be done once.
-        self.motd = configuration.getdefault(self.config_name, "motd",
+        self.motd = self.config.getdefault(self.config_name, "motd",
             "BravoServer")
 
     def register_hooks(self):

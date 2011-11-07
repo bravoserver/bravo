@@ -53,7 +53,7 @@ class BravoService(MultiService):
         for section in self.config.sections():
             if section.startswith("world "):
                 # Bravo worlds. Grab a list of endpoints and load them.
-                factory = BravoFactory(section[6:])
+                factory = BravoFactory(self.config, section[6:])
                 interfaces = self.config.getlist(section, "interfaces")
 
                 for service in services_for_endpoints(interfaces, factory):

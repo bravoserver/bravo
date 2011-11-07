@@ -5,7 +5,7 @@ from twisted.internet import reactor
 from twisted.internet.task import Clock
 from twisted.trial import unittest
 
-import bravo.config
+from bravo.config import BravoConfigParser
 from bravo.beta.factory import BravoFactory
 
 class MockProtocol(object):
@@ -21,15 +21,13 @@ class TestBravoFactory(unittest.TestCase):
     def setUp(self):
         # Same setup as World, because Factory is very automagical.
         self.name = "unittest"
+        self.bcp = BravoConfigParser()
 
-        bravo.config.configuration.add_section("world unittest")
-        bravo.config.configuration.set("world unittest", "port", "0")
-        bravo.config.configuration.set("world unittest", "mode", "creative")
+        self.bcp.add_section("world unittest")
+        self.bcp.set("world unittest", "port", "0")
+        self.bcp.set("world unittest", "mode", "creative")
 
         self.f = BravoFactory(self.name)
-
-    def tearDown(self):
-        bravo.config.configuration.remove_section("world unittest")
 
     def test_trivial(self):
         pass
@@ -88,7 +86,7 @@ class TestBravoFactory(unittest.TestCase):
         If no seasons are enabled, things should proceed as normal.
         """
 
-        bravo.config.configuration.set("world unittest", "seasons", "")
+        self.bcp.set("world unittest", "seasons", "")
         self.f.register_plugins()
 
         self.f.day = 0
@@ -105,7 +103,7 @@ class TestBravoFactory(unittest.TestCase):
         selected, regardless of day.
         """
 
-        bravo.config.configuration.set("world unittest", "seasons", "winter")
+        self.bcp.set("world unittest", "seasons", "winter")
         self.f.register_plugins()
 
         self.f.day = 0
@@ -121,7 +119,7 @@ class TestBravoFactory(unittest.TestCase):
         The season should change from spring to winter when both are enabled.
         """
 
-        bravo.config.configuration.set("world unittest", "seasons",
+        self.bcp.set("world unittest", "seasons",
             "winter, spring")
         self.f.register_plugins()
 
@@ -170,8 +168,9 @@ class TestBravoFactoryStarted(unittest.TestCase):
         # Same setup as World, because Factory is very automagical.
         self.d = tempfile.mkdtemp()
         self.name = "unittest"
+        self.bcp = BravoConfigParser()
 
-        bravo.config.configuration.add_section("world unittest")
+        self.bcp.add_section("world unittest")
         d = {
             "authenticator" : "offline",
             "automatons"    : "",
@@ -183,17 +182,14 @@ class TestBravoFactoryStarted(unittest.TestCase):
             "url"           : "file://%s" % self.d,
         }
         for k, v in d.items():
-            bravo.config.configuration.set("world unittest", k, v)
+            self.bcp.set("world unittest", k, v)
 
         self.f = BravoFactory(self.name)
         # And now start the factory.
         self.f.startFactory()
 
     def tearDown(self):
-        bravo.config.configuration.remove_section("world unittest")
-
         self.f.stopFactory()
-
         shutil.rmtree(self.d)
 
     def test_trivial(self):
