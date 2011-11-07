@@ -57,9 +57,9 @@ class BravoConfigParser(SafeConfigParser):
         except (NoSectionError, NoOptionError):
             return default
 
-configuration = BravoConfigParser()
-
 def read_configuration():
+    configuration = BravoConfigParser()
+
     default_files = [
         "/etc/bravo/bravo.ini",
         expanduser("~/.bravo/bravo.ini"),
@@ -68,3 +68,5 @@ def read_configuration():
     ]
 
     configuration.read(default_files)
+
+    return configuration

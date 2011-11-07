@@ -1,11 +1,11 @@
 import unittest
 
-import bravo.config
+from bravo.config import BravoConfigParser
 
 class TestBravoConfigParser(unittest.TestCase):
 
     def setUp(self):
-        self.bcp = bravo.config.BravoConfigParser()
+        self.bcp = BravoConfigParser()
         self.bcp.add_section("unittest")
 
     def test_trivial(self):
