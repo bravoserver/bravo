@@ -13,7 +13,6 @@ from twisted.internet.task import coiterate, LoopingCall
 from twisted.python import log
 
 from bravo.chunk import Chunk
-from bravo.config import configuration
 from bravo.entity import Player, Furnace
 from bravo.errors import ChunkNotLoaded, SerializerReadException
 from bravo.ibravo import ISerializer
@@ -121,13 +120,14 @@ class World(object):
     saved in the level data.
     """
 
-    def __init__(self, name):
+    def __init__(self, config, name):
         """
         :Parameters:
             name : str
                 The configuration key to use to look up configuration data.
         """
 
+        self.config = config
         self.config_name = "world %s" % name
 
         self.chunk_cache = weakref.WeakValueDictionary()
@@ -140,8 +140,8 @@ class World(object):
         Load a world from disk.
         """
 
-        world_url = configuration.get(self.config_name, "url")
-        world_sf_name = configuration.get(self.config_name, "serializer")
+        world_url = self.config.get(self.config_name, "url")
+        world_sf_name = self.config.get(self.config_name, "serializer")
 
         # Get the current serializer list, and attempt to connect our
         # serializer of choice to our resource.
@@ -155,7 +155,7 @@ class World(object):
         self.seed = random.randint(0, sys.maxint)
 
         # Check if we should offload chunk requests to ampoule.
-        if configuration.getbooleandefault("bravo", "ampoule", False):
+        if self.config.getbooleandefault("bravo", "ampoule", False):
             try:
                 import ampoule
                 if ampoule:
@@ -377,7 +377,7 @@ class World(object):
                 x=x,
                 z=z,
                 seed=self.seed,
-                generators=configuration.getlist(self.config_name, "generators")
+                generators=self.config.getlist(self.config_name, "generators")
             )
 
             # Get chunk data into our chunk object.

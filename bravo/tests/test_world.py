@@ -8,8 +8,8 @@ import tempfile
 
 from itertools import product
 
-import bravo.config
-from bravo.errors import ChunkNotLoaded, SerializerReadException
+from bravo.config import BravoConfigParser
+from bravo.errors import ChunkNotLoaded
 from bravo.world import World
 
 class TestWorldChunks(unittest.TestCase):
@@ -17,22 +17,19 @@ class TestWorldChunks(unittest.TestCase):
     def setUp(self):
         self.name = "unittest"
         self.d = tempfile.mkdtemp()
+        self.bcp = BravoConfigParser()
 
-        bravo.config.configuration.add_section("world unittest")
-        bravo.config.configuration.set("world unittest", "url", "file://%s" % self.d)
-        bravo.config.configuration.set("world unittest", "serializer",
-            "alpha")
+        self.bcp.add_section("world unittest")
+        self.bcp.set("world unittest", "url", "file://%s" % self.d)
+        self.bcp.set("world unittest", "serializer", "alpha")
 
-        self.w = World(self.name)
+        self.w = World(self.bcp, self.name)
         self.w.pipeline = []
         self.w.start()
 
     def tearDown(self):
         self.w.stop()
-        del self.w
-
         shutil.rmtree(self.d)
-        bravo.config.configuration.remove_section("world unittest")
 
     def test_trivial(self):
         pass
@@ -203,22 +200,19 @@ class TestWorld(unittest.TestCase):
     def setUp(self):
         self.name = "unittest"
         self.d = tempfile.mkdtemp()
+        self.bcp = BravoConfigParser()
 
-        bravo.config.configuration.add_section("world unittest")
-        bravo.config.configuration.set("world unittest", "url", "file://%s" % self.d)
-        bravo.config.configuration.set("world unittest", "serializer",
-            "alpha")
+        self.bcp.add_section("world unittest")
+        self.bcp.set("world unittest", "url", "file://%s" % self.d)
+        self.bcp.set("world unittest", "serializer", "alpha")
 
-        self.w = World(self.name)
+        self.w = World(self.bcp, self.name)
         self.w.pipeline = []
         self.w.start()
 
     def tearDown(self):
         self.w.stop()
-        del self.w
-
         shutil.rmtree(self.d)
-        bravo.config.configuration.remove_section("world unittest")
 
     def test_trivial(self):
         pass
