@@ -8,6 +8,7 @@ from twisted.internet.task import deferLater
 from construct import Container
 
 from bravo.beta.protocol import BetaServerProtocol, BravoProtocol
+from bravo.config import BravoConfigParser
 from bravo.errors import BetaClientError
 
 class FakeTransport(object):
@@ -152,7 +153,8 @@ class TestBetaServerProtocol(unittest.TestCase):
 class TestBravoProtocol(unittest.TestCase):
 
     def setUp(self):
-        self.p = BravoProtocol("unittest")
+        self.bcp = BravoConfigParser()
+        self.p = BravoProtocol(self.bcp, "unittest")
 
     def tearDown(self):
         if self.p._TimeoutMixin__timeoutCall:
