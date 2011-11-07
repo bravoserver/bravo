@@ -8,7 +8,7 @@ from numpy.testing import assert_array_equal
 from twisted.internet.defer import inlineCallbacks
 
 from bravo.blocks import blocks
-import bravo.config
+from bravo.config import BravoConfigParser
 from bravo.ibravo import IDigHook
 import bravo.plugin
 from bravo.world import ChunkNotLoaded, World
@@ -24,14 +24,13 @@ class TestWater(unittest.TestCase):
         # Set up world.
         self.name = "unittest"
         self.d = tempfile.mkdtemp()
+        self.bcp = BravoConfigParser()
 
-        bravo.config.configuration.add_section("world unittest")
-        bravo.config.configuration.set("world unittest", "url",
-            "file://%s" % self.d)
-        bravo.config.configuration.set("world unittest", "serializer",
-            "alpha")
+        self.bcp.add_section("world unittest")
+        self.bcp.set("world unittest", "url", "file://%s" % self.d)
+        self.bcp.set("world unittest", "serializer", "alpha")
 
-        self.w = World(self.name)
+        self.w = World(self.bcp, self.name)
         self.w.pipeline = []
         self.w.start()
 
@@ -52,9 +51,7 @@ class TestWater(unittest.TestCase):
     def tearDown(self):
         self.w.stop()
         self.hook.stop()
-
         shutil.rmtree(self.d)
-        bravo.config.configuration.remove_section("world unittest")
 
     def test_trivial(self):
         pass
