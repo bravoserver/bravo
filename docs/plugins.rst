@@ -22,14 +22,6 @@ Online
 
 Online authentication is the traditional authentication with minecraft.net.
 
-Password
---------
-
-Password authentication is an experimental authentication scheme which
-directly authenticates clients against a server without consulting
-minecraft.net or any other central authority. However, it is not correctly
-implemented in the Notchian client, and will not work with that client.
-
 .. _terrain_generator_plugins:
 
 Terrain generators
