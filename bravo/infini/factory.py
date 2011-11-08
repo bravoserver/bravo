@@ -48,16 +48,13 @@ class InfiniNodeFactory(Factory):
 
     broadcast_loop = None
 
-    private_key = None
-
     def __init__(self, config, name):
         self.name = name
         self.port = self.config.getint("infininode %s" % name, "port")
         self.gateway = self.config.get("infininode %s" % name, "gateway")
 
-        if self.config.has_option("infininode %s" % name, "private_key"):
-            self.private_key = self.config.get("infininode %s" % name,
-                "private_key")
+        self.private_key = self.config.getdefault("infininode %s" % name,
+            "private_key", None)
 
         self.broadcast_loop = LoopingCall(self.broadcast)
         self.broadcast_loop.start(220)

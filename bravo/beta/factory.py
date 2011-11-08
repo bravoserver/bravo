@@ -95,6 +95,9 @@ class BravoFactory(Factory):
         log.msg("Starting world...")
         self.world.start()
 
+        # Start up the permanent cache.
+        # has_option() is not exactly desirable, but it's appropriate here
+        # because we don't want to take any action if the key is unset.
         if self.config.has_option(self.config_name, "perm_cache"):
             cache_level = self.config.getint(self.config_name, "perm_cache")
             self.world.enable_cache(cache_level)

@@ -33,11 +33,8 @@ class BravoIRCClient(IRCClient):
 
     def signedOn(self):
         for channel in self.config.get(self.config, "channels").split(","):
-            # XXX getdefault instead
-            if self.config.has_option(self.config, "%s_key" % channel):
-                key = self.config.get(self.config, "%s_key" % channel)
-            else:
-                key = None
+            key = self.config.getdefault(self.config, "%s_key" % channel,
+                None)
             self.join(channel, key)
 
     def joined(self, channel):
