@@ -52,7 +52,7 @@ class BravoFactory(Factory):
         Create a factory and world.
 
         ``name`` is the string used to look up factory-specific settings from
-        the self.config.
+        the configuration.
 
         :param str name: internal name of this factory
         """
