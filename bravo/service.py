@@ -81,7 +81,7 @@ class BravoService(MultiService):
                     self.irc = True
                     self.ircbots.append(section)
             elif section.startswith("infiniproxy "):
-                factory = BetaProxyFactory(section[12:])
+                factory = BetaProxyFactory(self.config, section[12:])
                 interfaces = self.config.getlist(section, "interfaces")
 
                 for service in services_for_endpoints(interfaces, factory):
@@ -94,7 +94,7 @@ class BravoService(MultiService):
                     self.addService(service)
         if self.irc:
             for section in self.ircbots:
-                factory = BravoIRC(self.factorylist, section[4:])
+                factory = BravoIRC(self.factorylist, self.config, section[4:])
                 client = TCPClient(factory.host, factory.port, factory)
                 client.setName(factory.config)
                 self.addService(client)
