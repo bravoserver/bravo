@@ -4,7 +4,6 @@ from twisted.internet import reactor
 from zope.interface import implements
 
 from bravo.blocks import parse_block
-from bravo.config import configuration
 from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
 from bravo.plugin import (retrieve_plugins, retrieve_named_plugins,
     PluginException)
@@ -320,7 +319,7 @@ class WriteConfig(object):
 
     def console_command(self, parameters):
         f = open("".join(parameters), "w")
-        configuration.write(f)
+        factory.config.write(f)
         f.close()
         yield "Configuration saved."
 
