@@ -2,8 +2,6 @@ from twisted.internet.protocol import ClientFactory
 from twisted.python import log
 from twisted.words.protocols.irc import IRCClient
 
-from bravo.config import configuration
-
 class BravoIRCClient(IRCClient):
     """
     Simple bot.
@@ -12,7 +10,7 @@ class BravoIRCClient(IRCClient):
     https://github.com/ckolbeck/mc-bot.
     """
 
-    def __init__(self, factories, config):
+    def __init__(self, factories, config, name):
         """
         Set up.
 
@@ -23,20 +21,21 @@ class BravoIRCClient(IRCClient):
         for factory in self.factories:
             factory.chat_consumers.add(self)
 
-        self.config = "irc %s" % config
-        self.name = self.config
+        self.name = "irc %s" % config
+        self.config = config
 
-        self.host = configuration.get(self.config, "server")
-        self.nickname = configuration.get(self.config, "nick")
+        self.host = self.config.get(self.config, "server")
+        self.nickname = self.config.get(self.config, "nick")
 
         self.channels = set()
 
         log.msg("Spawned IRC client '%s'!" % config)
 
     def signedOn(self):
-        for channel in configuration.get(self.config, "channels").split(","):
-            if configuration.has_option(self.config, "%s_key" % channel):
-                key = configuration.get(self.config, "%s_key" % channel)
+        for channel in self.config.get(self.config, "channels").split(","):
+            # XXX getdefault instead
+            if self.config.has_option(self.config, "%s_key" % channel):
+                key = self.config.get(self.config, "%s_key" % channel)
             else:
                 key = None
             self.join(channel, key)
@@ -78,13 +77,14 @@ class BravoIRCClient(IRCClient):
 class BravoIRC(ClientFactory):
     protocol = BravoIRCClient
 
-    def __init__(self, factories, config):
+    def __init__(self, factories, config, name):
         self.factories = factories
+        self.name = name
         self.config = config
-        self.host = configuration.get("irc %s" % config, "server")
-        self.port = configuration.getint("irc %s" % config, "port")
+        self.host = self.config.get("irc %s" % config, "server")
+        self.port = self.config.getint("irc %s" % config, "port")
 
     def buildProtocol(self, a):
-        p = self.protocol(self.factories, self.config)
+        p = self.protocol(self.factories, self.config, self.name)
         p.factory = self
         return p
