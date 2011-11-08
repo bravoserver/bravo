@@ -1,3 +1,43 @@
+1.9
+===
+
+Compatibility
+-------------
+
+* bravo.config.configuration no longer exists and there is no longer a global
+  configuration object; use factory.config or protocol.config to obtain the
+  current configuration. (#376)
+* Serializer refactoring
+
+  * Serializers now start when their ``connect()`` method is called, rather
+    than on initialization
+  * Serializers may raise ``SerializerReadException`` if asked to retrieve
+    data which does not exist
+  * Serializers may ``implements(ISerializer)`` directly
+  * ``ISerializerFactory`` no longer exists
+  * Serializers should no longer need to be parameterized, and will not
+    receive configuration objects or worlds
+
+Features
+--------
+
+* Enabled certain simple redstone circuitry; redstone is now a finished
+  feature which can have issues filed for it, rather than a wishlist item
+* Added blocks and crafting recipes for pistons and sticky pistons (#375)
+
+Removals
+--------
+
+* Removed password authentication support
+
+Bugfixes
+--------
+
+* Fixed sand not falling on top of snow when AlphaSandGravel is enabled (#298)
+* Fixed ultra-large or bogus ping times causing server crashes in Python 2.7+
+  (#363)
+* Fixed player list not showing up in Notchian client
+
 1.8.1
 =====
 
