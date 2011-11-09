@@ -170,8 +170,7 @@ class World(object):
         @d.addErrback
         def sre(failure):
             failure.trap(SerializerReadException)
-            log.msg("Had issues loading level data...")
-            log.msg(failure)
+            log.msg("Had issues loading level data, continuing anyway...")
 
         # And now save our level.
         if self.saving:
