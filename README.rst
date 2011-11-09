@@ -25,6 +25,7 @@ Standard Features
    * Tiles
 
      * Chests
+     * Furnaces
      * Signs
 
  * Lighting
@@ -62,24 +63,10 @@ Extended Features
 
      * Sand, gravel
      * Water, lava
+     * Redstone
 
  * Chat commands
  * IP ban list
-
-Planned Features
-================
-
- * More plugins for chat
- * More plugins for admin
- * More terrain generators
- * Metadata (redstone/minecarts)
- * hey0/llama features
-
-   * MOTD and /motd
-   * /lighter
-   * /compass
-
- * And whatever else we can think of!
 
 Installing
 ==========
@@ -94,15 +81,15 @@ external libraries from PyPI:
 
  * construct, version 2.03 or later
  * numpy
- * Twisted, version 10.2 or later (11.0 recommended)
+ * Twisted, version 11.0 or later
+
+If installing modular Twisted, Twisted Conch is required.
 
 For IRC support, Twisted Words is required; it is usually called
 python-twisted-words or twisted-words in package managers.
 
-For IC support, Twisted 10.2 is required.
-
-For web service support, Twisted 11.0 is required and the Twisted Web package
-must be installed; it is generally called python-twisted-web or twisted-web.
+For web service support, Twisted Web must be installed; it is generally called
+python-twisted-web or twisted-web.
 
 Debian & Ubuntu
 ---------------
