@@ -838,6 +838,10 @@ class BravoProtocol(BetaServerProtocol):
                         self.factory.broadcast_for_others(packet, self)
             return
 
+        if container.state == "shooting":
+            self.shoot_arrow()
+            return
+
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
         coords = smallx, container.y, smallz
 
@@ -1093,6 +1097,12 @@ class BravoProtocol(BetaServerProtocol):
                     secondary=container.damage
                 )
                 self.factory.broadcast_for_others(packet, self)
+
+    def shoot_arrow(self):
+        # TODO 1. Create arrow entity:          arrow = Arrow(self.factory, self.player)
+        #      2. Register within the factory:  self.factory.register_entity(arrow)
+        #      3. Run it:                       arrow.run()
+        pass
 
     def sign(self, container):
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
