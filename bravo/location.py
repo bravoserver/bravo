@@ -36,6 +36,23 @@ class Location(object):
         # Whether we are in the air.
         self.grounded = False
 
+    @classmethod
+    def at_block(cls, x, y, z):
+        """
+        Pinpoint a location at a certain block.
+
+        This constructor is intended to aid in pinpointing locations at a
+        specific block rather than forcing users to do the pixel<->block maths
+        themselves. Admittedly, the maths in question aren't hard, but there's
+        no reason to avoid this encapsulation.
+        """
+
+        location = cls()
+        location.x = x * 32
+        location.y = y * 32
+        location.z = z * 32
+        return location
+
     def __repr__(self):
         return "<Location(%s, (%d, %d (+%.6f), %d), (%.2f, %.2f))>" % (
             "grounded" if self.grounded else "midair", self.x, self.y,

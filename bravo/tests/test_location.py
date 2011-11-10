@@ -2,12 +2,12 @@ from twisted.trial import unittest
 
 import math
 
-import bravo.location
+from bravo.location import Location
 
 class TestLocation(unittest.TestCase):
 
     def setUp(self):
-        self.l = bravo.location.Location()
+        self.l = Location()
 
     def test_trivial(self):
         pass
@@ -19,16 +19,24 @@ class TestLocation(unittest.TestCase):
         self.assertTrue(self.l.save_to_packet())
 
     def test_distance(self):
-        other = bravo.location.Location()
+        other = Location()
         other.x = 2
         other.y = 3
         other.z = 6
         self.assertEqual(self.l.distance(other), 7)
 
+class TestLocationConstructors(unittest.TestCase):
+
+    def test_at_block(self):
+        l = Location.at_block(3, 4, 5)
+        self.assertEqual(l.x, 96)
+        self.assertEqual(l.y, 128)
+        self.assertEqual(l.z, 160)
+
 class TestLocationProperties(unittest.TestCase):
 
     def setUp(self):
-        self.l = bravo.location.Location()
+        self.l = Location()
 
     def test_trivial(self):
         pass
@@ -72,7 +80,7 @@ class TestLocationProperties(unittest.TestCase):
 class TestLocationMethods(unittest.TestCase):
 
     def setUp(self):
-        self.l = bravo.location.Location()
+        self.l = Location()
 
     def test_trivial(self):
         pass
