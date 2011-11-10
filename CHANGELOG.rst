@@ -1,3 +1,11 @@
+next
+====
+
+Bugfixes
+--------
+
+* Fixed client being kicked when shooting arrows (#378)
+
 1.9
 ===
 
