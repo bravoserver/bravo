@@ -232,6 +232,7 @@ packets = {
             stopped=2,
             broken=3,
             dropped=4,
+            shooting=5,
         ),
         SBInt32("x"),
         UBInt8("y"),
