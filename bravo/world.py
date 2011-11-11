@@ -543,7 +543,7 @@ class World(object):
         """
         Get a block from an unknown chunk.
 
-        :returns: a ``Deferred`` with the requested value
+        :returns: the requested block
         """
 
         return chunk.get_block(coords)
@@ -553,7 +553,7 @@ class World(object):
         """
         Set a block in an unknown chunk.
 
-        :returns: a ``Deferred`` that will fire on completion
+        :returns: None
         """
 
         chunk.set_block(coords, value)
@@ -563,7 +563,7 @@ class World(object):
         """
         Get a block's metadata from an unknown chunk.
 
-        :returns: a ``Deferred`` with the requested value
+        :returns: the requested metadata
         """
 
         return chunk.get_metadata(coords)
@@ -573,7 +573,7 @@ class World(object):
         """
         Set a block's metadata in an unknown chunk.
 
-        :returns: a ``Deferred`` that will fire on completion
+        :returns: None
         """
 
         chunk.set_metadata(coords, value)
@@ -583,7 +583,7 @@ class World(object):
         """
         Destroy a block in an unknown chunk.
 
-        :returns: a ``Deferred`` that will fire on completion
+        :returns: None
         """
 
         chunk.destroy(coords)
@@ -593,7 +593,7 @@ class World(object):
         """
         Mark an unknown chunk dirty.
 
-        :returns: a ``Deferred`` that will fire on completion
+        :returns: None
         """
 
         chunk.dirty = True
@@ -603,7 +603,7 @@ class World(object):
         """
         Get an unknown chunk.
 
-        :returns: a ``Deferred`` with the requested value
+        :returns: the requested ``Chunk``
         """
 
         return chunk
