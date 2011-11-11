@@ -37,36 +37,15 @@ class TestLocation(unittest.TestCase):
     def test_trivial(self):
         pass
 
+    def test_str(self):
+        str(self.l)
+
     def test_save_to_packet(self):
         self.assertTrue(self.l.save_to_packet())
 
     def test_distance(self):
         other = Location.at_block(2, 3, 6)
         self.assertEqual(self.l.distance(other), 7)
-
-class TestLocationConstructors(unittest.TestCase):
-
-    def test_at_block(self):
-        l = Location.at_block(3, 4, 5)
-        self.assertEqual(l.pos.x, 96)
-        self.assertEqual(l.pos.y, 128)
-        self.assertEqual(l.pos.z, 160)
-
-class TestLocationProperties(unittest.TestCase):
-
-    def setUp(self):
-        self.l = Location()
-
-    def test_trivial(self):
-        pass
-
-class TestLocationMethods(unittest.TestCase):
-
-    def setUp(self):
-        self.l = Location()
-
-    def test_trivial(self):
-        pass
 
     def test_in_front_of(self):
         other = self.l.in_front_of(1)
@@ -80,3 +59,11 @@ class TestLocationMethods(unittest.TestCase):
 
         self.assertEqual(other.pos.x, -32)
         self.assertEqual(other.pos.z, 0)
+
+class TestLocationConstructors(unittest.TestCase):
+
+    def test_at_block(self):
+        l = Location.at_block(3, 4, 5)
+        self.assertEqual(l.pos.x, 96)
+        self.assertEqual(l.pos.y, 128)
+        self.assertEqual(l.pos.z, 160)
