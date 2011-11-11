@@ -303,27 +303,29 @@ class BravoFactory(Factory):
 
     def create_entity(self, x, y, z, name, **kwargs):
         """
-        Spawn an entirely new entity.
+        Spawn an entirely new entity at the specified block coordinates.
 
         Handles entity registration as well as instantiation.
         """
 
-        location = Location()
-        location.x = x
-        location.y = y
-        location.z = z
+        bigx = x // 16
+        bigz = z // 16
+
+        location = Location.at_block(x, y, z)
         entity = entities[name](eid=0, location=location, **kwargs)
 
         self.register_entity(entity)
 
-        bigx = entity.location.x // 16
-        bigz = entity.location.z // 16
-
         d = self.world.request_chunk(bigx, bigz)
-        d.addCallback(lambda chunk: chunk.entities.add(entity))
-        d.addCallback(lambda none: log.msg("Created entity %s" % entity))
-        if hasattr(entity,'loop'): # XXX Maybe just send the entity object to the manager?
-            self.world.mob_manager.start_mob(entity)
+        @d.addCallback
+        def cb(chunk):
+            chunk.entities.add(entity)
+            log.msg("Created entity %s" % entity)
+            # XXX Maybe just send the entity object to the manager instead of
+            # the following?
+            if hasattr(entity,'loop'):
+                self.world.mob_manager.start_mob(entity)
+
         return entity
 
     def register_entity(self, entity):
@@ -331,7 +333,9 @@ class BravoFactory(Factory):
         Registers an entity with this factory.
 
         Registration is perhaps too fancy of a name; this method merely makes
-        sure that the entity has a unique and usable entity ID.
+        sure that the entity has a unique and usable entity ID. In particular,
+        this method does *not* make the entity attached to the world, or
+        advertise its existence.
         """
 
         if not entity.eid:
@@ -348,8 +352,8 @@ class BravoFactory(Factory):
         place to put this logic.
         """
 
-        bigx = entity.location.x // 16
-        bigz = entity.location.z // 16
+        bigx = entity.location.pos.x // 16
+        bigz = entity.location.pos.z // 16
 
         d = self.world.request_chunk(bigx, bigz)
         @d.addCallback

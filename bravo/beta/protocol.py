@@ -3,7 +3,6 @@
 from itertools import product, chain
 from time import time
 from urlparse import urlunparse
-from math import pi
 
 from twisted.internet import reactor
 from twisted.internet.defer import (DeferredList, inlineCallbacks,
@@ -24,7 +23,7 @@ from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
     IPreDigHook, IDigHook, ISignHook, IUseHook)
 from bravo.infini.factory import InfiniClientFactory
 from bravo.inventory.windows import InventoryWindow
-from bravo.location import Location
+from bravo.location import Location, Orientation, Position
 from bravo.motd import get_motd
 from bravo.beta.packets import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins
@@ -175,18 +174,14 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Hook for position packets.
         """
 
-        old_position = self.location.x, self.location.y, self.location.z
+        old_position = self.location.pos
+        position = Position.from_player(container.position.x,
+                container.position.y, container.position.z)
 
-        # Location represents the block the player is within
-        self.location.x = int(container.position.x) if container.position.x > 0 else int(container.position.x) - 1
-        self.location.y = int(container.position.y)
-        self.location.z = int(container.position.z) if container.position.z > 0 else int(container.position.z) - 1
         # Stance is the current jumping position, plus a small offset of
         # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
         # or the anti-grounded code kicks the client.
         self.location.stance = container.position.stance
-
-        position = self.location.x, self.location.y, self.location.z
 
         self.grounded(container.grounded)
 
@@ -198,12 +193,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Hook for orientation packets.
         """
 
-        old_orientation = self.location.yaw, self.location.pitch
-
-        self.location.yaw = container.orientation.rotation
-        self.location.pitch = container.orientation.pitch
-
-        orientation = self.location.yaw, self.location.pitch
+        old_orientation = self.location.ori
+        orientation = Orientation.from_degs(container.orientation.rotation,
+                container.orientation.pitch)
 
         self.grounded(container.grounded)
 
@@ -286,7 +278,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         players = len(self.factory.protocols)
         max_players = self.factory.limitConnections or 1000000
 
-        response = u"%sÂ§%dÂ§%d" % (self.motd, players, max_players)
+        response = u"%s§%d§%d" % (self.motd, players, max_players)
         self.error(response)
 
     def quit(self, container):
@@ -414,7 +406,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         original block, all without actually modifying the chunk.
         """
 
-        x, y, z = self.location.x, self.location.y, self.location.z
+        x, y, z = self.location.pos.to_block()
 
         if y:
             y -= 1
@@ -430,7 +422,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         self.write_packet("block", x=x, y=y, z=z,
                           type=blocks["note-block"].slot, meta=0)
 
-        for (instrument, pitch) in notes:
+        for instrument, pitch in notes:
             self.write_packet("note", x=x, y=y, z=z, pitch=pitch,
                     instrument=instrument)
 
@@ -643,25 +635,18 @@ class BravoProtocol(BetaServerProtocol):
 
     def orientation_changed(self):
         # Bang your head!
-        packet = make_packet("entity-orientation",
-            eid=self.player.eid,
-            yaw=int(self.location.theta * 255 / (2 * pi)) % 256,
-            pitch=int(self.location.phi * 255 / (2 * pi)) % 256,
-        )
+        yaw, pitch = self.location.ori.to_fracs()
+        packet = make_packet("entity-orientation", eid=self.player.eid,
+                yaw=yaw, pitch=pitch)
         self.factory.broadcast_for_others(packet, self)
 
     def position_changed(self):
-        x, chaff, z, chaff = split_coords(self.location.x, self.location.z)
+        x, y, z = self.location.pos
+        yaw, pitch = self.location.ori.to_fracs()
 
         # Inform everybody of our new location.
-        packet = make_packet("teleport",
-            eid=self.player.eid,
-            x=self.location.x * 32,
-            y=self.location.y * 32,
-            z=self.location.z * 32,
-            yaw=int(self.location.theta * 255 / (2 * pi)) % 256,
-            pitch=int(self.location.phi * 255 / (2 * pi)) % 256,
-        )
+        packet = make_packet("teleport", eid=self.player.eid, x=x, y=y, z=z,
+                yaw=yaw, pitch=pitch)
         self.factory.broadcast_for_others(packet, self)
 
         self.update_chunks()
@@ -693,8 +678,8 @@ class BravoProtocol(BetaServerProtocol):
         """
 
         chunk_radius = int(radius // 16 + 1)
-        chunkx, chaff, chunkz, chaff = split_coords(self.location.x,
-            self.location.z)
+        chunkx, chaff, chunkz, chaff = split_coords(self.location.pos.x,
+                self.location.pos.z)
 
         minx = chunkx - chunk_radius
         maxx = chunkx + chunk_radius + 1
@@ -817,9 +802,7 @@ class BravoProtocol(BetaServerProtocol):
                 primary, secondary, count = holding
                 if i.consume((primary, secondary), self.player.equipped):
                     dest = self.location.in_front_of(2)
-                    dest.y += 1
-                    coords = (int(dest.x * 32) + 16, int(dest.y * 32) + 16,
-                        int(dest.z * 32) + 16)
+                    coords = dest.pos._replace(y=dest.pos.y + 1)
                     self.factory.give(coords, (primary, secondary), 1)
 
                     # Re-send inventory.
@@ -1184,8 +1167,8 @@ class BravoProtocol(BetaServerProtocol):
         self.chunks[chunk.x, chunk.z] = chunk
 
     def send_initial_chunk_and_location(self):
-        bigx, smallx, bigz, smallz = split_coords(self.location.x,
-            self.location.z)
+        bigx, smallx, bigz, smallz = split_coords(self.location.pos.x,
+            self.location.pos.z)
 
         # Spawn the 25 chunks in a square around the spawn, *before* spawning
         # the player. Otherwise, there's a funky Beta 1.2 bug which causes the
@@ -1214,19 +1197,20 @@ class BravoProtocol(BetaServerProtocol):
         d.addCallback(lambda none: self.update_chunks())
 
     def update_location(self):
-        bigx, smallx, bigz, smallz = split_coords(self.location.x,
-            self.location.z)
+        bigx, smallx, bigz, smallz = split_coords(self.location.pos.x,
+            self.location.pos.z)
 
         chunk = self.chunks[bigx, bigz]
 
         height = chunk.height_at(smallx, smallz) + 2
-        self.location.y = height
+        self.location.pos = self.location.pos._replace(y=height)
 
         packet = self.location.save_to_packet()
         self.transport.write(packet)
 
     def update_chunks(self):
-        x, chaff, z, chaff = split_coords(self.location.x, self.location.z)
+        x, chaff, z, chaff = split_coords(self.location.pos.x,
+                self.location.pos.z)
 
         new = set((i + x, j + z) for i, j in circle)
         old = set(self.chunks.iterkeys())
