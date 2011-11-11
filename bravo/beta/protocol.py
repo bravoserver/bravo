@@ -177,6 +177,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         old_position = self.location.pos
         position = Position.from_player(container.position.x,
                 container.position.y, container.position.z)
+        self.location.pos = position
 
         # Stance is the current jumping position, plus a small offset of
         # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
@@ -196,6 +197,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         old_orientation = self.location.ori
         orientation = Orientation.from_degs(container.orientation.rotation,
                 container.orientation.pitch)
+        self.location.ori = orientation
 
         self.grounded(container.grounded)
 

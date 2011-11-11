@@ -56,12 +56,10 @@ class TestBetaServerProtocol(unittest.TestCase):
 
         self.p.dataReceived(location_packet)
 
-        self.assertEqual(self.p.location.pos, (1, 2, 4))
+        self.assertEqual(self.p.location.pos.to_block(), (1, 2, 4))
         self.assertEqual(self.p.location.stance, 3)
-        self.assertEqual(self.p.location.ord.to_degs(), (5, 6))
+        self.assertEqual(self.p.location.ori.to_degs(), (5, 6))
         self.assertTrue(self.p.location.grounded)
-
-    test_location_update.todo = "Far more broken than it should be."
 
     def test_reject_ancient_and_newfangled_clients(self):
         """
