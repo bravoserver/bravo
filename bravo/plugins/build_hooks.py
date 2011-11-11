@@ -43,7 +43,8 @@ class Sign(object):
             # orientation.
             # 180 degrees around to orient the signs correctly, and then
             # 23 degrees to get the sign to midpoint correctly.
-            metadata = ((player.location.yaw + 180) * 16 // 360) % 0xf
+            yaw = player.location.ori.to_degs()[0]
+            metadata = ((yaw + 180) * 16 // 360) % 0xf
             builddata = builddata._replace(block=blocks["signpost"],
                 metadata=metadata)
             y += 1

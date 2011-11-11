@@ -70,7 +70,7 @@ class TestSign(unittest.TestCase):
         self.assertTrue(success)
         self.assertFalse(cancel)
         builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
-            metadata=0x9)
+            metadata=0x8)
         self.assertEqual(builddata, newdata)
 
     @inlineCallbacks

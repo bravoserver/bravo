@@ -278,7 +278,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         players = len(self.factory.protocols)
         max_players = self.factory.limitConnections or 1000000
 
-        response = u"%sß%dß%d" % (self.motd, players, max_players)
+        response = u"%s√Ç%d√Ç%d" % (self.motd, players, max_players)
         self.error(response)
 
     def quit(self, container):

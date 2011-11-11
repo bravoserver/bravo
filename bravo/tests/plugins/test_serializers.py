@@ -67,7 +67,7 @@ class TestAlphaSerializer(unittest.TestCase):
 
         entity = self.s._load_entity_from_tag(tag)
         self.assertEqual(entity.location.pos.x, 10)
-        self.assertEqual(entity.location.yaw, 90)
+        self.assertEqual(entity.location.ori.to_degs()[0], 90)
         self.assertEqual(entity.location.grounded, True)
         self.assertEqual(entity.item[0], 3)
 
