@@ -23,7 +23,8 @@ class Entity(object):
     interesting.
     """
 
-    name = "Entity"
+    type = "Entity"
+    name = "EntityName"
 
     def __init__(self, location=None, eid=0, **kwargs):
         """
@@ -51,7 +52,8 @@ class Player(Entity):
     A player entity.
     """
 
-    name = "Player"
+    type = "Player"
+    name = "PlayerName"
 
     def __init__(self, username="", **kwargs):
         """
@@ -119,7 +121,8 @@ class Painting(Entity):
     A painting on a wall.
     """
 
-    name = "Painting"
+    type = "Painting"
+    name = "PaintingName"
 
     def __init__(self, direction=1, motive="", **kwargs):
         """
@@ -151,7 +154,8 @@ class Pickup(Entity):
     though its entity name is "Item."
     """
 
-    name = "Item"
+    type = "Item"
+    name = "ItemName"
 
     def __init__(self, item=(0, 0), quantity=1, **kwargs):
         """
@@ -181,7 +185,8 @@ class Mob(Entity):
     A creature.
     """
 
-    name = "Mob"
+    type = "Mob"
+    name = "MobName"
     """
     The name of this mob.
 
@@ -199,10 +204,7 @@ class Mob(Entity):
 
         This method calls super().
         """
-
-        self.loop = None
         super(Mob, self).__init__(**kwargs)
-        self.manager = None
 
     def update_metadata(self):
         """
@@ -319,12 +321,22 @@ class Mob(Entity):
         else:
             self.manager.broadcast(self.save_location_to_packet())
 
+    def save_location_to_packet(self):
+        return make_packet("teleport",
+            eid=self.eid,
+            x=self.location.x * 32 + 16,
+            y=self.location.y * 32,
+            z=self.location.z * 32 + 16,
+            yaw=int(self.location.theta * 255 / (2 * pi)) % 256,
+            pitch=int(self.location.phi * 255 / (2 * pi)) % 256,
+        )
 
 class Chuck(Mob):
     """
     A cross between a duck and a chicken.
     """
 
+    type = "Chicken"
     name = "Chicken"
     offsetlist = ((.5, 0, .5),
             (-.5, 0, .5),
@@ -336,14 +348,16 @@ class Cow(Mob):
     Large, four-legged milk containers.
     """
 
-    name = "Cow"
+    type = "Cow"
+    name = "CowName"
 
 class Creeper(Mob):
     """
     A creeper.
     """
 
-    name = "Creeper"
+    type = "Creeper"
+    name = "CreeperName"
 
     def __init__(self, aura=False, **kwargs):
         """
@@ -367,21 +381,24 @@ class Ghast(Mob):
     A very melancholy ghost.
     """
 
-    name = "Ghast"
+    type = "Ghast"
+    name = "GhastName"
 
 class GiantZombie(Mob):
     """
     Like a regular zombie, but far larger.
     """
 
-    name = "GiantZombie"
+    type = "GiantZombie"
+    name = "GiantZombieName"
 
 class Pig(Mob):
     """
     A provider of bacon and piggyback rides.
     """
 
-    name = "Pig"
+    type = "Pig"
+    name = "PigName"
 
     def __init__(self, saddle=False, **kwargs):
         """
@@ -405,6 +422,7 @@ class ZombiePigman(Mob):
     A zombie pigman.
     """
 
+    type = "PigZombie"
     name = "PigZombie"
 
 class Sheep(Mob):
@@ -412,7 +430,8 @@ class Sheep(Mob):
     A woolly mob.
     """
 
-    name = "Sheep"
+    type = "Sheep"
+    name = "SheepName"
 
     def __init__(self, sheared=False, color=0, **kwargs):
         """
@@ -441,14 +460,16 @@ class Skeleton(Mob):
     An archer skeleton.
     """
 
-    name = "Skeleton"
+    type = "Skeleton"
+    name = "SkeletonName"
 
 class Slime(Mob):
     """
     A gelatinous blob.
     """
 
-    name = "Slime"
+    type = "Slime"
+    name = "SlimeName"
 
     def __init__(self, size=1, **kwargs):
         """
@@ -472,21 +493,24 @@ class Spider(Mob):
     A spider.
     """
 
-    name = "Spider"
+    type = "Spider"
+    name = "SpiderName"
 
 class Squid(Mob):
     """
     An aquatic source of ink.
     """
 
-    name = "Squid"
+    type = "Squid"
+    name = "SquidName"
 
 class Wolf(Mob):
     """
     A wolf.
     """
 
-    name = "Wolf"
+    type = "Wolf"
+    name = "WolfName"
 
     def __init__(self, owner=None, angry=False, sitting=False, **kwargs):
         """
@@ -520,9 +544,10 @@ class Zombie(Mob):
     A zombie.
     """
 
-    name = "Zombie"
+    type = "Zombie"
+    name = "ZombieName"
 
-entities = dict((entity.name, entity)
+entities = dict((entity.type, entity)
     for entity in (
         Chuck,
         Cow,
@@ -551,7 +576,8 @@ class Tile(object):
     Or, perhaps more correctly, a block that is also an entity.
     """
 
-    name = "GenericTile"
+    type = "GenericTile"
+    name = "GenericTileName"
 
     def __init__(self, x, y, z):
         self.x = x
@@ -573,7 +599,8 @@ class Chest(Tile):
     A tile that holds items.
     """
 
-    name = "Chest"
+    type = "Chest"
+    name = "ChestName"
 
     def __init__(self, *args, **kwargs):
         super(Chest, self).__init__(*args, **kwargs)
@@ -585,7 +612,8 @@ class Furnace(Tile):
     A tile that converts items to other items, using specific items as fuel.
     """
 
-    name = "Furnace"
+    type = "Furnace"
+    name = "FurnaceName"
 
     burntime = 0
     cooktime = 0
@@ -758,21 +786,24 @@ class MobSpawner(Tile):
     A tile that spawns mobs.
     """
 
-    name = "MobSpawner"
+    type = "MobSpawner"
+    name = "MobSpawnerName"
 
 class Music(Tile):
     """
     A tile which produces a pitch when whacked.
     """
 
-    name = "Music"
+    type = "Music"
+    name = "MusicName"
 
 class Sign(Tile):
     """
     A tile that stores text.
     """
 
-    name = "Sign"
+    type = "Sign"
+    name = "SignName"
 
     def __init__(self, *args, **kwargs):
         super(Sign, self).__init__(*args, **kwargs)
@@ -798,7 +829,7 @@ class Sign(Tile):
             line4=self.text4)
         return packet
 
-tiles = dict((tile.name, tile)
+tiles = dict((tile.type, tile)
     for tile in (
         Chest,
         Furnace,

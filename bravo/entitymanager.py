@@ -3,7 +3,7 @@ from sys import maxint
 from math import floor
 from warnings import warn
 from bravo.utilities.coords import xrange3, split_coords
-from bravo.ibravo import IEntity, ITile
+from bravo.ibravo import IMob, ITile
 from bravo.plugin import retrieve_plugins
 from bravo.entity import entities, tiles
 
@@ -30,11 +30,13 @@ class EntityManager(object):
 
     def __init__(self, world):
         self.world = world
-        plugins = retrieve_plugins(IEntity)
-        entities.update(plugins) #XXX Check that mobs have valid types
+        entity_plugins = retrieve_plugins(IMob)
+        print "blarg2", entity_plugins
+        entities.update(entity_plugins) #XXX Check that mobs have valid types
 
-        plugins = retrieve_plugins(ITile)
-        tiles.update(plugins) #XXX Check that tiles have valid types
+        tile_plugins = retrieve_plugins(ITile)
+##        print "Blarg!", tile_plugins
+        tiles.update(tile_plugins) #XXX Check that tiles have valid types
 
     def start_entity(self, entity):
         """
@@ -78,27 +80,29 @@ class EntityManager(object):
         two oppisite corners that define the box.
         Returns True if the area is clear, False if it isn't
         """
-        min_point = (minvec[0] + location.x,
-                     minvec[1] + location.y,
-                     minvec[2] + location.z)
+        min_point = (minvec[0] + location[0],
+                     minvec[1] + location[1],
+                     minvec[2] + location[2])
 
-        max_point = (maxvec[0] + location.x,
-                     maxvec[1] + location.y,
-                     maxvec[2] + location.z)
+        max_point = (maxvec[0] + location[0],
+                     maxvec[1] + location[1],
+                     maxvec[2] + location[2])
 
         min_point = (int(floor(min_point[0])),
                      int(floor(min_point[1])),
                      int(floor(min_point[2])))
 
-        max_point = (int(floor(max_point[0])),
-                     int(floor(max_point[1])),
-                     int(floor(max_point[2])))
+        max_point = (int(floor(max_point[0]))+1,
+                     int(floor(max_point[1]))+1,
+                     int(floor(max_point[2]))+1)
 
         for x, y, z in xrange3(min_point, max_point):
             try:
                 if self.world.sync_get_block((x, y, z)) != block:
+                    print "Blocked at %s %s %s" %(x,y,z)
                     return False
             except ChunkNotLoaded:
+                print "Chunk Error! Blocked!"
                 return False
         return True
 

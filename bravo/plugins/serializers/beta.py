@@ -116,7 +116,7 @@ class Alpha(object):
 
         entity = entities[tag["id"].value](location=location)
 
-        self._entity_loaders[entity.name](entity, tag)
+        self._entity_loaders[entity.type](entity, tag)
 
         return entity
 
@@ -124,7 +124,7 @@ class Alpha(object):
         tag = NBTFile()
         tag.name = ""
 
-        tag["id"] = TAG_String(entity.name)
+        tag["id"] = TAG_String(entity.type)
 
         position = entity.location.pos
         tag["Pos"] = TAG_List(type=TAG_Double)
@@ -136,7 +136,7 @@ class Alpha(object):
 
         tag["OnGround"] = TAG_Byte(int(entity.location.grounded))
 
-        self._entity_savers[entity.name](entity, tag)
+        self._entity_savers[entity.type](entity, tag)
 
         return tag
 
@@ -211,7 +211,7 @@ class Alpha(object):
         tile = tiles[tag["id"].value](tag["x"].value, tag["y"].value,
             tag["z"].value)
 
-        self._tile_loaders[tile.name](tile, tag)
+        self._tile_loaders[tile.type](tile, tag)
 
         return tile
 
@@ -219,13 +219,13 @@ class Alpha(object):
         tag = NBTFile()
         tag.name = ""
 
-        tag["id"] = TAG_String(tile.name)
+        tag["id"] = TAG_String(tile.type)
 
         tag["x"] = TAG_Int(tile.x)
         tag["y"] = TAG_Int(tile.y)
         tag["z"] = TAG_Int(tile.z)
 
-        self._tile_savers[tile.name](tile, tag)
+        self._tile_savers[tile.type](tile, tag)
 
         return tag
 

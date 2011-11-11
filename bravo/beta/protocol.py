@@ -654,7 +654,7 @@ class BravoProtocol(BetaServerProtocol):
         self.update_chunks()
 
         for entity in self.entities_near(2):
-            if entity.name != "Item":
+            if entity.type != "Item":
                 continue
 
             left = self.player.inventory.add(entity.item, entity.quantity)
@@ -784,7 +784,7 @@ class BravoProtocol(BetaServerProtocol):
         nearby_players = self.factory.players_near(self.player, 4)
         for entity in chain(self.entities_near(4), nearby_players):
             if entity.eid == container.target:
-                for hook in self.use_hooks[entity.name]:
+                for hook in self.use_hooks[entity.type]:
                     hook.use_hook(self.factory, self.player, entity,
                         container.button == 0)
                 break
@@ -1162,7 +1162,7 @@ class BravoProtocol(BetaServerProtocol):
             self.transport.write(packet)
 
         for entity in chunk.tiles.itervalues():
-            if entity.name == "Sign":
+            if entity.type == "Sign":
                 packet = entity.save_to_packet()
                 self.transport.write(packet)
 

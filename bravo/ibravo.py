@@ -522,7 +522,7 @@ class IAutomaton(IBravoPlugin):
         processing data; it needs to stop immediately.
         """
 
-class IEntity(IBravoPlugin):
+class IActiveEntity(IBravoPlugin):
     """
     A constantly changing and dynamic entity.
 
@@ -533,11 +533,7 @@ class IEntity(IBravoPlugin):
     as the plugin will be used as a blueprint to instanciate entities on demand.
     """
 
-    type = Attribute(""" One of the base mob types""")
-
-    location = Attribute("""
-        A location object
-        """)
+    type = Attribute(""" One of the base mob or tile types""")
 
     loop = Attribute("""
         The main loop object that calls the entities update code.
@@ -546,7 +542,38 @@ class IEntity(IBravoPlugin):
         function.
         """)
 
-    def __init__(location=None, eid=0, **kwargs):
+    def update():
+        """
+        The main function called by the entities internal update loop.
+
+        This function should update the state and processes of the entity,
+        and only be called by the entities internal loop.
+        """
+
+    def start(manager):
+        """
+        Signal to the entity that it needs to start.
+
+        This function is called to signal to entity that it needs to start it's
+        update loop and set up any run-time specific configurations.
+        The manager object is given for the entity to make outside function
+        calls with.
+        """
+
+    def stop():
+        """
+        Signal to the entity that it needs to stop.
+
+        This function is called to signal to the entity that it needs to stop
+        any of its' running processes and save any data.
+        """
+
+class IMob(IActiveEntity):
+    """
+    A dynamic mob
+    """
+
+    def __init__(**kwargs):
         """
         The init method for a providing plugin.
 
@@ -554,7 +581,14 @@ class IEntity(IBravoPlugin):
         super(Parent Entity, self).__init__ should probably be called.
         """
 
-    def update_metadata(self):
+    eid = Attribute("""
+        The mob's entity id.
+
+        This attribute should be set sometime during the execution of the
+        the entity's __init__ function.
+        """)
+
+    def update_metadata():
         """
         Overrideable hook for general metadata updates.
 
@@ -566,50 +600,24 @@ class IEntity(IBravoPlugin):
         serialization or wire transfer.
         """
 
-    def update():
-        """
-        The main function called by the entities internal update loop.
-
-        This function should update the state and processes of the entity,
-        and only be called by the entities internal loop.
-        """
-
-    def start():
-        """
-        Signal to the entity that it needs to start.
-
-        This function is called to signal to entity that it needs to start it's
-        update loop and set up any run-time specific configurations.
-        """
-
-    def stop():
-        """
-        Signal to the entity that it needs to stop.
-
-        This function is called to signal to the entity that it needs to stop
-        any of its' running processes and save any data.
-        """
-
-class IMob(IEntity):
-    """
-    A dynamic mob
-    """
-    eid = Attribute("""
-        The mob's entity id.
-
-        This attribute should be set sometime during the execution of the
-        the entity's __init__ function.
+    chunk_coords = Attribute("""
+        The coordinates of the chunk this mob resides in.
+        Required for the correction of what chunk the entity object resides
+        in as it moves.
         """)
 
     metadata = Attribute("""
         The mob's metadata to be sent over the wire
         """)
 
-class ITile(IEntity):
+    location = Attribute("""
+        A location object representing the entities position
+        """)
+
+class ITile(IActiveEntity):
     """
     A dynamic tile
     """
-    name = Attribute("A name")
 
     def __init__(x, y, z):
         """
@@ -625,6 +633,18 @@ class ITile(IEntity):
         """
         Called to inform a mob to load data from a packet.
         """
+
+    x = Attribute("""
+        The absolute X position of the tile
+        """)
+
+    y = Attribute("""
+        The absolute Y position of the tile
+        """)
+
+    z = Attribute("""
+        The absolute Z position of the tile
+        """)
 
 class IWorldResource(IBravoPlugin, IResource):
     """
