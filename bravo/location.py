@@ -15,6 +15,21 @@ class Position(namedtuple("Position", "x, y, z")):
     Positions are *always* stored as integer absolute pixel coordinates.
     """
 
+    @classmethod
+    def from_player(cls, x, y, z):
+        """
+        Create a ``Position`` from floating-point block coordinates.
+        """
+
+        return cls(int(x * 32), int(y * 32), int(z * 32))
+
+    def to_player(self):
+        """
+        Return this position as floating-point block coordinates.
+        """
+
+        return self.x / 32, self.y / 32, self.z / 32
+
     def to_block(self):
         """
         Return this position as block coordinates.
