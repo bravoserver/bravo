@@ -1,3 +1,6 @@
+from __future__ import division
+
+from collections import namedtuple
 from copy import copy
 from math import cos, degrees, radians, pi, sin, sqrt
 
@@ -5,27 +8,29 @@ from construct import Container
 
 from bravo.beta.packets import make_packet
 
+class Position(namedtuple("Position", "x, y, z")):
+    """
+    The coordinates pointing to an entity.
+
+    Positions are *always* measured in absolute pixel coordinates.
+    """
+
+    def to_block(self):
+        """
+        Return this position as block coordinates.
+        """
+
+        return self.x / 32, self.y / 32, self.z / 32
+
 class Location(object):
     """
     The position and orientation of an entity.
     """
 
-    __slots__ = (
-        "grounded",
-        "phi",
-        "stance",
-        "_theta",
-        "x",
-        "_y",
-        "z",
-    )
-
     def __init__(self):
         # Position in pixels.
-        self.x = 0
+        self.pos = Position(0, 0, 0)
         self.stance = 0
-        self.y = 0
-        self.z = 0
 
         # Orientation, in radians.
         # Theta and phi are like the theta and phi of spherical coordinates,
@@ -48,23 +53,15 @@ class Location(object):
         """
 
         location = cls()
-        location.x = x * 32
-        location.y = y * 32
-        location.z = z * 32
+        location.pos = Position(x * 32, y * 32, z * 32)
         return location
 
     def __repr__(self):
         return "<Location(%s, (%d, %d (+%.6f), %d), (%.2f, %.2f))>" % (
-            "grounded" if self.grounded else "midair", self.x, self.y,
-            self.stance - self.y, self.z, self.theta, self.phi)
+            "grounded" if self.grounded else "midair", self.pos.x, self.pos.y,
+            self.stance - self.pos.y, self.pos.z, self.theta, self.phi)
 
     __str__ = __repr__
-
-    def _y_setter(self, value):
-        self._y = value
-        if not 0.1 < (self.stance - self.y) < 1.65:
-            self.stance = self.y + 1.0
-    y = property(lambda self: self._y, _y_setter)
 
     def _yaw_setter(self, value):
         self.theta = radians(value)
@@ -85,7 +82,14 @@ class Location(object):
         Returns a position/look/grounded packet.
         """
 
-        position = Container(x=self.x, y=self.stance, z=self.z, stance=self.y)
+        # Get our position.
+        x, y, z = self.pos.to_block()
+
+        # Clamp stance.
+        if not 0.1 < (self.stance - y) < 1.65:
+            self.stance = y + 1.0
+
+        position = Container(x=x, y=self.stance, z=z, stance=y)
         orientation = Container(rotation=self.yaw, pitch=self.pitch)
         grounded = Container(grounded=self.grounded)
 
@@ -101,10 +105,10 @@ class Location(object):
         Distance is measured in blocks.
         """
 
-        dx = (self.x - other.x)**2
-        dy = (self.y - other.y)**2
-        dz = (self.z - other.z)**2
-        return sqrt(dx + dy + dz)
+        dx = (self.pos.x - other.pos.x)**2
+        dy = (self.pos.y - other.pos.y)**2
+        dz = (self.pos.z - other.pos.z)**2
+        return sqrt(dx + dy + dz) // 32
 
     def in_front_of(self, distance):
         """
@@ -118,12 +122,15 @@ class Location(object):
         """
 
         other = copy(self)
+        distance *= 32
 
         # Do some trig to put the other location a few blocks ahead of the
         # player in the direction they are facing. Note that all three
         # coordinates are "misnamed;" the unit circle actually starts at (0,
         # 1) and goes *backwards* towards (-1, 0).
-        other.x = self.x - distance * sin(self.theta)
-        other.z = self.z + distance * cos(self.theta)
+        x = int(self.pos.x - distance * sin(self.theta))
+        z = int(self.pos.z + distance * cos(self.theta))
+
+        other.pos = other.pos._replace(x=x, z=z)
 
         return other
