@@ -78,8 +78,8 @@ class Player(Entity):
         Create a "player" packet representing this entity.
         """
 
-        yaw = int(self.location.theta * 255 / (2 * pi)) % 256
-        pitch = int(self.location.phi * 255 / (2 * pi)) % 256
+        yaw, pitch = self.location.ori.to_fracs()
+        x, y, z = self.location.pos
 
         item = self.inventory.holdables[self.equipped]
         if item is None:
@@ -87,16 +87,8 @@ class Player(Entity):
         else:
             item = item[0]
 
-        return make_packet("player",
-            eid=self.eid,
-            username=self.username,
-            x=self.location.x,
-            y=self.location.y,
-            z=self.location.z,
-            yaw=yaw,
-            pitch=pitch,
-            item=item
-        )
+        return make_packet("player", eid=self.eid, username=self.username,
+                x=x, y=y, z=z, yaw=yaw, pitch=pitch, item=item)
 
     def save_equipment_to_packet(self):
         """
@@ -146,14 +138,10 @@ class Painting(Entity):
         Create a "painting" packet representing this entity.
         """
 
-        return make_packet("painting",
-            eid=self.eid,
-            title=self.motive,
-            x=self.location.x,
-            y=self.location.y,
-            z=self.location.z,
-            direction=self.direction
-        )
+        x, y, z = self.location.pos
+
+        return make_packet("painting", eid=self.eid, title=self.motive, x=x,
+                y=y, z=z, direction=self.direction)
 
 class Pickup(Entity):
     """
@@ -182,18 +170,11 @@ class Pickup(Entity):
         Create a "pickup" packet representing this entity.
         """
 
-        return make_packet("pickup",
-            eid=self.eid,
-            primary=self.item[0],
-            secondary=self.item[1],
-            count=self.quantity,
-            x=self.location.x * 32 + 16,
-            y=self.location.y * 32,
-            z=self.location.z * 32 + 16,
-            yaw=0,
-            pitch=0,
-            roll=0
-        )
+        x, y, z = self.location.pos
+
+        return make_packet("pickup", eid=self.eid, primary=self.item[0],
+                secondary=self.item[1], count=self.quantity, x=x, y=y, z=z,
+                yaw=0, pitch=0, roll=0)
 
 class Mob(Entity):
     """
@@ -240,9 +221,10 @@ class Mob(Entity):
         Starts a mob's loop process
         """
 
-        xcoord, chaff, zcoord, chaff = split_coords(self.location.x,
-            self.location.z)
+        xcoord, chaff, zcoord, chaff = split_coords(self.location.pos.x,
+                self.location.pos.z)
         # XXX The one is redundant, fix it
+        # XXX also, WTF are chunk_coords and why aren't they doc'd?
         self.chunk_coords = xcoord, 1, zcoord
         self.loop = LoopingCall(self.update)
         self.loop.start(.2)
@@ -252,29 +234,21 @@ class Mob(Entity):
         Create a "mob" packet representing this entity.
         """
 
+        x, y, z = self.location.pos
+        yaw, pitch = self.location.ori.to_fracs()
+
         # Update metadata from instance variables.
         self.update_metadata()
 
-        return make_packet("mob",
-            eid=self.eid,
-            type=self.name,
-            x=self.location.x * 32 + 16,
-            y=self.location.y * 32,
-            z=self.location.z * 32 + 16,
-            yaw=0,
-            pitch=0,
-            metadata=self.metadata
-        )
+        return make_packet("mob", eid=self.eid, type=self.name, x=x, y=y, z=z,
+                yaw=yaw, pitch=pitch, metadata=self.metadata)
 
     def save_location_to_packet(self):
-        return make_packet("teleport",
-            eid=self.eid,
-            x=self.location.x * 32 + 16,
-            y=self.location.y * 32,
-            z=self.location.z * 32 + 16,
-            yaw=int(self.location.yaw),
-            pitch=int(self.location.pitch),
-        )
+        x, y, z = self.location.pos
+        yaw, pitch = self.location.ori.to_fracs()
+
+        return make_packet("teleport", eid=self.eid, x=x, y=y, z=z, yaw=yaw,
+                pitch=pitch)
 
     def update(self):
         """
@@ -282,6 +256,7 @@ class Mob(Entity):
         """
 
         # XXX  Discuss appropriate style with MAD
+        # XXX remarkably untested
         player = self.manager.closest_player((self.location.x,
                                  self.location.y,
                                  self.location.z),
