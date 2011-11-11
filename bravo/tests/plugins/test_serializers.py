@@ -9,7 +9,7 @@ from bravo.entity import Player
 from bravo.errors import SerializerReadException
 from bravo.ibravo import ISerializer
 from bravo.nbt import TAG_Compound, TAG_List, TAG_String
-from bravo.nbt import TAG_Double, TAG_Byte, TAG_Short
+from bravo.nbt import TAG_Double, TAG_Byte, TAG_Short, TAG_Int
 from bravo.plugin import retrieve_plugins
 
 class TestAlphaSerializerInit(unittest.TestCase):
@@ -51,7 +51,7 @@ class TestAlphaSerializer(unittest.TestCase):
     def test_trivial(self):
         pass
 
-    def test_load_entity_from_tag(self):
+    def test_load_entity_from_tag_pickup(self):
         tag = TAG_Compound()
         tag["Pos"] = TAG_List(type=TAG_Double)
         tag["Pos"].tags = [TAG_Double(10), TAG_Double(5), TAG_Double(-15)]
@@ -66,10 +66,29 @@ class TestAlphaSerializer(unittest.TestCase):
         tag["Item"]["Count"] = TAG_Short(5)
 
         entity = self.s._load_entity_from_tag(tag)
-        self.assertEqual(entity.location.x, 10)
+        self.assertEqual(entity.location.pos.x, 10)
         self.assertEqual(entity.location.yaw, 90)
         self.assertEqual(entity.location.grounded, True)
         self.assertEqual(entity.item[0], 3)
+
+    def test_load_entity_from_tag_painting(self):
+        tag = TAG_Compound()
+        tag["Pos"] = TAG_List(type=TAG_Double)
+        tag["Pos"].tags = [TAG_Double(10), TAG_Double(5), TAG_Double(-15)]
+        tag["Rotation"] = TAG_List(type=TAG_Double)
+        tag["Rotation"].tags = [TAG_Double(90), TAG_Double(0)]
+        tag["OnGround"] = TAG_Byte(1)
+        tag["id"] = TAG_String("Painting")
+
+        tag["Dir"] = TAG_Byte(1)
+        tag["Motive"] = TAG_String("Sea")
+        tag["TileX"] = TAG_Int(32)
+        tag["TileY"] = TAG_Int(32)
+        tag["TileZ"] = TAG_Int(32)
+
+        entity = self.s._load_entity_from_tag(tag)
+        self.assertEqual(entity.motive, "Sea")
+        self.assertEqual(entity.direction, 1)
 
     def test_save_chunk_to_tag(self):
         chunk = Chunk(1, 2)

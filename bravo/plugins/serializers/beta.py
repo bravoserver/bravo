@@ -16,7 +16,7 @@ from bravo.beta.structures import Slot
 from bravo.entity import entities, tiles
 from bravo.errors import SerializerReadException, SerializerWriteException
 from bravo.ibravo import ISerializer
-from bravo.location import Location
+from bravo.location import Location, Orientation, Position
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
@@ -104,15 +104,14 @@ class Alpha(object):
     # Entity serializers.
 
     def _load_entity_from_tag(self, tag):
-        location = Location()
-
         position = tag["Pos"].tags
         rotation = tag["Rotation"].tags
-        location.x = position[0].value
-        location.y = position[1].value
-        location.z = position[2].value
-        location.yaw = rotation[0].value
-        location.pitch = rotation[1].value
+        location = Location()
+        location.pos = Position(position[0].value, position[1].value,
+                position[2].value)
+        location.ori = Orientation.from_degs(rotation[0].value,
+                rotation[1].value)
+
         location.grounded = bool(tag["OnGround"])
 
         entity = entities[tag["id"].value](location=location)
@@ -127,11 +126,11 @@ class Alpha(object):
 
         tag["id"] = TAG_String(entity.name)
 
-        position = [entity.location.x, entity.location.y, entity.location.z]
+        position = entity.location.pos
         tag["Pos"] = TAG_List(type=TAG_Double)
         tag["Pos"].tags = [TAG_Double(i) for i in position]
 
-        rotation = [entity.location.yaw, entity.location.pitch]
+        rotation = entity.location.ori.to_degs()
         tag["Rotation"] = TAG_List(type=TAG_Double)
         tag["Rotation"].tags = [TAG_Double(i) for i in rotation]
 
@@ -156,17 +155,16 @@ class Alpha(object):
         painting.motive = tag["Motive"].value
         # Overwrite position with absolute block coordinates of image's
         # center. Original position seems to be unused.
-        painting.location.x = tag["TileX"].value
-        painting.location.y = tag["TileY"].value
-        painting.location.z = tag["TileZ"].value
+        painting.location.pos = Position(tag["TileX"].value,
+                tag["TileY"].value, tag["TileZ"].value)
 
     def _save_painting_to_tag(self, painting, tag):
         tag["Dir"] = TAG_Byte(painting.direction)
         tag["Motive"] = TAG_String(painting.motive)
         # Both tile and position will be the center of the image.
-        tag["TileX"] = TAG_Int(painting.location.x)
-        tag["TileY"] = TAG_Int(painting.location.y)
-        tag["TileZ"] = TAG_Int(painting.location.z)
+        tag["TileX"] = TAG_Int(painting.location.pos.x)
+        tag["TileY"] = TAG_Int(painting.location.pos.y)
+        tag["TileZ"] = TAG_Int(painting.location.pos.z)
 
     def _load_pig_from_tag(self, pig, tag):
         pig.saddle = bool(tag["Saddle"].value)
