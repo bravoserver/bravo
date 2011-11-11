@@ -425,16 +425,16 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             return
 
         block = self.chunks[bigx, bigz].get_block((smallx, y, smallz))
+        meta = self.chunks[bigx, bigz].get_metadata((smallx, y, smallz))
 
         self.write_packet("block", x=x, y=y, z=z,
                           type=blocks["note-block"].slot, meta=0)
 
         for (instrument, pitch) in notes:
-            self.write_packet("note", x=self.location.x, y=y,
-                              z=self.location.z, pitch=pitch,
-                              instrument=instrument)
+            self.write_packet("note", x=x, y=y, z=z, pitch=pitch,
+                    instrument=instrument)
 
-        self.write_packet("block", x=x, y=y, z=z, type=block, meta=0)
+        self.write_packet("block", x=x, y=y, z=z, type=block, meta=meta)
 
     # Automatic properties. Assigning to them causes the client to be notified
     # of changes.
