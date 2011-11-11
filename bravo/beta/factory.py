@@ -531,10 +531,15 @@ class BravoFactory(Factory):
         Radius is measured in blocks.
         """
 
-        for i in (p for p in self.protocols.itervalues()
-            if player.location.distance(p.location) <= radius and
-            p.player != player):
-            yield i.player
+        radius *= 32
+
+        for p in self.protocols.itervalues():
+            if p.player == player:
+                continue
+
+            distance = player.location.distance(p.location)
+            if distance <= radius:
+                yield p.player
 
     def pauseProducing(self):
         pass

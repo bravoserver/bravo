@@ -37,6 +37,17 @@ class Position(namedtuple("Position", "x, y, z")):
 
         return self.x // 32, self.y // 32, self.z // 32
 
+    def distance(self, other):
+        """
+        Return the distance between this position and another, in absolute
+        pixels.
+        """
+
+        dx = (self.x - other.x)**2
+        dy = (self.y - other.y)**2
+        dz = (self.z - other.z)**2
+        return int(sqrt(dx + dy + dz))
+
 class Orientation(namedtuple("Orientation", "theta, phi")):
     """
     The angles corresponding to the heading of an entity.
@@ -143,14 +154,9 @@ class Location(object):
     def distance(self, other):
         """
         Return the distance between this location and another location.
-
-        Distance is measured in blocks.
         """
 
-        dx = (self.pos.x - other.pos.x)**2
-        dy = (self.pos.y - other.pos.y)**2
-        dz = (self.pos.z - other.pos.z)**2
-        return sqrt(dx + dy + dz) // 32
+        return self.pos.distance(other.pos)
 
     def in_front_of(self, distance):
         """

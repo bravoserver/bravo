@@ -18,6 +18,11 @@ class TestPosition(unittest.TestCase):
         p = Position(-32, 32, 48)
         self.assertEqual(p.to_block(), (-1, 1, 1))
 
+    def test_distance(self):
+        first = Position(0, 0, 0)
+        second = Position(2, 3, 6)
+        self.assertEqual(first.distance(second), 7)
+
 class TestOrientation(unittest.TestCase):
 
     def test_from_degs(self):
@@ -54,10 +59,6 @@ class TestLocation(unittest.TestCase):
 
     def test_save_to_packet(self):
         self.assertTrue(self.l.save_to_packet())
-
-    def test_distance(self):
-        other = Location.at_block(2, 3, 6)
-        self.assertEqual(self.l.distance(other), 7)
 
     def test_in_front_of(self):
         other = self.l.in_front_of(1)

@@ -250,5 +250,3 @@ class TestBravoFactoryStarted(unittest.TestCase):
         for player, radius, result in expected_results:
             found = [p.eid for p in self.f.players_near(player, radius)]
             self.assertEqual(set(found), set(result))
-
-    test_players_near.todo = "Precision problems >:T"

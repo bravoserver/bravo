@@ -694,7 +694,7 @@ class BravoProtocol(BetaServerProtocol):
             chunk = self.chunks[x, z]
 
             yieldables = [entity for entity in chunk.entities
-                if self.location.distance(entity.location) <= radius]
+                if self.location.distance(entity.location) <= (radius * 32)]
             for i in yieldables:
                 yield i
 
