@@ -53,6 +53,15 @@ class Orientation(namedtuple("Orientation", "theta, phi")):
 
         return int(round(degrees(self.theta))), int(round(degrees(self.phi)))
 
+    def to_fracs(self):
+        """
+        Return this orientation as fractions of a byte.
+        """
+
+        yaw = int(self.theta * 255 / (2 * pi)) % 256
+        pitch = int(self.phi * 255 / (2 * pi)) % 256
+        return yaw, pitch
+
 class Location(object):
     """
     The position and orientation of an entity.

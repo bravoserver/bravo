@@ -25,9 +25,13 @@ class TestOrientation(unittest.TestCase):
         o = Orientation.from_degs(-90, 0)
         self.assertAlmostEqual(o.theta, math.pi * 3 / 2)
 
-    def test_to_degs_pitch_rounding(self):
+    def test_to_degs_rounding(self):
         o = Orientation(1, 1)
         self.assertEqual(o.to_degs(), (57, 57))
+
+    def test_to_fracs_rounding(self):
+        o = Orientation.from_degs(180, 0)
+        self.assertEqual(o.to_fracs(), (127, 0))
 
 class TestLocation(unittest.TestCase):
 
