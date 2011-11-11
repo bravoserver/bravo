@@ -12,7 +12,7 @@ class Position(namedtuple("Position", "x, y, z")):
     """
     The coordinates pointing to an entity.
 
-    Positions are *always* measured in absolute pixel coordinates.
+    Positions are *always* stored as integer absolute pixel coordinates.
     """
 
     def to_block(self):
@@ -20,7 +20,38 @@ class Position(namedtuple("Position", "x, y, z")):
         Return this position as block coordinates.
         """
 
-        return self.x / 32, self.y / 32, self.z / 32
+        return self.x // 32, self.y // 32, self.z // 32
+
+class Orientation(namedtuple("Orientation", "theta, phi")):
+    """
+    The angles corresponding to the heading of an entity.
+
+    Theta and phi are very much like the theta and phi of spherical
+    coordinates, except that phi's zero is perpendicular to the XZ-plane
+    rather than pointing straight up or straight down.
+
+    Orientation is stored in floating-point radians, for simplicity of
+    computation. Unfortunately, no wire protocol speaks radians, so several
+    conversion methods are provided for sanity and convenience.
+
+    The ``from_degs()`` and ``to_degs()`` methods provide integer degrees.
+    This form is called "yaw and pitch" by protocol documentation.
+    """
+
+    @classmethod
+    def from_degs(cls, yaw, pitch):
+        """
+        Create an ``Orientation`` from integer degrees.
+        """
+
+        return cls(radians(yaw) % (pi * 2), radians(pitch))
+
+    def to_degs(self):
+        """
+        Return this orientation as integer degrees.
+        """
+
+        return int(round(degrees(self.theta))), int(round(degrees(self.phi)))
 
 class Location(object):
     """
@@ -33,10 +64,7 @@ class Location(object):
         self.stance = 0
 
         # Orientation, in radians.
-        # Theta and phi are like the theta and phi of spherical coordinates,
-        # except that phi starts perpendicular to the xz-plane.
-        self._theta = 0
-        self.phi = 0
+        self.ori = Orientation(0.0, 0.0)
 
         # Whether we are in the air.
         self.grounded = False
@@ -63,20 +91,6 @@ class Location(object):
 
     __str__ = __repr__
 
-    def _yaw_setter(self, value):
-        self.theta = radians(value)
-    yaw = property(lambda self: int(round(degrees(self.theta))), _yaw_setter)
-
-    def _theta_setter(self, value):
-        # Radial clamp.
-        self._theta = value % (pi * 2)
-    theta = property(lambda self: self._theta, _theta_setter)
-
-    def _pitch_setter(self, value):
-        self.phi = radians(value)
-    pitch = property(lambda self: int(round(degrees(self.phi))),
-        _pitch_setter)
-
     def save_to_packet(self):
         """
         Returns a position/look/grounded packet.
@@ -89,8 +103,11 @@ class Location(object):
         if not 0.1 < (self.stance - y) < 1.65:
             self.stance = y + 1.0
 
+        # Grab orientation.
+        yaw, pitch = self.ori.to_degs()
+
         position = Container(x=x, y=self.stance, z=z, stance=y)
-        orientation = Container(rotation=self.yaw, pitch=self.pitch)
+        orientation = Container(rotation=yaw, pitch=pitch)
         grounded = Container(grounded=self.grounded)
 
         packet = make_packet("location", position=position,
@@ -115,7 +132,8 @@ class Location(object):
         Return a ``Location`` a certain number of blocks in front of this
         position.
 
-        The orientation of the returned location is undefined.
+        The orientation of the returned location is identical to this
+        position's orientation.
 
         :param int distance: the number of blocks by which to offset this
                              position
@@ -128,8 +146,8 @@ class Location(object):
         # player in the direction they are facing. Note that all three
         # coordinates are "misnamed;" the unit circle actually starts at (0,
         # 1) and goes *backwards* towards (-1, 0).
-        x = int(self.pos.x - distance * sin(self.theta))
-        z = int(self.pos.z + distance * cos(self.theta))
+        x = int(self.pos.x - distance * sin(self.ori.theta))
+        z = int(self.pos.z + distance * cos(self.ori.theta))
 
         other.pos = other.pos._replace(x=x, z=z)
 

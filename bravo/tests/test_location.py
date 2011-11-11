@@ -2,7 +2,32 @@ from twisted.trial import unittest
 
 import math
 
-from bravo.location import Location
+from bravo.location import Location, Orientation, Position
+
+class TestPosition(unittest.TestCase):
+
+    def test_to_block(self):
+        p = Position(-32, 32, 48)
+        self.assertEqual(p.to_block(), (-1, 1, 1))
+
+class TestOrientation(unittest.TestCase):
+
+    def test_from_degs(self):
+        o = Orientation.from_degs(90, 180)
+        self.assertAlmostEqual(o.theta, math.pi / 2)
+        self.assertAlmostEqual(o.phi, math.pi)
+
+    def test_from_degs_wrap(self):
+        o = Orientation.from_degs(450, 0)
+        self.assertAlmostEqual(o.theta, math.pi / 2)
+
+    def test_from_degs_wrap_negative(self):
+        o = Orientation.from_degs(-90, 0)
+        self.assertAlmostEqual(o.theta, math.pi * 3 / 2)
+
+    def test_to_degs_pitch_rounding(self):
+        o = Orientation(1, 1)
+        self.assertEqual(o.to_degs(), (57, 57))
 
 class TestLocation(unittest.TestCase):
 
@@ -35,30 +60,6 @@ class TestLocationProperties(unittest.TestCase):
     def test_trivial(self):
         pass
 
-    def test_pitch_property(self):
-        self.l.pitch = 180
-        self.assertAlmostEqual(self.l.phi, math.pi)
-
-    def test_pitch_rounding(self):
-        self.l.phi = 1
-        self.assertEqual(self.l.pitch, 57)
-
-    def test_yaw_property(self):
-        self.l.yaw = 90
-        self.assertAlmostEqual(self.l.theta, math.pi / 2)
-
-    def test_yaw_rounding(self):
-        self.l.theta = 1
-        self.assertEqual(self.l.yaw, 57)
-
-    def test_yaw_wrap(self):
-        self.l.yaw = 370
-        self.assertEqual(self.l.yaw, 10)
-
-    def test_yaw_wrap_negative(self):
-        self.l.yaw = -10
-        self.assertEqual(self.l.yaw, 350)
-
 class TestLocationMethods(unittest.TestCase):
 
     def setUp(self):
@@ -74,7 +75,7 @@ class TestLocationMethods(unittest.TestCase):
         self.assertEqual(other.pos.z, 32)
 
     def test_in_front_of_yaw(self):
-        self.l.yaw = 90
+        self.l.ori = Orientation.from_degs(90, 0)
         other = self.l.in_front_of(1)
 
         self.assertEqual(other.pos.x, -32)
