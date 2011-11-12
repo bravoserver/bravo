@@ -6,6 +6,16 @@ from bravo.location import Location, Orientation, Position
 
 class TestPosition(unittest.TestCase):
 
+    def test_add(self):
+        first = Position(1, 2, 3)
+        second = Position(4, 5, 6)
+        self.assertEqual(first + second, Position(5, 7, 9))
+
+    def test_add_in_place(self):
+        p = Position(1, 2, 3)
+        p += Position(4, 5, 6)
+        self.assertEqual(p, Position(5, 7, 9))
+
     def test_from_player(self):
         p = Position.from_player(2.5, 3.0, -1.0)
         self.assertEqual(p, (80, 96, -32))

@@ -3,10 +3,17 @@ from __future__ import division
 from collections import namedtuple
 from copy import copy
 from math import cos, degrees, radians, pi, sin, sqrt
+import operator
 
 from construct import Container
 
 from bravo.beta.packets import make_packet
+
+def _combinator(op):
+    def f(self, other):
+        return self._replace(x=op(self.x, other.x), y=op(self.y, other.y),
+                             z=op(self.z, other.z))
+    return f
 
 class Position(namedtuple("Position", "x, y, z")):
     """
@@ -14,6 +21,11 @@ class Position(namedtuple("Position", "x, y, z")):
 
     Positions are *always* stored as integer absolute pixel coordinates.
     """
+
+    __add__ = _combinator(operator.add)
+    __sub__ = _combinator(operator.sub)
+    __mul__ = _combinator(operator.mul)
+    __div__ = _combinator(operator.div)
 
     @classmethod
     def from_player(cls, x, y, z):
