@@ -257,20 +257,16 @@ class Mob(Entity):
         # XXX remarkably untested
         player = self.manager.closest_player(self.location.pos, 16)
 
-        if player == None:
+        if player is None:
             vector = (uniform(-.4,.4),
                       uniform(-.4,.4),
                       uniform(-.4,.4))
 
-            target = (self.location.x + vector[0],
-                self.location.y + vector[1],
-                self.location.z + vector[2])
+            target = self.location.pos + vector
         else:
-            target = (player.location.x,
-                player.location.y,
-                player.location.z)
+            target = player.location.pos
 
-            self_pos = (self.location.x, self.location.y, self.location.z)
+            self_pos = self.location.pos
             vector = gen_close_point(self_pos, target)
 
             vector = (
@@ -279,31 +275,28 @@ class Mob(Entity):
                 clamp(vector[2], -0.4, 0.4),
             )
 
-        new_position = (vector[0] + self.location.x,
-            vector[1] + self.location.y,
-            vector[2] + self.location.z,)
+        new_position = self.location.pos + vector
 
+        # XXX explain me, plz kthnx
         new_theta = int(atan2(
             (self.location.z - new_position[2]),
-            (self.location.x - new_position[0] ))
+            (self.location.x - new_position[0]))
             + pi/2)
 
         if new_theta < 0 :
             new_theta = 0
 
         can_go = self.manager.check_block_collision(self.location, (-.3, 0, -.3,), (.5, 1, .5))
-        self.location.theta = new_theta
+        self.location.ori = self.location.ori._replace(theta=new_theta)
 
         if can_go:
             self.slide = False
-            self.location.x = new_position[0]
-            self.location.y = new_position[1]
-            self.location.z = new_position[2]
+            self.location.pos = new_position
 
             self.manager.correct_origin_chunk(self)
             self.manager.broadcast(self.save_location_to_packet())
         else:
-            self.slide = self.manager.slide_vector(vector, )
+            self.slide = self.manager.slide_vector(vector)
             self.manager.broadcast(self.save_location_to_packet())
 
 
