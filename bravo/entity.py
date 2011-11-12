@@ -286,7 +286,9 @@ class Mob(Entity):
         if new_theta < 0 :
             new_theta = 0
 
-        can_go = self.manager.check_block_collision(self.location, (-.3, 0, -.3,), (.5, 1, .5))
+        # XXX explain these magic numbers please
+        can_go = self.manager.check_block_collision(self.location.pos,
+                (-10, 0, -10), (16, 32, 16))
         self.location.ori = self.location.ori._replace(theta=new_theta)
 
         if can_go:

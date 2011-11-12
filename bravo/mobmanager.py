@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 from sys import maxint
-from math import floor
 
 from bravo.errors import ChunkNotLoaded
 from bravo.simplex import dot3
-from bravo.utilities.maths import clamp
 
 class MobManager(object):
 
@@ -43,31 +41,18 @@ class MobManager(object):
 
         return closest
 
-    def check_block_collision(self, location, minvec, maxvec):
-        min_point = [minvec[0] + location.x,
-               minvec[1] + location.y,
-               minvec[2] + location.z]
+    def check_block_collision(self, position, minvec, maxvec):
+        min_point = position + minvec
+        max_point = position + maxvec
 
-        max_point = [maxvec[0] + location.x,
-               maxvec[1] + location.y,
-               maxvec[2] + location.z]
+        min_block = min_point.to_block()
+        max_block = max_point.to_block()
 
-        min_point[0] = int(floor(min_point[0]))
-        min_point[1] = int(floor(min_point[1]))
-        min_point[2] = int(floor(min_point[2]))
-
-        max_point[0] = int(floor(max_point[0]))
-        max_point[1] = int(floor(max_point[1]))
-        max_point[2] = int(floor(max_point[2]))
-
-        for x in xrange(min_point[0],max_point[0]):
-            for y in xrange(min_point[1],max_point[1]):
-                for z in xrange(min_point[2],max_point[2]):
-                    if self.world.sync_get_block((x,y,z)) != 0:
-                        normal = (clamp(location.x - x, -1, 1),
-                                  clamp(location.y - y, -1, 1),
-                                  clamp(location.z - z, -1, 1))
-                        return False, normal
+        for x in xrange(min_block[0],max_block[0]):
+            for y in xrange(min_block[1],max_block[1]):
+                for z in xrange(min_block[2],max_block[2]):
+                    if self.world.sync_get_block((x,y,z)):
+                        return False
 
         return True
 
