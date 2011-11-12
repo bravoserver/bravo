@@ -33,6 +33,21 @@ class TestPosition(unittest.TestCase):
         second = Position(2, 3, 6)
         self.assertEqual(first.distance(second), 7)
 
+    def test_heading(self):
+        """
+        The positive Z heading points towards a heading of zero, and the
+        positive X heading points towards three-halves pi.
+        """
+
+        first = Position(0, 0, 0)
+        second = Position(0, 0, 1)
+        third = Position(1, 0, 0)
+
+        self.assertAlmostEqual(first.heading(second), 0)
+        self.assertAlmostEqual(first.heading(third), 3 * math.pi / 2)
+        # Just for fun, this should point between pi and 3pi/2, or 5pi/4.
+        self.assertAlmostEqual(second.heading(third), 5 * math.pi / 4)
+
 class TestOrientation(unittest.TestCase):
 
     def test_from_degs(self):

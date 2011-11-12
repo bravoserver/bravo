@@ -2,7 +2,7 @@ from __future__ import division
 
 from collections import namedtuple
 from copy import copy
-from math import cos, degrees, radians, pi, sin, sqrt
+from math import atan2, cos, degrees, radians, pi, sin, sqrt
 import operator
 
 from construct import Container
@@ -59,6 +59,17 @@ class Position(namedtuple("Position", "x, y, z")):
         dy = (self.y - other.y)**2
         dz = (self.z - other.z)**2
         return int(sqrt(dx + dy + dz))
+
+    def heading(self, other):
+        """
+        Return the heading from this position to another, in radians.
+
+        This is a wrapper for the common atan2() expression found in games,
+        meant to help encapsulate semantics and keep copy-paste errors from
+        happening.
+        """
+
+        return atan2(self.z - other.z, self.x - other.x) + pi / 2
 
 class Orientation(namedtuple("Orientation", "theta, phi")):
     """
