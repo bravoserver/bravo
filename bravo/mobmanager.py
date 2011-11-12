@@ -2,6 +2,7 @@
 from sys import maxint
 from math import floor
 
+from bravo.errors import ChunkNotLoaded
 from bravo.simplex import dot3
 from bravo.utilities.maths import clamp
 
@@ -100,15 +101,20 @@ class MobManager(object):
 
     def correct_origin_chunk(self, mob):
         """
-        Corrects an entities reference to the correct chunk.
+        Ensure that a mob is bound to the correct chunk.
+
         As entities move, the chunk they reside in may not match up with their
-        location. this function aims to provide a uniform way to correct this.
+        location. This method will correctly reassign the mob to its chunk.
         """
-        old_chunk = self.world.sync_request_chunk(mob.chunk_coords)
-        old_chunk.entities.discard(mob)
-        chunk = self.world.sync_request_chunk((mob.location.x,
-            1, mob.location.z))
-        chunk.entities.add(mob)
+
+        try:
+            old = self.world.sync_request_chunk(mob.chunk_coords)
+            new = self.world.sync_request_chunk(mob.location.pos)
+        except ChunkNotLoaded:
+            pass
+        else:
+            new.entities.add(mob)
+            old.entities.discard(mob)
 
     def broadcast(self, packet):
         """

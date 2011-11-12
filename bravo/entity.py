@@ -218,14 +218,13 @@ class Mob(Entity):
 
     def run(self):
         """
-        Starts a mob's loop process
+        Start this mob's update loop.
         """
 
-        xcoord, chaff, zcoord, chaff = split_coords(self.location.pos.x,
-                self.location.pos.z)
-        # XXX The one is redundant, fix it
-        # XXX also, WTF are chunk_coords and why aren't they doc'd?
-        self.chunk_coords = xcoord, 1, zcoord
+        # Save the current chunk coordinates of this mob. They will be used to
+        # track which chunk this mob belongs to.
+        self.chunk_coords = self.location.pos
+
         self.loop = LoopingCall(self.update)
         self.loop.start(.2)
 
