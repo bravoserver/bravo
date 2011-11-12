@@ -69,7 +69,10 @@ class Position(namedtuple("Position", "x, y, z")):
         happening.
         """
 
-        return atan2(self.z - other.z, self.x - other.x) + pi / 2
+        theta = atan2(self.z - other.z, self.x - other.x) + pi / 2
+        if theta < 0:
+            theta += pi * 2
+        return theta
 
 class Orientation(namedtuple("Orientation", "theta, phi")):
     """

@@ -277,19 +277,12 @@ class Mob(Entity):
 
         new_position = self.location.pos + vector
 
-        # XXX explain me, plz kthnx
-        new_theta = int(atan2(
-            (self.location.z - new_position[2]),
-            (self.location.x - new_position[0]))
-            + pi/2)
-
-        if new_theta < 0 :
-            new_theta = 0
+        new_theta = self.location.pos.heading(new_position)
+        self.location.ori = self.location.ori._replace(theta=new_theta)
 
         # XXX explain these magic numbers please
         can_go = self.manager.check_block_collision(self.location.pos,
                 (-10, 0, -10), (16, 32, 16))
-        self.location.ori = self.location.ori._replace(theta=new_theta)
 
         if can_go:
             self.slide = False

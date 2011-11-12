@@ -48,6 +48,19 @@ class TestPosition(unittest.TestCase):
         # Just for fun, this should point between pi and 3pi/2, or 5pi/4.
         self.assertAlmostEqual(second.heading(third), 5 * math.pi / 4)
 
+    def test_heading_negative(self):
+        """
+        Headings shouldn't be negative.
+
+        Well, they can be, technically, but in Bravo, they should be clamped
+        to the unit circle.
+        """
+
+        first = Position(0, 0, 0)
+        second = Position(-1, 0, 0)
+
+        self.assertTrue(first.heading(second) >= 0)
+
 class TestOrientation(unittest.TestCase):
 
     def test_from_degs(self):
