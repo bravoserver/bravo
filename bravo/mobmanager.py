@@ -15,55 +15,33 @@ class MobManager(object):
 
     def start_mob(self, mob):
         """
-        Starts a mob and sets it up. This is here to mainly provide a uniform
-        way for outside sources to start mobs
+        Add a mob to this manager, and start it.
+
+        This is here to mainly provide a uniform way for outside sources to
+        start mobs.
         """
+
         mob.manager = self
         mob.run()
 
-
-
-    def closest_player(self, position, threshold = None):
+    def closest_player(self, position, threshold=maxint):
         """
-        Given a factory and coordinates, returns the closest player object
+        Given a factory and coordinates, returns the closest player.
+
+        Returns None if no players were found within the threshold.
         """
+
         closest = None
-        if threshold == None:
-            threshold = maxint
-        else:
-            threshold = threshold**2
-        for player in self.world.factory.protocols.itervalues():
-            for player in self.world.factory.protocols.itervalues():
-                player_x = player.location.x
-                player_y = player.location.y
-                player_z = player.location.z
-                distance = ((( position[0] - player_x )**2)+
-                    (( position[1] - player_y )**2)+
-                    (( position[2] - player_z )**2))
-                if distance < threshold:
-                    threshold = distance
-                    closest = player
-        return closest
 
-##    def check_block_collision(self, vector, offsetlist, block = 0):
-##        """
-##        Checks a list of points to see if a block other than air occupies the
-##        same space
-##        """
-##        cont = True
-##        for offset_x, offset_y, offset_z in offsetlist:
-##            vector_x = vector[0] + offset_x
-##            vector_y = vector[1] + offset_y
-##            vector_z = vector[2] + offset_z
-##
-##            block_coord = polar_round_vector((vector_x, vector_y, vector_z))
-##            block = self.world.sync_get_block(block_coord)
-##            if block == 0:
-##                continue
-##            else:
-##                return False
-##        if cont:
-##            return True
+        # Loop through all players. Check each one's distance, and adjust our
+        # idea of "closest".
+        for player in self.world.factory.protocols.itervalues():
+            distance = position.distance(player.location.pos)
+            if distance < threshold:
+                threshold = distance
+                closest = player
+
+        return closest
 
     def check_block_collision(self, location, minvec, maxvec):
         min_point = [minvec[0] + location.x,

@@ -1,27 +1,6 @@
 """ Utilities for ai/pathfinding routines"""
-from sys import maxint
 from math import sin, cos, floor, ceil
 from bravo.simplex import dot3
-
-def closest_player(factory,position, threshold = None):
-    """ Given a factory and xyz coords, returns the closest player object """
-    closest = None
-    if threshold == None:
-        threshold = maxint
-    else:
-        threshold = threshold**2
-    for player in factory.protocols.itervalues():
-        for player in factory.protocols.itervalues():
-            player_x = player.location.x
-            player_y = player.location.y
-            player_z = player.location.z
-            distance = ((( position[0] - player_x )**2)+
-                        (( position[1] - player_y )**2)+
-                        (( position[2] - player_z )**2))
-            if distance < threshold:
-                threshold = distance
-                closest = player
-    return closest
 
 def check_collision(vector, offsetlist, factory):
     cont = True

@@ -8,7 +8,6 @@ from bravo.inventory import Inventory
 from bravo.inventory.slots import ChestStorage, FurnaceStorage
 from bravo.location import Location
 from bravo.beta.packets import make_packet
-from bravo.utilities.coords import split_coords
 from bravo.utilities.geometry import gen_close_point
 from bravo.utilities.maths import clamp
 from bravo.utilities.furnace import (furnace_recipes, furnace_on_off,
@@ -256,10 +255,7 @@ class Mob(Entity):
 
         # XXX  Discuss appropriate style with MAD
         # XXX remarkably untested
-        player = self.manager.closest_player((self.location.x,
-                                 self.location.y,
-                                 self.location.z),
-                                 16)
+        player = self.manager.closest_player(self.location.pos, 16)
 
         if player == None:
             vector = (uniform(-.4,.4),
