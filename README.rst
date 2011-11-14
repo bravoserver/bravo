@@ -199,7 +199,7 @@ FAQ
 ===
 
 The FAQ moved to the docs; see docs/faq.rst, or more usefully,
-http://docs.bravoserver.org/faq.html or
+http://docs.bravoserver.org/introduction.html#q-a or
 http://bravo.readthedocs.org/en/latest/faq.html for processed copies.
 
 License
