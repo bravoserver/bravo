@@ -5,8 +5,7 @@ from bravo.blocks import blocks
 from bravo.errors import ChunkNotLoaded
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
-from bravo.utilities.redstone import (RedstoneError, Asic, PlainBlock,
-                                      block_to_circuit)
+from bravo.utilities.redstone import (RedstoneError, Asic, Circuit)
 
 from bravo.parameters import factory
 
@@ -14,9 +13,7 @@ def create_circuit(asic, coords):
     block = factory.world.sync_get_block(coords)
     metadata = factory.world.sync_get_metadata(coords)
 
-    cls = block_to_circuit.get(block, PlainBlock)
-
-    circuit = cls(coords, block, metadata)
+    circuit = Circuit(coords, block, metadata)
 
     # What I'm about to do probably seems a bit, well, extravagant, but until
     # the real cause can properly be dissected, it's the right thing to do,

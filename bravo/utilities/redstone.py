@@ -191,12 +191,33 @@ class Circuit(object):
 
     asic = None
 
-    def __init__(self, coordinates, block, metadata):
-        self.coords = coordinates
-        self.inputs = set()
-        self.outputs = set()
+    def __new__(cls, coordinates, block, metadata):
+        """
+        Create a new circuit.
 
-        self.from_block(block, metadata)
+        This method is special; it will return one of its subclasses depending
+        on that subclass's preferred blocks.
+        """
+
+        block_to_circuit = {
+            blocks["lever"].slot: Lever,
+            blocks["redstone-torch"].slot: Torch,
+            blocks["redstone-torch-off"].slot: Torch,
+            blocks["redstone-wire"].slot: Wire,
+        }
+
+        cls = block_to_circuit.get(block, PlainBlock)
+        obj = object.__new__(cls)
+        obj.coords = coordinates
+        obj.block = block
+        obj.metadata = metadata
+        obj.inputs = set()
+        obj.outputs = set()
+        obj.from_block(block, metadata)
+
+        # If any custom __init__() was added to this class, it'll be run after
+        # this.
+        return obj
 
     def __str__(self):
         return "<%s(%d, %d, %d, %s)>" % (self.__class__.__name__,
@@ -312,10 +333,6 @@ class Wire(Circuit):
     name = "wire"
     traceables = ("plain",)
 
-    def __init__(self, coords, block, metadata):
-        super(Wire, self).__init__(coords, block, metadata)
-        self.metadata = metadata
-
     def update(self):
         x, y, z = self.coords
         return self.asic.update_wires(x, y, z)
@@ -350,7 +367,6 @@ class OrientedCircuit(Circuit):
     """
 
     def __init__(self, coords, block, metadata):
-        super(OrientedCircuit, self).__init__(coords, block, metadata)
         self.orientation = blocks[block].face(metadata)
         if self.orientation is None:
             raise RedstoneError("Bad metadata %d for %r!" % (metadata, self))
@@ -445,10 +461,3 @@ class Lever(OrientedCircuit):
         """
 
         return (self,), self.outputs
-
-block_to_circuit = {
-    blocks["lever"].slot: Lever,
-    blocks["redstone-torch"].slot: Torch,
-    blocks["redstone-torch-off"].slot: Torch,
-    blocks["redstone-wire"].slot: Wire,
-}
