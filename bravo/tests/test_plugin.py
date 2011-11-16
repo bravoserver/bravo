@@ -86,8 +86,14 @@ class TestOptions(unittest.TestCase):
     def test_identity(self):
         names = ["first", "second"]
         d = {"first": None, "second": None}
-        self.assertEqual(["first", "second"],
-            bravo.plugin.expand_names(d, names))
+        self.assertEqual(sorted(["first", "second"]),
+            sorted(bravo.plugin.expand_names(d, names)))
+
+    def test_doubled(self):
+        names = ["first", "first", "second"]
+        d = {"first": None, "second": None}
+        self.assertEqual(sorted(["first", "second"]),
+            sorted(bravo.plugin.expand_names(d, names)))
 
     def test_wildcard(self):
         names = ["*"]
@@ -102,6 +108,21 @@ class TestOptions(unittest.TestCase):
 
     def test_wildcard_after_removed(self):
         names = ["-first", "*"]
+        d = {"first": None, "second": None}
+        self.assertEqual(["second"], bravo.plugin.expand_names(d, names))
+
+    def test_removed_conflict(self):
+        """
+        If a name is both included and excluded, the exclusion takes
+        precedence.
+        """
+
+        names = ["first", "-first", "second"]
+        d = {"first": None, "second": None}
+        self.assertEqual(["second"], bravo.plugin.expand_names(d, names))
+
+    def test_removed_conflict_after(self):
+        names = ["-first", "first", "second"]
         d = {"first": None, "second": None}
         self.assertEqual(["second"], bravo.plugin.expand_names(d, names))
 

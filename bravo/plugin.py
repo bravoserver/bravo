@@ -98,14 +98,26 @@ def expand_names(plugins, names):
     :returns: a list of filtered plugin names
     """
 
-    # Wildcard.
-    if "*" in names:
-        # Get the exceptions.
-        exceptions = set(name[1:] for name in names if name.startswith("-"))
+    wildcard = False
+    exceptions = set()
+    expanded = set()
 
-        # And now the names. Everything that isn't excepted.
-        names = [name for name in plugins.iterkeys()
-            if name not in exceptions]
+    # Partition the list into exceptions and non-exceptions, finding the
+    # wildcard(s) along the way.
+    for name in names:
+        if name == "*":
+            wildcard = True
+        elif name.startswith("-"):
+            exceptions.add(name[1:])
+        else:
+            expanded.add(name)
+
+    if wildcard:
+        # Add all of the plugin names to the expanded name list.
+        expanded.update(plugins.keys())
+
+    # Remove excepted names from the expanded list.
+    names = list(expanded - exceptions)
 
     return names
 
