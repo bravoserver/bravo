@@ -8,14 +8,15 @@ from twisted.internet.task import LoopingCall
 from twisted.python import log
 from zope.interface import implements
 
+from bravo.beta.packets import make_packet
+from bravo.beta.protocol import BravoProtocol, KickedProtocol
 from bravo.entity import entities
 from bravo.ibravo import (ISortedPlugin, IAutomaton, IAuthenticator, ISeason,
     ITerrainGenerator, IUseHook, ISignHook, IPreDigHook, IDigHook, IPreBuildHook,
     IPostBuildHook, IWindowOpenHook, IWindowClickHook, IWindowCloseHook)
 from bravo.location import Location
-from bravo.beta.packets import make_packet
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
-from bravo.beta.protocol import BravoProtocol, KickedProtocol
+from bravo.policy.packs import packs as available_packs
 from bravo.utilities.chat import chat_name, sanitize_chat
 from bravo.weather import WeatherVane
 from bravo.world import World
@@ -263,8 +264,21 @@ class BravoFactory(Factory):
 
         pp = {"factory": self}
 
+        packs = self.config.getlistdefault(self.config_name, "packs", [])
+        try:
+            packs = [available_packs[pack] for pack in packs]
+        except KeyError, e:
+            raise Exception("Couldn't find plugin pack %s" % e.args)
+
         for t, interface in plugin_types.iteritems():
             l = self.config.getlistdefault(self.config_name, t, [])
+
+            # Grab extra plugins from the pack. Order doesn't really matter
+            # since the plugin loader sorts things anyway.
+            for pack in packs:
+                if t in pack:
+                    l += pack[t]
+
             if issubclass(interface, ISortedPlugin):
                 plugins = retrieve_sorted_plugins(interface, l, parameters=pp)
             else:

@@ -250,3 +250,37 @@ class TestBravoFactoryStarted(unittest.TestCase):
         for player, radius, result in expected_results:
             found = [p.eid for p in self.f.players_near(player, radius)]
             self.assertEqual(set(found), set(result))
+
+class TestBravoFactoryPacks(unittest.TestCase):
+    """
+    The plugin pack system should work.
+    """
+
+    def test_pack_beta(self):
+        """
+        The "beta" plugin pack should always work. Period.
+        """
+
+        self.d = tempfile.mkdtemp()
+        self.name = "unittest"
+        self.bcp = BravoConfigParser()
+
+        self.bcp.add_section("world unittest")
+        d = {
+            "authenticator" : "offline",
+            "mode"          : "creative",
+            "packs"         : "beta",
+            "port"          : "0",
+            "serializer"    : "alpha",
+            "url"           : "file://%s" % self.d,
+        }
+        for k, v in d.items():
+            self.bcp.set("world unittest", k, v)
+
+        self.f = BravoFactory(self.bcp, self.name)
+        # And now start the factory.
+        self.f.startFactory()
+
+    def tearDown(self):
+        self.f.stopFactory()
+        shutil.rmtree(self.d)

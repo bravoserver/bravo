@@ -59,3 +59,7 @@ beta = {
     # XXX I think we need some of these, don't we?
     "use_hooks": [],
 }
+
+packs = {
+    "beta": beta,
+}
