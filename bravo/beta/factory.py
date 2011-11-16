@@ -295,6 +295,7 @@ class BravoFactory(Factory):
             "close_hooks",
             "pre_build_hooks",
             "post_build_hooks",
+            "pre_dig_hooks",
             "dig_hooks",
             "sign_hooks",
             "use_hooks",
