@@ -497,11 +497,11 @@ class Alpha(object):
                     (player, fp.path))
 
         try:
-            player.location.x, player.location.y, player.location.z = [
-                i.value for i in tag["Pos"].tags]
+            player.location.pos = Position(i.value for i in tag["Pos"].tags)
 
-            player.location.yaw = tag["Rotation"].tags[0].value
-            player.location.pitch = tag["Rotation"].tags[1].value
+            yaw = tag["Rotation"].tags[0].value
+            pitch = tag["Rotation"].tags[1].value
+            player.location.ori = Orientation.from_degs(yaw, pitch)
 
             if "Inventory" in tag:
                 self._load_inventory_from_tag(player.inventory,
@@ -515,12 +515,11 @@ class Alpha(object):
         tag.name = ""
 
         tag["Pos"] = TAG_List(type=TAG_Double)
-        tag["Pos"].tags = [TAG_Double(i)
-            for i in (player.location.x, player.location.y, player.location.z)]
+        tag["Pos"].tags = [TAG_Double(i) for i in player.location.pos]
 
         tag["Rotation"] = TAG_List(type=TAG_Double)
         tag["Rotation"].tags = [TAG_Double(i)
-            for i in (player.location.yaw, player.location.pitch)]
+            for i in player.location.ori.to_degs()]
 
         tag["Inventory"] = self._save_inventory_to_tag(player.inventory)
 
