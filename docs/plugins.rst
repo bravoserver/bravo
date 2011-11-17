@@ -7,6 +7,16 @@ Plugins
 Bravo is highly configurable and extensible. The plugins shipped with Bravo
 are listed here, for convenience.
 
+Packs
+=====
+
+Beta
+----
+
+The Beta plugin pack, called "beta", provides all of Bravo's Beta
+compatibility in one single line of configuration. This pack does not select
+an authenticator, so an authenticator is still required.
+
 Authenticators
 ==============
 

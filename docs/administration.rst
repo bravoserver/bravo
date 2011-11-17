@@ -63,6 +63,7 @@ this::
  some_wildcard_option = *
  some_picky_option = *, -fifth
  another_picky_option = -fifth, -sixth, *
+ a_weird_but_valid_option = seventh, -seventh
 
 General settings
 ----------------
@@ -101,16 +102,6 @@ serializer
     Which serializer to use for saving worlds. Currently, the "alpha" and
     "beta" serializers are provided for MC Alpha and MC Beta compatibility,
     respectively.
-build_hooks
-    Which :ref:`build_hooks` to enable. This is a list of plugins; see above.
-dig_hooks
-    Which :ref:`dig_hooks` to enable. This is a list of plugins.
-generators
-    Which :ref:`terrain_generator_plugins` to use. This is a list of plugins.
-seasons
-    Which :ref:`season_plugins` to enable. This, too, is a list of plugins.
-automatons
-    Which :ref:`automatons` to enable. Another list of plugins.
 
 Plugin Data Files
 =================
