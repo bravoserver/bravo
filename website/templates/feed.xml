@@ -3,24 +3,25 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <atom:link href="{{ site.base_url }}{{ page.url }}" rel="self" type="application/rss+xml" />
-        <title>Bravo Server</title>
+        <title>{{ site.site_name }}</title>
         <link>{{ site.base_url }}{{ page.url }}</link>
-        <description>Bravo is a Minecraft server.</description>
         <language>en-us</language>
         <pubDate>{{ site.datetime.strftime(datefmt) }}</pubDate>
         <docs>http://blogs.law.harvard.edu/tech/rss</docs>
-        {% for item in site.categories[page.rss_category] %}
-        <item>
-            <title>item.title</title>
-            <link>{{ site.base_url }}{{ item.url }}</link>
-            <pubDate>{{ item.datetime.strftime(datefmt) }}</pubDate>
-            <description>
-                {{ item.content|e }}
-            </description>
-            <guid>
-                {{site.base_url}}{{ item.url }}
-            </guid>
-        </item>
+        {% for item in site.categories[page.rss_category]|sort(attribute='datetime')|reverse %}
+            {% if loop.index0 < 10 %}
+                <item>
+                    <title>{{item.title}}</title>
+                    <link>{{ site.base_url }}{{ item.url }}</link>
+                    <pubDate>{{ item.datetime.strftime(datefmt) }}</pubDate>
+                    <description>
+                        {{ item.content|e }}
+                    </description>
+                    <guid>
+                        {{site.base_url}}{{ item.url }}
+                    </guid>
+                </item>
+            {% endif %}
         {% endfor %}
     </channel>
 </rss>
