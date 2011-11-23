@@ -57,6 +57,10 @@ class PluginMixin(object):
     def test_trivial(self):
         pass
 
+class TestAscend(PluginMixin, unittest.TestCase):
+
+    name = "ascend"
+
 class TestGetpos(PluginMixin, unittest.TestCase):
 
     name = "getpos"
