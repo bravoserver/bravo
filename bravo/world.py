@@ -372,12 +372,10 @@ class World(object):
             from ampoule import deferToAMPProcess
             from bravo.remote import MakeChunk
 
-            d = deferToAMPProcess(MakeChunk,
-                x=x,
-                z=z,
-                seed=self.seed,
-                generators=self.config.getlist(self.config_name, "generators")
-            )
+            generators = [plugin.name for plugin in self.pipeline]
+
+            d = deferToAMPProcess(MakeChunk, x=x, z=z, seed=self.seed,
+                    generators=generators)
 
             # Get chunk data into our chunk object.
             def fill_chunk(kwargs):
