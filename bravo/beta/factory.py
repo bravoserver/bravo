@@ -484,8 +484,12 @@ class BravoFactory(Factory):
         Tell automatons about this chunk.
         """
 
-        for automaton in self.automatons:
-            automaton.scan(chunk)
+        # It's possible for there to be no automatons; this usually means that
+        # the factory is shutting down. We should be permissive and handle
+        # this case correctly.
+        if hasattr(self, "automatons"):
+            for automaton in self.automatons:
+                automaton.scan(chunk)
 
     def flush_chunk(self, chunk):
         """
