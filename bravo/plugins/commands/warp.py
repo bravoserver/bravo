@@ -1,10 +1,10 @@
 import csv
 from StringIO import StringIO
 
-from twisted.internet.defer import inlineCallbacks, returnValue
 from zope.interface import implements
 
 from bravo.ibravo import IChatCommand, IConsoleCommand
+from bravo.location import Orientation, Position
 from bravo.utilities.coords import split_coords
 
 from bravo.parameters import factory
@@ -45,11 +45,14 @@ class Home(object):
         l = protocol.player.location
         if username in homes:
             yield "Teleporting %s home" % username
-            (l.x, l.y, l.z, l.yaw, l.pitch) = homes[username]
+            x, y, z, yaw, pitch = homes[username]
         else:
             yield "Teleporting %s to spawn" % username
-            l.x, l.y, l.z = factory.world.spawn
-            l.yaw, l.pitch = 0, 0
+            x, y, z = factory.world.spawn
+            yaw, pitch = 0, 0
+
+        l.pos = Position.from_block(x, y, z)
+        l.ori = Orientation.from_degs(yaw, pitch)
         protocol.send_initial_chunk_and_location()
         yield "Teleportation successful!"
 
@@ -72,11 +75,8 @@ class SetHome(object):
         yield "Saving %s's home..." % username
 
         protocol = factory.protocols[username]
-        x = protocol.player.location.x
-        y = protocol.player.location.y
-        z = protocol.player.location.z
-        yaw = protocol.player.location.yaw
-        pitch = protocol.player.location.pitch
+        x, y, z = protocol.player.location.pos.to_block()
+        yaw, pitch = protocol.player.location.ori.to_degs()
 
         data = factory.world.serializer.load_plugin_data("homes")
         d = get_locations(data)
@@ -107,6 +107,7 @@ class Warp(object):
         if location in warps:
             yield "Teleporting you to %s" % location
             protocol = factory.protocols[username]
+
             # An explanation might be necessary.
             # We are changing the location of the player, but we must
             # immediately send a new location packet in order to force the
@@ -116,7 +117,9 @@ class Warp(object):
             # location setup, so we call send_initial_chunk_and_location()
             # instead of update_location().
             l = protocol.player.location
-            (l.x, l.y, l.z, l.yaw, l.pitch) = warps[location]
+            x, y, z, yaw, pitch = warps[location]
+            l.pos = Position.from_block(x, y, z)
+            l.ori = Orientation.from_degs(yaw, pitch)
             protocol.send_initial_chunk_and_location()
             yield "Teleportation successful!"
         else:
@@ -173,11 +176,8 @@ class SetWarp(object):
         yield "Saving warp %s..." % name
 
         protocol = factory.protocols[username]
-        x = protocol.player.location.x
-        y = protocol.player.location.y
-        z = protocol.player.location.z
-        yaw = protocol.player.location.yaw
-        pitch = protocol.player.location.pitch
+        x, y, z = protocol.player.location.pos.to_block()
+        yaw, pitch = protocol.player.location.ori.to_degs()
 
         data = factory.world.serializer.load_plugin_data("warps")
         d = get_locations(data)
@@ -225,17 +225,15 @@ class Ascend(object):
 
     implements(IChatCommand)
 
-    @inlineCallbacks
     def chat_command(self, username, parameters):
         protocol = factory.protocols[username]
-        x = protocol.player.location.x
-        z = protocol.player.location.z
+        l = protocol.player.location
+
+        x, y, z = l.pos.to_block()
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
-        chunk = yield factory.world.request_chunk(bigx, bigz)
+        chunk = factory.world.sync_request_chunk((x, y, z))
         column = chunk.get_column(smallx, smallz)
-
-        y = protocol.player.location.y
 
         # Find the next spot above us which has a platform and two empty
         # blocks of air.
@@ -244,11 +242,11 @@ class Ascend(object):
             if column[y] and not column[y + 1] and not column[y + 2]:
                 break
         else:
-            returnValue(("Couldn't find anywhere to ascend!",))
+            return ("Couldn't find anywhere to ascend!",)
 
-        protocol.player.location.y = y
+        l.pos = l.pos._replace(y=y)
         protocol.send_initial_chunk_and_location()
-        returnValue(("Ascended!",))
+        return ("Ascended!",)
 
     name = "ascend"
     aliases = tuple()
@@ -261,17 +259,15 @@ class Descend(object):
 
     implements(IChatCommand)
 
-    @inlineCallbacks
     def chat_command(self, username, parameters):
         protocol = factory.protocols[username]
-        x = protocol.player.location.x
-        z = protocol.player.location.z
+        l = protocol.player.location
+
+        x, y, z = l.pos.to_block()
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
-        chunk = yield factory.world.request_chunk(bigx, bigz)
+        chunk = factory.world.sync_request_chunk((x, y, z))
         column = chunk.get_column(smallx, smallz)
-
-        y = protocol.player.location.y
 
         # Find the next spot below us which has a platform and two empty
         # blocks of air.
@@ -280,11 +276,11 @@ class Descend(object):
             if column[y] and not column[y + 1] and not column[y + 2]:
                 break
         else:
-            returnValue(("Couldn't find anywhere to descend!",))
+            return ("Couldn't find anywhere to descend!",)
 
-        protocol.player.location.y = y
+        l.pos = l.pos._replace(y=y)
         protocol.send_initial_chunk_and_location()
-        returnValue(("Descended!",))
+        return ("Descended!",)
 
     name = "descend"
     aliases = tuple()
