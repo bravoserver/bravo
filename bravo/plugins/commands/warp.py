@@ -51,7 +51,7 @@ class Home(object):
             x, y, z = factory.world.spawn
             yaw, pitch = 0, 0
 
-        l.pos = Position.from_block(x, y, z)
+        l.pos = Position.from_player(x, y, z)
         l.ori = Orientation.from_degs(yaw, pitch)
         protocol.send_initial_chunk_and_location()
         yield "Teleportation successful!"
@@ -118,7 +118,7 @@ class Warp(object):
             # instead of update_location().
             l = protocol.player.location
             x, y, z, yaw, pitch = warps[location]
-            l.pos = Position.from_block(x, y, z)
+            l.pos = Position.from_player(x, y, z)
             l.ori = Orientation.from_degs(yaw, pitch)
             protocol.send_initial_chunk_and_location()
             yield "Teleportation successful!"
