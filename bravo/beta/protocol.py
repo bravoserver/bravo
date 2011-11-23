@@ -181,8 +181,21 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         # Stance is the current jumping position, plus a small offset of
         # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
-        # or the anti-grounded code kicks the client.
-        self.location.stance = container.position.stance
+        # or the anti-grounded code kicks the client. At this point, we
+        # enforce some sanity on our client, and force both the Y and stance
+        # values to reasonable values.
+        # First, the Y value. We don't let people climb up to the very top of
+        # the world due to client bugs.
+        y = position.y
+        if not 0 < y < (32 * 126):
+            position = position._replace(y=clamp(y, 0, 32 * 126))
+
+        # Now, the stance.
+        blocky = position.y * 32
+        stance = container.position.stance
+        if not 0.1 < (stance - blocky) < 1.65:
+            stance = blocky + 1.0
+        self.location.stance = stance
 
         self.grounded(container.grounded)
 
@@ -619,6 +632,7 @@ class BravoProtocol(BetaServerProtocol):
             self.transport.write(packet)
             self.write_packet("create", eid=protocol.player.eid)
 
+        # *Now* we are in our factory's list of protocols. Be aware.
         self.factory.protocols[self.username] = self
 
         # Send spawn and inventory.
