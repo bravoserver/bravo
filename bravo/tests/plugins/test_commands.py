@@ -42,19 +42,24 @@ class CommandsMockFactory(object):
     def update_season(self):
         pass
 
-class TestGetpos(unittest.TestCase):
+class PluginMixin(object):
 
     def setUp(self):
+        self.f = CommandsMockFactory()
         self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand,
-            parameters={"factory": CommandsMockFactory()})
+            parameters={"factory": self.f})
 
-        if "getpos" not in self.p:
+        if self.name not in self.p:
             raise unittest.SkipTest("Plugin not present")
 
-        self.hook = self.p["getpos"]
+        self.hook = self.p[self.name]
 
     def test_trivial(self):
         pass
+
+class TestGetpos(PluginMixin, unittest.TestCase):
+
+    name = "getpos"
 
     def test_return_value(self):
         retval = self.hook.chat_command("unittest", [])
@@ -62,20 +67,9 @@ class TestGetpos(unittest.TestCase):
         l = list(retval)
         self.assertEqual(len(l), 1)
 
-class TestGive(unittest.TestCase):
+class TestGive(PluginMixin, unittest.TestCase):
 
-    def setUp(self):
-        self.f = CommandsMockFactory()
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand,
-            parameters={"factory": self.f})
-
-        if "give" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
-        self.hook = self.p["give"]
-
-    def test_trivial(self):
-        pass
+    name = "give"
 
     def test_no_parameters(self):
         """
@@ -91,20 +85,9 @@ class TestGive(unittest.TestCase):
 
         self.assertFalse(called[0])
 
-class TestTime(unittest.TestCase):
+class TestTime(PluginMixin, unittest.TestCase):
 
-    def setUp(self):
-        self.f = CommandsMockFactory()
-        self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand,
-            parameters={"factory": self.f})
-
-        if "time" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
-        self.hook = self.p["time"]
-
-    def test_trivial(self):
-        pass
+    name = "time"
 
     def test_set_sunset(self):
         """
