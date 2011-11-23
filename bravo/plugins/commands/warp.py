@@ -254,7 +254,7 @@ class Ascend(object):
 
 class Descend(object):
     """
-    Warp to a location above the current location.
+    Warp to a location below the current location.
     """
 
     implements(IChatCommand)
