@@ -35,7 +35,7 @@ from bravo.utilities.temporal import timestamp_from_clock
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
 
-SUPPORTED_PROTOCOL = 17
+SUPPORTED_PROTOCOL = 22
 
 circle = [(i, j)
     for i, j in product(xrange(-10, 10), xrange(-10, 10))
