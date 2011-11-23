@@ -174,6 +174,8 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Hook for position packets.
         """
 
+        self.grounded(container.grounded)
+
         old_position = self.location.pos
         position = Position.from_player(container.position.x,
                 container.position.y, container.position.z)
@@ -184,20 +186,12 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         # or the anti-grounded code kicks the client. At this point, we
         # enforce some sanity on our client, and force both the Y and stance
         # values to reasonable values.
-        # First, the Y value. We don't let people climb up to the very top of
-        # the world due to client bugs.
         y = position.y
         if not 0 < y < (32 * 126):
             position = position._replace(y=clamp(y, 0, 32 * 126))
-
-        # Now, the stance.
-        blocky = position.y * 32
-        stance = container.position.stance
-        if not 0.1 < (stance - blocky) < 1.65:
-            stance = blocky + 1.0
-        self.location.stance = stance
-
-        self.grounded(container.grounded)
+            # Fire the location update. At some point down the road, this will
+            # clamp the stance as well before firing the whole shebang.
+            self.update_location()
 
         if old_position != position:
             self.position_changed()
@@ -207,12 +201,12 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Hook for orientation packets.
         """
 
+        self.grounded(container.grounded)
+
         old_orientation = self.location.ori
         orientation = Orientation.from_degs(container.orientation.rotation,
                 container.orientation.pitch)
         self.location.ori = orientation
-
-        self.grounded(container.grounded)
 
         if old_orientation != orientation:
             self.orientation_changed()
@@ -1218,7 +1212,7 @@ class BravoProtocol(BetaServerProtocol):
 
         chunk = self.chunks[bigx, bigz]
 
-        height = chunk.height_at(smallx, smallz) + 2
+        height = chunk.height_at(smallx, smallz) * 32
         self.location.pos = self.location.pos._replace(y=height)
 
         packet = self.location.save_to_packet()
