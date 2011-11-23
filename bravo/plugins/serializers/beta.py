@@ -497,7 +497,8 @@ class Alpha(object):
                     (player, fp.path))
 
         try:
-            player.location.pos = Position(i.value for i in tag["Pos"].tags)
+            x, y, z = [i.value for i in tag["Pos"].tags]
+            player.location.pos = Position(x, y, z)
 
             yaw = tag["Rotation"].tags[0].value
             pitch = tag["Rotation"].tags[1].value
