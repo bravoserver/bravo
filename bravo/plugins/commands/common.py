@@ -411,7 +411,7 @@ class GetPos(object):
     def chat_command(self, username, parameters):
         player = parse_player(factory, username)
         l = player.player.location
-        locMsg = "Your location is <%d, %d, %d>" % l.pos
+        locMsg = "Your location is <%d, %d, %d>" % l.pos.to_block()
         yield locMsg
 
     name = "getpos"
