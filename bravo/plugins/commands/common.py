@@ -318,9 +318,8 @@ class WriteConfig(object):
     implements(IConsoleCommand)
 
     def console_command(self, parameters):
-        f = open("".join(parameters), "w")
-        factory.config.write(f)
-        f.close()
+        with open("".join(parameters), "wb") as f:
+            factory.config.write(f)
         yield "Configuration saved."
 
     name = "write-config"
