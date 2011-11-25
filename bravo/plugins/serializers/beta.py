@@ -538,8 +538,8 @@ class Alpha(object):
         if not path.exists():
             return ""
         else:
-            f = path.open("r")
-            return f.read()
+            with path.open("rb") as f:
+                return f.read()
 
     def save_plugin_data(self, name, value):
         path = self.get_plugin_data_path(name)
@@ -576,8 +576,9 @@ class Beta(Alpha):
         """
 
         fp = self.folder.child("region").child(region)
-        handle = fp.open("r")
-        page = handle.read(4096)
+        with fp.open("r") as handle:
+            page = handle.read(4096)
+
         # The + 1 is not gratuitous. Remember that range/xrange won't include
         # the upper index, but we want it, so we need to increase our upper
         # bound. Additionally, the first page is off-limits.
@@ -618,9 +619,10 @@ class Beta(Alpha):
         if not position or not pages:
             return
 
-        handle = fp.open("r")
-        handle.seek(position * 4096)
-        data = handle.read(pages * 4096)
+        with fp.open("r") as handle:
+            handle.seek(position * 4096)
+            data = handle.read(pages * 4096)
+
         length = unpack(">L", data[:4])[0] - 1
         version = ord(data[4])
 
@@ -649,9 +651,8 @@ class Beta(Alpha):
         if not fp.exists():
             # Create the file and zero out the header, plus a spare page for
             # Notchian software.
-            handle = fp.open("w")
-            handle.write("\x00" * 8192)
-            handle.close()
+            with fp.open("w") as handle:
+                handle.write("\x00" * 8192)
 
         if region not in self.regions:
             self.cache_region_pages(region)
@@ -668,8 +669,6 @@ class Beta(Alpha):
         # Pack up the data, all ready to go.
         data = "%s\x02%s" % (pack(">L", len(data) + 1), data)
         needed_pages = (len(data) + 4095) // 4096
-
-        handle = fp.open("r+")
 
         # I should comment this, since it's not obvious in the original MCR
         # code either. The reason that we might want to reallocate pages if we
@@ -710,15 +709,15 @@ class Beta(Alpha):
         positions[x, z] = position, pages
 
         # Write our payload.
-        handle.seek(position * 4096)
-        handle.write(data)
+        with fp.open("r+") as handle:
+            handle.seek(position * 4096)
+            handle.write(data)
 
-        # Write our position and page count.
-        offset = 4 * (x + z * 32)
-        position = position << 8 | pages
-        handle.seek(offset)
-        handle.write(pack(">L", position))
-        handle.close()
+            # Write our position and page count.
+            offset = 4 * (x + z * 32)
+            position = position << 8 | pages
+            handle.seek(offset)
+            handle.write(pack(">L", position))
 
 alpha = Alpha()
 beta = Beta()
