@@ -410,9 +410,8 @@ def _loadSingle(mk, mf, m=None):
 
     # Run the actual exec.
     contents = {}
-    handle = mk.filePath.open("rb")
-    exec handle in contents
-    handle.close()
+    with mk.filePath.open("rb") as handle:
+        exec handle in contents
 
     contents['__exocet_context__'] = mf
     m.__dict__.update(contents)
