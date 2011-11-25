@@ -407,8 +407,13 @@ def _loadSingle(mk, mf, m=None):
     trace("execfile", mk.name, m)
     if m is None:
         m = ModuleType(mk.name)
+
+    # Run the actual exec.
     contents = {}
-    code = execfile(mk.filePath.path, contents)
+    handle = mk.filePath.open("rb")
+    exec handle in contents
+    handle.close()
+
     contents['__exocet_context__'] = mf
     m.__dict__.update(contents)
     m.__file__ = mk.filePath.path
