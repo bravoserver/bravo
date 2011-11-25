@@ -5,8 +5,8 @@ from time import time
 from urlparse import urlunparse
 
 from twisted.internet import reactor
-from twisted.internet.defer import (DeferredList, inlineCallbacks,
-    maybeDeferred, succeed)
+from twisted.internet.defer import (DeferredList, gatherResults,
+    inlineCallbacks, maybeDeferred, succeed)
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import cooperate, deferLater, LoopingCall
 from twisted.internet.task import TaskDone, TaskFailed
@@ -33,7 +33,9 @@ from bravo.utilities.chat import username_alternatives
 from bravo.utilities.maths import clamp
 from bravo.utilities.temporal import timestamp_from_clock
 
-(STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED) = range(3)
+# States of the protocol.
+(STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED, STATE_LOCATED
+) = range(4)
 
 SUPPORTED_PROTOCOL = 22
 
@@ -651,6 +653,11 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_others(packet, self)
 
     def position_changed(self):
+        # Don't bother trying to update things if the position's not yet
+        # synchronized.
+        if self.state != STATE_LOCATED:
+            return
+
         x, y, z = self.location.pos
         yaw, pitch = self.location.ori.to_fracs()
 
@@ -1132,6 +1139,7 @@ class BravoProtocol(BetaServerProtocol):
                 container.z, [s.text1, s.text2, s.text3, s.text4], new)
 
     def disable_chunk(self, x, z):
+        log.msg("Disabling chunk %d, %d" % (x, z))
         # Remove the chunk from cache.
         chunk = self.chunks.pop(x, z)
 
@@ -1151,7 +1159,10 @@ class BravoProtocol(BetaServerProtocol):
                   with no arguments
         """
 
+        log.msg("Enabling chunk %d, %d" % (x, z))
+
         if (x, z) in self.chunks:
+            log.msg("...But the chunk was already loaded!")
             return succeed(None)
 
         d = self.factory.world.request_chunk(x, z)
@@ -1160,6 +1171,7 @@ class BravoProtocol(BetaServerProtocol):
         return d
 
     def send_chunk(self, chunk):
+        log.msg("Sending chunk %d, %d" % (chunk.x, chunk.z))
         self.write_packet("prechunk", x=chunk.x, z=chunk.z, enabled=1)
 
         packet = chunk.save_to_packet()
@@ -1177,29 +1189,43 @@ class BravoProtocol(BetaServerProtocol):
         self.chunks[chunk.x, chunk.z] = chunk
 
     def send_initial_chunk_and_location(self):
+        """
+        Send the initial chunks and location.
+
+        This method sends more than one chunk; since Beta 1.2, it must send
+        nearly fifty chunks before the location can be safely sent.
+        """
+
+        log.msg("Initial, position %d, %d, %d" % self.location.pos)
         bigx, smallx, bigz, smallz = split_coords(self.location.pos.x,
             self.location.pos.z)
 
-        # Spawn the 25 chunks in a square around the spawn, *before* spawning
+        # Spawn the 49 chunks in a square around the spawn, *before* spawning
         # the player. Otherwise, there's a funky Beta 1.2 bug which causes the
         # player to not be able to move.
-        d = cooperate(
-            self.enable_chunk(i, j)
+        d = gatherResults([self.enable_chunk(i, j)
             for i, j in product(
                 xrange(bigx - 3, bigx + 3),
                 xrange(bigz - 3, bigz + 3)
             )
-        ).whenDone()
+        ])
+
+        # What to do if we can't load a given chunk? Just kick 'em.
+        d.addErrback(lambda fail: self.error("Couldn't load a chunk... :c"))
 
         # Don't dare send more chunks beyond the initial one until we've
-        # spawned.
+        # spawned. Once we've spawned, set our status to LOCATED and then
+        # update_location() will work.
+        @d.addCallback
+        def located(none):
+            self.state = STATE_LOCATED
         d.addCallback(lambda none: self.update_location())
         d.addCallback(lambda none: self.position_changed())
 
         # Send the MOTD.
         if self.motd:
             @d.addCallback
-            def cb(none):
+            def motd(none):
                 self.write_packet("chat",
                     message=self.motd.replace("<tagline>", get_motd()))
 
@@ -1207,6 +1233,15 @@ class BravoProtocol(BetaServerProtocol):
         d.addCallback(lambda none: self.update_chunks())
 
     def update_location(self):
+        """
+        Location ping.
+        """
+
+        # If not located, then don't bother; anything we do in here is almost
+        # certainly stupid.
+        if self.state != STATE_LOCATED:
+            return
+
         bigx, smallx, bigz, smallz = split_coords(self.location.pos.x,
             self.location.pos.z)
 
@@ -1241,12 +1276,12 @@ class BravoProtocol(BetaServerProtocol):
                 except (TaskDone, TaskFailed):
                     pass
 
-        self.chunk_tasks = [cooperate(task) for task in
-            (
+        self.chunk_tasks = [
+            cooperate(
                 self.enable_chunk(i, j) for i, j in
                 sorted(added, key=lambda t: (t[0] - x)**2 + (t[1] - z)**2)
             ),
-            (self.disable_chunk(i, j) for i, j in discarded)
+            cooperate(self.disable_chunk(i, j) for i, j in discarded)
         ]
 
     def update_time(self):

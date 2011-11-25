@@ -224,20 +224,21 @@ class World(object):
         :param int size: The taxicab radius of the cache, in chunks
         """
 
-        log.msg("Setting cache size to %d..." % size)
+        log.msg("Setting cache size to %d, please hold..." % size)
 
         self.permanent_cache = set()
-        def assign(chunk):
-            self.permanent_cache.add(chunk)
+        assign = self.permanent_cache.add
 
         x = self.spawn[0] // 16
         z = self.spawn[2] // 16
 
         rx = xrange(x - size, x + size)
         rz = xrange(z - size, z + size)
-        d = coiterate(self.request_chunk(x, z).addCallback(assign)
-            for x, z in product(rx, rz))
-        d.addCallback(lambda chaff: log.msg("Cache size is now %d" % size))
+        for x, z in product(rx, rz):
+            log.msg("Adding %d, %d to cache..." % (x, z))
+            self.request_chunk(x, z).addCallback(assign)
+
+        log.msg("Cache size is now %d!" % size)
 
     def sort_chunks(self):
         """
