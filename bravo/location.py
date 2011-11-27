@@ -173,8 +173,8 @@ class Location(object):
         # Clamp Y. We take precautions here and forbid things to go up past
         # the top of the world; this tend to strand entities up in the sky
         # where they cannot get down.
-        if not 0 < y < (32 * 126):
-            y = clamp(y, 0, 32 * 126)
+        if not (32 * 1) < y < (32 * 126):
+            y = clamp(y, 32 * 1, 32 * 126)
             self.pos = self.pos._replace(y=y)
             clamped = True
 
