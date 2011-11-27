@@ -16,7 +16,7 @@ __all__ = ("packs",)
 # don't be concerned with order.
 
 beta = {
-    "automatons": ["grass", "lava", "trees", "water"],
+    "automatons": ["grass", "lava", "redstone", "trees", "water"],
     "click_hooks": ["furnace", "inventory", "windows"],
     "close_hooks": ["inventory", "windows"],
     "dig_hooks": [
