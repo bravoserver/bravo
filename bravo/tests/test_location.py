@@ -96,9 +96,13 @@ class TestLocation(unittest.TestCase):
         str(self.l)
 
     def test_clamp_stance(self):
+        """
+        Clamped stance should be 1.62 blocks above the current block.
+        """
+
         self.l.pos = Position(0, 32, 0)
         self.l.clamp()
-        self.assertEqual(self.l.stance, 2.0)
+        self.assertAlmostEqual(self.l.stance, 2.62)
 
     def test_save_to_packet(self):
         self.assertTrue(self.l.save_to_packet())

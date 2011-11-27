@@ -180,12 +180,14 @@ class Location(object):
 
         # Stance is the current jumping position, plus a small offset of
         # around 0.1. In the Alpha server, it must between 0.1 and 1.65, or
-        # the anti-grounded code kicks the client. At this point, we enforce
-        # some sanity on our client, and force the stance to a reasonable
-        # value.
+        # the anti-grounded code kicks the client. In the Beta server, though,
+        # the clamp is different. Experimentally, the stance can be as short
+        # as 1.5 (crouching) to 2.4 (jumping). At this point, we enforce some
+        # sanity on our client, and force the stance to a reasonable value.
         fy = y / 32
-        if not 0.1 < (self.stance - fy) < 1.65:
-            self.stance = fy + 1.0
+        if not 1.5 < (self.stance - fy) < 2.4:
+            # Standard standing stance is 1.62.
+            self.stance = fy + 1.62
             clamped = True
 
         return clamped
