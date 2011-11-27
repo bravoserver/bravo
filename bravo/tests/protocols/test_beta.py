@@ -171,3 +171,10 @@ class TestBravoProtocol(unittest.TestCase):
         """
 
         list(self.p.entities_near(2))
+
+    def test_disable_chunk_invalid(self):
+        """
+        If invalid data is sent to disable_chunk(), no error should happen.
+        """
+
+        self.p.disable_chunk(0, 0)

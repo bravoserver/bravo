@@ -1146,9 +1146,16 @@ class BravoProtocol(BetaServerProtocol):
                 container.z, [s.text1, s.text2, s.text3, s.text4], new)
 
     def disable_chunk(self, x, z):
-        log.msg("Disabling chunk %d, %d" % (x, z))
+        key = x, z
+
+        log.msg("Disabling chunk %d, %d" % key)
+
+        if key not in self.chunks:
+            log.msg("...But the chunk wasn't loaded!")
+            return
+
         # Remove the chunk from cache.
-        chunk = self.chunks.pop(x, z)
+        chunk = self.chunks.pop(key)
 
         for entity in chunk.entities:
             self.write_packet("destroy", eid=entity.eid)
