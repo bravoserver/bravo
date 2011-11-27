@@ -182,19 +182,18 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         position = Position.from_player(container.position.x,
                 container.position.y, container.position.z)
         self.location.pos = position
+        self.location.stance = container.position.stance
 
-        # Stance is the current jumping position, plus a small offset of
-        # around 0.1. In the Alpha server, it must between 0.1 and 1.65,
-        # or the anti-grounded code kicks the client. At this point, we
-        # enforce some sanity on our client, and force both the Y and stance
-        # values to reasonable values.
-        y = position.y
-        if not 0 < y < (32 * 126):
-            position = position._replace(y=clamp(y, 0, 32 * 126))
-            # Fire the location update. At some point down the road, this will
-            # clamp the stance as well before firing the whole shebang.
+        # Santitize location.
+        altered = self.location.clamp()
+
+        # If, for any reason, our opinion on where the client should be
+        # located is different than theirs, force them to conform to our point
+        # of view.
+        if altered:
             self.update_location()
 
+        # If our position actually changed, fire the position change hook.
         if old_position != position:
             self.position_changed()
 
@@ -373,7 +372,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         pass
 
     # Convenience methods for consolidating code and expressing intent. I
-    # hear that these are occasionally useful.
+    # hear that these are occasionally useful. If a method in this section can
+    # be used, then *PLEASE* use it; not using it is the same as open-coding
+    # whatever you're doing, and only hurts in the long run.
 
     def write_packet(self, header, **payload):
         """
@@ -389,6 +390,24 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         timestamp = timestamp_from_clock(reactor)
         self.write_packet("ping", pid=timestamp)
+
+    def update_location(self):
+        """
+        Send this client's location to the client.
+        """
+
+        # Don't bother trying to update things if the position's not yet
+        # synchronized. We could end up jettisoning them into the void.
+        if self.state != STATE_LOCATED:
+            return
+
+        x, y, z = self.location.pos
+        yaw, pitch = self.location.ori.to_fracs()
+
+        # Inform everybody of our new location.
+        packet = make_packet("teleport", eid=self.player.eid, x=x, y=y, z=z,
+                yaw=yaw, pitch=pitch)
+        self.factory.broadcast_for_others(packet, self)
 
     def error(self, message):
         """
@@ -653,19 +672,7 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_others(packet, self)
 
     def position_changed(self):
-        # Don't bother trying to update things if the position's not yet
-        # synchronized.
-        if self.state != STATE_LOCATED:
-            return
-
-        x, y, z = self.location.pos
-        yaw, pitch = self.location.ori.to_fracs()
-
-        # Inform everybody of our new location.
-        packet = make_packet("teleport", eid=self.player.eid, x=x, y=y, z=z,
-                yaw=yaw, pitch=pitch)
-        self.factory.broadcast_for_others(packet, self)
-
+        # Send chunks.
         self.update_chunks()
 
         for entity in self.entities_near(2):

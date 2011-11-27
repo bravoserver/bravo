@@ -49,7 +49,9 @@ class TestBetaServerProtocol(unittest.TestCase):
         """
 
         # This packet is the location test packet from the packet parser
-        # test suite.
+        # test suite. Position in blocks is (1, 2, 4), with a stance of 3
+        # (2 + 1), and an orientation in degrees of (5, 6). The location is
+        # grounded.
         location_packet = """
         DT/wAAAAAAAAQAAAAAAAAABACAAAAAAAAEAQAAAAAAAAQKAAAEDAAAAB
         """.decode("base64")
