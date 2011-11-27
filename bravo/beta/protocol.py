@@ -176,6 +176,10 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Hook for position packets.
         """
 
+        if self.state != STATE_LOCATED:
+            log.msg("Ignoring unlocated position!")
+            return
+
         self.grounded(container.grounded)
 
         old_position = self.location.pos
@@ -394,6 +398,8 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     def update_location(self):
         """
         Send this client's location to the client.
+
+        Also let other clients know where this client is.
         """
 
         # Don't bother trying to update things if the position's not yet
@@ -408,6 +414,54 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         packet = make_packet("teleport", eid=self.player.eid, x=x, y=y, z=z,
                 yaw=yaw, pitch=pitch)
         self.factory.broadcast_for_others(packet, self)
+
+        # Inform ourselves of our new location.
+        packet = self.location.save_to_packet()
+        self.transport.write(packet)
+
+    def ascend(self, count):
+        """
+        Ascend to the next XZ-plane.
+
+        ``count`` is the number of ascensions to perform, and may be zero in
+        order to force this player to not be standing inside a block.
+
+        :returns: bool of whether the ascension was successful
+
+        This client must be located for this method to have any effect.
+        """
+
+        if self.state != STATE_LOCATED:
+            return False
+
+        x, y, z = self.location.pos.to_block()
+
+        bigx, smallx, bigz, smallz = split_coords(x, z)
+
+        chunk = self.chunks[bigx, bigz]
+        column = chunk.get_column(smallx, smallz)
+
+        # Special case: Ascend at most once, if the current spot isn't good.
+        if count == 0:
+            if not column[y] or column[y + 1] or column[y + 2]:
+                # Yeah, we're gonna need to move.
+                count += 1
+            else:
+                # Nope, we're fine where we are.
+                return True
+
+        for i in xrange(y, 126):
+            # Find the next spot above us which has a platform and two empty
+            # blocks of air.
+            if column[i] and not column[i + 1] and not column[i + 2]:
+                count -= 1
+                if not count:
+                    break
+        else:
+            return False
+
+        self.location.pos = self.location.pos._replace(y=i * 32)
+        return True
 
     def error(self, message):
         """
@@ -1180,6 +1234,10 @@ class BravoProtocol(BetaServerProtocol):
             return succeed(None)
 
         d = self.factory.world.request_chunk(x, z)
+        @d.addCallback
+        def cb(chunk):
+            self.chunks[x, z] = chunk
+            return chunk
         d.addCallback(self.send_chunk)
 
         return d
@@ -1200,8 +1258,6 @@ class BravoProtocol(BetaServerProtocol):
                 packet = entity.save_to_packet()
                 self.transport.write(packet)
 
-        self.chunks[chunk.x, chunk.z] = chunk
-
     def send_initial_chunk_and_location(self):
         """
         Send the initial chunks and location.
@@ -1210,9 +1266,12 @@ class BravoProtocol(BetaServerProtocol):
         nearly fifty chunks before the location can be safely sent.
         """
 
+        # Disable located hooks. We'll re-enable them at the end.
+        self.state = STATE_AUTHENTICATED
+
         log.msg("Initial, position %d, %d, %d" % self.location.pos)
-        bigx, smallx, bigz, smallz = split_coords(self.location.pos.x,
-            self.location.pos.z)
+        x, y, z = self.location.pos.to_block()
+        bigx, smallx, bigz, smallz = split_coords(x, z)
 
         # Spawn the 49 chunks in a square around the spawn, *before* spawning
         # the player. Otherwise, there's a funky Beta 1.2 bug which causes the
@@ -1233,6 +1292,8 @@ class BravoProtocol(BetaServerProtocol):
         @d.addCallback
         def located(none):
             self.state = STATE_LOCATED
+            # Ensure that we're above-ground.
+            self.ascend(0)
         d.addCallback(lambda none: self.update_location())
         d.addCallback(lambda none: self.position_changed())
 
@@ -1246,30 +1307,9 @@ class BravoProtocol(BetaServerProtocol):
         # Finally, start the secondary chunk loop.
         d.addCallback(lambda none: self.update_chunks())
 
-    def update_location(self):
-        """
-        Location ping.
-        """
-
-        # If not located, then don't bother; anything we do in here is almost
-        # certainly stupid.
-        if self.state != STATE_LOCATED:
-            return
-
-        bigx, smallx, bigz, smallz = split_coords(self.location.pos.x,
-            self.location.pos.z)
-
-        chunk = self.chunks[bigx, bigz]
-
-        height = chunk.height_at(smallx, smallz) * 32
-        self.location.pos = self.location.pos._replace(y=height)
-
-        packet = self.location.save_to_packet()
-        self.transport.write(packet)
-
     def update_chunks(self):
-        x, chaff, z, chaff = split_coords(self.location.pos.x,
-                self.location.pos.z)
+        x, y, z = self.location.pos.to_block()
+        x, chaff, z, chaff = split_coords(x, z)
 
         new = set((i + x, j + z) for i, j in circle)
         old = set(self.chunks.iterkeys())

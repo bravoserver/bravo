@@ -9,7 +9,7 @@ from numpy import fromstring
 from twisted.internet import reactor
 from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
                                     returnValue, succeed)
-from twisted.internet.task import coiterate, LoopingCall
+from twisted.internet.task import LoopingCall
 from twisted.python import log
 
 from bravo.chunk import Chunk

@@ -227,26 +227,12 @@ class Ascend(object):
 
     def chat_command(self, username, parameters):
         protocol = factory.protocols[username]
-        l = protocol.player.location
+        success = protocol.ascend(1)
 
-        x, y, z = l.pos.to_block()
-        bigx, smallx, bigz, smallz = split_coords(x, z)
-
-        chunk = factory.world.sync_request_chunk((x, y, z))
-        column = chunk.get_column(smallx, smallz)
-
-        # Find the next spot above us which has a platform and two empty
-        # blocks of air.
-        while y < 125:
-            y += 1
-            if column[y] and not column[y + 1] and not column[y + 2]:
-                break
+        if success:
+            return ("Ascended!",)
         else:
             return ("Couldn't find anywhere to ascend!",)
-
-        l.pos = l.pos._replace(y=y)
-        protocol.send_initial_chunk_and_location()
-        return ("Ascended!",)
 
     name = "ascend"
     aliases = tuple()

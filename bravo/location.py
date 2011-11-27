@@ -48,7 +48,7 @@ class Position(namedtuple("Position", "x, y, z")):
         Return this position as block coordinates.
         """
 
-        return self.x // 32, self.y // 32, self.z // 32
+        return int(self.x // 32), int(self.y // 32), int(self.z // 32)
 
     def distance(self, other):
         """
