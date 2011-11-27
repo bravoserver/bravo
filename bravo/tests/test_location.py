@@ -95,6 +95,11 @@ class TestLocation(unittest.TestCase):
     def test_str(self):
         str(self.l)
 
+    def test_clamp_stance(self):
+        self.l.pos = Position(0, 32, 0)
+        self.l.clamp()
+        self.assertEqual(self.l.stance, 2.0)
+
     def test_save_to_packet(self):
         self.assertTrue(self.l.save_to_packet())
 

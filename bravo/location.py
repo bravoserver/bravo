@@ -8,6 +8,7 @@ import operator
 from construct import Container
 
 from bravo.beta.packets import make_packet
+from bravo.utilities.maths import clamp
 
 def _combinator(op):
     def f(self, other):
@@ -122,7 +123,9 @@ class Location(object):
     def __init__(self):
         # Position in pixels.
         self.pos = Position(0, 0, 0)
-        self.stance = 0
+
+        # Start with a relatively sane stance.
+        self.stance = 1.0
 
         # Orientation, in radians.
         self.ori = Orientation(0.0, 0.0)
@@ -153,6 +156,40 @@ class Location(object):
 
     __str__ = __repr__
 
+    def clamp(self):
+        """
+        Force this location to be sane.
+
+        Forces the position and orientation to be sane, then fixes up
+        location-specific things, like stance.
+
+        :returns: bool indicating whether this location had to be altered
+        """
+
+        clamped = False
+
+        y = self.pos.y
+
+        # Clamp Y. We take precautions here and forbid things to go up past
+        # the top of the world; this tend to strand entities up in the sky
+        # where they cannot get down.
+        if not 0 < y < (32 * 126):
+            y = clamp(y, 0, 32 * 126)
+            self.pos = self.pos._replace(y=y)
+            clamped = True
+
+        # Stance is the current jumping position, plus a small offset of
+        # around 0.1. In the Alpha server, it must between 0.1 and 1.65, or
+        # the anti-grounded code kicks the client. At this point, we enforce
+        # some sanity on our client, and force the stance to a reasonable
+        # value.
+        fy = y / 32
+        if not 0.1 < (self.stance - fy) < 1.65:
+            self.stance = fy + 1.0
+            clamped = True
+
+        return clamped
+
     def save_to_packet(self):
         """
         Returns a position/look/grounded packet.
@@ -160,10 +197,6 @@ class Location(object):
 
         # Get our position.
         x, y, z = self.pos.to_block()
-
-        # Clamp stance.
-        if not 0.1 < (self.stance - y) < 1.65:
-            self.stance = y + 1.0
 
         # Grab orientation.
         yaw, pitch = self.ori.to_degs()
