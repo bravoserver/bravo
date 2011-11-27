@@ -185,16 +185,27 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         old_position = self.location.pos
         position = Position.from_player(container.position.x,
                 container.position.y, container.position.z)
-        self.location.pos = position
-        self.location.stance = container.position.stance
+        altered = False
 
-        # Santitize location.
-        altered = self.location.clamp()
+        dx, dy, dz = old_position - position
+        if any(abs(d) >= 64 for d in (dx, dy, dz)):
+            # Whoa, slow down there, cowboy. You're moving too fast. We're
+            # gonna ignore this position change completely, because it's
+            # either bogus or ignoring a recent teleport.
+            altered = True
+        else:
+            self.location.pos = position
+            self.location.stance = container.position.stance
+
+        # Santitize location. This handles safety boundaries, illegal stance,
+        # etc.
+        altered = self.location.clamp() or altered
 
         # If, for any reason, our opinion on where the client should be
         # located is different than theirs, force them to conform to our point
         # of view.
         if altered:
+            log.msg("Not updating bogus position!")
             self.update_location()
 
         # If our position actually changed, fire the position change hook.
