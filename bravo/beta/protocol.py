@@ -98,7 +98,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             101: self.wclose,
             102: self.waction,
             106: self.wacknowledge,
-            107: self.creative_inventory,
+            107: self.wcreative,
             130: self.sign,
             254: self.poll,
             255: self.quit,
@@ -280,7 +280,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Hook for wacknowledge packets.
         """
 
-    def creative_inventory(self, container):
+    def wcreative(self, container):
         """
         Hook for creative inventory action packets.
         """
@@ -1154,19 +1154,20 @@ class BravoProtocol(BetaServerProtocol):
         self.write_packet("window-token", wid=container.wid,
             token=container.token, acknowledged=handled)
 
-    def creative_inventory(self, container):
+    def wcreative(self, container):
         # apply inventory change that was done in creative mode
-        applied = self.inventory.creative(container.slot, container.itemid,
-            container.damage, container.quantity)
+        applied = self.inventory.creative(container.slot, container.primary,
+            container.secondary, container.quantity)
         if applied:
             # Inform other players about changes to this player's equipment.
             equipped_slot = self.player.equipped + 36
             if container.slot == equipped_slot:
                 packet = make_packet("entity-equipment",
                     eid=self.player.eid,
+                    # XXX why 0? why not the actual slot?
                     slot=0,
-                    primary=container.itemid,
-                    secondary=container.damage
+                    primary=container.primary,
+                    secondary=container.secondary,
                 )
                 self.factory.broadcast_for_others(packet, self)
 
