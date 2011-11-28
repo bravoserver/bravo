@@ -10,6 +10,7 @@ from construct import Container
 from bravo.beta.protocol import BetaServerProtocol, BravoProtocol
 from bravo.config import BravoConfigParser
 from bravo.errors import BetaClientError
+from bravo.location import Position
 
 class FakeTransport(object):
 
@@ -36,32 +37,10 @@ class TestBetaServerProtocol(unittest.TestCase):
 
     def tearDown(self):
         # Stop the connection timeout.
-        if self.p._TimeoutMixin__timeoutCall:
-            self.p._TimeoutMixin__timeoutCall.cancel()
+        self.p.setTimeout(None)
 
     def test_trivial(self):
         pass
-
-    def test_location_update(self):
-        """
-        Regression test for location unification commits around the time of
-        5a14768866cdebdb022a69b9edbed22208550033.
-        """
-
-        # This packet is the location test packet from the packet parser
-        # test suite. Position in blocks is (1, 2, 4), with a stance of 3
-        # (2 + 1), and an orientation in degrees of (5, 6). The location is
-        # grounded.
-        location_packet = """
-        DT/wAAAAAAAAQAAAAAAAAABACAAAAAAAAEAQAAAAAAAAQKAAAEDAAAAB
-        """.decode("base64")
-
-        self.p.dataReceived(location_packet)
-
-        self.assertEqual(self.p.location.pos.to_block(), (1, 2, 4))
-        self.assertEqual(self.p.location.stance, 3)
-        self.assertEqual(self.p.location.ori.to_degs(), (5, 6))
-        self.assertTrue(self.p.location.grounded)
 
     def test_reject_ancient_and_newfangled_clients(self):
         """
@@ -156,8 +135,7 @@ class TestBravoProtocol(unittest.TestCase):
         self.p = BravoProtocol(self.bcp, "unittest")
 
     def tearDown(self):
-        if self.p._TimeoutMixin__timeoutCall:
-            self.p._TimeoutMixin__timeoutCall.cancel()
+        self.p.setTimeout(None)
 
     def test_trivial(self):
         pass
