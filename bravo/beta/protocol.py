@@ -966,12 +966,12 @@ class BravoProtocol(BetaServerProtocol):
 
         x, y, z = coords
 
+        if block.breakable:
+            chunk.destroy(coords)
+
         l = []
         for hook in self.dig_hooks:
             l.append(maybeDeferred(hook.dig_hook, chunk, x, y, z, block))
-
-        if block.breakable:
-            chunk.destroy(coords)
 
         dl = DeferredList(l)
         dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
