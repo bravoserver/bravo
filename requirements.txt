@@ -1,0 +1,2 @@
+construct>=2.03
+Twisted>=11.0
