@@ -426,8 +426,7 @@ packets = {
         SBInt32("x"),
         SBInt32("y"),
         SBInt32("z"),
-        # 0, 1, 2, or 3
-        UBInt32("direction"),
+        face,
     ),
     26: Struct("experience",
         UBInt32("eid"),
