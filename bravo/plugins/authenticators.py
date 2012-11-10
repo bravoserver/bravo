@@ -36,7 +36,7 @@ class OfflineAuthenticator(object):
         players = min(protocol.factory.limitConnections, 60)
 
         packet = make_packet("login",
-                    pid=protocol.eid,
+                    eid=protocol.eid,
                     leveltype="default",
                     mode=protocol.factory.mode,
                     dimension=protocol.factory.world.dimension,
