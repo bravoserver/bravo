@@ -21,6 +21,8 @@ class OfflineAuthenticator(object):
         This will authenticate just about anybody.
         """
 
+        protocol.username = container.username
+
         # Order is important here; the challenged callback *must* fire before
         # we send anything back to the client, because otherwise we won't have
         # a valid entity ready to use.
@@ -28,7 +30,7 @@ class OfflineAuthenticator(object):
 
         # Since a handshake packet from the server is no longer necessary,
         # once challenged calls back, we fire off a login packet.
-        d.addCallback(lambda none: self.login(protocol, container))
+        d.addCallback(lambda none: protocol.login(container))
 
         return True
 
