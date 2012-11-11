@@ -1,6 +1,7 @@
 *.pyc
 *.swp
 bravo.ini
+bravo.log
 twistd.pid
 dropin.cache
 website/output/*
