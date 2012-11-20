@@ -9,7 +9,6 @@ from bravo.blocks import blocks
 from bravo.config import BravoConfigParser
 from bravo.ibravo import IDigHook
 import bravo.plugin
-from bravo.tests.helpers import assert_array_equal
 from bravo.world import ChunkNotLoaded, World
 
 class PhysicsMockFactory(object):
@@ -379,7 +378,7 @@ class TestWater(unittest.TestCase):
         after = chunk.blocks[:, :, 0], chunk.metadata[:, :, 0]
 
         # Make sure that the sponge didn't permanently change anything.
-        assert_array_equal(before, after)
+        self.assertEqual(before, after)
 
     @inlineCallbacks
     def test_spring_remove(self):

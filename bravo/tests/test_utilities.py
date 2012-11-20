@@ -8,7 +8,6 @@ from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 from bravo.utilities.chat import sanitize_chat
 from bravo.utilities.coords import split_coords, taxicab2, taxicab3
 from bravo.utilities.temporal import split_time
-from bravo.tests.helpers import assert_array_equal
 
 class TestCoordHandling(unittest.TestCase):
 
@@ -44,8 +43,8 @@ class TestCoordHandling(unittest.TestCase):
 class TestBitTwiddling(unittest.TestCase):
 
     def test_unpack_nibbles(self):
-        assert_array_equal(unpack_nibbles("a"), array("B", [1, 6]))
-        assert_array_equal(unpack_nibbles("nibbles"),
+        self.assertEqual(unpack_nibbles("a"), array("B", [1, 6]))
+        self.assertEqual(unpack_nibbles("nibbles"),
             array("B", [14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 6, 3, 7])
         )
 
