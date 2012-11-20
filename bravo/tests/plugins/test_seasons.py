@@ -67,7 +67,7 @@ class TestWinter(unittest.TestCase):
         self.c.populated = True
         self.c.dirty = False
         self.c.clear_damage()
-        self.c.heightmap[0, 0] = 2
+        self.c.heightmap[0 * 16 + 0] = 2
         self.hook.transform(self.c)
         self.assertEqual(self.c.get_block((0, 1, 0)),
             bravo.blocks.blocks["snow"].slot)
