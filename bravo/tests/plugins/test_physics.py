@@ -359,9 +359,10 @@ class TestWater(unittest.TestCase):
         while self.hook.tracked:
             self.hook.process()
 
-        # Take a snapshot.
         chunk = yield self.w.request_chunk(0, 0)
-        before = chunk.blocks[:, :, 0], chunk.metadata[:, :, 0]
+
+        # Take a snapshot at the base level, with a clever slice.
+        before = chunk.blocks[::16 * 128], chunk.metadata[::16 * 128]
 
         self.w.set_block((3, 0, 0), blocks["sponge"].slot)
         self.hook.tracked.add((3, 0, 0))
@@ -375,7 +376,8 @@ class TestWater(unittest.TestCase):
         while self.hook.tracked:
             self.hook.process()
 
-        after = chunk.blocks[:, :, 0], chunk.metadata[:, :, 0]
+        # Make another snapshot, for comparison.
+        after = chunk.blocks[::16 * 128], chunk.metadata[::16 * 128]
 
         # Make sure that the sponge didn't permanently change anything.
         self.assertEqual(before, after)
