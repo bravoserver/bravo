@@ -60,7 +60,7 @@ def composite_glow(target, strength, x, y, z):
 
     ambient = glow[strength]
 
-    xbound, zbound, ybound = target.shape
+    xbound, zbound, ybound = 16, 128, 16
 
     sx = x - strength
     sy = y - strength
@@ -91,8 +91,15 @@ def composite_glow(target, strength, x, y, z):
     if ez > zbound:
         ez, ek = zbound, ek - ez + zbound
 
-    # Composite!
-    target[sx:ex, sz:ez, sy:ey] += ambient[si:ei, sk:ek, sj:ej]
+    adim = 2 * strength + 1
+
+    # Composite! Apologies for the loops.
+    for (tx, ax) in zip(range(sx, ex), range(si, ei)):
+        for (tz, az) in zip(range(sz, ez), range(sk, ek)):
+            for (ty, ay) in zip(range(sy, ey), range(sj, ej)):
+                target_index = (tx * 16 + tz) * 128 + ty
+                ambient_index = (ax * adim + az) * adim + ay
+                target[target_index] += ambient[ambient_index]
 
 def iter_neighbors(coords):
     """
