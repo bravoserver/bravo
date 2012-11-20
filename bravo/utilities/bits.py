@@ -40,7 +40,7 @@ def pack_nibbles(a):
 
     Bytes are returned as characters.
 
-    :param `ndarray` a: nibbles to pack
+    :param `array` a: nibbles to pack
 
     :returns: packed nibbles as a string of bytes
     """

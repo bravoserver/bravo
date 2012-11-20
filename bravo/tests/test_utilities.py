@@ -44,9 +44,10 @@ class TestCoordHandling(unittest.TestCase):
 class TestBitTwiddling(unittest.TestCase):
 
     def test_unpack_nibbles(self):
-        assert_array_equal(unpack_nibbles("a"), [1, 6])
+        assert_array_equal(unpack_nibbles("a"), array("B", [1, 6]))
         assert_array_equal(unpack_nibbles("nibbles"),
-            [14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 6, 3, 7])
+            array("B", [14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 6, 3, 7])
+        )
 
     def test_pack_nibbles(self):
         self.assertEqual(pack_nibbles(array("B", [1, 6])), "a")
@@ -55,21 +56,16 @@ class TestBitTwiddling(unittest.TestCase):
             "nibs")
 
     def test_nibble_reflexivity(self):
-        self.assertEqual("nibbles",
-            pack_nibbles(
-                array(unpack_nibbles("nibbles"))
-            )
-        )
+        self.assertEqual("nibbles", pack_nibbles(unpack_nibbles("nibbles")))
 
     def test_unpack_nibbles_overflow(self):
         """
         No spurious OverflowErrors should occur when packing nibbles.
 
-        This test doesn't even assert anything; it will raise instead if
-        there's a regression.
+        This test will raise if there's a regression.
         """
 
-        pack_nibbles([0xff, 0xff])
+        self.assertEqual(pack_nibbles(array("B", [0xff, 0xff])), "\xff")
 
 class TestStringMunging(unittest.TestCase):
 
