@@ -42,14 +42,18 @@ class TestCoordHandling(unittest.TestCase):
 
 class TestBitTwiddling(unittest.TestCase):
 
-    def test_unpack_nibbles(self):
+    def test_unpack_nibbles_single(self):
         self.assertEqual(unpack_nibbles("a"), array("B", [1, 6]))
+
+    def test_unpack_nibbles_multiple(self):
         self.assertEqual(unpack_nibbles("nibbles"),
             array("B", [14, 6, 9, 6, 2, 6, 2, 6, 12, 6, 5, 6, 3, 7])
         )
 
-    def test_pack_nibbles(self):
+    def test_pack_nibbles_single(self):
         self.assertEqual(pack_nibbles(array("B", [1, 6])), "a")
+
+    def test_pack_nibbles_multiple(self):
         self.assertEqual(
             pack_nibbles(array("B", [14, 6, 9, 6, 2, 6, 3, 7])),
             "nibs")
