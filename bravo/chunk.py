@@ -40,6 +40,16 @@ def check_bounds(f):
 
     return deco
 
+def ci(x, y, z):
+    """
+    Turn an (x, y, z) tuple into a chunk index.
+
+    This is really a macro and not a function, but Python doesn't know the
+    difference. Hopefully this is faster on PyPy than on CPython.
+    """
+
+    return (x * 16 + z) * 128 + y
+
 # Set up glow tables.
 # These tables provide glow maps for illuminated points.
 glow = [None] * 16
@@ -97,9 +107,8 @@ def composite_glow(target, strength, x, y, z):
     for (tx, ax) in zip(range(sx, ex), range(si, ei)):
         for (tz, az) in zip(range(sz, ez), range(sk, ek)):
             for (ty, ay) in zip(range(sy, ey), range(sj, ej)):
-                target_index = (tx * 16 + tz) * 128 + ty
                 ambient_index = (ax * adim + az) * adim + ay
-                target[target_index] += ambient[ambient_index]
+                target[ci(tx, ty, tz)] += ambient[ambient_index]
 
 def iter_neighbors(coords):
     """
@@ -217,7 +226,7 @@ class Chunk(object):
         lightmap = array("L", [0] * (16 * 16 * 128))
 
         for x, y, z in product(xrange(16), xrange(128), xrange(16)):
-            block = self.blocks[(x * 16 + z) * 128 + y]
+            block = self.blocks[ci(x, y, z)]
             if block in glowing_blocks:
                 composite_glow(lightmap, glowing_blocks[block], x, y, z)
 
@@ -275,7 +284,7 @@ class Chunk(object):
         # find all lighted blocks with one or more unlit blocks as neighbours.
         spread = set()
         for x, z, y in product(xrange(16), xrange(16), xrange(max_height)):
-            if not lightmap[(x * 16 + z) * 128 + y]:
+            if not lightmap[ci(x, y, z)]:
                 continue
 
             if ((x > 0  and unlit[((x - 1) * 16 + z) * 128 + y]) or
@@ -290,6 +299,7 @@ class Chunk(object):
         # blocks and illuminate them.
         for glow in xrange(14, 0, -1):
             for coords in spread:
+                # XXX should this be ci()'d?
                 if lightmap[(coords[0] * 16 + coords[1]) * 16 + coords[2]] <= glow:
                     visited.add(coords)
                     continue
@@ -304,7 +314,7 @@ class Chunk(object):
                     if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < 128):
                         continue
 
-                    offset = (x * 16 + z) * 128 + y
+                    offset = ci(x, y, z)
 
                     # If the block's lightable and the lightmap isn't fully
                     # lit up, then light the block appropriately and mark it
@@ -340,8 +350,10 @@ class Chunk(object):
 
         x, y, z = coords
 
-        self.damaged[(x * 16 + z) * 128 + y] = 1
+        self.damaged[ci(x, y, z)] = 1
 
+        # The number 176 represents the threshold at which it is cheaper to
+        # resend the entire chunk instead of individual blocks.
         if sum(self.damaged) > 176:
             self.all_damaged = True
 
@@ -458,8 +470,7 @@ class Chunk(object):
         :returns: int representing block type
         """
 
-        x, y, z = coords
-        return self.blocks[(x * 16 + z) * 128 + y]
+        return self.blocks[ci(*coords)]
 
     @check_bounds
     def set_block(self, coords, block):
@@ -502,7 +513,7 @@ class Chunk(object):
                                               self.blocklight])
 
             # And the skylight.
-            glow = max(self.skylight[(nx * 16 + nz) * 128 + ny]
+            glow = max(self.skylight[ci(nx, ny, nz)]
                 for nx, nz, ny in iter_neighbors((x, z, y)))
             self.skylight[offset] = neighboring_light(glow, block)
 
@@ -518,8 +529,7 @@ class Chunk(object):
         :rtype: int
         """
 
-        x, y, z = coords
-        return self.metadata[(x * 16 + z) * 128 + y]
+        return self.metadata[ci(*coords)]
 
     @check_bounds
     def set_metadata(self, coords, metadata):
@@ -530,10 +540,8 @@ class Chunk(object):
         :param int metadata:
         """
 
-        x, y, z = coords
-
-        if self.metadata[(x * 16 + z) * 128 + y] != metadata:
-            self.metadata[(x * 16 + z) * 128 + y] = metadata
+        if self.metadata[ci(*coords)] != metadata:
+            self.metadata[ci(*coords)] = metadata
 
             self.dirty = True
             self.damage(coords)
@@ -553,11 +561,9 @@ class Chunk(object):
         :param tuple coords: coordinate triplet
         """
 
-        x, y, z = coords
-
-        block = blocks[self.blocks[(x * 16 + z) * 128 + y]]
-        self.set_block((x, y, z), block.replace)
-        self.set_metadata((x, y, z), 0)
+        block = blocks[self.blocks[ci(*coords)]]
+        self.set_block(coords, block.replace)
+        self.set_metadata(coords, 0)
 
     def height_at(self, x, z):
         """
