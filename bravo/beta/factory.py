@@ -11,12 +11,14 @@ from zope.interface import implements
 from bravo.beta.packets import make_packet
 from bravo.beta.protocol import BravoProtocol, KickedProtocol
 from bravo.entity import entities
-from bravo.ibravo import (ISortedPlugin, IAutomaton, IAuthenticator, ISeason,
-    ITerrainGenerator, IUseHook, ISignHook, IPreDigHook, IDigHook, IPreBuildHook,
-    IPostBuildHook, IWindowOpenHook, IWindowClickHook, IWindowCloseHook)
+from bravo.ibravo import (ISortedPlugin, IAutomaton, IAuthenticator,
+        ITerrainGenerator, IUseHook, ISignHook, IPreDigHook, IDigHook,
+        IPreBuildHook, IPostBuildHook, IWindowOpenHook, IWindowClickHook,
+        IWindowCloseHook)
 from bravo.location import Location
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
 from bravo.policy.packs import packs as available_packs
+from bravo.policy.seasons import Spring, Winter
 from bravo.utilities.chat import chat_name, sanitize_chat
 from bravo.weather import WeatherVane
 from bravo.world import World
@@ -47,6 +49,8 @@ class BravoFactory(Factory):
     login_hook = None
 
     interfaces = []
+
+    seasons = [Spring(), Winter()]
 
     def __init__(self, config, name):
         """
@@ -250,7 +254,6 @@ class BravoFactory(Factory):
         plugin_types = {
             "automatons": IAutomaton,
             "generators": ITerrainGenerator,
-            "seasons": ISeason,
             "open_hooks": IWindowOpenHook,
             "click_hooks": IWindowClickHook,
             "close_hooks": IWindowCloseHook,
@@ -303,7 +306,6 @@ class BravoFactory(Factory):
         for name in [
             "automatons",
             "generators",
-            "seasons",
             "open_hooks",
             "click_hooks",
             "close_hooks",

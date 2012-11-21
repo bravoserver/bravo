@@ -87,6 +87,3 @@ class Spring(object):
     name = "spring"
 
     day = 90
-
-winter = Winter()
-spring = Spring()

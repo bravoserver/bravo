@@ -3,11 +3,11 @@ from textwrap import wrap
 from twisted.internet import reactor
 from zope.interface import implements
 
-from bravo.blocks import parse_block
-from bravo.ibravo import IChatCommand, IConsoleCommand, ISeason
-from bravo.plugin import (retrieve_plugins, retrieve_named_plugins,
-    PluginException)
 from bravo.beta.packets import make_packet
+from bravo.blocks import parse_block
+from bravo.ibravo import IChatCommand, IConsoleCommand
+from bravo.plugin import retrieve_plugins
+from bravo.policy.seasons import Spring, Winter
 from bravo.utilities.temporal import split_time
 
 from bravo.parameters import factory
@@ -338,9 +338,11 @@ class Season(object):
 
     def console_command(self, parameters):
         wanted = " ".join(parameters)
-        try:
-            season = retrieve_named_plugins(ISeason, [wanted])[0]
-        except PluginException:
+        if wanted == "spring":
+            season = Spring()
+        elif wanted == "winter":
+            season = Winter()
+        else:
             yield "Couldn't find season %s" % wanted
             return
 
