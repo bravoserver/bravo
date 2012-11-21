@@ -597,7 +597,9 @@ class Chunk(object):
 
         :rtype: :py:class:`numpy.ndarray`
         """
-        return self.blocks[x * 16 + z]
+
+        column = (x * 16 + z) * 128
+        return self.blocks[column:column + 128]
 
     def set_column(self, x, z, column):
         """
@@ -605,10 +607,12 @@ class Chunk(object):
 
         :param int x: X coordinate
         :param int z: Z coordinate
-        :type column: :py:class:`numpy.ndarray`
+        :type column: :py:class:`array.array`
         :param column: Column data, in the form of a NumPy array.
         """
-        self.blocks[x * 16 + z] = column
+
+        s = (x * 16 + z) * 128
+        self.blocks[s:s + 128] = column
 
         self.dirty = True
         for y in range(128):
