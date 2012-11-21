@@ -307,8 +307,7 @@ class Chunk(object):
         # blocks and illuminate them.
         for glow in xrange(14, 0, -1):
             for coords in spread:
-                # XXX should this be ci()'d?
-                if lightmap[(coords[0] * 16 + coords[1]) * 16 + coords[2]] <= glow:
+                if lightmap[ci(coords[0], coords[2], coords[1])] <= glow:
                     visited.add(coords)
                     continue
 
