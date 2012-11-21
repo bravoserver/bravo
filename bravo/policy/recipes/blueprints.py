@@ -242,179 +242,147 @@ def door(material, provides, name):
         (provides.key, 1))
 
 # And now, having defined our helpers, we instantiate all of the recipes, in
-# no particular order.
-
-#Basics
-sticks = one_by_two(blocks["wood"], blocks["wood"], items["stick"], 4, "sticks")
-torches = one_by_two(items["coal"], items["stick"], blocks["torch"], 4,
-    "torches")
-workbench = two_by_two(blocks["wood"], blocks["workbench"], "workbench")
-furnace = hollow_eight(blocks["cobblestone"], blocks["furnace"], "furnace")
-chest = hollow_eight(blocks["wood"], blocks["chest"], "chest")
-
-#Block
-ironblock = three_by_three(items["iron-ingot"], items["iron-ingot"],
-    blocks["iron"], "iron-block")
-goldblock = three_by_three(items["gold-ingot"], items["gold-ingot"],
-    blocks["gold"], "gold-block")
-diamondblock = three_by_three(items["diamond"], items["diamond"],
-    blocks["diamond-block"], "diamond-block")
-glowstone = three_by_three(items["glowstone-dust"], items["glowstone-dust"],
-    blocks["lightstone"], "lightstone")
-lazuliblock = three_by_three(items["lapis-lazuli"], items["lapis-lazuli"],
-    blocks["lapis-lazuli-block"], "lapis-lazuli-block")
-wool = three_by_three(items["string"], items["string"], blocks["wool"], "wool")
-stoneslab = three_by_one(blocks["stone"], blocks["stone-step"], 3, "stone-step")
-cstoneslab = three_by_one(blocks["cobblestone"], blocks["cobblestone-step"], 3,
-    "cobblestone-step")
-sstoneslab = three_by_one(blocks["sandstone"], blocks["sandstone-step"], 3,
-    "sandstone-step")
-woodenslab = three_by_one(blocks["wood"], blocks["wooden-step"], 3, "wooden-step")
-woodstairs = stairs(blocks["wood"], blocks["wooden-stairs"], "wood")
-cstonestairs = stairs(blocks["cobblestone"], blocks["stone-stairs"], "stone")
-snowblock = two_by_two(items["snowball"], blocks["snow-block"], "snow-block")
-clayblock = two_by_two(items["clay-balls"], blocks["clay"], "clay-block")
-brick = two_by_two(items["clay-brick"], blocks["brick"], "brick")
-sandstone = two_by_two(blocks["sand"], blocks["sandstone"], "sandstone")
-jackolantern = one_by_two(blocks["pumpkin"], items["stick"],
-    blocks["jack-o-lantern"], 1, "jack-o-lantern")
-
-#Tools
-woodaxe = axe(blocks["wood"], items["wooden-axe"], "wood")
-stoneaxe = axe(blocks["cobblestone"], items["stone-axe"], "stone")
-ironaxe = axe(items["iron-ingot"], items["iron-axe"], "iron")
-goldaxe = axe(items["gold-ingot"], items["gold-axe"], "gold")
-diamondaxe = axe(items["diamond"], items["diamond-axe"], "diamond")
-woodpickaxe = pickaxe(blocks["wood"], items["wooden-pickaxe"], "wood")
-stonepickaxe = pickaxe(blocks["cobblestone"], items["stone-pickaxe"], "stone")
-ironpickaxe = pickaxe(items["iron-ingot"], items["iron-pickaxe"], "iron")
-goldpickaxe = pickaxe(items["gold-ingot"], items["gold-pickaxe"], "gold")
-diamondpickaxe = pickaxe(items["diamond"], items["diamond-pickaxe"],
-    "diamond")
-woodshovel = shovel(blocks["wood"], items["wooden-shovel"], "wood")
-stoneshovel = shovel(blocks["cobblestone"], items["stone-shovel"], "stone")
-ironshovel = shovel(items["iron-ingot"], items["iron-shovel"], "iron")
-goldshovel = shovel(items["gold-ingot"], items["gold-shovel"], "gold")
-diamondshovel = shovel(items["diamond"], items["diamond-shovel"], "diamond")
-woodhoe = hoe(blocks["wood"], items["wooden-hoe"], "wood")
-stonehoe = hoe(blocks["cobblestone"], items["stone-hoe"], "stone")
-ironhoe = hoe(items["iron-ingot"], items["iron-hoe"], "iron")
-goldhoe = hoe(items["gold-ingot"], items["gold-hoe"], "gold")
-diamondhoe = hoe(items["diamond"], items["diamond-hoe"], "diamond")
-clock = clock_compass(items["iron-ingot"], items["clock"], "clock")
-compass = clock_compass(items["gold-ingot"], items["compass"], "compass")
-bucket = bowl_bucket(items["iron-ingot"], items["bucket"], 1, "bucket")
-
-#Weapon
-woodsword = sword(blocks["wood"], items["wooden-sword"], "wood")
-cstonesword = sword(blocks["cobblestone"], items["stone-sword"], "stone")
-ironsword = sword(items["iron-ingot"], items["iron-sword"], "iron")
-goldsword = sword(items["gold-ingot"], items["gold-sword"], "gold")
-diamondsword = sword(items["diamond"], items["diamond-sword"], "diamond")
-
-#Armor
-leatherhelmet = helmet(items["leather"], items["leather-helmet"], "leather")
-goldhelmet = helmet(items["gold-ingot"], items["gold-helmet"], "gold")
-ironhelmet = helmet(items["iron-ingot"], items["iron-helmet"], "iron")
-diamondhelmet = helmet(items["diamond"], items["diamond-helmet"], "diamond")
-chainmailhelmet = helmet(blocks["fire"], items["chainmail-helmet"],
-    "chainmail")
-leatherchestplate = chestplate(items["leather"], items["leather-chestplate"],
-    "leather")
-goldchestplate = chestplate(items["gold-ingot"], items["gold-chestplate"],
-    "gold")
-ironchestplate = chestplate(items["iron-ingot"], items["iron-chestplate"],
-    "iron")
-diamondchestplate = chestplate(items["diamond"], items["diamond-chestplate"],
-    "diamond")
-chainmailchestplate = chestplate(blocks["fire"],
-    items["chainmail-chestplate"], "chainmail")
-leatherleggings = leggings(items["leather"], items["leather-leggings"],
-    "leather")
-goldleggings = leggings(items["gold-ingot"], items["gold-leggings"], "gold")
-ironleggings = leggings(items["iron-ingot"], items["iron-leggings"], "iron")
-diamondleggings = leggings(items["diamond"], items["diamond-leggings"],
-    "diamond")
-chainmailleggings = leggings(blocks["fire"], items["chainmail-leggings"],
-    "chainmail")
-leatherboots = boots(items["leather"], items["leather-boots"], "leather")
-goldboots = boots(items["gold-ingot"], items["gold-boots"], "gold")
-ironboots = boots(items["iron-ingot"], items["iron-boots"], "iron")
-diamondboots = boots(items["diamond"], items["diamond-boots"], "diamond")
-chainmailboots = boots(blocks["fire"], items["chainmail-boots"], "chainmail")
-
-#Transportation
-minecart = cart_boat(items["iron-ingot"], items["mine-cart"], "minecart")
-poweredmc = one_by_two(blocks["furnace"], items["mine-cart"],
-    items["powered-minecart"], 1, "poweredmc")
-storagemc = one_by_two(blocks["chest"], items["mine-cart"],
-    items["storage-minecart"], 1, "storagemc")
-boat = cart_boat(blocks["wood"], items["boat"], "boat")
-
-#Mechanism
-wooddoor = door(blocks["wood"], items["wooden-door"], "wood")
-irondoor = door(items["iron-ingot"], items["iron-door"], "iron")
-woodpressure = two_by_one(blocks["wood"], blocks["wooden-plate"], 1,
-    "wood-plate")
-stonepressure = two_by_one(blocks["stone"], blocks["stone-plate"], 1,
-    "stone-plate")
-stonebtn = one_by_two(blocks["stone"], blocks["stone"], blocks["stone-button"],
-    1, "stone-btn")
-redstonetorch = one_by_two(items["redstone"], items["stick"],
-    blocks["redstone-torch"], 1, "redstone-torch")
-lever = one_by_two(items["stick"], blocks["cobblestone"], blocks["lever"], 1,
-    "lever")
-noteblock = three_by_three(blocks["wood"], items["redstone"],
-    blocks["note-block"], "noteblock")
-jukebox = three_by_three(blocks["wood"], items["diamond"], blocks["jukebox"],
-    "jukebox")
-
-trapdoor = Blueprint("trapdoor", (3, 2), ((blocks["wood"].key, 1),) * 6,
-    (blocks["trapdoor"].key, 2))
-
-#Food
-bowl = bowl_bucket(blocks["wood"], items["bowl"], 4, "bowl")
-bread = three_by_one(items["wheat"], items["bread"], 1, "bread")
-goldenapple = three_by_three(blocks["gold"], items["apple"],
-    items["golden-apple"], "goldapple")
-
-painting = three_by_three(items["stick"], blocks["wool"], items["paintings"],
-    "paintings")
-papers = three_by_one(blocks["reed"], items["paper"], 3, "paper")
-
-# Special items.
-# These recipes are only special in that their blueprints don't follow any
-# interesting or reusable patterns, so they are presented here in a very
-# explicit, open-coded style.
-arrow = Blueprint("arrow", (1, 3),
-    (
+# no particular order. There are no longer any descriptive names or comments
+# next to most recipes, becase they are still instantiated with a name.
+all_blueprints = (
+    # The basics.
+    one_by_two(blocks["wood"], blocks["wood"], items["stick"], 4, "sticks"),
+    one_by_two(items["coal"], items["stick"], blocks["torch"], 4, "torches"),
+    two_by_two(blocks["wood"], blocks["workbench"], "workbench"),
+    hollow_eight(blocks["cobblestone"], blocks["furnace"], "furnace"),
+    hollow_eight(blocks["wood"], blocks["chest"], "chest"),
+    # Some blocks.
+    three_by_three(items["iron-ingot"], items["iron-ingot"], blocks["iron"],
+            "iron-block"),
+    three_by_three(items["gold-ingot"], items["gold-ingot"], blocks["gold"],
+        "gold-block"),
+    three_by_three(items["diamond"], items["diamond"],
+        blocks["diamond-block"], "diamond-block"),
+    three_by_three(items["glowstone-dust"], items["glowstone-dust"],
+        blocks["lightstone"], "lightstone"),
+    three_by_three(items["lapis-lazuli"], items["lapis-lazuli"],
+        blocks["lapis-lazuli-block"], "lapis-lazuli-block"),
+    three_by_three(items["string"], items["string"], blocks["wool"], "wool"),
+    three_by_one(blocks["stone"], blocks["stone-step"], 3, "stone-step"),
+    three_by_one(blocks["cobblestone"], blocks["cobblestone-step"], 3,
+        "cobblestone-step"),
+    three_by_one(blocks["sandstone"], blocks["sandstone-step"], 3,
+        "sandstone-step"),
+    three_by_one(blocks["wood"], blocks["wooden-step"], 3, "wooden-step"),
+    stairs(blocks["wood"], blocks["wooden-stairs"], "wood"),
+    stairs(blocks["cobblestone"], blocks["stone-stairs"], "stone"),
+    two_by_two(items["snowball"], blocks["snow-block"], "snow-block"),
+    two_by_two(items["clay-balls"], blocks["clay"], "clay-block"),
+    two_by_two(items["clay-brick"], blocks["brick"], "brick"),
+    two_by_two(blocks["sand"], blocks["sandstone"], "sandstone"),
+    one_by_two(blocks["pumpkin"], items["stick"], blocks["jack-o-lantern"], 1,
+        "jack-o-lantern"),
+    # Tools.
+    axe(blocks["wood"], items["wooden-axe"], "wood"),
+    axe(blocks["cobblestone"], items["stone-axe"], "stone"),
+    axe(items["iron-ingot"], items["iron-axe"], "iron"),
+    axe(items["gold-ingot"], items["gold-axe"], "gold"),
+    axe(items["diamond"], items["diamond-axe"], "diamond"),
+    pickaxe(blocks["wood"], items["wooden-pickaxe"], "wood"),
+    pickaxe(blocks["cobblestone"], items["stone-pickaxe"], "stone"),
+    pickaxe(items["iron-ingot"], items["iron-pickaxe"], "iron"),
+    pickaxe(items["gold-ingot"], items["gold-pickaxe"], "gold"),
+    pickaxe(items["diamond"], items["diamond-pickaxe"], "diamond"),
+    shovel(blocks["wood"], items["wooden-shovel"], "wood"),
+    shovel(blocks["cobblestone"], items["stone-shovel"], "stone"),
+    shovel(items["iron-ingot"], items["iron-shovel"], "iron"),
+    shovel(items["gold-ingot"], items["gold-shovel"], "gold"),
+    shovel(items["diamond"], items["diamond-shovel"], "diamond"),
+    hoe(blocks["wood"], items["wooden-hoe"], "wood"),
+    hoe(blocks["cobblestone"], items["stone-hoe"], "stone"),
+    hoe(items["iron-ingot"], items["iron-hoe"], "iron"),
+    hoe(items["gold-ingot"], items["gold-hoe"], "gold"),
+    hoe(items["diamond"], items["diamond-hoe"], "diamond"),
+    clock_compass(items["iron-ingot"], items["clock"], "clock"),
+    clock_compass(items["gold-ingot"], items["compass"], "compass"),
+    bowl_bucket(items["iron-ingot"], items["bucket"], 1, "bucket"),
+    # Weapons.
+    sword(blocks["wood"], items["wooden-sword"], "wood"),
+    sword(blocks["cobblestone"], items["stone-sword"], "stone"),
+    sword(items["iron-ingot"], items["iron-sword"], "iron"),
+    sword(items["gold-ingot"], items["gold-sword"], "gold"),
+    sword(items["diamond"], items["diamond-sword"], "diamond"),
+    # Armor.
+    helmet(items["leather"], items["leather-helmet"], "leather"),
+    helmet(items["gold-ingot"], items["gold-helmet"], "gold"),
+    helmet(items["iron-ingot"], items["iron-helmet"], "iron"),
+    helmet(items["diamond"], items["diamond-helmet"], "diamond"),
+    helmet(blocks["fire"], items["chainmail-helmet"], "chainmail"),
+    chestplate(items["leather"], items["leather-chestplate"], "leather"),
+    chestplate(items["gold-ingot"], items["gold-chestplate"], "gold"),
+    chestplate(items["iron-ingot"], items["iron-chestplate"], "iron"),
+    chestplate(items["diamond"], items["diamond-chestplate"], "diamond"),
+    chestplate(blocks["fire"], items["chainmail-chestplate"], "chainmail"),
+    leggings(items["leather"], items["leather-leggings"], "leather"),
+    leggings(items["gold-ingot"], items["gold-leggings"], "gold"),
+    leggings(items["iron-ingot"], items["iron-leggings"], "iron"),
+    leggings(items["diamond"], items["diamond-leggings"], "diamond"),
+    leggings(blocks["fire"], items["chainmail-leggings"], "chainmail"),
+    boots(items["leather"], items["leather-boots"], "leather"),
+    boots(items["gold-ingot"], items["gold-boots"], "gold"),
+    boots(items["iron-ingot"], items["iron-boots"], "iron"),
+    boots(items["diamond"], items["diamond-boots"], "diamond"),
+    boots(blocks["fire"], items["chainmail-boots"], "chainmail"),
+    # Transportation.
+    cart_boat(items["iron-ingot"], items["mine-cart"], "minecart"),
+    one_by_two(blocks["furnace"], items["mine-cart"],
+            items["powered-minecart"], 1, "poweredmc"),
+    one_by_two(blocks["chest"], items["mine-cart"], items["storage-minecart"],
+            1, "storagemc"),
+    cart_boat(blocks["wood"], items["boat"], "boat"),
+    # Mechanisms.
+    door(blocks["wood"], items["wooden-door"], "wood"),
+    door(items["iron-ingot"], items["iron-door"], "iron"),
+    two_by_one(blocks["wood"], blocks["wooden-plate"], 1, "wood-plate"),
+    two_by_one(blocks["stone"], blocks["stone-plate"], 1, "stone-plate"),
+    one_by_two(blocks["stone"], blocks["stone"], blocks["stone-button"], 1,
+            "stone-btn"),
+    one_by_two(items["redstone"], items["stick"], blocks["redstone-torch"], 1,
+            "redstone-torch"),
+    one_by_two(items["stick"], blocks["cobblestone"], blocks["lever"], 1,
+            "lever"),
+    three_by_three(blocks["wood"], items["redstone"], blocks["note-block"],
+            "noteblock"),
+    three_by_three(blocks["wood"], items["diamond"], blocks["jukebox"],
+            "jukebox"),
+    Blueprint("trapdoor", (3, 2), ((blocks["wood"].key, 1),) * 6,
+            (blocks["trapdoor"].key, 2)),
+    # Food.
+    bowl_bucket(blocks["wood"], items["bowl"], 4, "bowl"),
+    three_by_one(items["wheat"], items["bread"], 1, "bread"),
+    three_by_three(blocks["gold"], items["apple"], items["golden-apple"],
+            "goldapple"),
+    three_by_three(items["stick"], blocks["wool"], items["paintings"],
+            "paintings"),
+    three_by_one(blocks["reed"], items["paper"], 3, "paper"),
+    # Special items.
+    # These recipes are only special in that their blueprints don't follow any
+    # interesting or reusable patterns, so they are presented here in a very
+    # explicit, open-coded style.
+    Blueprint("arrow", (1, 3), (
         (items["coal"].key, 1),
         (items["stick"].key, 1),
         (items["feather"].key, 1),
-    ),
-    (items["arrow"].key, 4))
-
-bed = Blueprint("bed", (3, 2),
-    (
+    ), (items["arrow"].key, 4)),
+    Blueprint("bed", (3, 2), (
         (blocks["wool"].key, 1),
         (blocks["wool"].key, 1),
         (blocks["wool"].key, 1),
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
-    ),
-    (items["bed"].key, 1))
-
-book = Blueprint("book", (1, 3),
-    (
+    ), (items["bed"].key, 1)),
+    Blueprint("book", (1, 3), (
         (items["paper"].key, 1),
         (items["paper"].key, 1),
         (items["paper"].key, 1),
-    ),
-    (items["book"].key, 1))
-
-bookshelf = Blueprint("bookshelf", (3, 3),
-    (
+    ), (items["book"].key, 1)),
+    Blueprint("bookshelf", (3, 3), (
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
@@ -424,11 +392,8 @@ bookshelf = Blueprint("bookshelf", (3, 3),
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
-    ),
-    (blocks["bookshelf"].key, 1))
-
-bow = Blueprint("bow", (3, 3),
-    (
+    ), (blocks["bookshelf"].key, 1)),
+    Blueprint("bow", (3, 3), (
         (items["string"].key, 1),
         (items["stick"].key, 1),
         None,
@@ -438,11 +403,8 @@ bow = Blueprint("bow", (3, 3),
         (items["string"].key, 1),
         (items["stick"].key, 1),
         None,
-    ),
-    (items["bow"].key, 1))
-
-cake = Blueprint("cake", (3, 3),
-    (
+    ), (items["bow"].key, 1)),
+    Blueprint("cake", (3, 3), (
         (items["milk"].key, 1),
         (items["milk"].key, 1),
         (items["milk"].key, 1),
@@ -452,11 +414,8 @@ cake = Blueprint("cake", (3, 3),
         (items["wheat"].key, 1),
         (items["wheat"].key, 1),
         (items["wheat"].key, 1),
-    ),
-    (items["cake"].key, 1))
-
-dispenser = Blueprint("dispenser", (3, 3),
-    (
+    ), (items["cake"].key, 1)),
+    Blueprint("dispenser", (3, 3), (
         (blocks["cobblestone"].key, 1),
         (blocks["cobblestone"].key, 1),
         (blocks["cobblestone"].key, 1),
@@ -466,22 +425,16 @@ dispenser = Blueprint("dispenser", (3, 3),
         (blocks["cobblestone"].key, 1),
         (items["redstone"].key, 1),
         (blocks["cobblestone"].key, 1),
-    ),
-    (blocks["dispenser"].key, 1))
-
-fence = Blueprint("fence", (3, 2),
-    (
+    ), (blocks["dispenser"].key, 1)),
+    Blueprint("fence", (3, 2), (
         (items["stick"].key, 1),
         (items["stick"].key, 1),
         (items["stick"].key, 1),
         (items["stick"].key, 1),
         (items["stick"].key, 1),
         (items["stick"].key, 1),
-    ),
-    (blocks["fence"].key, 2))
-
-fishing_rod = Blueprint("fishing-rod", (3, 3),
-    (
+    ), (blocks["fence"].key, 2)),
+    Blueprint("fishing-rod", (3, 3), (
         None,
         None,
         (items["stick"].key, 1),
@@ -491,20 +444,14 @@ fishing_rod = Blueprint("fishing-rod", (3, 3),
         (items["stick"].key, 1),
         None,
         (items["string"].key, 1),
-    ),
-    (items["fishing-rod"].key, 1))
-
-flint = Blueprint("flint-and-steel", (2, 2),
-    (
+    ), (items["fishing-rod"].key, 1)),
+    Blueprint("flint-and-steel", (2, 2), (
         (items["iron-ingot"].key, 1),
         None,
         None,
         (items["flint"].key, 1)
-    ),
-    (items["flint-and-steel"].key, 1))
-
-ladder = Blueprint("ladder", (3, 3),
-    (
+    ), (items["flint-and-steel"].key, 1)),
+    Blueprint("ladder", (3, 3), (
         (items["stick"].key, 1),
         None,
         (items["stick"].key, 1),
@@ -514,27 +461,18 @@ ladder = Blueprint("ladder", (3, 3),
         (items["stick"].key, 1),
         None,
         (items["stick"].key, 1),
-    ),
-    (blocks["ladder"].key, 2))
-
-mushroom_soup = Blueprint("mushroom-stew", (1, 3),
-    (
+    ), (blocks["ladder"].key, 2)),
+    Blueprint("mushroom-stew", (1, 3), (
         (blocks["red-mushroom"].key, 1),
         (blocks["brown-mushroom"].key, 1),
         (items["bowl"].key, 1),
-    ),
-    (items["mushroom-soup"].key, 1))
-
-mushroom_soup2 = Blueprint("mushroom-stew2", (1, 3),
-    (
+    ), (items["mushroom-soup"].key, 1)),
+    Blueprint("mushroom-stew2", (1, 3), (
         (blocks["brown-mushroom"].key, 1),
         (blocks["red-mushroom"].key, 1),
         (items["bowl"].key, 1),
-    ),
-    (items["mushroom-soup"].key, 1))
-
-sign = Blueprint("sign", (3, 3),
-    (
+    ), (items["mushroom-soup"].key, 1)),
+    Blueprint("sign", (3, 3), (
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
@@ -544,11 +482,8 @@ sign = Blueprint("sign", (3, 3),
         None,
         (items["stick"].key, 1),
         None,
-    ),
-    (items["sign"].key, 1))
-
-tnt = Blueprint("tnt", (3, 3),
-    (
+    ), (items["sign"].key, 1)),
+    Blueprint("tnt", (3, 3), (
         (items["sulphur"].key, 1),
         (blocks["sand"].key, 1),
         (items["sulphur"].key, 1),
@@ -558,11 +493,8 @@ tnt = Blueprint("tnt", (3, 3),
         (items["sulphur"].key, 1),
         (blocks["sand"].key, 1),
         (items["sulphur"].key, 1),
-    ),
-    (blocks["tnt"].key, 1))
-
-track = Blueprint("track", (3, 3),
-    (
+    ), (blocks["tnt"].key, 1)),
+    Blueprint("track", (3, 3), (
         (items["iron-ingot"].key, 1),
         None,
         (items["iron-ingot"].key, 1),
@@ -572,11 +504,8 @@ track = Blueprint("track", (3, 3),
         (items["iron-ingot"].key, 1),
         None,
         (items["iron-ingot"].key, 1),
-    ),
-    (blocks["tracks"].key, 16))
-
-piston = Blueprint("piston", (3, 3),
-    (
+    ), (blocks["tracks"].key, 16)),
+    Blueprint("piston", (3, 3), (
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
         (blocks["wood"].key, 1),
@@ -586,9 +515,8 @@ piston = Blueprint("piston", (3, 3),
         (blocks["cobblestone"].key, 1),
         (items["redstone"].key, 1),
         (blocks["cobblestone"].key, 1),
-    ),
-    (blocks["piston"].key, 1))
-
-sticky_piston = Blueprint("sticky-piston", (1, 2),
-    ((items["slimeball"].key, 1), (blocks["piston"].key, 1)),
-    (blocks["sticky-piston"].key, 1))
+    ), (blocks["piston"].key, 1)),
+    Blueprint("sticky-piston", (1, 2),
+        ((items["slimeball"].key, 1), (blocks["piston"].key, 1)),
+        (blocks["sticky-piston"].key, 1)),
+)

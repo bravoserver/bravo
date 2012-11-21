@@ -3,9 +3,7 @@ from twisted.trial import unittest
 import bravo.blocks
 
 from bravo.beta.structures import Slot
-from bravo.ibravo import IRecipe
 from bravo.inventory.slots import comblist, Crafting, Workbench, ChestStorage
-from bravo.plugin import retrieve_plugins
 
 class TestComblist(unittest.TestCase):
 
@@ -46,10 +44,6 @@ class TestCraftingWood(unittest.TestCase):
     from which all crafting is derived.
     """
     def setUp(self):
-        recipes = retrieve_plugins(IRecipe)
-        if "wood" not in recipes:
-            raise unittest.SkipTest("Plugin not present")
-
         self.i = Crafting()
 
     def test_check_crafting(self):
@@ -122,10 +116,6 @@ class TestCraftingTorches(unittest.TestCase):
     """
 
     def setUp(self):
-        recipes = retrieve_plugins(IRecipe)
-        if "torches" not in recipes:
-            raise unittest.SkipTest("Plugin not present")
-
         self.i = Crafting()
 
     def test_check_crafting(self):
@@ -172,10 +162,6 @@ class TestCraftingShovel(unittest.TestCase):
     """
 
     def setUp(self):
-        recipes = retrieve_plugins(IRecipe)
-        if "stone-shovel" not in recipes:
-            raise unittest.SkipTest("Plugin not present")
-
         self.i = Workbench()
 
     def test_check_crafting(self):
@@ -217,10 +203,6 @@ class TestCraftingFurnace(unittest.TestCase):
     """
 
     def setUp(self):
-        recipes = retrieve_plugins(IRecipe)
-        if "furnace" not in recipes:
-            raise unittest.SkipTest("Plugin not present")
-
         self.i = Workbench()
 
     def test_check_crafting(self):

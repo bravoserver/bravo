@@ -1,8 +1,10 @@
 from bravo.beta.packets import make_packet
 from bravo.beta.structures import Slot
-from bravo.ibravo import IRecipe
-from bravo.plugin import retrieve_plugins
 from bravo.inventory import SerializableSlots
+from bravo.policy.recipes.ingredients import all_ingredients
+from bravo.policy.recipes.blueprints import all_blueprints
+
+all_recipes = all_ingredients + all_blueprints
 
 # XXX I am completely undocumented and untested; is this any way to go through
 # life? Test and document me!
@@ -165,7 +167,7 @@ class Crafting(SlotsSet):
 
         self.recipe = None
 
-        for name, recipe in retrieve_plugins(IRecipe).iteritems():
+        for recipe in all_recipes:
             if recipe.matches(self.crafting, self.crafting_stride):
                 self.recipe = recipe
 
