@@ -28,7 +28,7 @@ def check_bounds(f):
         x, y, z = coords
 
         # Coordinates were out-of-bounds; warn and run away.
-        if not (0 <= x < 16 or 0 <= z < 16 or 0 <= y < 128):
+        if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < 128):
             warn("Coordinates %s are OOB in %s() of %s, ignoring call"
                 % (coords, f.func_name, chunk), ChunkWarning)
             # A concession towards where this decorator will be used. The
