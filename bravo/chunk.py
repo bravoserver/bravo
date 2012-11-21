@@ -50,16 +50,24 @@ def ci(x, y, z):
 
     return (x * 16 + z) * 128 + y
 
-# Set up glow tables.
-# These tables provide glow maps for illuminated points.
-glow = [None] * 16
-for i in range(16):
-    dim = 2 * i + 1
-    glow[i] = array("b", [0] * (dim**3))
-    for x, y, z in product(xrange(dim), repeat=3):
-        distance = abs(x - i) + abs(y - i) + abs(z - i)
-        glow[i][(x * dim + y) * dim + z] = i + 1 - distance
-    glow[i] = array("B", [clamp(x, 0, 15) for x in glow[i]])
+def make_glows():
+    """
+    Set up glow tables.
+
+    These tables provide glow maps for illuminated points.
+    """
+
+    glow = [None] * 16
+    for i in range(16):
+        dim = 2 * i + 1
+        glow[i] = array("b", [0] * (dim**3))
+        for x, y, z in product(xrange(dim), repeat=3):
+            distance = abs(x - i) + abs(y - i) + abs(z - i)
+            glow[i][(x * dim + y) * dim + z] = i + 1 - distance
+        glow[i] = array("B", [clamp(x, 0, 15) for x in glow[i]])
+    return glow
+
+glow = make_glows()
 
 def composite_glow(target, strength, x, y, z):
     """
