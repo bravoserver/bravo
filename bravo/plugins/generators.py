@@ -371,12 +371,13 @@ class FloatGenerator(object):
             height = octaves2(magx, magz, 6)
             height *= 15
             height = int(height + 70)
-            column = chunk.get_column(x, z)
-            if abs(chunk.heightmap[x, z] - height) < 10:
-                column.fill(blocks["air"].slot)
+
+            if abs(chunk.heightmap[x * 16 + z] - height) < 10:
+                chunk.set_column(array("b", [blocks["air"].slot] * 128))
             else:
                 height = height - 30 + R.randint(-15, 10)
-                column[:height].fill(blocks["air"].slot)
+                for y in range(height):
+                    chunk.set_block((x, y, z), blocks["air"].slot)
 
     name = "float"
 
