@@ -50,8 +50,6 @@ class BravoFactory(Factory):
 
     interfaces = []
 
-    seasons = [Spring(), Winter()]
-
     def __init__(self, config, name):
         """
         Create a factory and world.
@@ -290,6 +288,17 @@ class BravoFactory(Factory):
             log.msg("Using %s: %s" % (t.replace("_", " "),
                 ", ".join(plugin.name for plugin in plugins)))
             setattr(self, t, plugins)
+
+        # Deal with seasons.
+        seasons = self.config.getlistdefault(self.config_name, "seasons", [])
+        for pack in packs:
+            if "seasons" in pack:
+                seasons += pack["seasons"]
+        self.seasons = []
+        if "spring" in seasons:
+            self.seasons.append(Spring())
+        if "winter" in seasons:
+            self.seasons.append(Winter())
 
         # Assign generators to the world pipeline.
         self.world.pipeline = self.generators
