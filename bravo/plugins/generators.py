@@ -329,6 +329,8 @@ class CliffGenerator(object):
         Make smooth waves of stone, then compare to current landscape.
         """
 
+        set_seed(seed)
+
         factor = 1 / 256
         for x, z in product(xrange(16), repeat=2):
             magx = ((chunk.x + 32) * 16 + x) * factor
