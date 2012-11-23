@@ -1,6 +1,24 @@
 next
 ====
 
+Compatibility
+-------------
+
+* Bravo is now fully compatible with PyPy. Accordingly, PyPy is now supported.
+* Bravo no longer uses Exocet.
+
+  * All hooking plugins that expect to have access to a factory must now have
+    an ``__init__()`` which takes a ``factory`` keyword argument.
+* Recipes and seasons are no longer pluggable.
+* ``Location``'s API has been cleaned up and made internally consistent.
+  (#368, #373)
+
+Features
+--------
+
+* Seeds can be set for worlds in configuration files (#239)
+* Plugins can be grouped into packs, and there is a pack for Beta (#380)
+
 Bugfixes
 --------
 
