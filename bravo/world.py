@@ -134,9 +134,9 @@ class World(object):
 
         self._pending_chunks = dict()
 
-    def start(self):
+    def connect(self):
         """
-        Load a world from disk.
+        Connect to the world.
         """
 
         world_url = self.config.get(self.config_name, "url")
@@ -150,6 +150,17 @@ class World(object):
         serializers = retrieve_named_plugins(ISerializer, [world_sf_name])
         self.serializer = serializers[0]
         self.serializer.connect(world_url)
+
+        log.msg("World started on %s, using serializer %s" %
+            (world_url, self.serializer.name))
+
+    def start(self):
+        """
+        Start managing a world.
+
+        Connect to the world and turn on all of the timed actions which
+        continuously manage the world.
+        """
 
         self.seed = random.randint(0, sys.maxint)
 
@@ -178,8 +189,6 @@ class World(object):
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
 
-        log.msg("World started on %s, using serializer %s" %
-            (world_url, self.serializer.name))
         log.msg("Using Ampoule: %s" % self.async)
 
         self.mob_manager = MobManager() # XXX Put this in init or here?
