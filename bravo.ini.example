@@ -99,6 +99,10 @@ perm_cache = 3
 # provides most of the useful functionality found in Beta.
 packs = beta
 
+# A numeric seed can be set to specify how the world should behave. If
+# omitted, the world will automatically generate one on the initial startup.
+# seed = 42
+
 # The web service. Comment out to disable.
 [web]
 # Interfaces to listen on.

@@ -164,7 +164,10 @@ class World(object):
 
         self.connect()
 
-        self.seed = random.randint(0, sys.maxint)
+        # Pick a random number for the seed. Use the configured value if one
+        # is present.
+        seed = random.randint(0, sys.maxint)
+        self.seed = self.config.getintdefault(self.config_name, "seed", seed)
 
         # Check if we should offload chunk requests to ampoule.
         if self.config.getbooleandefault("bravo", "ampoule", False):

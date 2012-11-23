@@ -225,3 +225,33 @@ class TestWorld(unittest.TestCase):
         def cb(player):
             self.assertEqual(player.username, "unittest")
         return d
+
+class TestWorldConfig(unittest.TestCase):
+
+    def setUp(self):
+        self.name = "unittest"
+        self.d = tempfile.mkdtemp()
+        self.bcp = BravoConfigParser()
+
+        self.bcp.add_section("world unittest")
+        self.bcp.set("world unittest", "url", "file://%s" % self.d)
+        self.bcp.set("world unittest", "serializer", "alpha")
+
+        self.w = World(self.bcp, self.name)
+        self.w.pipeline = []
+
+    def tearDown(self):
+        shutil.rmtree(self.d)
+
+    def test_trivial(self):
+        pass
+
+    def test_world_configured_seed(self):
+        """
+        Worlds can have their seed set via configuration.
+        """
+
+        self.bcp.set("world unittest", "seed", "42")
+        self.w.start()
+        self.assertEqual(self.w.seed, 42)
+        self.w.stop()
