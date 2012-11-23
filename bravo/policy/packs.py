@@ -39,6 +39,7 @@ beta = {
         "erosion",
         "watertable",
         "beaches",
+        "ore",
         "grass",
         "saplings",
         "safety",
