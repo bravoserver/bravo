@@ -338,11 +338,13 @@ class CliffGenerator(object):
             height = octaves2(magx, magz, 6)
             height *= 15
             height = int(height + 70)
-            if (-6 < chunk.heightmap[x, z] - height < 3 and
-                chunk.heightmap[x, z] > 63 and height > 63):
-                column = chunk.get_column(x, z)
-                column.fill(blocks["air"].slot)
-                column[:height-3].fill(blocks["stone"].slot)
+            current_height = chunk.heightmap[x * 16 + z]
+            if (-6 < current_height - height < 3 and
+                current_height > 63 and height > 63):
+                for y in range(height - 3):
+                    chunk.set_block((x, y, z), blocks["stone"].slot)
+                for y in range(y, 128):
+                    chunk.set_block((x, y, z), blocks["air"].slot)
 
     name = "cliffs"
 
