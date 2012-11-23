@@ -471,17 +471,3 @@ class SaplingGenerator(object):
 
     before = ("grass", "erosion", "simplex", "complex", "boring")
     after = tuple()
-
-float = FloatGenerator()
-cliffs = CliffGenerator()
-boring = BoringGenerator()
-simplex = SimplexGenerator()
-complex = ComplexGenerator()
-watertable = WaterTableGenerator()
-erosion = ErosionGenerator()
-grass = GrassGenerator()
-beaches = BeachGenerator()
-ore = OreGenerator()
-safety = SafetyGenerator()
-caves = CaveGenerator()
-saplings = SaplingGenerator()

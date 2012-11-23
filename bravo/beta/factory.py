@@ -280,7 +280,10 @@ class BravoFactory(Factory):
                 if t in pack:
                     l += pack[t]
 
-            if issubclass(interface, ISortedPlugin):
+            # Hax. :T
+            if t == "generators":
+                plugins = retrieve_sorted_plugins(interface, l)
+            elif issubclass(interface, ISortedPlugin):
                 plugins = retrieve_sorted_plugins(interface, l, factory=self)
             else:
                 plugins = retrieve_named_plugins(interface, l, factory=self)
