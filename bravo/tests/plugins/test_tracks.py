@@ -1,4 +1,4 @@
-from twisted.trial.unittest import SkipTest, TestCase
+from twisted.trial.unittest import TestCase
 
 from bravo.ibravo import IPostBuildHook
 from bravo.plugin import retrieve_plugins
@@ -10,12 +10,7 @@ class TestTracks(TestCase):
 
     def setUp(self):
         self.f = TrackMockFactory()
-        self.p = retrieve_plugins(IPostBuildHook,
-            parameters={"factory": self.f})
-
-        if "tracks" not in self.p:
-            raise SkipTest("Plugin not present")
-
+        self.p = retrieve_plugins(IPostBuildHook, factory=self.f)
         self.hook = self.p["tracks"]
 
     def test_trivial(self):

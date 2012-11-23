@@ -6,8 +6,6 @@ from bravo.entity import Sign as SignTile
 from bravo.ibravo import IPreBuildHook
 from bravo.utilities.coords import split_coords
 
-from bravo.parameters import factory
-
 class Sign(object):
     """
     Place signs.
@@ -16,6 +14,9 @@ class Sign(object):
     """
 
     implements(IPreBuildHook)
+
+    def __init__(self, factory):
+        self.factory = factory
 
     @inlineCallbacks
     def pre_build_hook(self, player, builddata):
@@ -58,7 +59,7 @@ class Sign(object):
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
         # Let's build a sign!
-        chunk = yield factory.world.request_chunk(bigx, bigz)
+        chunk = yield self.factory.world.request_chunk(bigx, bigz)
         s = SignTile(smallx, y, smallz)
         chunk.tiles[smallx, y, smallz] = s
 
@@ -78,8 +79,12 @@ class BuildSnow(object):
 
     implements(IPreBuildHook)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def pre_build_hook(self, player, builddata):
-        d = factory.world.get_block((builddata.x, builddata.y, builddata.z))
+        d = self.factory.world.get_block((builddata.x, builddata.y,
+            builddata.z))
 
         @d.addCallback
         def adjust_block(block):
@@ -96,6 +101,3 @@ class BuildSnow(object):
 
     before = tuple()
     after = tuple()
-
-sign = Sign()
-build_snow = BuildSnow()

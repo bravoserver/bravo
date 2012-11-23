@@ -1,5 +1,4 @@
-# This test suite *does* require trial, for sane conditional test skipping.
-from twisted.trial import unittest
+from unittest import TestCase
 
 from twisted.internet.defer import inlineCallbacks, succeed
 
@@ -23,16 +22,11 @@ class TileMockFactory(object):
 
         self.world = TileMockWorld()
 
-class TestSign(unittest.TestCase):
+class TestSign(TestCase):
 
     def setUp(self):
         self.f = TileMockFactory()
-        self.p = bravo.plugin.retrieve_plugins(IPreBuildHook,
-            parameters={"factory": self.f})
-
-        if "sign" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
+        self.p = bravo.plugin.retrieve_plugins(IPreBuildHook, factory=self.f)
         self.hook = self.p["sign"]
 
     def test_trivial(self):

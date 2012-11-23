@@ -2,18 +2,18 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python import log
 from zope.interface import implements
 
-from bravo.blocks import blocks
-from bravo.location import Location
 from bravo.beta.packets import make_packet
-from bravo.ibravo import IWindowOpenHook, IWindowClickHook, IWindowCloseHook, IPreBuildHook, IDigHook
-from bravo.inventory.windows import WorkbenchWindow, ChestWindow, LargeChestWindow, FurnaceWindow
+from bravo.blocks import blocks
 from bravo.entity import Chest as ChestTile, Furnace as FurnaceTile
-
-from bravo.parameters import factory
-from bravo.utilities.coords import adjust_coords_for_face, split_coords
+from bravo.ibravo import (IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
+        IPreBuildHook, IDigHook)
+from bravo.inventory.windows import (WorkbenchWindow, ChestWindow,
+        LargeChestWindow, FurnaceWindow)
+from bravo.location import Location
 from bravo.utilities.building import chestsAround
+from bravo.utilities.coords import adjust_coords_for_face, split_coords
 
-def drop_items(location, items, y_offset = 0):
+def drop_items(factory, location, items, y_offset = 0):
     """
     Loop over items and drop all of them
 
@@ -33,12 +33,12 @@ def drop_items(location, items, y_offset = 0):
             continue
         factory.give(coords, (item[0], item[1]), item[2])
 
-def processClickMessage(player, window, container):
+def processClickMessage(factory, player, window, container):
 
     # Clicked out of the window
     if container.slot == 64537: # -999
         items = window.drop_selected(bool(container.button))
-        drop_items(player.location.in_front_of(1), items, 1)
+        drop_items(factory, player.location.in_front_of(1), items, 1)
         player.write_packet("window-token", wid=container.wid,
             token=container.token, acknowledged=True)
         return
@@ -111,7 +111,11 @@ class Windows(object):
     Generic window hooks
     NOTE: ``player`` argument in methods is a protocol. Not Player class!
     '''
+
     implements(IWindowClickHook, IWindowCloseHook)
+
+    def __init__(self, factory):
+        self.factory = factory
 
     def close_hook(self, player, container):
         """
@@ -126,7 +130,7 @@ class Windows(object):
             items, packets = window.close()
             # No need to send the packet as the window already closed on client.
             # Pakets work only for player's inventory.
-            drop_items(player.location.in_front_of(1), items, 1)
+            drop_items(self.factory, player.location.in_front_of(1), items, 1)
         else:
             player.error("Couldn't close non-current window %d" % container.wid)
 
@@ -144,7 +148,7 @@ class Windows(object):
             player.error("Couldn't find window %d" % container.wid)
             return False
 
-        processClickMessage(player, window, container)
+        processClickMessage(self.factory, player, window, container)
         return True
 
     name = "windows"
@@ -159,6 +163,9 @@ class Inventory(object):
 
     implements(IWindowClickHook, IWindowCloseHook)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def close_hook(self, player, container):
         """
         The ``player`` is a Player's protocol
@@ -172,7 +179,7 @@ class Inventory(object):
         items, packets = player.inventory.close() # it's window from protocol
         if packets:
             player.transport.write(packets)
-        drop_items(player.location.in_front_of(1), items, 1)
+        drop_items(self.factory, player.location.in_front_of(1), items, 1)
 
     def click_hook(self, player, container):
         """
@@ -183,7 +190,7 @@ class Inventory(object):
             # not inventory window
             return False
 
-        processClickMessage(player, player.inventory, container)
+        processClickMessage(self.factory, player, player.inventory, container)
         return True
 
     name = "inventory"
@@ -194,6 +201,9 @@ class Inventory(object):
 class Workbench(object):
 
     implements(IWindowOpenHook)
+
+    def __init__(self, factory):
+        pass
 
     def open_hook(self, player, container, block):
         """
@@ -217,6 +227,9 @@ class Workbench(object):
 class Furnace(object):
 
     implements(IWindowOpenHook, IWindowClickHook, IPreBuildHook, IDigHook)
+
+    def __init__(self, factory):
+        self.factory = factory
 
     def get_furnace_tile(self, chunk, coords):
         try:
@@ -244,7 +257,7 @@ class Furnace(object):
             returnValue(None)
 
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
-        chunk = yield factory.world.request_chunk(bigx, bigz)
+        chunk = yield self.factory.world.request_chunk(bigx, bigz)
 
         furnace = self.get_furnace_tile(chunk, (smallx, container.y, smallz))
         if furnace is None:
@@ -273,12 +286,12 @@ class Furnace(object):
             return
         # inform content of furnace was probably changed
         bigx, x, bigz, z, y = window.coords
-        d = factory.world.request_chunk(bigx, bigz)
+        d = self.factory.world.request_chunk(bigx, bigz)
         @d.addCallback
         def on_change(chunk):
             furnace = self.get_furnace_tile(chunk, (x, y, z))
             if furnace is not None:
-                furnace.changed(factory, window.coords)
+                furnace.changed(self.factory, window.coords)
 
     @inlineCallbacks
     def pre_build_hook(self, player, builddata):
@@ -299,7 +312,7 @@ class Furnace(object):
             print "fix metadata"
 
         # Not much to do, just tell the chunk about this tile.
-        chunk = yield factory.world.request_chunk(bigx, bigz)
+        chunk = yield self.factory.world.request_chunk(bigx, bigz)
         chunk.tiles[smallx, y, smallz] = FurnaceTile(smallx, y, smallz)
         returnValue((True, builddata, False))
 
@@ -308,7 +321,7 @@ class Furnace(object):
         if block.slot not in (blocks["furnace"].slot, blocks["burning-furnace"].slot):
             return
 
-        furnaces = factory.furnace_manager
+        furnaces = self.factory.furnace_manager
 
         coords = (x, y, z)
         furnace = self.get_furnace_tile(chunk, coords)
@@ -321,7 +334,8 @@ class Furnace(object):
         x = chunk.x * 16 + x
         z = chunk.z * 16 + z
         furnace = furnace.inventory
-        drop_items((x, y, z), furnace.crafted + furnace.crafting + furnace.fuel)
+        drop_items(self.factory, (x, y, z),
+                furnace.crafted + furnace.crafting + furnace.fuel)
         del(chunk.tiles[coords])
 
     name = "furnace"
@@ -332,6 +346,9 @@ class Furnace(object):
 class Chest(object):
 
     implements(IWindowOpenHook, IPreBuildHook, IDigHook)
+
+    def __init__(self, factory):
+        self.factory = factory
 
     def get_chest_tile(self, chunk, coords):
         try:
@@ -360,9 +377,10 @@ class Chest(object):
             returnValue(None)
 
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
-        chunk = yield factory.world.request_chunk(bigx, bigz)
+        chunk = yield self.factory.world.request_chunk(bigx, bigz)
 
-        chests_around = chestsAround(factory, (container.x, container.y, container.z))
+        chests_around = chestsAround(self.factory,
+                (container.x, container.y, container.z))
         chests_around_num = len(chests_around)
 
         if chests_around_num == 0: # small chest
@@ -380,7 +398,7 @@ class Chest(object):
                 # both chest blocks are in same chunk
                 chunk2 = chunk
             else:
-                chunk2 = yield factory.world.request_chunk(bigx2, bigz2)
+                chunk2 = yield self.factory.world.request_chunk(bigx2, bigz2)
 
             chest1 = self.get_chest_tile(chunk, (smallx, container.y, smallz))
             chest2 = self.get_chest_tile(chunk2, (smallx2, container.y, smallz2))
@@ -422,19 +440,19 @@ class Chest(object):
 
         # Chests have some restrictions on building:
         # you cannot connect more than two chests. (notchian)
-        ccs = chestsAround(factory, (x, y, z))
+        ccs = chestsAround(self.factory, (x, y, z))
         ccn = len(ccs)
         if ccn > 1:
             # cannot build three or more connected chests
             returnValue((False, builddata, True))
 
-        chunk = yield factory.world.request_chunk(bigx, bigz)
+        chunk = yield self.factory.world.request_chunk(bigx, bigz)
 
         if ccn == 0:
             metadata = blocks["chest"].orientation(orientation)
         elif ccn == 1:
             # check gonna-be-connected chest is not connected already
-            n = len(chestsAround(factory, ccs[0]))
+            n = len(chestsAround(self.factory, ccs[0]))
             if n != 0:
                 returnValue((False, builddata, True))
 
@@ -458,7 +476,7 @@ class Chest(object):
                 # both blocks are in same chunk
                 chunk2 = chunk
             else:
-                chunk2 = yield factory.world.request_chunk(bigx2, bigz2)
+                chunk2 = yield self.factory.world.request_chunk(bigx2, bigz2)
             chunk2.set_metadata((smallx2, y2, smallz2), metadata)
 
         # Not much to do, just tell the chunk about this tile.
@@ -479,16 +497,10 @@ class Chest(object):
         x = chunk.x * 16 + x
         z = chunk.z * 16 + z
         chest = chest.inventory
-        drop_items((x, y, z), chest.storage)
+        drop_items(self.factory, (x, y, z), chest.storage)
         del(chunk.tiles[coords])
 
     name = "chest"
 
     before = ("build_snow",)
     after = tuple()
-
-windows = Windows()
-inventory = Inventory()
-workbench = Workbench()
-furnace = Furnace()
-chest = Chest()

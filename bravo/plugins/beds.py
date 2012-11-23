@@ -3,8 +3,6 @@ from zope.interface import implements
 from bravo.blocks import blocks, items
 from bravo.ibravo import IPreBuildHook, IDigHook
 
-from bravo.parameters import factory
-
 # Metadata
 HEAD_PART = 0x8
 
@@ -14,6 +12,9 @@ class Bed(object):
     """
 
     implements(IPreBuildHook, IDigHook)
+
+    def __init__(self, factory):
+        self.factory = factory
 
     def deltas(self, orientation):
         return {'+x': (1, 0),
@@ -40,7 +41,7 @@ class Bed(object):
 
         y += 1
         # Check if there is enough space for the bed.
-        bl = factory.world.sync_get_block((x + dx, y, z + dz))
+        bl = self.factory.world.sync_get_block((x + dx, y, z + dz))
         if bl and bl != blocks["snow"].slot:
             return False, builddata, True
 
@@ -48,10 +49,12 @@ class Bed(object):
         if not player.inventory.consume((item.slot, 0), player.equipped):
             return False, builddata, False
 
-        factory.world.set_block((x, y, z), blocks["bed-block"].slot)
-        factory.world.set_block((x + dx, y, z + dz), blocks["bed-block"].slot)
-        factory.world.set_metadata((x, y, z), metadata)
-        factory.world.set_metadata((x + dx, y, z + dz), metadata | HEAD_PART)
+        self.factory.world.set_block((x, y, z), blocks["bed-block"].slot)
+        self.factory.world.set_block((x + dx, y, z + dz),
+                blocks["bed-block"].slot)
+        self.factory.world.set_metadata((x, y, z), metadata)
+        self.factory.world.set_metadata((x + dx, y, z + dz),
+                metadata | HEAD_PART)
 
         # XXX As we doing all of the building actions manually we cancel at this point.
         # This is not what we shall do, but now it's the best solution we have.
@@ -77,11 +80,9 @@ class Bed(object):
         # Block coordinates for the second block of the bed.
         x = chunk.x * 16 + x
         z = chunk.z * 16 + z
-        factory.world.destroy((x + dx, y, z + dz))
+        self.factory.world.destroy((x + dx, y, z + dz))
 
     name = "bed"
 
     before = ("build_snow",) # plugins that come before this plugin
     after = tuple()
-
-bed = Bed()

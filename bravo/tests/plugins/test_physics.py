@@ -1,4 +1,4 @@
-from twisted.trial import unittest
+from twisted.trial.unittest import TestCase
 
 import shutil
 import tempfile
@@ -16,7 +16,7 @@ class PhysicsMockFactory(object):
     def flush_chunk(self, chunk):
         pass
 
-class TestWater(unittest.TestCase):
+class TestWater(TestCase):
 
     def setUp(self):
         # Set up world.
@@ -38,12 +38,7 @@ class TestWater(unittest.TestCase):
 
         # Using dig hook to grab the plugin since the build hook was nuked in
         # favor of the automaton interface.
-        pp = {"factory": self.f}
-        self.p = bravo.plugin.retrieve_plugins(IDigHook, parameters=pp)
-
-        if "water" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
+        self.p = bravo.plugin.retrieve_plugins(IDigHook, factory=self.f)
         self.hook = self.p["water"]
 
     def tearDown(self):

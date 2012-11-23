@@ -3,8 +3,6 @@ from zope.interface import implements
 from bravo.utilities.coords import polar_round_vector
 from bravo.ibravo import IConsoleCommand, IChatCommand
 
-from bravo.parameters import factory
-
 # Trivial hello-world command.
 # If this is ever modified, please also update the documentation;
 # docs/extending.rst includes this verbatim in order to demonstrate authoring
@@ -54,17 +52,20 @@ class Status(object):
 
     implements(IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def console_command(self, parameters):
-        protocol_count = len(factory.protocols)
+        protocol_count = len(self.factory.protocols)
         yield "%d protocols connected" % protocol_count
 
-        for name, protocol in factory.protocols.iteritems():
+        for name, protocol in self.factory.protocols.iteritems():
             count = len(protocol.chunks)
             dirty = len([i for i in protocol.chunks.values() if i.dirty])
             yield "%s: %d chunks (%d dirty)" % (name, count, dirty)
 
-        chunk_count = len(factory.world.chunk_cache)
-        dirty = len(factory.world.dirty_chunk_cache)
+        chunk_count = len(self.factory.world.chunk_cache)
+        dirty = len(self.factory.world.dirty_chunk_cache)
         chunk_count += dirty
         yield "World cache: %d chunks (%d dirty)" % (chunk_count, dirty)
 
@@ -95,16 +96,21 @@ class Rain(object):
     Perform a rain dance.
     """
 
+    # XXX I recommend that this touch the weather vane directly.
+
     implements(IChatCommand)
+
+    def __init__(self, factory):
+        self.factory = factory
 
     def chat_command(self, username, parameters):
         from bravo.beta.packets import make_packet
         arg = "".join(parameters)
         if arg == "start":
-            factory.broadcast(make_packet("state", state="start_rain",
+            self.factory.broadcast(make_packet("state", state="start_rain",
                 creative=False))
         elif arg == "stop":
-            factory.broadcast(make_packet("state", state="stop_rain",
+            self.factory.broadcast(make_packet("state", state="stop_rain",
                 creative=False))
         else:
             return ("Couldn't understand you!",)
@@ -121,9 +127,12 @@ class CreateMob(object):
 
     implements(IChatCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
         make = True
-        position = factory.protocols[username].location
+        position = self.factory.protocols[username].location
         if len(parameters) == 1:
             mob = parameters[0]
             number = 1
@@ -137,9 +146,10 @@ class CreateMob(object):
 #            try:
             for i in range(0,number):
                 print mob, number
-                entity = factory.create_entity(position.x,position.y,position.z,mob)
-                factory.broadcast(entity.save_to_packet())
-                factory.world.mob_manager.start_mob(entity)
+                entity = self.factory.create_entity(position.x, position.y,
+                        position.z, mob)
+                self.factory.broadcast(entity.save_to_packet())
+                self.factory.world.mob_manager.start_mob(entity)
             return ("Made mob!",)
 #            except:
 #                return ("Couldn't make mob!",)
@@ -155,8 +165,10 @@ class CheckCoords(object):
 
     implements(IChatCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
-        position = factory.protocols[username].location
         offset = set()
         calc_offset = set()
         for x in range(-1,2):
@@ -169,19 +181,11 @@ class CheckCoords(object):
         for i in offset:
             calc_offset.add(polar_round_vector(i))
         for i in calc_offset:
-            factory.world.sync_set_block(i,8)
+            self.factory.world.sync_set_block(i,8)
         print 'offset', offset
         print 'offsetlist', calc_offset
         return "Done"
+
     name = "check"
     aliases = tuple()
     usage = "<state>"
-
-check = CheckCoords()
-
-hello = Hello()
-meliae = Meliae()
-status = Status()
-colors = Colors()
-rain = Rain()
-mob = CreateMob()

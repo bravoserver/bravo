@@ -4,18 +4,20 @@ from bravo.blocks import items, blocks
 from bravo.ibravo import IPreBuildHook, IPreDigHook, IDigHook
 from bravo.utilities.coords import split_coords
 
-from bravo.parameters import factory
-
 DOOR_TOP_BLOCK = 0x8
 DOOR_IS_SWUNG = 0x4
 
 class Trapdoor(object):
+
     implements(IPreBuildHook, IPreDigHook)
+
+    def __init__(self, factory):
+        self.factory = factory
 
     def open_or_close(self, coords):
         x, y, z = coords
         bigx, x, bigz, z = split_coords(x, z)
-        d = factory.world.request_chunk(bigx, bigz)
+        d = self.factory.world.request_chunk(bigx, bigz)
 
         @d.addCallback
         def cb(chunk):
@@ -24,7 +26,7 @@ class Trapdoor(object):
                 return
             metadata = chunk.get_metadata((x, y, z))
             chunk.set_metadata((x, y, z), metadata ^ DOOR_IS_SWUNG)
-            factory.flush_chunk(chunk)
+            self.factory.flush_chunk(chunk)
 
     def pre_dig_hook(self, player, coords, block):
         if block == blocks["trapdoor"].slot:
@@ -33,9 +35,9 @@ class Trapdoor(object):
     def pre_build_hook(self, player, builddata):
         item, metadata, x, y, z, face = builddata
 
-        # If the block we are aiming at is a trapdoor, try to open/close it instead
-        # and stop the building process.
-        faced_block = factory.world.sync_get_block((x, y, z))
+        # If the block we are aiming at is a trapdoor, try to open/close it
+        # instead and stop the building process.
+        faced_block = self.factory.world.sync_get_block((x, y, z))
         if faced_block == blocks["trapdoor"].slot:
             self.open_or_close((x, y, z))
             return False, builddata, True
@@ -53,20 +55,24 @@ class Trapdoor(object):
 
 class Door(object):
     """
-        Implements all the door logic.
-
-        FIXME: open_or_close should also get called when receiving "empty" dig packets on
-            a wooden-door block. We are so far lacking the proper interface to do so.
-        FIXME: When the redstone circuitry logic will be implemented, iron doors will be
-            able to be toggled by calling Door.open_or_close (world, (x, y, z) )
+    Implements all the door logic.
     """
+
+    # XXX open_or_close should also get called when receiving "empty" dig
+    # packets on a wooden-door block. We are so far lacking the proper
+    # interface to do so.
+    # XXX When the redstone circuitry logic will be implemented, iron doors
+    # will be able to be toggled by calling Door.open_or_close (world, (x, y,
+    # z))
 
     implements(IPreBuildHook, IPreDigHook, IDigHook)
 
     doors = (blocks["wooden-door-block"].slot, blocks["iron-door-block"].slot)
 
-    @staticmethod
-    def open_or_close(world, point):
+    def __init__(self, factory):
+        self.factory = factory
+
+    def open_or_close(self, world, point):
         """
         Toggle the state of the door : open it if it was closed, close it if it was open.
         """
@@ -95,16 +101,16 @@ class Door(object):
                 chunk.set_metadata((x, other_y, z), metadata ^ DOOR_IS_SWUNG)
 
             # Flush changed chunk
-            factory.flush_chunk(chunk)
+            self.factory.flush_chunk(chunk)
 
     def pre_dig_hook(self, player, coords, block):
         if block in self.doors:
-            self.open_or_close(factory.world, coords)
+            self.open_or_close(self.factory.world, coords)
 
     def pre_build_hook(self, player, builddata):
         item, metadata, x, y, z, face = builddata
 
-        world = factory.world
+        world = self.factory.world
 
         # If the block we are aiming at is a door, try to open/close it instead
         # and stop the building process.
@@ -177,6 +183,3 @@ class Door(object):
 
     before = tuple("build_snow",)
     after = tuple()
-
-door = Door()
-trapdoor = Trapdoor()

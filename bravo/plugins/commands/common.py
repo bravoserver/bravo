@@ -10,8 +10,6 @@ from bravo.plugin import retrieve_plugins
 from bravo.policy.seasons import Spring, Winter
 from bravo.utilities.temporal import split_time
 
-from bravo.parameters import factory
-
 def parse_player(factory, name):
     if name in factory.protocols:
         return factory.protocols[name]
@@ -25,7 +23,8 @@ class Help(object):
 
     implements(IChatCommand, IConsoleCommand)
 
-    pp = {"factory": factory}
+    def __init__(self, factory):
+        self.pp = {"factory": factory}
 
     def general_help(self, plugins):
         """
@@ -94,16 +93,19 @@ class List(object):
 
     implements(IChatCommand, IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def dispatch(self, factory):
         yield "Connected players: %s" % (", ".join(
                 player for player in factory.protocols))
 
     def chat_command(self, username, parameters):
-        for i in self.dispatch(factory):
+        for i in self.dispatch(self.factory):
             yield i
 
     def console_command(self, parameters):
-        for i in self.dispatch(factory):
+        for i in self.dispatch(self.factory):
             yield i
 
     name = "list"
@@ -115,9 +117,12 @@ class Time(object):
     Obtain or change the current time and date.
     """
 
+    # XXX my code is all over the place; clean me up
+
     implements(IChatCommand, IConsoleCommand)
 
-    # XXX my code is all over the place; clean me up
+    def __init__(self, factory):
+        self.factory = factory
 
     def dispatch(self, factory):
         hours, minutes = split_time(factory.time)
@@ -154,19 +159,19 @@ class Time(object):
                 time -= 6000 # to account for 24000 being high noon in minecraft.
 
             if len(parameters) >= 2:
-                factory.day = int(parameters[1])
+                self.factory.day = int(parameters[1])
 
-            factory.time = int(time)
-            factory.update_time()
-            factory.update_season()
+            self.factory.time = int(time)
+            self.factory.update_time()
+            self.factory.update_season()
             # Update the time for the clients
-            factory.broadcast_time()
+            self.factory.broadcast_time()
 
         # Tell the user the current time.
-        return self.dispatch(factory)
+        return self.dispatch(self.factory)
 
     def console_command(self, parameters):
-        return self.dispatch(factory)
+        return self.dispatch(self.factory)
 
     name = "time"
     aliases = ("date",)
@@ -179,11 +184,14 @@ class Say(object):
 
     implements(IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def console_command(self, parameters):
         message = "[Server] %s" % " ".join(parameters)
         yield message
         packet = make_packet("chat", message=message)
-        factory.broadcast(packet)
+        self.factory.broadcast(packet)
 
     name = "say"
     aliases = tuple()
@@ -195,6 +203,9 @@ class Give(object):
     """
 
     implements(IChatCommand)
+
+    def __init__(self, factory):
+        self.factory = factory
 
     def chat_command(self, username, parameters):
         if len(parameters) == 0:
@@ -209,7 +220,7 @@ class Give(object):
             block = " ".join(parameters[:-1])
             count = parameters[-1]
 
-        player = parse_player(factory, username)
+        player = parse_player(self.factory, username)
         block = parse_block(block)
         count = int(count)
 
@@ -219,7 +230,7 @@ class Give(object):
 
         coords = int(dest.x * 32), int(dest.y * 32), int(dest.z * 32)
 
-        factory.give(coords, block, count)
+        self.factory.give(coords, block, count)
 
         # Return an empty tuple for iteration
         return tuple()
@@ -235,6 +246,9 @@ class Quit(object):
 
     implements(IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def console_command(self, parameters):
         # Let's shutdown!
         message = "Server shutting down."
@@ -242,11 +256,11 @@ class Quit(object):
 
         # Use an error packet to kick clients cleanly.
         packet = make_packet("error", message=message)
-        factory.broadcast(packet)
+        self.factory.broadcast(packet)
 
         yield "Saving all chunks to disk..."
-        for chunk in factory.world.dirty_chunk_cache.itervalues():
-            factory.world.save_chunk(chunk)
+        for chunk in self.factory.world.dirty_chunk_cache.itervalues():
+            self.factory.world.save_chunk(chunk)
 
         yield "Halting."
         reactor.stop()
@@ -262,11 +276,14 @@ class SaveAll(object):
 
     implements(IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def console_command(self, parameters):
         yield "Flushing all chunks..."
 
-        for chunk in factory.world.chunk_cache.itervalues():
-            factory.world.save_chunk(chunk)
+        for chunk in self.factory.world.chunk_cache.itervalues():
+            self.factory.world.save_chunk(chunk)
 
         yield "Save complete!"
 
@@ -281,10 +298,13 @@ class SaveOff(object):
 
     implements(IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def console_command(self, parameters):
         yield "Disabling saving..."
 
-        factory.world.save_off()
+        self.factory.world.save_off()
 
         yield "Saving disabled. Currently running in memory."
 
@@ -299,10 +319,13 @@ class SaveOn(object):
 
     implements(IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def console_command(self, parameters):
         yield "Enabling saving (this could take a bit)..."
 
-        factory.world.save_on()
+        self.factory.world.save_on()
 
         yield "Saving enabled."
 
@@ -317,9 +340,12 @@ class WriteConfig(object):
 
     implements(IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def console_command(self, parameters):
         with open("".join(parameters), "wb") as f:
-            factory.config.write(f)
+            self.factory.config.write(f)
         yield "Configuration saved."
 
     name = "write-config"
@@ -336,6 +362,9 @@ class Season(object):
 
     implements(IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def console_command(self, parameters):
         wanted = " ".join(parameters)
         if wanted == "spring":
@@ -348,8 +377,8 @@ class Season(object):
 
         msg = "Changing season to %s..." % wanted
         yield msg
-        factory.day = season.day
-        factory.update_season()
+        self.factory.day = season.day
+        self.factory.update_season()
         yield "Season successfully changed!"
 
     name = "season"
@@ -362,6 +391,9 @@ class Me(object):
     """
 
     implements(IChatCommand)
+
+    def __init__(self, factory):
+        pass
 
     def chat_command(self, username, parameters):
         say = " ".join(parameters)
@@ -381,8 +413,11 @@ class Kick(object):
 
     implements(IConsoleCommand)
 
-    def dispatch(self, factory, parameters):
-        player = parse_player(factory, parameters[0])
+    def __init__(self, factory):
+        self.factory = factory
+
+    def dispatch(self, parameters):
+        player = parse_player(self.factory, parameters[0])
         if len(parameters) == 1:
             msg = "%s has been kicked." % parameters[0]
         elif len(parameters) > 1:
@@ -393,7 +428,7 @@ class Kick(object):
         yield msg
 
     def console_command(self, parameters):
-        for i in self.dispatch(factory, parameters):
+        for i in self.dispatch(parameters):
             yield i
 
     name = "kick"
@@ -409,8 +444,11 @@ class GetPos(object):
 
     implements(IChatCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
-        player = parse_player(factory, username)
+        player = parse_player(self.factory, username)
         l = player.player.location
         locMsg = "Your location is <%d, %d, %d>" % l.pos.to_block()
         yield locMsg
@@ -426,13 +464,16 @@ class Nick(object):
 
     implements(IChatCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
-        player = parse_player(factory, username)
+        player = parse_player(self.factory, username)
         if len(parameters) == 0:
             return ("Usage: /nick <nickname>",)
         else:
             new = parameters[0]
-        if factory.set_username(player, new):
+        if self.factory.set_username(player, new):
             return ("Changed nickname from %s to %s" % (username, new),)
         else:
             return ("Couldn't change nickname!",)
@@ -440,19 +481,3 @@ class Nick(object):
     name = "nick"
     aliases = tuple()
     usage = "<nickname>"
-
-help = Help()
-list = List()
-time = Time()
-say  = Say()
-give = Give()
-quit = Quit()
-save_all = SaveAll()
-save_off = SaveOff()
-save_on = SaveOn()
-write_config = WriteConfig()
-season = Season()
-me = Me()
-kick = Kick()
-getpos = GetPos()
-nick = Nick()

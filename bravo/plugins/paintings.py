@@ -8,8 +8,6 @@ from bravo.ibravo import IPreBuildHook, IUseHook
 from bravo.beta.packets import make_packet
 from bravo.utilities.coords import adjust_coords_for_face
 
-from bravo.parameters import factory
-
 available_paintings = {
     (1, 1): ("Kebab", "Aztec", "Alban", "Aztec2", "Bomb", "Plant",
              "Wasteland", ),
@@ -45,6 +43,9 @@ class Paintings(object):
 
     name = "painting"
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def pre_build_hook(self, player, builddata):
         item, metadata, x, y, z, face = builddata
 
@@ -59,13 +60,13 @@ class Paintings(object):
         if not player.inventory.consume((item.slot, 0), player.equipped):
             return False, builddata, False
 
-        entity = factory.create_entity(x, y, z, "Painting",
+        entity = self.factory.create_entity(x, y, z, "Painting",
             direction=face_to_direction[face],
             motive=random.choice(painting_names))
-        factory.broadcast(entity.save_to_packet())
+        self.factory.broadcast(entity.save_to_packet())
 
         # Force the chunk (with its entities) to be saved to disk.
-        factory.world.mark_dirty((x, y, z))
+        self.factory.world.mark_dirty((x, y, z))
 
         return False, builddata, False
 
@@ -73,27 +74,25 @@ class Paintings(object):
         # Block coordinates.
         x, y, z = target.location.x, target.location.y, target.location.z
 
-        # Offset coords according to direction. A painting does not
-        # occupy a block, therefore we drop the pickup right in front of the
-        # block it is attached to.
+        # Offset coords according to direction. A painting does not occupy a
+        # block, therefore we drop the pickup right in front of the block it
+        # is attached to.
         face = direction_to_face[target.direction]
         x, y, z = adjust_coords_for_face((x, y, z), face)
 
         # Pixel coordinates.
         coords = (x * 32 + 16, y * 32, z * 32 + 16)
 
-        factory.destroy_entity(target)
-        factory.give(coords, (items["paintings"].slot, 0), 1)
+        self.factory.destroy_entity(target)
+        self.factory.give(coords, (items["paintings"].slot, 0), 1)
 
         packet = make_packet("destroy", eid=target.eid)
-        factory.broadcast(packet)
+        self.factory.broadcast(packet)
 
         # Force the chunk (with its entities) to be saved to disk.
-        factory.world.mark_dirty((x, y, z))
+        self.factory.world.mark_dirty((x, y, z))
 
     targets = ("Painting",)
 
     before = tuple()
     after = tuple()
-
-painting = Paintings()

@@ -6,8 +6,6 @@ from bravo.blocks import blocks
 from bravo.ibravo import IChatCommand, IConsoleCommand
 from bravo.utilities.geometry import gen_line_covered
 
-from bravo.parameters import factory
-
 """
 This plugin shall mimic the worldedit plugin for the original minecraft_server.jar.
 """
@@ -40,10 +38,13 @@ class Jumpto(object):
 
     implements(IChatCommand, IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
         yield "Trying to Jump..."
 
-        protocol = factory.protocols[username] # Our player object
+        protocol = self.factory.protocols[username] # Our player object
 
         l = protocol.player.location
         # Viewport and player location are not very adapted to the coordinate system :
@@ -58,7 +59,7 @@ class Jumpto(object):
         distant_point.y += o.y
         distant_point.z += o.z
 
-        world = factory.world
+        world = self.factory.world
         dest = None
         for point in gen_line_covered(o, distant_point):
             block = world.get_block(point)
@@ -91,5 +92,3 @@ class Jumpto(object):
     aliases = tuple()
     usage = "<name>"
     info = "Teleports you where you're looking at."
-
-jumpto = Jumpto()

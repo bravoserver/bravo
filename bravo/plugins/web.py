@@ -17,8 +17,6 @@ from bravo.blocks import blocks
 from bravo.ibravo import IWorldResource
 from bravo import __file__
 
-from bravo.parameters import factory
-
 worldmap_xml = os.path.join(os.path.dirname(__file__), 'plugins',
                             'worldmap.html')
 
@@ -67,7 +65,8 @@ class ChunkIllustrator(Resource):
     A helper resource which returns image data for a given chunk.
     """
 
-    def __init__(self, x, z):
+    def __init__(self, factory, x, z):
+        self.factory = factory
         self.x = x
         self.z = z
 
@@ -101,7 +100,7 @@ class ChunkIllustrator(Resource):
         request.finish()
 
     def render_GET(self, request):
-        d = factory.world.request_chunk(self.x, self.z)
+        d = self.factory.world.request_chunk(self.x, self.z)
         d.addCallback(self._cb_render_GET, request)
         return NOT_DONE_YET
 
@@ -206,9 +205,12 @@ class AutomatonStatsElement(Element):
 
     loader = XMLString(automaton_stats_template)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     @renderer
     def main(self, request, tag):
-        return tag(*(AutomatonElement(a) for a in factory.automatons))
+        return tag(*(AutomatonElement(a) for a in self.factory.automatons))
 
 class AutomatonStats(Resource):
 
@@ -218,14 +220,14 @@ class AutomatonStats(Resource):
 
     isLeaf = True
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def render_GET(self, request):
-        d = flattenString(request, AutomatonStatsElement())
+        d = flattenString(request, AutomatonStatsElement(self.factory))
         def complete_request(html):
             if not request._disconnected:
                 request.write(html)
                 request.finish()
         d.addCallback(complete_request)
         return NOT_DONE_YET
-
-automatonstats = AutomatonStats()
-worldmap = WorldMap()

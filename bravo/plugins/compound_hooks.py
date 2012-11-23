@@ -6,8 +6,6 @@ from bravo.blocks import blocks
 from bravo.ibravo import IPostBuildHook, IDigHook
 from bravo.utilities.coords import split_coords
 
-from bravo.parameters import factory
-
 class Fallables(object):
     """
     Sometimes things should fall.
@@ -17,6 +15,9 @@ class Fallables(object):
 
     fallables = tuple()
     whitespace = (blocks["air"].slot,)
+
+    def __init__(self, factory):
+        self.factory = factory
 
     def dig_hook(self, chunk, x, y, z, block):
         column = chunk.get_column(x, z)
@@ -47,7 +48,7 @@ class Fallables(object):
     @inlineCallbacks
     def post_build_hook(self, player, coords, block):
         bigx, smallx, bigz, smallz = split_coords(coords[0], coords[2])
-        chunk = yield factory.world.request_chunk(bigx, bigz)
+        chunk = yield self.factory.world.request_chunk(bigx, bigz)
         self.dig_hook(chunk, smallx, coords[1], smallz, block)
 
     name = "fallables"
@@ -80,6 +81,3 @@ class BravoSnow(Fallables):
     fallables = (blocks["snow"].slot,)
 
     name = "bravo_snow"
-
-alpha_sand_gravel = AlphaSandGravel()
-bravo_snow = BravoSnow()

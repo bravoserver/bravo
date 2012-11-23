@@ -6,8 +6,6 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IDigHook
 
-from bravo.parameters import factory
-
 class AlphaSnow(object):
     """
     Notch-style snow handling.
@@ -40,6 +38,9 @@ class Give(object):
 
     implements(IDigHook)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def dig_hook(self, chunk, x, y, z, block):
         if block.drop == blocks["air"].key:
             return
@@ -55,7 +56,7 @@ class Give(object):
         # remember that, for most blocks, the drop ratio is 1, so we should
         # have a short-circuit for those cases.
         if block.ratio == 1 or random.random() <= block.ratio:
-            factory.give(coords, block.drop, block.quantity)
+            self.factory.give(coords, block.drop, block.quantity)
 
     name = "give"
 
@@ -71,6 +72,9 @@ class Torch(object):
 
     implements(IDigHook)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     @inlineCallbacks
     def dig_hook(self, chunk, x, y, z, block):
         """
@@ -78,7 +82,7 @@ class Torch(object):
         block, and drop pickups for them.
         """
 
-        world = factory.world
+        world = self.factory.world
         # Block coordinates
         x = chunk.x * 16 + x
         z = chunk.z * 16 + z
@@ -105,13 +109,9 @@ class Torch(object):
 
             # Drop torch on ground - needs pixel coordinates
             pixcoords = ((x + dx) * 32 + 16, (y + 1) * 32, (z + dz) * 32 + 16)
-            factory.give(pixcoords, blocks[dblock].key, 1)
+            self.factory.give(pixcoords, blocks[dblock].key, 1)
 
     name = "torch"
 
     before = tuple()
     after = ("replace",)
-
-alpha_snow = AlphaSnow()
-give = Give()
-torch = Torch()

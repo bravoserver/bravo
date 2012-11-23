@@ -7,8 +7,6 @@ from bravo.ibravo import IChatCommand, IConsoleCommand
 from bravo.location import Orientation, Position
 from bravo.utilities.coords import split_coords
 
-from bravo.parameters import factory
-
 csv.register_dialect("hey0", delimiter=":")
 
 def get_locations(data):
@@ -37,18 +35,21 @@ class Home(object):
 
     implements(IChatCommand, IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
-        data = factory.world.serializer.load_plugin_data("homes")
+        data = self.factory.world.serializer.load_plugin_data("homes")
         homes = get_locations(data)
 
-        protocol = factory.protocols[username]
+        protocol = self.factory.protocols[username]
         l = protocol.player.location
         if username in homes:
             yield "Teleporting %s home" % username
             x, y, z, yaw, pitch = homes[username]
         else:
             yield "Teleporting %s to spawn" % username
-            x, y, z = factory.world.spawn
+            x, y, z = self.factory.world.spawn
             yaw, pitch = 0, 0
 
         l.pos = Position.from_player(x, y, z)
@@ -71,18 +72,21 @@ class SetHome(object):
 
     implements(IChatCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
         yield "Saving %s's home..." % username
 
-        protocol = factory.protocols[username]
+        protocol = self.factory.protocols[username]
         x, y, z = protocol.player.location.pos.to_block()
         yaw, pitch = protocol.player.location.ori.to_degs()
 
-        data = factory.world.serializer.load_plugin_data("homes")
+        data = self.factory.world.serializer.load_plugin_data("homes")
         d = get_locations(data)
         d[username] = x, y, z, yaw, pitch
         data = put_locations(d)
-        factory.world.serializer.save_plugin_data("homes", data)
+        self.factory.world.serializer.save_plugin_data("homes", data)
 
         yield "Saved %s!" % username
 
@@ -97,8 +101,11 @@ class Warp(object):
 
     implements(IChatCommand, IConsoleCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
-        data = factory.world.serializer.load_plugin_data("warps")
+        data = self.factory.world.serializer.load_plugin_data("warps")
         warps = get_locations(data)
         if len(parameters) == 0:
             yield "Usage: /warp <warpname>"
@@ -106,7 +113,7 @@ class Warp(object):
         location = parameters[0]
         if location in warps:
             yield "Teleporting you to %s" % location
-            protocol = factory.protocols[username]
+            protocol = self.factory.protocols[username]
 
             # An explanation might be necessary.
             # We are changing the location of the player, but we must
@@ -140,8 +147,11 @@ class ListWarps(object):
 
     implements(IChatCommand, IConsoleCommand)
 
-    def dispatch(self, factory):
-        data = factory.world.serializer.load_plugin_data("warps")
+    def __init__(self, factory):
+        self.factory = factory
+
+    def dispatch(self):
+        data = self.factory.world.serializer.load_plugin_data("warps")
         warps = get_locations(data)
 
         if warps:
@@ -152,11 +162,11 @@ class ListWarps(object):
             yield "No warps are set!"
 
     def chat_command(self, username, parameters):
-        for i in self.dispatch(factory):
+        for i in self.dispatch():
             yield i
 
     def console_command(self, parameters):
-        for i in self.dispatch(factory):
+        for i in self.dispatch():
             yield i
 
     name = "listwarps"
@@ -170,20 +180,23 @@ class SetWarp(object):
 
     implements(IChatCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
         name = "".join(parameters)
 
         yield "Saving warp %s..." % name
 
-        protocol = factory.protocols[username]
+        protocol = self.factory.protocols[username]
         x, y, z = protocol.player.location.pos.to_block()
         yaw, pitch = protocol.player.location.ori.to_degs()
 
-        data = factory.world.serializer.load_plugin_data("warps")
+        data = self.factory.world.serializer.load_plugin_data("warps")
         d = get_locations(data)
         d[name] = x, y, z, yaw, pitch
         data = put_locations(d)
-        factory.world.serializer.save_plugin_data("warps", data)
+        self.factory.world.serializer.save_plugin_data("warps", data)
 
         yield "Saved %s!" % name
 
@@ -198,18 +211,21 @@ class RemoveWarp(object):
 
     implements(IChatCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
         name = "".join(parameters)
 
         yield "Removing warp %s..." % name
 
-        data = factory.world.serializer.load_plugin_data("warps")
+        data = self.factory.world.serializer.load_plugin_data("warps")
         d = get_locations(data)
         if name in d:
             del d[name]
             yield "Saving warps..."
             data = put_locations(d)
-            factory.world.serializer.save_plugin_data("warps", data)
+            self.factory.world.serializer.save_plugin_data("warps", data)
             yield "Removed %s!" % name
         else:
             yield "No such warp %s!" % name
@@ -225,8 +241,11 @@ class Ascend(object):
 
     implements(IChatCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
-        protocol = factory.protocols[username]
+        protocol = self.factory.protocols[username]
         success = protocol.ascend(1)
 
         if success:
@@ -245,14 +264,17 @@ class Descend(object):
 
     implements(IChatCommand)
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def chat_command(self, username, parameters):
-        protocol = factory.protocols[username]
+        protocol = self.factory.protocols[username]
         l = protocol.player.location
 
         x, y, z = l.pos.to_block()
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
-        chunk = factory.world.sync_request_chunk((x, y, z))
+        chunk = self.factory.world.sync_request_chunk((x, y, z))
         column = chunk.get_column(smallx, smallz)
 
         # Find the next spot below us which has a platform and two empty
@@ -271,12 +293,3 @@ class Descend(object):
     name = "descend"
     aliases = tuple()
     usage = ""
-
-home = Home()
-sethome = SetHome()
-warp = Warp()
-listwarps = ListWarps()
-setwarp = SetWarp()
-removewarp = RemoveWarp()
-ascend = Ascend()
-descend = Descend()

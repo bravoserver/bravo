@@ -1,9 +1,9 @@
 from itertools import product
 import shutil
 import tempfile
+from unittest import TestCase
 
 from twisted.internet.defer import inlineCallbacks
-from twisted.trial import unittest
 
 from bravo.blocks import blocks
 from bravo.config import BravoConfigParser
@@ -22,7 +22,7 @@ class GrassMockFactory(object):
     def scan_chunk(self, chunk):
         pass
 
-class TestGrass(unittest.TestCase):
+class TestGrass(TestCase):
 
     def setUp(self):
         self.d = tempfile.mkdtemp()
@@ -40,13 +40,7 @@ class TestGrass(unittest.TestCase):
         self.f.world = self.w
         self.w.factory = self.f
 
-        pp = {"factory": self.f}
-
-        plugins = retrieve_plugins(IAutomaton, parameters=pp)
-
-        if "grass" not in plugins:
-            raise unittest.SkipTest("Plugin not present")
-
+        plugins = retrieve_plugins(IAutomaton, factory=self.f)
         self.hook = plugins["grass"]
 
     def tearDown(self):

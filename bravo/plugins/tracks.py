@@ -3,8 +3,6 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IPostBuildHook, IDigHook
 
-from bravo.parameters import factory
-
 tracks_allowed_on = set([
     blocks["bedrock"].slot,
     blocks["brick"].slot,
@@ -64,6 +62,9 @@ class Tracks(object):
 
     name = "tracks"
 
+    def __init__(self, factory):
+        self.factory = factory
+
     def post_build_hook(self, player, coords, block):
         """
         Uses the players location yaw relative to the building position to
@@ -76,7 +77,7 @@ class Tracks(object):
         """
 
         x, y, z = coords
-        world = factory.world
+        world = self.factory.world
 
         # Handle tracks only
         if block.slot != blocks["tracks"].slot:
@@ -150,7 +151,7 @@ class Tracks(object):
         Whenever a block is dug out, destroy descending tracks next to the block
         or tracks on top of the block.
         """
-        world = factory.world
+        world = self.factory.world
         # Block coordinates
         x = chunk.x * 16 + x
         z = chunk.z * 16 + z
@@ -174,9 +175,7 @@ class Tracks(object):
             world.destroy(coords)
             # Drop track on ground - needs pixel coordinates
             pixcoords = ((x + dx) * 32 + 16, (y + 1) * 32, (z + dz) * 32 + 16)
-            factory.give(pixcoords, (blocks["tracks"].slot, 0), 1)
+            self.factory.give(pixcoords, (blocks["tracks"].slot, 0), 1)
 
     before = ("build_snow",)
     after = ("build",)
-
-tracks = Tracks()

@@ -14,8 +14,6 @@ from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
 from bravo.utilities.automatic import column_scan
 from bravo.world import ChunkNotLoaded
 
-from bravo.parameters import factory
-
 class Trees(object):
     """
     Turn saplings into trees.
@@ -27,13 +25,16 @@ class Trees(object):
     grow_step_min = 15
     grow_step_max = 60
 
-    def __init__(self):
-        self.trees = [
-            NormalTree,
-            ConeTree,
-            RoundTree,
-            NormalTree,
-        ]
+    trees = [
+        NormalTree,
+        ConeTree,
+        RoundTree,
+        NormalTree,
+    ]
+
+    def __init__(self, factory):
+        self.factory = factory
+
         self.tracked = set()
 
     def start(self):
@@ -47,22 +48,22 @@ class Trees(object):
 
     def process(self, coords):
         try:
-            metadata = factory.world.sync_get_metadata(coords)
+            metadata = self.factory.world.sync_get_metadata(coords)
             # Is this sapling ready to grow into a big tree? We use a bit-trick to
             # check.
             if metadata >= 12:
                 # Tree time!
                 tree = self.trees[metadata % 4](pos=coords)
-                tree.prepare(factory.world)
-                tree.make_trunk(factory.world)
-                tree.make_foliage(factory.world)
+                tree.prepare(self.factory.world)
+                tree.make_trunk(self.factory.world)
+                tree.make_foliage(self.factory.world)
                 # We can't easily tell how many chunks were modified, so we have
                 # to flush all of them.
-                factory.flush_all_chunks()
+                self.factory.flush_all_chunks()
             else:
                 # Increment metadata.
                 metadata += 4
-                factory.world.sync_set_metadata(coords, metadata)
+                self.factory.world.sync_set_metadata(coords, metadata)
                 call = reactor.callLater(
                     randint(self.grow_step_min, self.grow_step_max), self.process,
                     coords)
@@ -90,7 +91,9 @@ class Grass(object):
     blocks = (blocks["dirt"].slot,)
     step = 1
 
-    def __init__(self):
+    def __init__(self, factory):
+        self.factory = factory
+
         self.tracked = deque()
         self.loop = LoopingCall(self.process)
 
@@ -114,7 +117,7 @@ class Grass(object):
         # about it; we can get to it later. Grass isn't exactly a
         # super-high-tension thing that must happen.
         try:
-            current = factory.world.sync_get_block(coords)
+            current = self.factory.world.sync_get_block(coords)
             if current == blocks["dirt"].slot:
                 # Yep, it's still dirt. Let's look around and see whether it
                 # should be grassy.  Our general strategy is as follows: We
@@ -125,7 +128,7 @@ class Grass(object):
 
                 # First things first: Grass can't grow if there's things on
                 # top of it, so check that first.
-                above = factory.world.sync_get_block((x, y + 1, z))
+                above = self.factory.world.sync_get_block((x, y + 1, z))
                 if above:
                     return
 
@@ -137,18 +140,18 @@ class Grass(object):
                     # Early-exit to avoid block lookup if we finish early.
                     if grasses >= 8:
                         break
-                    block = factory.world.sync_get_block((x, y, z))
+                    block = self.factory.world.sync_get_block((x, y, z))
                     if block == blocks["grass"].slot:
                         grasses += 1
 
                 # Randomly determine whether we are finished.
                 if grasses / 8 >= random():
                     # Hey, let's make some grass.
-                    factory.world.set_block(coords, blocks["grass"].slot)
+                    self.factory.world.set_block(coords, blocks["grass"].slot)
                     # And schedule the chunk to be flushed.
                     x, y, z = coords
-                    d = factory.world.request_chunk(x // 16, z // 16)
-                    d.addCallback(factory.flush_chunk)
+                    d = self.factory.world.request_chunk(x // 16, z // 16)
+                    d.addCallback(self.factory.flush_chunk)
                 else:
                     # Not yet; add it back to the list.
                     self.tracked.appendleft(coords)
@@ -184,7 +187,9 @@ class Rain(object):
 
     blocks = tuple()
 
-    def __init__(self):
+    def __init__(self, factory):
+        self.factory = factory
+
         self.season_loop = LoopingCall(self.check_season)
 
     def scan(self, chunk):
@@ -200,13 +205,9 @@ class Rain(object):
         self.season_loop.stop()
 
     def check_season(self):
-        if factory.world.season.name == "spring":
-            factory.vane.weather = "rainy"
-            reactor.callLater(1 * 60, setattr, factory.vane, "weather",
+        if self.factory.world.season.name == "spring":
+            self.factory.vane.weather = "rainy"
+            reactor.callLater(1 * 60, setattr, self.factory.vane, "weather",
                 "sunny")
 
     name = "rain"
-
-trees = Trees()
-grass = Grass()
-rain = Rain()

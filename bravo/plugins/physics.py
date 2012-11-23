@@ -10,8 +10,6 @@ from bravo.utilities.automatic import naive_scan
 from bravo.utilities.spatial import Block2DSpatialDict, Block3DSpatialDict
 from bravo.world import ChunkNotLoaded
 
-from bravo.parameters import factory
-
 FALLING = 0x8
 """
 Flag indicating whether fluid is in freefall.
@@ -31,7 +29,9 @@ class Fluid(object):
     Defaults to None, which effectively disables this feature.
     """
 
-    def __init__(self):
+    def __init__(self, factory):
+        self.factory = factory
+
         self.sponges = Block3DSpatialDict()
         self.springs = Block2DSpatialDict()
 
@@ -255,7 +255,7 @@ class Fluid(object):
         self.new.add(below)
 
     def process(self):
-        w = factory.world
+        w = self.factory.world
 
         for x, y, z in self.tracked:
             # Try each block separately. If it can't be done, it'll be
@@ -270,8 +270,9 @@ class Fluid(object):
                 elif block == self.fluid:
                     self.add_fluid(w, x, y, z)
                 else:
-                    # Hm, why would a pending block not be any of the things we
-                    # care about? Maybe it used to be a spring or something?
+                    # Hm, why would a pending block not be any of the things
+                    # we care about? Maybe it used to be a spring or
+                    # something?
                     if (x, z) in self.springs:
                         self.remove_spring(x, y, z)
                     elif (x, y, z) in self.sponges:
@@ -284,8 +285,8 @@ class Fluid(object):
         for x, y, z in chain(self.tracked, self.new):
             to_flush.add((x // 16, z // 16))
         for x, z in to_flush:
-            d = factory.world.request_chunk(x, z)
-            d.addCallback(factory.flush_chunk)
+            d = self.factory.world.request_chunk(x, z)
+            d.addCallback(self.factory.flush_chunk)
 
         self.tracked = self.new
         self.new = set()
@@ -324,7 +325,7 @@ class Fluid(object):
                 ( 1, 0,  0),
                 (-1, 0,  0)):
                 coords = x + dx, y + dy, z + dz
-                test_block = yield factory.world.get_block(coords)
+                test_block = yield self.factory.world.get_block(coords)
                 if test_block in (self.spring, self.fluid):
                     self.tracked.add(coords)
 
@@ -360,6 +361,3 @@ class Lava(Fluid):
     step = 0.5
 
     name = "lava"
-
-water = Water()
-lava = Lava()

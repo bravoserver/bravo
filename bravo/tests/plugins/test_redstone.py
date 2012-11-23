@@ -1,4 +1,4 @@
-from twisted.trial import unittest
+from unittest import TestCase
 
 import shutil
 import tempfile
@@ -13,7 +13,7 @@ from bravo.utilities.redstone import Asic, truthify_block
 class RedstoneMockFactory(object):
     pass
 
-class TestRedstone(unittest.TestCase):
+class TestRedstone(TestCase):
 
     def setUp(self):
         # Set up world.
@@ -33,12 +33,7 @@ class TestRedstone(unittest.TestCase):
         self.f = RedstoneMockFactory()
         self.f.world = self.w
 
-        pp = {"factory": self.f}
-        self.p = retrieve_plugins(IDigHook, parameters=pp)
-
-        if "redstone" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
+        self.p = retrieve_plugins(IDigHook, factory=self.f)
         self.hook = self.p["redstone"]
 
     def tearDown(self):

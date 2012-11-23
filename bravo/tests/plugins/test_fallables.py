@@ -1,4 +1,4 @@
-from twisted.trial import unittest
+from unittest import TestCase
 
 from bravo.blocks import blocks
 from bravo.chunk import Chunk
@@ -8,15 +8,11 @@ from bravo.plugin import retrieve_plugins
 class FallablesMockFactory(object):
     pass
 
-class TestAlphaSandGravelDig(unittest.TestCase):
+class TestAlphaSandGravelDig(TestCase):
 
     def setUp(self):
         self.f = FallablesMockFactory()
-        self.p = retrieve_plugins(IDigHook, parameters={"factory": self.f})
-
-        if "alpha_sand_gravel" not in self.p:
-            raise unittest.SkipTest("Plugin not present")
-
+        self.p = retrieve_plugins(IDigHook, factory=self.f)
         self.hook = self.p["alpha_sand_gravel"]
         self.c = Chunk(0, 0)
 

@@ -1,5 +1,4 @@
-# This test suite *does* require trial, for sane conditional test skipping.
-from twisted.trial import unittest
+from twisted.trial.unittest import TestCase
 
 import bravo.blocks
 import bravo.ibravo
@@ -47,21 +46,18 @@ class PluginMixin(object):
     def setUp(self):
         self.f = CommandsMockFactory()
         self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.IChatCommand,
-            parameters={"factory": self.f})
-
-        if self.name not in self.p:
-            raise unittest.SkipTest("Plugin not present")
+                factory=self.f)
 
         self.hook = self.p[self.name]
 
     def test_trivial(self):
         pass
 
-class TestAscend(PluginMixin, unittest.TestCase):
+class TestAscend(PluginMixin, TestCase):
 
     name = "ascend"
 
-class TestGetpos(PluginMixin, unittest.TestCase):
+class TestGetpos(PluginMixin, TestCase):
 
     name = "getpos"
 
@@ -71,7 +67,7 @@ class TestGetpos(PluginMixin, unittest.TestCase):
         l = list(retval)
         self.assertEqual(len(l), 1)
 
-class TestGive(PluginMixin, unittest.TestCase):
+class TestGive(PluginMixin, TestCase):
 
     name = "give"
 
@@ -89,7 +85,7 @@ class TestGive(PluginMixin, unittest.TestCase):
 
         self.assertFalse(called[0])
 
-class TestTime(PluginMixin, unittest.TestCase):
+class TestTime(PluginMixin, TestCase):
 
     name = "time"
 

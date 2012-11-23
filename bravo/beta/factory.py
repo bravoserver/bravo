@@ -265,8 +265,6 @@ class BravoFactory(Factory):
             "use_hooks": IUseHook,
         }
 
-        pp = {"factory": self}
-
         packs = self.config.getlistdefault(self.config_name, "packs", [])
         try:
             packs = [available_packs[pack] for pack in packs]
@@ -283,9 +281,9 @@ class BravoFactory(Factory):
                     l += pack[t]
 
             if issubclass(interface, ISortedPlugin):
-                plugins = retrieve_sorted_plugins(interface, l, parameters=pp)
+                plugins = retrieve_sorted_plugins(interface, l, factory=self)
             else:
-                plugins = retrieve_named_plugins(interface, l, parameters=pp)
+                plugins = retrieve_named_plugins(interface, l, factory=self)
             log.msg("Using %s: %s" % (t.replace("_", " "),
                 ", ".join(plugin.name for plugin in plugins)))
             setattr(self, t, plugins)

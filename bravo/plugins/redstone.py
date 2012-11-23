@@ -7,9 +7,7 @@ from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
 from bravo.utilities.redstone import (RedstoneError, Asic, Circuit)
 
-from bravo.parameters import factory
-
-def create_circuit(asic, coords):
+def create_circuit(factory, asic, coords):
     block = factory.world.sync_get_block(coords)
     metadata = factory.world.sync_get_metadata(coords)
 
@@ -41,7 +39,9 @@ class Redstone(object):
         blocks["redstone-wire"].slot,
     )
 
-    def __init__(self):
+    def __init__(self, factory):
+        self.factory = factory
+
         self.asic = Asic()
         self.active_circuits = set()
 
@@ -77,11 +77,12 @@ class Redstone(object):
             for coords in circuit.iter_outputs():
                 try:
                     if (coords not in self.asic.circuits and
-                        factory.world.sync_get_block(coords)):
+                        self.factory.world.sync_get_block(coords)):
                         # Create a new circuit for this plain block and set it
                         # to be updated next tick. Odds are good it's a plain
                         # block anyway.
-                        affected.add(create_circuit(self.asic, coords))
+                        affected.add(create_circuit(self.factory, self.asic,
+                            coords))
                 except ChunkNotLoaded:
                     # If the chunk's not loaded, then it doesn't really affect
                     # us if we're unable to extend the ASIC into that chunk,
@@ -96,20 +97,20 @@ class Redstone(object):
         for circuit in changed:
             # Get the world data...
             coords = circuit.coords
-            block = factory.world.sync_get_block(coords)
-            metadata = factory.world.sync_get_metadata(coords)
+            block = self.factory.world.sync_get_block(coords)
+            metadata = self.factory.world.sync_get_metadata(coords)
 
             # ...truthify it...
             block, metadata = circuit.to_block(block, metadata)
 
             # ...and send it back out.
-            factory.world.sync_set_block(coords, block)
-            factory.world.sync_set_metadata(coords, metadata)
+            self.factory.world.sync_set_block(coords, block)
+            self.factory.world.sync_set_metadata(coords, metadata)
 
         self.active_circuits = affected
 
     def feed(self, coords):
-        circuit = create_circuit(self.asic, coords)
+        circuit = create_circuit(self.factory, self.asic, coords)
         self.active_circuits.add(circuit)
 
     scan = naive_scan
@@ -121,5 +122,3 @@ class Redstone(object):
 
     before = ("build",)
     after = tuple()
-
-redstone = Redstone()
