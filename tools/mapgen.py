@@ -3,10 +3,10 @@
 from __future__ import division
 
 from itertools import product
-import os.path
 import sys
 import time
 
+from bravo.config import BravoConfigParser
 from bravo.ibravo import ITerrainGenerator
 from bravo.plugin import retrieve_plugins
 from bravo.world import World
@@ -21,15 +21,20 @@ size = int(sys.argv[1])
 pipeline = [d[name] for name in sys.argv[2].split(",")]
 target = sys.argv[3]
 
-if not os.path.exists(target):
-    os.makedirs(target)
-
 print "Making map of %dx%d chunks in %s" % (size, size, target)
 print "Using pipeline: %s" % ", ".join(plugin.name for plugin in pipeline)
 
-world = World(target)
+config = BravoConfigParser()
+config.add_section("world mapgen")
+config.set("world mapgen", "url", target)
+config.set("world mapgen", "serializer", "beta")
+
+world = World(config, "mapgen")
+world.connect()
 world.pipeline = pipeline
 world.season = None
+world.seed = 0
+world.saving = True
 
 counts = [1, 2, 4, 5, 8]
 count = 0
@@ -39,9 +44,9 @@ cpu = 0
 before = time.time()
 for i, j in product(xrange(size), repeat=2):
     start = time.time()
-    chunk = world.load_chunk(i, j)
+    d = world.request_chunk(i, j)
     cpu += (time.time() - start)
-    world.save_chunk(chunk)
+    d.addCallback(lambda chunk: world.save_chunk(chunk))
     count += 1
     if count >= counts[0]:
         print "Status: %d/%d (%.2f%%)" % (count, total, count * 100 / total)
