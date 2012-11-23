@@ -162,6 +162,8 @@ class World(object):
         continuously manage the world.
         """
 
+        self.connect()
+
         self.seed = random.randint(0, sys.maxint)
 
         # Check if we should offload chunk requests to ampoule.
