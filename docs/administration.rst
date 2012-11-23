@@ -102,6 +102,10 @@ serializer
     Which serializer to use for saving worlds. Currently, the "alpha" and
     "beta" serializers are provided for MC Alpha and MC Beta compatibility,
     respectively.
+seed
+    A numeric seed to use for terrain generation. If omitted, the seed will be
+    generated when the world is created. This option only affects new worlds;
+    existing worlds already have a seed.
 
 Plugin Data Files
 =================

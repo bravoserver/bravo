@@ -8,8 +8,6 @@ furnace which inventory was updated.
 
 .. code-block:: python
 
-    from bravo.parameters import factory
-    ...
     # inform content of furnace was probably changed
     d = factory.world.request_chunk(bigx, bigz)
     @d.addCallback
@@ -17,7 +15,6 @@ furnace which inventory was updated.
         furnace = self.get_furnace_tile(chunk, (x, y, z))
         if furnace is not None:
             furnace.changed(factory, coords)
-    ...
 
 ``Furnace.changed()`` method checks if current furnace shall start to burn:
 it must have source item, fuel and must have valid recipe. If it meets the

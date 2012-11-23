@@ -48,7 +48,9 @@ Q & A
 
  Plenty. The biggest architectural mistake is the choice of dozens of threads
  instead of NIO and an asynchronous event-driven model, but there are other
- problems as well.
+ problems as well. Additionally, the offical server development team has
+ recently moved to remove all other servers as options for people wishing to
+ deploy servers. We don't approve of that.
 
 *Are you implying that the official Alpha server is bad?*
 
@@ -69,7 +71,7 @@ Q & A
  http://mc.kev009.com/wiki/ now, since it allows us to share data faster. All
  general Minecraft data goes to that wiki. Bravo-specific docs are shipped in
  ReST form, and a processed Sphinx version is available online at
- http://www.docs.bravoserver.org/.
+ http://bravo.readthedocs.org/.
 
 *Why did you make design decision <X>?*
 
@@ -93,7 +95,7 @@ Credits
 
 *Who are you guys, anyway?*
 
- Corbin Simpson (MostAwesomeDude) is the main coder. Derrick Dymock (Ac-town)
- is the visionary and provider of network traffic dumps. Ben Kero and Mark
- Harris are the reluctant testers and bug-reporters. The Minecraft Coalition
- has been an invaluable forum for discussion.
+ Corbin Simpson (MostAwesomeDude/simpson) is the main coder. Derrick Dymock
+ (Ac-town) is the visionary and provider of network traffic dumps. Ben Kero
+ and Mark Harris are the reluctant testers and bug-reporters. The Minecraft
+ Coalition has been an invaluable forum for discussion.

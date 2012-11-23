@@ -35,6 +35,24 @@ there are several advantages to Python which are too important to sacrifice:
 Additionally, with the advent of PyPy_, the question of whether a full-fledged
 Python application is too slow for consumer hardware is rapidly fading.
 
+Compared to Other Languages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+C++
++++
+
+`Mineserver`_ was a cool attempt to write a custom server in C++. It still
+receives occasional updates, but never attempted the more ambitious features.
+
+.. _Mineserver: http://mineserver.be/
+
+Haskell
++++++++
+
+The Bravo team attempted to port Bravo to Haskell. It was unsuccessful.
+Haskell does not yet have a mature library for creating massively event-driven
+network servers.
+
 No Extension Modules
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -60,20 +78,13 @@ Dependencies
 Forward-compatibility
  Frankly, extension modules are forever incompatible with the spirit of PyPy,
  and require, at bare minimum, a recompile and prayer before they'll
- cooperate. This is another hurdle to jump over in the ongoing quest to make
- PyPy a supported Python interpreter for the entire package.
+ cooperate. We support running Bravo on PyPy, and on this alone, we wish to
+ not depend on them.
 
 Frankly, most extension modules aren't worth this trouble. Extension modules
 which are well-tested, ubiquitous, and actively maintained, are generally
 going to be favored more than extensions which break, are hard to obtain or
 compile, or are derelict.
-
-At the moment, the only extension modules required are in the numpy package,
-which has benefits far outweighing the above complaints.
-
-I am expressly vetoing noise. In addition to the above complaints, its API
-doesn't even provide an equivalent to the pure-Python code in Bravo's core
-which it would supposedly supplant.
 
 Twisted
 ^^^^^^^

@@ -27,19 +27,13 @@ server log says something about "ConsoleRPCProtocol".*
 Errors
 ======
 
-*I get lots of RuntimeErrors from Exocet while loading things like*
+*I get lots of RuntimeErrors from Exocet.*
 
-``bravo.parameters``, ``xml.sax``, and ``twisted.internet``.
- Those are harmless.
-
- Exocet is very, very strict about imports, and in fact, it is stricter than
- the standard importer. This means that Exocet will warn about modules which
- try to do weird or tricky things during imports. The warnings might be
- annoying, but they aren't indicative of anything going wrong.
+ Upgrade to a newer Bravo which doesn't use Exocet.
 
 *I have an error involving construct!*
 
- Install Construct.
+ Install Construct. It is a required package.
 
 *I have an error involving JSON!*
 
@@ -47,12 +41,11 @@ Errors
 
 *I have an error involving IRC/AMP/ListOf!*
 
- Your Twisted is too old. You really do need Twisted 10.1 or newer.
+ Your Twisted is too old. You really do need Twisted 11.0 or newer.
 
 *I have an error ``TypeError: an integer is required`` when starting Bravo!*
 
- Is your Twisted 10.1 or older? This error could be caused by your Twisted not
- being 10.2 or newer.
+ Your Twisted is too old. You *really* do need Twisted 11.0 or newer.
 
 *I am running as root on a Unix system and twistd cannot find
 ``bravo.service``. What's going on?*
@@ -62,6 +55,8 @@ Errors
  setting ``PYTHONPATH``::
 
      # PYTHONPATH=. twistd -n bravo
+
+ But seriously, stop running as root.
 
 Help!
 =====
