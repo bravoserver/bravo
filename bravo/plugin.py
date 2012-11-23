@@ -109,10 +109,15 @@ def verify_plugin(interface, plugin):
     modules.
     """
 
+    converted = interface(plugin, None)
+    if converted is None:
+        raise PluginException("Couldn't convert %s to %s" % (plugin,
+            interface))
+
     try:
-        verifyObject(interface, plugin)
-        interface.validateInvariants(plugin)
-        log.msg(" ( ^^) Plugin: %s" % plugin.name)
+        verifyObject(interface, converted)
+        interface.validateInvariants(converted)
+        log.msg(" ( ^^) Plugin: %s" % converted.name)
     except BrokenImplementation, bi:
         if hasattr(plugin, "name"):
             log.msg(" ( ~~) Plugin %s is missing attribute %r!" %
@@ -170,6 +175,9 @@ def get_plugins(interface, package):
                         # z.i raises this for things which couldn't possibly
                         # be implementations.
                         pass
+                    except AttributeError:
+                        # z.i leaks this one. Fuckers.
+                        pass
             except ImportError, ie:
                 log.msg(ie)
             except SyntaxError, se:
@@ -194,13 +202,13 @@ def retrieve_plugins(interface, **kwargs):
     for p in get_plugins(interface, "bravo.plugins"):
         try:
             obj = p(**kwargs)
-            verify_plugin(interface, obj)
-            d[p.name] = obj
+            verified = verify_plugin(interface, obj)
+            d[p.name] = verified
         except PluginException:
             pass
         except TypeError:
-            # If we ran across e.g. object, then we'll get one of these. It
-            # happens.
+            # The object that we found probably didn't like the kwargs that we
+            # passed in. Oh well!
             pass
 
     if issubclass(interface, ISortedPlugin):
@@ -231,8 +239,10 @@ def retrieve_named_plugins(interface, names, **kwargs):
     try:
         return [d[name] for name in names]
     except KeyError, e:
-        raise PluginException("Couldn't find plugin %s for interface %s!" %
-            (e.args[0], interface.__name__))
+        msg = """Couldn't find plugin %s for interface %s!
+    Candidates were: %r
+        """ % (e.args[0], interface.__name__, sorted(d.keys()))
+        raise PluginException(msg)
 
 def retrieve_sorted_plugins(interface, names, **kwargs):
     """
@@ -245,5 +255,7 @@ def retrieve_sorted_plugins(interface, names, **kwargs):
     try:
         return sort_plugins(l)
     except KeyError, e:
-        raise PluginException("Couldn't find plugin %s for interface %s!" %
-            (e.args[0], interface))
+        msg = """Couldn't find plugin %s for interface %s when sorting!
+    Candidates were: %r
+        """ % (e.args[0], interface.__name__, sorted(p.name for p in l))
+        raise PluginException(msg)
