@@ -21,25 +21,31 @@ class OfflineAuthenticator(object):
         This will authenticate just about anybody.
         """
 
-        packet = make_packet("handshake", username="-")
+        protocol.username = container.username
 
         # Order is important here; the challenged callback *must* fire before
         # we send anything back to the client, because otherwise we won't have
         # a valid entity ready to use.
         d = deferLater(reactor, 0, protocol.challenged)
-        d.addCallback(lambda none: protocol.transport.write(packet))
+
+        # Since a handshake packet from the server is no longer necessary,
+        # once challenged calls back, we fire off a login packet.
+        d.addCallback(lambda none: protocol.login(container))
 
         return True
 
     def login(self, protocol, container):
-        protocol.username = container.username
-
         players = min(protocol.factory.limitConnections, 60)
 
-        packet = make_packet("login", protocol=protocol.eid, username="",
-            seed=protocol.factory.world.seed, mode=protocol.factory.mode,
-            dimension=protocol.factory.world.dimension, difficulty=1,
-            height=128, players=players)
+        packet = make_packet("login",
+                    eid=protocol.eid,
+                    leveltype="default",
+                    mode=protocol.factory.mode,
+                    dimension=protocol.factory.world.dimension,
+                    difficulty="peaceful",
+                    unused=0,
+                    maxplayers=players
+                )
         protocol.transport.write(packet)
 
         return succeed(None)
