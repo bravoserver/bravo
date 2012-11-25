@@ -1,10 +1,8 @@
 from __future__ import division
 
 from array import array
-from gzip import GzipFile
 import os
 from StringIO import StringIO
-from struct import pack, unpack
 from urlparse import urlparse
 
 from twisted.python import log
@@ -19,6 +17,7 @@ from bravo.location import Location, Orientation, Position
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
+from bravo.region import Region
 from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 from bravo.utilities.paths import names_for_chunk, name_for_region
 
@@ -557,7 +556,7 @@ class Beta(Alpha):
     def __init__(self):
         super(Beta, self).__init__()
 
-        self.regions = dict()
+        self.regions = {}
 
     def _save_level_to_tag(self, level):
         tag = Alpha._save_level_to_tag(self, level)
@@ -569,154 +568,40 @@ class Beta(Alpha):
 
         return tag
 
-    def cache_region_pages(self, region):
-        """
-        Cache the pages of a region.
-        """
-
-        fp = self.folder.child("region").child(region)
-        with fp.open("r") as handle:
-            page = handle.read(4096)
-
-        # The + 1 is not gratuitous. Remember that range/xrange won't include
-        # the upper index, but we want it, so we need to increase our upper
-        # bound. Additionally, the first page is off-limits.
-        free_pages = set(xrange(2, (fp.getsize() // 4096) + 1))
-        positions = dict()
-
-        for x in xrange(32):
-            for z in xrange(32):
-                offset = 4 * (x + z * 32)
-                position = unpack(">L", page[offset:offset+4])[0]
-                pages = position & 0xff
-                position >>= 8
-                if position and pages:
-                    positions[x, z] = position, pages
-                    for i in xrange(pages):
-                        free_pages.discard(position + i)
-
-        self.regions[region] = positions, free_pages
-
     def load_chunk(self, chunk):
-        region = name_for_region(chunk.x, chunk.z)
-        fp = self.folder.child("region").child(region)
-        if not fp.exists():
-            return
+        name = name_for_region(chunk.x, chunk.z)
+        if name in self.regions:
+            region = self.regions[name]
+        else:
+            fp = self.folder.child("region").child(name)
+            if not fp.exists():
+                return
 
-        x, z = chunk.x % 32, chunk.z % 32
+            region = Region(fp)
+            self.regions[name] = region
 
-        if region not in self.regions:
-            self.cache_region_pages(region)
-
-        positions = self.regions[region][0]
-
-        if (x, z) not in positions:
-            return
-
-        position, pages = positions[x, z]
-
-        if not position or not pages:
-            return
-
-        with fp.open("r") as handle:
-            handle.seek(position * 4096)
-            data = handle.read(pages * 4096)
-
-        length = unpack(">L", data[:4])[0] - 1
-        version = ord(data[4])
-
-        data = data[5:length+5]
-        if version == 1:
-            data = data.decode("gzip")
-            fileobj = GzipFile(fileobj=StringIO(data))
-        elif version == 2:
-            fileobj = StringIO(data.decode("zlib"))
-
-        tag = NBTFile(buffer=fileobj)
-
-        return self._load_chunk_from_tag(chunk, tag)
+        try:
+            data = region.get_chunk(chunk.x, chunk.z)
+            tag = NBTFile(buffer=StringIO(data))
+            return self._load_chunk_from_tag(chunk, tag)
+        except KeyError:
+            pass
 
     def save_chunk(self, chunk):
         tag = self._save_chunk_to_tag(chunk)
         b = StringIO()
         tag.write_file(buffer=b)
-        data = b.getvalue().encode("zlib")
+        data = b.getvalue()
 
-        region = name_for_region(chunk.x, chunk.z)
+        name = name_for_region(chunk.x, chunk.z)
         fp = self.folder.child("region")
         if not fp.exists():
             fp.makedirs()
-        fp = fp.child(region)
-        if not fp.exists():
-            # Create the file and zero out the header, plus a spare page for
-            # Notchian software.
-            with fp.open("w") as handle:
-                handle.write("\x00" * 8192)
+        fp = fp.child(name)
 
-        if region not in self.regions:
-            self.cache_region_pages(region)
-
-        positions = self.regions[region][0]
-
-        x, z = chunk.x % 32, chunk.z % 32
-
-        if (x, z) in positions:
-            position, pages = positions[x, z]
-        else:
-            position, pages = 0, 0
-
-        # Pack up the data, all ready to go.
-        data = "%s\x02%s" % (pack(">L", len(data) + 1), data)
-        needed_pages = (len(data) + 4095) // 4096
-
-        # I should comment this, since it's not obvious in the original MCR
-        # code either. The reason that we might want to reallocate pages if we
-        # have shrunk, and not just grown, is that it allows the region to
-        # self-vacuum somewhat by reusing single unused pages near the
-        # beginning of the file. While this isn't an absolute guarantee, the
-        # potential savings, and the guarantee that sometime during this
-        # method we *will* be blocking, makes it worthwhile computationally.
-        # This is a lot cheaper than an explicit vacuum, by the way!
-        if not position or not pages or pages != needed_pages:
-            free_pages = self.regions[region][1]
-
-            # Deallocate our current home.
-            for i in xrange(pages):
-                free_pages.add(position + i)
-
-            # Find a new home for us.
-            found = False
-            for candidate in sorted(free_pages):
-                if all(candidate + i in free_pages
-                    for i in range(needed_pages)):
-                        # Excellent.
-                        position = candidate
-                        found = True
-                        break
-
-            # If we couldn't find a reusable run of pages, we should just go
-            # to the end of the file.
-            if not found:
-                position = (fp.getsize() + 4095) // 4096
-
-            # And allocate our new home.
-            for i in xrange(needed_pages):
-                free_pages.discard(position + i)
-
-        pages = needed_pages
-
-        positions[x, z] = position, pages
-
-        # Write our payload.
-        with fp.open("r+") as handle:
-            handle.seek(position * 4096)
-            handle.write(data)
-
-            # Write our position and page count.
-            offset = 4 * (x + z * 32)
-            position = position << 8 | pages
-            handle.seek(offset)
-            handle.write(pack(">L", position))
+        region = Region(fp)
+        region.create()
+        region.put_chunk(chunk.x, chunk.z, data)
 
 alpha = Alpha()
 beta = Beta()

@@ -2,8 +2,6 @@ from gzip import GzipFile
 from StringIO import StringIO
 from struct import pack, unpack
 
-from bravo.nbt import NBTFile
-
 class Region(object):
     """
     An MCRegion-style paged chunk file.
@@ -11,6 +9,7 @@ class Region(object):
 
     def __init__(self, fp):
         self.fp = fp
+        self._load_pages()
 
     def _load_pages(self):
         """
