@@ -19,7 +19,8 @@ from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 from bravo.region import Region
 from bravo.utilities.bits import unpack_nibbles, pack_nibbles
-from bravo.utilities.paths import names_for_chunk, name_for_region
+from bravo.utilities.paths import (names_for_chunk, name_for_anvil,
+        name_for_region)
 
 class Alpha(object):
     """
@@ -543,6 +544,7 @@ class Alpha(object):
         path = self.get_plugin_data_path(name)
         path.setContent(value)
 
+
 class Beta(Alpha):
     """
     Minecraft Beta serializer.
@@ -557,6 +559,10 @@ class Beta(Alpha):
         super(Beta, self).__init__()
 
         self.regions = {}
+
+    @staticmethod
+    def _name_for_region(x, z):
+        return name_for_region(x, z)
 
     def _save_level_to_tag(self, level):
         tag = Alpha._save_level_to_tag(self, level)
@@ -603,5 +609,16 @@ class Beta(Alpha):
         region.create()
         region.put_chunk(chunk.x, chunk.z, data)
 
-alpha = Alpha()
-beta = Beta()
+
+class Anvil(Beta):
+    """
+    Minecraft post-Beta serializer.
+
+    This serializer supports the so-called "Anvil" format.
+    """
+
+    name = "anvil"
+
+    @staticmethod
+    def _name_for_region(x, z):
+        return name_for_anvil(x, z)

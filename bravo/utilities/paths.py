@@ -43,3 +43,10 @@ def name_for_region(x, z):
     """
 
     return "r.%s.%s.mcr" % (x // 32, z // 32)
+
+def name_for_anvil(x, z):
+    """
+    Figure out the name for an Anvil region file, given chunk coordinates.
+    """
+
+    return "r.%s.%s.mca" % (x // 32, z // 32)
