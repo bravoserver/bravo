@@ -14,6 +14,7 @@ from twisted.protocols.policies import TimeoutMixin
 from twisted.python import log
 from twisted.web.client import getPage
 
+from bravo import version
 from bravo.beta.structures import BuildData
 from bravo.blocks import blocks, items
 from bravo.entity import Sign
@@ -300,10 +301,11 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         servers for status.
         """
 
-        players = len(self.factory.protocols)
-        max_players = self.factory.limitConnections or 1000000
+        players = unicode(len(self.factory.protocols))
+        max_players = unicode(self.factory.limitConnections or 1000000)
 
-        response = u"%s§%d§%d" % (self.motd, players, max_players)
+        response = u"\u0000".join([u"§1", unicode(49), u"Bravo %s" % version,
+            self.motd, players, max_players])
         self.error(response)
 
     def quit(self, container):

@@ -5,7 +5,7 @@ from construct import MetaArray, If, Switch, Const, Peek
 from construct import OptionalGreedyRange, RepeatUntil
 from construct import Flag, PascalString, Adapter
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
-from construct import SBInt8, SBInt16, SBInt32, SBInt64
+from construct import SBInt8, SBInt16, SBInt32
 from construct import BFloat32, BFloat64
 from construct import BitStruct, BitField
 from construct import StringAdapter, LengthValueAdapter, Sequence
@@ -749,10 +749,8 @@ packets = {
         UBInt16("token-len"),
         # Token byte arrap
     ),
-    254: Struct("poll"),
-    255: Struct("error",
-        AlphaString("message"),
-    ),
+    254: Struct("poll", UBInt8("unused")),
+    255: Struct("error", AlphaString("message")),
 }
 
 packet_stream = Struct("packet_stream",
