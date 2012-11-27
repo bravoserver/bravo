@@ -101,6 +101,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             106: self.wacknowledge,
             107: self.wcreative,
             130: self.sign,
+            204: self.settings,
             254: self.poll,
             255: self.quit,
         }
@@ -289,6 +290,11 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     def sign(self, container):
         """
         Hook for sign packets.
+        """
+
+    def settings(self, container):
+        """
+        Hook for client settings packets.
         """
 
     def poll(self, container):
