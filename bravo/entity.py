@@ -1,4 +1,3 @@
-from math import pi, atan2
 from random import uniform
 
 from twisted.internet.task import LoopingCall
@@ -87,7 +86,7 @@ class Player(Entity):
             item = item[0]
 
         return make_packet("player", eid=self.eid, username=self.username,
-                x=x, y=y, z=z, yaw=yaw, pitch=pitch, item=item)
+                x=x, y=y, z=z, yaw=yaw, pitch=pitch, item=item, metadata={})
 
     def save_equipment_to_packet(self):
         """
@@ -120,7 +119,7 @@ class Painting(Entity):
 
     name = "Painting"
 
-    def __init__(self, direction=1, motive="", **kwargs):
+    def __init__(self, face="+x", motive="", **kwargs):
         """
         Create a painting.
 
@@ -129,7 +128,7 @@ class Painting(Entity):
 
         super(Painting, self).__init__(**kwargs)
 
-        self.direction = direction
+        self.face = face
         self.motive = motive
 
     def save_to_packet(self):
@@ -140,7 +139,7 @@ class Painting(Entity):
         x, y, z = self.location.pos
 
         return make_packet("painting", eid=self.eid, title=self.motive, x=x,
-                y=y, z=z, direction=self.direction)
+                y=y, z=z, face=self.face)
 
 class Pickup(Entity):
     """
@@ -239,7 +238,8 @@ class Mob(Entity):
         self.update_metadata()
 
         return make_packet("mob", eid=self.eid, type=self.name, x=x, y=y, z=z,
-                yaw=yaw, pitch=pitch, metadata=self.metadata)
+                yaw=yaw, pitch=pitch, head_yaw=yaw, vx=0, vy=0, vz=0,
+                metadata=self.metadata)
 
     def save_location_to_packet(self):
         x, y, z = self.location.pos
