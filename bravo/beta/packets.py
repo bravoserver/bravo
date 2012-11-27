@@ -443,7 +443,7 @@ packets = {
     ),
     29: Struct("destroy",
         UBInt8("count"),
-        MetaArray(lambda context: context["length"], UBInt32("eid")),
+        MetaArray(lambda context: context["count"], UBInt32("eid")),
     ),
     30: Struct("create",
         UBInt32("eid"),

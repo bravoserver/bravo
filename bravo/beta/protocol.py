@@ -760,7 +760,7 @@ class BravoProtocol(BetaServerProtocol):
                 else:
                     packet = make_packet("collect", eid=entity.eid,
                         destination=self.player.eid)
-                    packet += make_packet("destroy", eid=entity.eid)
+                    packet += make_packet("destroy", count=1, eid=[entity.eid])
                     self.factory.broadcast(packet)
                     self.factory.destroy_entity(entity)
 
@@ -1231,8 +1231,9 @@ class BravoProtocol(BetaServerProtocol):
         # Remove the chunk from cache.
         chunk = self.chunks.pop(key)
 
-        for entity in chunk.entities:
-            self.write_packet("destroy", eid=entity.eid)
+        eids = [e.eid for e in chunk.entities]
+
+        self.write_packet("destroy", count=len(eids), eid=eids)
 
         self.write_packet("prechunk", x=x, z=z, enabled=0)
 
@@ -1378,7 +1379,7 @@ class BravoProtocol(BetaServerProtocol):
 
         if self.player:
             self.factory.destroy_entity(self.player)
-            packet = make_packet("destroy", eid=self.player.eid)
+            packet = make_packet("destroy", count=1, eid=[self.player.eid])
             self.factory.broadcast(packet)
 
         if self.username:

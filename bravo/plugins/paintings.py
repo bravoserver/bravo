@@ -86,7 +86,7 @@ class Paintings(object):
         self.factory.destroy_entity(target)
         self.factory.give(coords, (items["paintings"].slot, 0), 1)
 
-        packet = make_packet("destroy", eid=target.eid)
+        packet = make_packet("destroy", count=1, eid=[target.eid])
         self.factory.broadcast(packet)
 
         # Force the chunk (with its entities) to be saved to disk.
