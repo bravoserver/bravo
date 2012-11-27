@@ -83,7 +83,11 @@ class MetadataAdapter(Adapter):
                 value=value,
                 peeked=None)
             c.data.append(d)
-        c.data[-1].peeked = 127
+        if c.data:
+            c.data[-1].peeked = 127
+        else:
+            c.data.append(Container(id=Container(first=0, second=0), value=0,
+                peeked=127))
         return c
 
 # Metadata inner container.
