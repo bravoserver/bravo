@@ -29,11 +29,18 @@ def services_for_endpoints(endpoints, factory):
 
 class BravoService(MultiService):
 
-    def __init__(self):
+    def __init__(self, path):
+        """
+        Initialize this service.
+
+        The path should be a ``FilePath`` which points to the configuration
+        file to use.
+        """
+
         MultiService.__init__(self)
 
         # Grab configuration.
-        self.config = read_configuration()
+        self.config = read_configuration(path)
 
         # Start up our AMP RPC.
         self.amp = TCPServer(25601, ConsoleRPCFactory(self))
