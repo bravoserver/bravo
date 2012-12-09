@@ -23,6 +23,7 @@ Bugfixes
 --------
 
 * Fixed client being kicked when shooting arrows (#378)
+* Removed magic numbers in painting directions (#379)
 
 1.9
 ===
