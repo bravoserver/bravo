@@ -18,6 +18,7 @@ Features
 
 * Seeds can be set for worlds in configuration files (#239)
 * Plugins can be grouped into packs, and there is a pack for Beta (#380)
+* Added command-line option for path to configuration file (#386)
 
 Bugfixes
 --------
