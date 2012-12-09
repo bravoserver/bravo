@@ -99,7 +99,4 @@ class BravoService(MultiService):
                 client.setName(factory.config)
                 self.addService(client)
 
-service = BravoService()
-
-application = Application("Bravo")
-service.setServiceParent(application)
+service = BravoService

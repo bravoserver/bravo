@@ -17,6 +17,6 @@ class BravoServiceMaker(object):
 
     def makeService(self, options):
         from bravo.service import service
-        return service
+        return service()
 
 bsm = BravoServiceMaker()
