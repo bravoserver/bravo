@@ -10,11 +10,7 @@ setup(
     packages=find_packages() + [
         "twisted.plugins",
     ],
-    install_requires=[
-        "numpy",
-        "construct>=2.03",
-        "Twisted>=11.0",
-    ],
+    install_requires=open("requirements.txt").read().split("\n"),
     author="Corbin Simpson",
     author_email="MostAwesomeDude@gmail.com",
     description="Minecraft server and utilities",
