@@ -6,7 +6,7 @@
   <meta name="generator" content=
   "HTML Tidy for Linux (vers 25 March 2009), see www.w3.org">
 
-  <link rel="stylesheet" type="text/css" href="styles.css">
+  <link rel="stylesheet" type="text/css" href="bootstrap.css">
   <link rel="stylesheet" type="text/css" href="highlighting.css">
   <link rel='stylesheet' type='text/css' href=
   'http://fonts.googleapis.com/css?family=GFS+Neohellenic:bolditalic&amp;subset=greek'>
@@ -35,32 +35,32 @@
 </head>
 
 <body>
-  <div id="body">
-    <div id="header">
-      <div id="header-left">
-        <a href="index.html">
-          <h1 style="font-size: 60pt; font-family: 'Candal'">
-            <span style=
-            "font-size: 200%; font-family: 'GFS Neohellenic'">&beta;</span>ravo
-          </h1>
-        </a>
-      </div>
-      <div id="header-right">
-        <ul id="navigation">
-          <li><a href="about.html">About</a></li>
-          <li><a href="downloads.html">Downloads</a></li>
-          <li><a href="http://docs.bravoserver.org/">Docs</a></li>
-          <li><a href="http://lists.bravoserver.org/listinfo.cgi/bravo-dev-bravoserver.org">Mailing List</a></li>
-        </ul>
+  <div class="container">
+    <div class="page-header">
+      <a href="index.html">
+        <h1 style="font-family: 'Candal'">
+          <span style="font-size: larger; font-family: 'GFS
+              Neohellenic'">&beta;</span>ravo
+        </h1>
+      </a>
+    </div>
+    <ul class="nav nav-pills pull-left">
+      <li><a href="about.html">About</a></li>
+      <li><a href="downloads.html">Downloads</a></li>
+      <li><a href="http://docs.bravoserver.org/">Docs</a></li>
+      <li><a href="http://lists.bravoserver.org/listinfo.cgi/bravo-dev-bravoserver.org">Mailing List</a></li>
+    </ul>
     <!--script type="text/javascript"
     src="http://www.ohloh.net/p/486884/widgets/project_users.js?style=rainbow">
     </script-->
-      </div>
-    </div>
 
-    <div id="main">
-      <div id="content">
-          {% block main %}{{ page.content }}{% endblock %}
+    <div class="row">
+      <div class="span10 offset1 well">
+        <div class="row">
+          <div class="span8 offset1 well">
+            {% block main %}{{ page.content }}{% endblock %}
+          </div>
+        </div>
       </div>
     </div>
 
