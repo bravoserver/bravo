@@ -9,12 +9,17 @@ $pale-green: #dff;
 $paler-green: #eff;
 $white: #fff;
 
-body {
-    background-color: #ffffff;
-
-    font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
+.well-light-green {
+    background: $paler-green;
+    border-color: $light-green;
 }
 
+.well-green {
+    background: $pale-green;
+    border-color: $light-green;
+}
+
+/*
 a {
     color: inherit;
 
@@ -120,3 +125,4 @@ p {
     color: #111199;
     text-align: right;
 }
+*/
