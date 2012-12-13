@@ -3,12 +3,14 @@
     {{ site.title }}
 {% endblock %}
 {% block main %}
-{{ super() }}
+<p class="lead">Welcome to Bravo! Bravo is a Minecraft server.</p>
 {% for subpage in page.subpages|sort(reverse=True, attribute="datetime") %}
-    <div class="entry">
-        <h2>{{ subpage.title }}</h2>
-        {{ subpage.content }}
+  <div class="row">
+    <div class="span8 offset1 well well-green">
+      <h2>{{ subpage.title }}</h2>
+      {{ subpage.content }}
     </div>
+  </div>
 {% else %}
 Huh, where'd the content go?
 {% endfor %}
