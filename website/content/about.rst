@@ -1,5 +1,5 @@
 title: About
-author: Corbin Simpson <MostAwesomeDude@gmail.com>
+author: Corbin Simpson <cds@corbinsimpson.com>
 ---
 Bravo is, as originally stated in the README, a speedy, elegant, and
 customizable Minecraft server.
@@ -10,9 +10,13 @@ significant ways:
 Speed
 -----
 
-Bravo is fast. Bravo leverages the Twisted framework to provide highly
+Bravo is fast. Bravo leverages the `Twisted`_ framework to provide highly
 concurrent network services, allowing Bravo to provide a Minecraft server
-which scales easily to hundreds of connected players.
+which scales easily to hundreds of connected players. Bravo also supports
+running on `PyPy`_, gaining massive speed boosts and improved memory usage.
+
+.. _Twisted: http://twistedmatrix.com/
+.. _PyPy: http://pypy.org/
 
 Elegance
 --------
@@ -26,6 +30,6 @@ Customization
 -------------
 
 Bravo has a large and robust plugin system, as well as a series of interfaces
-to extend Bravo's capabilities. Bravo ships with a large corpus of plugins,
-including the capabilities of the vanilla server, a web frontend, an IRC
-client, and more.
+to extend Bravo's capabilities. Bravo ships with a large corpus of plugins and
+components, including the capabilities of the vanilla server, a web frontend,
+an IRC client, and more.
