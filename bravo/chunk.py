@@ -50,6 +50,23 @@ def ci(x, y, z):
 
     return (x * 16 + z) * 128 + y
 
+def segment_array(a):
+    """
+    Chop up a chunk-sized array into sixteen components.
+
+    The chops are done in order to produce the smaller chunks preferred by
+    modern clients.
+    """
+
+    l = [array(a.typecode) for chaff in range(16)]
+    index = 0
+
+    for i in range(0, len(a), 16):
+        l[index].extend(a[i:i + 16])
+        index = (index + 1) % 16
+
+    return l
+
 def make_glows():
     """
     Set up glow tables.
