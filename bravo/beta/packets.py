@@ -519,16 +519,14 @@ packets = {
         UBInt16("level"),
         UBInt16("total"),
     ),
-    # TODO: Needs work
     51: Struct("chunk",
         SBInt32("x"),
         SBInt32("z"),
         Bool("continuous"),
-        UBInt16("bitmap"),
-        UBInt16("add-bitmap"),
+        UBInt16("primary"),
+        UBInt16("add"),
         PascalString("data", length_field=UBInt32("length"), encoding="zlib"),
     ),
-    # TODO: Needs work
     52: Struct("batch",
         SBInt32("x"),
         SBInt32("z"),
