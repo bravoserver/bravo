@@ -476,12 +476,18 @@ class Chunk(object):
         Generate a chunk packet.
         """
 
-        array = self.blocks.tostring()
-        array += pack_nibbles(self.metadata)
-        array += pack_nibbles(self.blocklight)
-        array += pack_nibbles(self.skylight)
-        packet = make_packet("chunk", x=self.x * 16, y=0, z=self.z * 16,
-            x_size=15, y_size=127, z_size=15, data=array)
+        in_order = self.blocks, self.metadata, self.blocklight, self.skylight
+        zipped = zip(*[segment_array(a) for a in in_order])
+        packed = []
+
+        for b, m, l, s in zipped:
+            packed.append(b.tostring())
+            packed.append(pack_nibbles(m))
+            packed.append(pack_nibbles(l))
+            packed.append(pack_nibbles(s))
+
+        packet = make_packet("chunk", x=self.x, z=self.z, continuous=False,
+                primary=0xff, add=0x0, data="".join(packed))
         return packet
 
     @check_bounds
