@@ -660,7 +660,7 @@ packets = {
     ),
     104: Struct("inventory",
         UBInt8("wid"),
-        UBInt16("count"),
+        UBInt16("length"),
         MetaArray(lambda context: context["length"], items),
     ),
     105: Struct("window-progress",
