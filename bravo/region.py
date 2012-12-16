@@ -7,11 +7,13 @@ class Region(object):
     An MCRegion-style paged chunk file.
     """
 
+    free_pages = None
+    positions = None
+
     def __init__(self, fp):
         self.fp = fp
-        self._load_pages()
 
-    def _load_pages(self):
+    def load_pages(self):
         """
         Prefetch the pages of a region.
         """
@@ -46,9 +48,14 @@ class Region(object):
             # Notchian software.
             handle.write("\x00" * 8192)
 
+        self.load_pages()
+
     def get_chunk(self, x, z):
         x %= 32
         z %= 32
+
+        if not self.positions:
+            self.load_pages()
 
         position, pages = self.positions[x, z]
 
@@ -72,6 +79,9 @@ class Region(object):
         x %= 32
         z %= 32
         data = data.encode("zlib")
+
+        if not self.positions:
+            self.load_pages()
 
         if (x, z) in self.positions:
             position, pages = self.positions[x, z]
