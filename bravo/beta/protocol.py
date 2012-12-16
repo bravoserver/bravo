@@ -1360,7 +1360,8 @@ class BravoProtocol(BetaServerProtocol):
         ]
 
     def update_time(self):
-        self.write_packet("time", timestamp=int(self.factory.time))
+        time = int(self.factory.time)
+        self.write_packet("time", timestamp=time, time=time % 24000)
 
     def connectionLost(self, reason):
         """
