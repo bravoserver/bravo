@@ -18,7 +18,7 @@ def check_bounds(f):
     """
     Decorate a function or method to have its first positional argument be
     treated as an (x, y, z) tuple which must fit inside chunk boundaries of
-    16, 128, and 16, respectively.
+    16, 256, and 16, respectively.
 
     A warning will be raised if the bounds check fails.
     """
@@ -28,7 +28,7 @@ def check_bounds(f):
         x, y, z = coords
 
         # Coordinates were out-of-bounds; warn and run away.
-        if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < 128):
+        if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < 256):
             warn("Coordinates %s are OOB in %s() of %s, ignoring call"
                 % (coords, f.func_name, chunk), ChunkWarning)
             # A concession towards where this decorator will be used. The
@@ -48,7 +48,7 @@ def ci(x, y, z):
     difference. Hopefully this is faster on PyPy than on CPython.
     """
 
-    return (x * 16 + z) * 128 + y
+    return (x * 16 + z) * 256 + y
 
 def segment_array(a):
     """
@@ -95,7 +95,7 @@ def composite_glow(target, strength, x, y, z):
 
     ambient = glow[strength]
 
-    xbound, zbound, ybound = 16, 128, 16
+    xbound, zbound, ybound = 16, 256, 16
 
     sx = x - strength
     sy = y - strength
@@ -161,7 +161,7 @@ def iter_neighbors(coords):
 
         if not (0 <= nx < 16 and
             0 <= nz < 16 and
-            0 <= ny < 128):
+            0 <= ny < 256):
             continue
 
         yield nx, nz, ny
@@ -184,7 +184,7 @@ class Chunk(object):
 
     Chunks are large pieces of world geometry (block data). The blocks, light
     maps, and associated metadata are stored in chunks. Chunks are
-    always measured 16x128x16 and are aligned on 16x16 boundaries in
+    always measured 16x256x16 and are aligned on 16x16 boundaries in
     the xz-plane.
 
     :cvar bool dirty: Whether this chunk needs to be flushed to disk.
@@ -213,16 +213,16 @@ class Chunk(object):
         self.x = int(x)
         self.z = int(z)
 
-        self.blocks = array("B", [0] * (16 * 16 * 128))
+        self.blocks = array("B", [0] * (16 * 16 * 256))
         self.heightmap = array("B", [0] * (16 * 16))
-        self.blocklight = array("B", [0] * (16 * 16 * 128))
-        self.metadata = array("B", [0] * (16 * 16 * 128))
-        self.skylight = array("B", [0] * (16 * 16 * 128))
+        self.blocklight = array("B", [0] * (16 * 16 * 256))
+        self.metadata = array("B", [0] * (16 * 16 * 256))
+        self.skylight = array("B", [0] * (16 * 16 * 256))
 
         self.entities = set()
         self.tiles = {}
 
-        self.damaged = array("B", [0] * (16 * 16 * 128))
+        self.damaged = array("B", [0] * (16 * 16 * 256))
 
         self.all_damaged = False
 
@@ -248,9 +248,9 @@ class Chunk(object):
             self.heightmap[column] = i
 
     def regenerate_blocklight(self):
-        lightmap = array("L", [0] * (16 * 16 * 128))
+        lightmap = array("L", [0] * (16 * 16 * 256))
 
-        for x, y, z in product(xrange(16), xrange(128), xrange(16)):
+        for x, y, z in product(xrange(16), xrange(256), xrange(16)):
             block = self.blocks[ci(x, y, z)]
             if block in glowing_blocks:
                 composite_glow(lightmap, glowing_blocks[block], x, y, z)
@@ -267,7 +267,7 @@ class Chunk(object):
         The height map must be valid for this method to produce valid results.
         """
 
-        lightmap = array("B", [0] * (16 * 16 * 128))
+        lightmap = array("B", [0] * (16 * 16 * 256))
 
         for x, z in product(xrange(16), repeat=2):
             offset = x * 16 + z
@@ -282,18 +282,18 @@ class Chunk(object):
 
             # The topmost block, regardless of type, is set to maximum
             # lighting, as are all the blocks above it.
-            for i in xrange(height, 128):
+            for i in xrange(height, 256):
                 lightmap[offset + i] = light
 
             # Dim the light going throught the remaining blocks, until there
             # is no more light left.
             for y in range(height, -1, -1):
-                dim = blocks[self.blocks[offset * 128 + y]].dim
+                dim = blocks[self.blocks[offset * 256 + y]].dim
                 light -= dim
                 if light <= 0:
                     break
 
-                lightmap[offset * 128 + y] = light
+                lightmap[offset * 256 + y] = light
 
         # Now it's time to spread the light around. This flavor uses extra
         # memory to speed things up; the basic idea is to spread *all* light,
@@ -312,10 +312,10 @@ class Chunk(object):
             if not lightmap[ci(x, y, z)]:
                 continue
 
-            if ((x > 0  and unlit[((x - 1) * 16 + z) * 128 + y]) or
-                (x < 15 and unlit[((x + 1) * 16 + z) * 128 + y]) or
-                (z > 0  and unlit[(x * 16 + (z - 1)) * 128 + y]) or
-                (z < 15 and unlit[(x * 16 + (z + 1)) * 128 + y])):
+            if ((x > 0  and unlit[((x - 1) * 16 + z) * 256 + y]) or
+                (x < 15 and unlit[((x + 1) * 16 + z) * 256 + y]) or
+                (z > 0  and unlit[(x * 16 + (z - 1)) * 256 + y]) or
+                (z < 15 and unlit[(x * 16 + (z + 1)) * 256 + y])):
                 spread.add((x, z, y))
 
         visited = set()
@@ -335,7 +335,7 @@ class Chunk(object):
 
                     x, z, y = target
 
-                    if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < 128):
+                    if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < 256):
                         continue
 
                     offset = ci(x, y, z)
@@ -429,7 +429,7 @@ class Chunk(object):
             block = self.blocks[index]
             metadata = self.metadata[index]
             # divmod() trick for coords.
-            index, y = divmod(index, 128)
+            index, y = divmod(index, 256)
             x, z = divmod(index, 16)
 
             return make_packet("block",
@@ -440,22 +440,17 @@ class Chunk(object):
                     meta=metadata)
         else:
             # Use a batch update.
-            # Coordinates are not quite packed in the same system as the
-            # indices for chunk data structures.
-            # Chunk data structures are ((x * 16) + z) * 128) + y, or in
-            # bit-twiddler's parlance, x << 11 | z << 7 | y. However, for
-            # this, we need x << 12 | z << 8 | y, so repack accordingly.
+            # Coordinates are, magically, packed in exactly the same way as
+            # the indices for chunk data structures.
+            # Chunk data structures are ((x * 16) + z) * 256) + y, or in
+            # bit-twiddler's parlance, x << 12 | z << 8 | y. This is *exactly*
+            # the format required for batch updates.
             coords = []
             types = []
             metadata = []
             for index, value in enumerate(self.damaged):
                 if value:
-                    # This line deserves an explanation. The top of index is
-                    # correct, but needs to be repacked. x and z are 4 bits
-                    # wide, and need to be one bit higher, so we mask them
-                    # together and shift them both up, while preserving the y.
-                    repacked = ((index & 0x7f80) << 1) | (index & 0x7f)
-                    coords.append(repacked)
+                    coords.append(index)
                     types.append(self.blocks[index])
                     metadata.append(self.metadata[index])
 
@@ -468,7 +463,7 @@ class Chunk(object):
         Clear this chunk's damage.
         """
 
-        self.damaged = array("B", [0] * (16 * 16 * 128))
+        self.damaged = array("B", [0] * (16 * 16 * 256))
         self.all_damaged = False
 
     def save_to_packet(self):
@@ -514,7 +509,7 @@ class Chunk(object):
         x, y, z = coords
 
         column = x * 16 + z
-        offset = column * 128 + y
+        offset = column * 256 + y
 
         if self.blocks[offset] != block:
             self.blocks[offset] = block
@@ -531,7 +526,7 @@ class Chunk(object):
                 height = self.heightmap[column]
                 if y == height:
                     for y in range(height, -1, -1):
-                        if self.blocks[column * 128 + y]:
+                        if self.blocks[column * 256 + y]:
                             break
                     self.heightmap[column] = y
 
@@ -634,8 +629,8 @@ class Chunk(object):
         :rtype: :py:class:`numpy.ndarray`
         """
 
-        column = (x * 16 + z) * 128
-        return self.blocks[column:column + 128]
+        column = ci(x, 0, z)
+        return self.blocks[column:column + 256]
 
     def set_column(self, x, z, column):
         """
@@ -647,9 +642,9 @@ class Chunk(object):
         :param column: Column data, in the form of a NumPy array.
         """
 
-        s = (x * 16 + z) * 128
-        self.blocks[s:s + 128] = column
+        s = ci(x, 0, z)
+        self.blocks[s:s + 256] = column
 
         self.dirty = True
-        for y in range(128):
+        for y in range(256):
             self.damage((x, y, z))
