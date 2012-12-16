@@ -24,9 +24,11 @@ class WeatherVane(object):
             self.factory.broadcast(self.make_packet())
 
     def make_packet(self):
+        # XXX this probably should use the factory's mode rather than
+        # hardcoding creative mode. Probably.
         if self.weather == "rainy":
-            return make_packet("state", state="start_rain", creative=False)
+            return make_packet("state", state="start_rain", mode="creative")
         elif self.weather == "sunny":
-            return make_packet("state", state="stop_rain", creative=False)
+            return make_packet("state", state="stop_rain", mode="creative")
         else:
             return ""
