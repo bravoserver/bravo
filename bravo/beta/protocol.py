@@ -1235,7 +1235,9 @@ class BravoProtocol(BetaServerProtocol):
 
         self.write_packet("destroy", count=len(eids), eid=eids)
 
-        self.write_packet("prechunk", x=x, z=z, enabled=0)
+        # Clear chunk data on the client.
+        self.write_packet("chunk", x=x, z=z, continuous=False, primary=0x0,
+                add=0x0, data="")
 
     def enable_chunk(self, x, z):
         """
@@ -1265,7 +1267,6 @@ class BravoProtocol(BetaServerProtocol):
 
     def send_chunk(self, chunk):
         log.msg("Sending chunk %d, %d" % (chunk.x, chunk.z))
-        self.write_packet("prechunk", x=chunk.x, z=chunk.z, enabled=1)
 
         packet = chunk.save_to_packet()
         self.transport.write(packet)
