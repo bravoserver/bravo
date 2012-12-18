@@ -482,7 +482,7 @@ class Chunk(object):
             packed.append(pack_nibbles(s))
 
         packet = make_packet("chunk", x=self.x, z=self.z, continuous=False,
-                primary=0xff, add=0x0, data="".join(packed))
+                primary=0xffff, add=0x0, data="".join(packed))
         return packet
 
     @check_bounds
