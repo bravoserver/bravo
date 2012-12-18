@@ -471,21 +471,39 @@ class Chunk(object):
         Generate a chunk packet.
         """
 
-        in_order = self.blocks, self.metadata, self.blocklight, self.skylight
-        zipped = zip(*[segment_array(a) for a in in_order])
+        mask = 0
         packed = []
 
-        for b, m, l, s in zipped:
-            packed.append(b.tostring())
-            packed.append(pack_nibbles(m))
-            packed.append(pack_nibbles(l))
-            packed.append(pack_nibbles(s))
+        bs = segment_array(self.blocks)
+        ms = segment_array(self.metadata)
+        ls = segment_array(self.blocklight)
+        ss = segment_array(self.skylight)
+
+        for i, b in enumerate(bs):
+            if any(b):
+                mask |= 1 << i
+                packed.append(b.tostring())
+                print "Slice", i, "is occupied"
+            else:
+                print "Slice", i, "is empty"
+
+        for i, m in enumerate(ms):
+            if mask & 1 << i:
+                packed.append(pack_nibbles(m))
+
+        for i, l in enumerate(ls):
+            if mask & 1 << i:
+                packed.append(pack_nibbles(l))
+
+        for i, s in enumerate(ss):
+            if mask & 1 << i:
+                packed.append(pack_nibbles(s))
 
         # Fake the biome data.
         packed.append("\x00" * 256)
 
         packet = make_packet("chunk", x=self.x, z=self.z, continuous=True,
-                primary=0xffff, add=0x0, data="".join(packed))
+                primary=mask, add=0x0, data="".join(packed))
         return packet
 
     @check_bounds
