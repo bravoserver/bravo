@@ -1115,7 +1115,7 @@ class BravoProtocol(BetaServerProtocol):
         return DeferredList(dl)
 
     def equip(self, container):
-        self.player.equipped = container.item
+        self.player.equipped = container.slot
 
         # Inform everyone about the item the player is holding now.
         item = self.player.inventory.holdables[self.player.equipped]
