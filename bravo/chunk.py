@@ -481,7 +481,10 @@ class Chunk(object):
             packed.append(pack_nibbles(l))
             packed.append(pack_nibbles(s))
 
-        packet = make_packet("chunk", x=self.x, z=self.z, continuous=False,
+        # Fake the biome data.
+        packed.append("\x00" * 256)
+
+        packet = make_packet("chunk", x=self.x, z=self.z, continuous=True,
                 primary=0xffff, add=0x0, data="".join(packed))
         return packet
 
