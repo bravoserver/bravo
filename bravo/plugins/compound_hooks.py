@@ -20,20 +20,24 @@ class Fallables(object):
         self.factory = factory
 
     def dig_hook(self, chunk, x, y, z, block):
-        column = chunk.get_column(x, z)
         y = min(y - 1, 0)
 
-        while y < 127:
+        for y in range(y, 127):
+            current = chunk.get_block((x, y, z))
+
             # Find whitespace...
-            if column[y] in self.whitespace:
+            if current in self.whitespace:
                 above = y + 1
                 # ...find end of whitespace...
-                while column[above] in self.whitespace and above < 127:
+                while (chunk.get_block((x, above, z)) in self.whitespace
+                       and above < 127):
                     above += 1
-                if column[above] in self.fallables:
-                    # ...move fallables.
-                    column[y] = column[above]
-                    column[above] = blocks["air"].slot
+
+                moved = chunk.get_block((x, above, z))
+                if moved in self.fallables:
+                    # ...and move fallables.
+                    chunk.set_block((x, y, z), moved)
+                    chunk.set_block((x, above, z), blocks["air"].slot)
                 else:
                     # Not fallable; reset stack search here.
                     # y is reset to above, not above - 1, because
@@ -42,8 +46,6 @@ class Fallables(object):
                     # next line.
                     y = above
             y += 1
-
-        chunk.set_column(x, z, column)
 
     @inlineCallbacks
     def post_build_hook(self, player, coords, block):
