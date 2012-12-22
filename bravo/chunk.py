@@ -5,6 +5,7 @@ from warnings import warn
 
 from bravo.blocks import blocks, glowing_blocks
 from bravo.beta.packets import make_packet
+from bravo.geometry.section import Section
 from bravo.utilities.bits import pack_nibbles
 from bravo.utilities.maths import clamp
 
@@ -216,8 +217,9 @@ class Chunk(object):
         self.blocks = array("B", [0] * (16 * 16 * 256))
         self.heightmap = array("B", [0] * (16 * 16))
         self.blocklight = array("B", [0] * (16 * 16 * 256))
-        self.metadata = array("B", [0] * (16 * 16 * 256))
         self.skylight = array("B", [0] * (16 * 16 * 256))
+
+        self.sections = [Section() for i in range(16)]
 
         self.entities = set()
         self.tiles = {}
@@ -426,11 +428,13 @@ class Chunk(object):
             # Use a single block update packet. Find the first (only) set bit
             # in the damaged array, and use it as an index.
             index = next(i for i, value in enumerate(self.damaged) if value)
-            block = self.blocks[index]
-            metadata = self.metadata[index]
+
             # divmod() trick for coords.
             index, y = divmod(index, 256)
             x, z = divmod(index, 16)
+
+            block = self.blocks[index]
+            metadata = self.get_metadata((x, y, z))
 
             return make_packet("block",
                     x=x + self.x * 16,
@@ -452,7 +456,11 @@ class Chunk(object):
                 if value:
                     coords.append(index)
                     types.append(self.blocks[index])
-                    metadata.append(self.metadata[index])
+
+                    # divmod() trick for coords.
+                    index, y = divmod(index, 256)
+                    x, z = divmod(index, 16)
+                    metadata.append(self.get_metadata((x, y, z)))
 
             return make_packet("batch", x=self.x, z=self.z,
                 length=len(coords), coords=coords, types=types,
@@ -475,7 +483,6 @@ class Chunk(object):
         packed = []
 
         bs = segment_array(self.blocks)
-        ms = segment_array(self.metadata)
         ls = segment_array(self.blocklight)
         ss = segment_array(self.skylight)
 
@@ -487,9 +494,9 @@ class Chunk(object):
             else:
                 print "Slice", i, "is empty"
 
-        for i, m in enumerate(ms):
+        for i, section in enumerate(self.sections):
             if mask & 1 << i:
-                packed.append(pack_nibbles(m))
+                packed.append(pack_nibbles(section.metadata))
 
         for i, l in enumerate(ls):
             if mask & 1 << i:
@@ -575,7 +582,10 @@ class Chunk(object):
         :rtype: int
         """
 
-        return self.metadata[ci(*coords)]
+        x, y, z = coords
+        index, y = divmod(y, 16)
+
+        return self.sections[index].get_metadata((x, y, z))
 
     @check_bounds
     def set_metadata(self, coords, metadata):
@@ -586,8 +596,11 @@ class Chunk(object):
         :param int metadata:
         """
 
-        if self.metadata[ci(*coords)] != metadata:
-            self.metadata[ci(*coords)] = metadata
+        if self.get_metadata(coords) != metadata:
+            x, y, z = coords
+            index, y = divmod(y, 16)
+
+            self.sections[index].set_metadata((x, y, z), metadata)
 
             self.dirty = True
             self.damage(coords)

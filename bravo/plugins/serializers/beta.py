@@ -340,7 +340,9 @@ class Alpha(object):
         level["Blocks"].value = chunk.blocks.tostring()
         level["HeightMap"].value = chunk.heightmap.tostring()
         level["BlockLight"].value = pack_nibbles(chunk.blocklight)
-        level["Data"].value = pack_nibbles(chunk.metadata)
+        metadata = "".join(pack_nibbles(section.metadata)
+                           for section in chunk.sections)
+        level["Data"].value = metadata
         level["SkyLight"].value = pack_nibbles(chunk.skylight)
 
         level["TerrainPopulated"] = TAG_Byte(chunk.populated)

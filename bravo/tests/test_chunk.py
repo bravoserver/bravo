@@ -1,8 +1,6 @@
 from twisted.trial import unittest
 
 from itertools import product
-import warnings
-
 
 from bravo.blocks import blocks
 from bravo.chunk import Chunk
@@ -41,7 +39,7 @@ class TestChunkBlocks(unittest.TestCase):
         self.c.set_metadata((0, 0, 0), 1)
         self.c.destroy((0, 0, 0))
         self.assertEqual(self.c.blocks[0], 0)
-        self.assertEqual(self.c.metadata[0], 0)
+        self.assertEqual(self.c.get_metadata((0, 0, 0)), 0)
 
     def test_sed(self):
         """
