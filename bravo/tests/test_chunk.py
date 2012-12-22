@@ -13,23 +13,6 @@ class TestChunkBlocks(unittest.TestCase):
     def test_trivial(self):
         pass
 
-    def test_set_block(self):
-        self.assertEqual(self.c.blocks[0], 0)
-        self.c.set_block((0, 0, 0), 1)
-        self.assertEqual(self.c.blocks[0], 1)
-
-    def test_set_block_xyz_xzy(self):
-        """
-        Test that set_block swizzles correctly.
-        """
-
-        self.c.set_block((1, 0, 0), 1)
-        self.c.set_block((0, 1, 0), 2)
-        self.c.set_block((0, 0, 1), 3)
-        self.assertEqual(self.c.blocks[2048], 1)
-        self.assertEqual(self.c.blocks[1], 2)
-        self.assertEqual(self.c.blocks[128], 3)
-
     def test_destroy(self):
         """
         Test block destruction.
@@ -38,7 +21,7 @@ class TestChunkBlocks(unittest.TestCase):
         self.c.set_block((0, 0, 0), 1)
         self.c.set_metadata((0, 0, 0), 1)
         self.c.destroy((0, 0, 0))
-        self.assertEqual(self.c.blocks[0], 0)
+        self.assertEqual(self.c.get_block((0, 0, 0)), 0)
         self.assertEqual(self.c.get_metadata((0, 0, 0)), 0)
 
     def test_sed(self):
@@ -217,7 +200,7 @@ class TestLightmaps(unittest.TestCase):
         """
 
         # Any solid block with no dimming works. I choose dirt.
-        self.c.blocks[(0 * 16 + 0) * 128 + 0] = blocks["dirt"].slot
+        self.c.set_block((0, 0, 0), blocks["dirt"].slot)
 
         # Initialize tables and enable set_block().
         self.c.regenerate()

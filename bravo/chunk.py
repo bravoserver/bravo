@@ -214,7 +214,6 @@ class Chunk(object):
         self.x = int(x)
         self.z = int(z)
 
-        self.blocks = array("B", [0] * (16 * 16 * 256))
         self.heightmap = array("B", [0] * (16 * 16))
         self.blocklight = array("B", [0] * (16 * 16 * 256))
         self.skylight = array("B", [0] * (16 * 16 * 256))
@@ -241,19 +240,20 @@ class Chunk(object):
         xz-column.
         """
 
-        for column in xrange(16 * 16):
-            offset = column * 16
-            for i in xrange(127, -1, -1):
-                if self.blocks[offset + i]:
-                    break
+        for x in range(16):
+            for z in range(16):
+                column = x * 16 + z
+                for y in range(127, -1, -1):
+                    if self.get_block((x, y, z)):
+                        break
 
-            self.heightmap[column] = i
+                self.heightmap[column] = y
 
     def regenerate_blocklight(self):
         lightmap = array("L", [0] * (16 * 16 * 256))
 
         for x, y, z in product(xrange(16), xrange(256), xrange(16)):
-            block = self.blocks[ci(x, y, z)]
+            block = self.get_block((x, y, z))
             if block in glowing_blocks:
                 composite_glow(lightmap, glowing_blocks[block], x, y, z)
 
@@ -290,7 +290,7 @@ class Chunk(object):
             # Dim the light going throught the remaining blocks, until there
             # is no more light left.
             for y in range(height, -1, -1):
-                dim = blocks[self.blocks[offset * 256 + y]].dim
+                dim = blocks[self.get_block((x, y, z))].dim
                 light -= dim
                 if light <= 0:
                     break
@@ -303,7 +303,7 @@ class Chunk(object):
         # individually.
         max_height = max(self.heightmap)
 
-        lightable = [blocks[block].dim < 15 for block in self.blocks]
+        lightable = [False] * 16 * 16 * 256 # [blocks[block].dim < 15 for block in self.blocks]
         unlit = [x and not y for (x, y) in zip(lightable, lightmap)]
 
         # Create a mask to find all blocks that have an unlit block as a
@@ -347,7 +347,8 @@ class Chunk(object):
                     # as visited.
                     if (lightable[offset]
                         and lightmap[offset] < glow):
-                        light = neighboring_light(glow, self.blocks[offset])
+                        light = neighboring_light(glow,
+                                                  self.get_block((x, y, z)))
                         lightmap[offset] = clamp(light, 0, 15)
                         visited.add(target)
             spread = visited
@@ -433,7 +434,7 @@ class Chunk(object):
             index, y = divmod(index, 256)
             x, z = divmod(index, 16)
 
-            block = self.blocks[index]
+            block = self.get_block((x, y, z))
             metadata = self.get_metadata((x, y, z))
 
             return make_packet("block",
@@ -454,12 +455,12 @@ class Chunk(object):
             metadata = []
             for index, value in enumerate(self.damaged):
                 if value:
-                    coords.append(index)
-                    types.append(self.blocks[index])
-
                     # divmod() trick for coords.
                     index, y = divmod(index, 256)
                     x, z = divmod(index, 16)
+
+                    coords.append(index)
+                    types.append(self.get_block((x, y, z)))
                     metadata.append(self.get_metadata((x, y, z)))
 
             return make_packet("batch", x=self.x, z=self.z,
@@ -482,14 +483,13 @@ class Chunk(object):
         mask = 0
         packed = []
 
-        bs = segment_array(self.blocks)
         ls = segment_array(self.blocklight)
         ss = segment_array(self.skylight)
 
-        for i, b in enumerate(bs):
-            if any(b):
+        for i, section in enumerate(self.sections):
+            if any(section.blocks):
                 mask |= 1 << i
-                packed.append(b.tostring())
+                packed.append(section.blocks.tostring())
                 print "Slice", i, "is occupied"
             else:
                 print "Slice", i, "is empty"
@@ -523,7 +523,10 @@ class Chunk(object):
         :returns: int representing block type
         """
 
-        return self.blocks[ci(*coords)]
+        x, y, z = coords
+        index, y = divmod(y, 16)
+
+        return self.sections[index].get_block((x, y, z))
 
     @check_bounds
     def set_block(self, coords, block):
@@ -535,12 +538,13 @@ class Chunk(object):
         """
 
         x, y, z = coords
+        index, y = divmod(y, 16)
 
         column = x * 16 + z
         offset = column * 256 + y
 
-        if self.blocks[offset] != block:
-            self.blocks[offset] = block
+        if self.get_block(coords) != block:
+            self.sections[index].set_block((x, y, z), block)
 
             if not self.populated:
                 return
@@ -554,7 +558,7 @@ class Chunk(object):
                 height = self.heightmap[column]
                 if y == height:
                     for y in range(height, -1, -1):
-                        if self.blocks[column * 256 + y]:
+                        if self.get_block((x, y, z)):
                             break
                     self.heightmap[column] = y
 
@@ -620,7 +624,7 @@ class Chunk(object):
         :param tuple coords: coordinate triplet
         """
 
-        block = blocks[self.blocks[ci(*coords)]]
+        block = blocks[self.get_block(coords)]
         self.set_block(coords, block.replace)
         self.set_metadata(coords, 0)
 
@@ -647,20 +651,20 @@ class Chunk(object):
         :param int replace: block to use as a replacement
         """
 
-        for i, block in enumerate(self.blocks):
-            if block == search:
-                self.blocks[i] = replace
-                self.all_damaged = True
-                self.dirty = True
+        for section in self.sections:
+            for i, block in enumerate(section.blocks):
+                if block == search:
+                    section.blocks[i] = replace
+                    self.all_damaged = True
+                    self.dirty = True
 
     def get_column(self, x, z):
         """
         Return a slice of the block data at the given xz-column.
 
-        The slice is a numpy array, so you do not have to set it again if you
-        are modifying it in-place.
+        Deprecated.
 
-        :rtype: :py:class:`numpy.ndarray`
+        :rtype: :py:class:`array.array`
         """
 
         column = ci(x, 0, z)
@@ -669,6 +673,8 @@ class Chunk(object):
     def set_column(self, x, z, column):
         """
         Atomically set an entire xz-column's block data.
+
+        Deprecated.
 
         :param int x: X coordinate
         :param int z: Z coordinate

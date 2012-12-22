@@ -27,11 +27,10 @@ class BoringGenerator(object):
         Fill the bottom half of the chunk with stone.
         """
 
-        # Optimized fill. Go to each offset of 128, in order, and do a fill of
-        # 64.
-        stone = array("B", [blocks["stone"].slot] * 64)
-        for offset in xrange(0, 32768, 128):
-            chunk.blocks[offset:offset + 64] = stone
+        # Optimized fill. Fill the bottom eight sections with stone.
+        stone = array("B", [blocks["stone"].slot] * 16 * 16 * 16)
+        for section in chunk.sections[:8]:
+            section.blocks[:] = stone[:]
 
     name = "boring"
 
@@ -44,8 +43,6 @@ class SimplexGenerator(object):
 
     This class uses a simplex noise generator to procedurally generate
     organic-looking, continuously smooth terrain.
-
-    This generator relies on implementation details of ``Chunk``.
     """
 
     implements(ITerrainGenerator)
@@ -76,9 +73,8 @@ class SimplexGenerator(object):
             height = int(height + 70)
 
             # Make our chunk offset, and render into the chunk.
-            offset = x * 16 + z
-            stone = array("B", [blocks["stone"].slot] * height)
-            chunk.blocks[offset:offset + height] = stone
+            for y in range(height):
+                chunk.set_block((x, y, z), blocks["stone"].slot)
 
     name = "simplex"
 
@@ -362,8 +358,10 @@ class FloatGenerator(object):
 
     def populate(self, chunk, seed):
         """
-        Eat moar stone
+        Create floating islands.
         """
+
+        # Eat moar stone
 
         R.seed(seed)
 
@@ -377,11 +375,12 @@ class FloatGenerator(object):
             height = int(height + 70)
 
             if abs(chunk.heightmap[x * 16 + z] - height) < 10:
-                chunk.set_column(array("b", [blocks["air"].slot] * 128))
+                height = 256
             else:
                 height = height - 30 + R.randint(-15, 10)
-                for y in range(height):
-                    chunk.set_block((x, y, z), blocks["air"].slot)
+
+            for y in range(height):
+                chunk.set_block((x, y, z), blocks["air"].slot)
 
     name = "float"
 
