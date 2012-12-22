@@ -6,6 +6,11 @@ from bravo.blocks import blocks
 from bravo.ibravo import IPostBuildHook, IDigHook
 from bravo.utilities.coords import split_coords
 
+
+# The topmost block of a chunk, zero-indexed. Used for loop indices.
+TOP = 255
+
+
 class Fallables(object):
     """
     Sometimes things should fall.
@@ -20,9 +25,9 @@ class Fallables(object):
         self.factory = factory
 
     def dig_hook(self, chunk, x, y, z, block):
-        y = min(y - 1, 0)
-
-        for y in range(y, 127):
+        # Start at the block below the one that was dug out; we iterate
+        # upwards from this block, comparing up and moving down as we go.
+        for y in range(max(y - 1, 0), TOP):
             current = chunk.get_block((x, y, z))
 
             # Find whitespace...
@@ -30,7 +35,7 @@ class Fallables(object):
                 above = y + 1
                 # ...find end of whitespace...
                 while (chunk.get_block((x, above, z)) in self.whitespace
-                       and above < 127):
+                       and above < TOP):
                     above += 1
 
                 moved = chunk.get_block((x, above, z))
@@ -53,10 +58,9 @@ class Fallables(object):
         chunk = yield self.factory.world.request_chunk(bigx, bigz)
         self.dig_hook(chunk, smallx, coords[1], smallz, block)
 
-    name = "fallables"
-
     before = tuple()
     after = tuple()
+
 
 class AlphaSandGravel(Fallables):
     """
@@ -74,6 +78,7 @@ class AlphaSandGravel(Fallables):
     )
 
     name = "alpha_sand_gravel"
+
 
 class BravoSnow(Fallables):
     """

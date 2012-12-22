@@ -41,7 +41,7 @@ class TestAlphaSandGravelDig(TestCase):
         self.c.set_block((0, 1, 0), blocks["sand"].slot)
         self.c.set_block((0, 0, 0), blocks["snow"].slot)
 
-        self.hook.dig_hook(self.c, 0, 2, 0, blocks["snow"].slot)
+        self.hook.dig_hook(self.c, 0, 1, 0, blocks["sand"].slot)
 
         self.assertEqual(self.c.get_block((0, 1, 0)), blocks["air"].slot)
         self.assertEqual(self.c.get_block((0, 0, 0)), blocks["sand"].slot)
@@ -56,7 +56,7 @@ class TestAlphaSandGravelDig(TestCase):
         self.c.set_block((0, 1, 0), blocks["sand"].slot)
         self.c.set_block((0, 0, 0), blocks["spring"].slot)
 
-        self.hook.dig_hook(self.c, 0, 2, 0, blocks["spring"].slot)
+        self.hook.dig_hook(self.c, 0, 1, 0, blocks["sand"].slot)
 
         self.assertEqual(self.c.get_block((0, 1, 0)), blocks["air"].slot)
         self.assertEqual(self.c.get_block((0, 0, 0)), blocks["sand"].slot)
