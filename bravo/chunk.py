@@ -31,7 +31,7 @@ def check_bounds(f):
         # Coordinates were out-of-bounds; warn and run away.
         if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < 256):
             warn("Coordinates %s are OOB in %s() of %s, ignoring call"
-                % (coords, f.func_name, chunk), ChunkWarning)
+                % (coords, f.func_name, chunk), ChunkWarning, stacklevel=2)
             # A concession towards where this decorator will be used. The
             # value is likely to be discarded either way, but if the value is
             # used, we shouldn't horribly die because of None/0 mismatch.
