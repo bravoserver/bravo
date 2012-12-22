@@ -490,9 +490,6 @@ class Chunk(object):
             if any(section.blocks):
                 mask |= 1 << i
                 packed.append(section.blocks.tostring())
-                print "Slice", i, "is occupied"
-            else:
-                print "Slice", i, "is empty"
 
         for i, section in enumerate(self.sections):
             if mask & 1 << i:
