@@ -654,34 +654,3 @@ class Chunk(object):
                     section.blocks[i] = replace
                     self.all_damaged = True
                     self.dirty = True
-
-    def get_column(self, x, z):
-        """
-        Return a slice of the block data at the given xz-column.
-
-        Deprecated.
-
-        :rtype: :py:class:`array.array`
-        """
-
-        column = ci(x, 0, z)
-        return self.blocks[column:column + 256]
-
-    def set_column(self, x, z, column):
-        """
-        Atomically set an entire xz-column's block data.
-
-        Deprecated.
-
-        :param int x: X coordinate
-        :param int z: Z coordinate
-        :type column: :py:class:`array.array`
-        :param column: Column data, in the form of a NumPy array.
-        """
-
-        s = ci(x, 0, z)
-        self.blocks[s:s + 256] = column
-
-        self.dirty = True
-        for y in range(256):
-            self.damage((x, y, z))
