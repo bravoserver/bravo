@@ -38,7 +38,7 @@ from bravo.utilities.temporal import timestamp_from_clock
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED, STATE_LOCATED
 ) = range(4)
 
-SUPPORTED_PROTOCOL = 49
+SUPPORTED_PROTOCOL = 51
 
 circle = [(i, j)
     for i, j in product(xrange(-10, 10), xrange(-10, 10))
@@ -310,8 +310,16 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         players = unicode(len(self.factory.protocols))
         max_players = unicode(self.factory.limitConnections or 1000000)
 
-        response = u"\u0000".join([u"§1", unicode(49), u"Bravo %s" % version,
-            self.motd, players, max_players])
+        data = [
+            u"§1",
+            unicode(SUPPORTED_PROTOCOL),
+            u"Bravo %s" % version,
+            self.motd,
+            players,
+            max_players,
+        ]
+
+        response = u"\u0000".join(data)
         self.error(response)
 
     def quit(self, container):
