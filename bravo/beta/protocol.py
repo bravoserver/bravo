@@ -458,7 +458,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
         chunk = self.chunks[bigx, bigz]
-        column = chunk.get_column(smallx, smallz)
+        column = [chunk.get_block((smallx, i, smallz)) for i in range(256)]
 
         # Special case: Ascend at most once, if the current spot isn't good.
         if count == 0:
