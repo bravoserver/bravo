@@ -1171,9 +1171,12 @@ class BravoProtocol(BetaServerProtocol):
             token=container.token, acknowledged=handled)
 
     def wcreative(self, container):
-        # apply inventory change that was done in creative mode
+        """
+        A slot was altered in creative mode.
+        """
+
         applied = self.inventory.creative(container.slot, container.primary,
-            container.secondary, container.quantity)
+            container.secondary, container.count)
         if applied:
             # Inform other players about changes to this player's equipment.
             equipped_slot = self.player.equipped + 36
