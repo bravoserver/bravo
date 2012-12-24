@@ -172,17 +172,18 @@ class Location(object):
 
         # Clamp Y. We take precautions here and forbid things to go up past
         # the top of the world; this tend to strand entities up in the sky
-        # where they cannot get down.
-        if not (32 * 1) < y < (32 * 126):
-            y = clamp(y, 32 * 1, 32 * 126)
+        # where they cannot get down. We also forbid entities from falling
+        # past bedrock.
+        if not (32 * 1) <= y <= (32 * 254):
+            y = clamp(y, 32 * 1, 32 * 254)
             self.pos = self.pos._replace(y=y)
             clamped = True
 
         # Stance is the current jumping position, plus a small offset of
         # around 0.1. In the Alpha server, it must between 0.1 and 1.65, or
         # the anti-grounded code kicks the client. In the Beta server, though,
-        # the clamp is different. Experimentally, the stance can be as short
-        # as 1.5 (crouching) to 2.4 (jumping). At this point, we enforce some
+        # the clamp is different. Experimentally, the stance can range from
+        # 1.5 (crouching) to 2.4 (jumping). At this point, we enforce some
         # sanity on our client, and force the stance to a reasonable value.
         fy = y / 32
         if not 1.5 < (self.stance - fy) < 2.4:

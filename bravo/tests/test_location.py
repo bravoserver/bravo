@@ -104,6 +104,15 @@ class TestLocation(unittest.TestCase):
         self.l.clamp()
         self.assertAlmostEqual(self.l.stance, 2.62)
 
+    def test_clamp_void(self):
+        """
+        Locations in the Void should be clamped to above bedrock.
+        """
+
+        self.l.pos = Position(0, -32, 0)
+        self.assertTrue(self.l.clamp())
+        self.assertEqual(self.l.pos.y, 32)
+
     def test_save_to_packet(self):
         self.assertTrue(self.l.save_to_packet())
 
