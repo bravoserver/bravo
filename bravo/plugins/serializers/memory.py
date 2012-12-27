@@ -36,20 +36,27 @@ class Memory(object):
         Dummy ``connect()`` for ``ISerializer``.
         """
 
-    def load_chunk(self, chunk):
-        raise SerializerReadException("%r couldn't be loaded" % chunk)
+    def load_chunk(self, x, z):
+        key = x, z
+        if key in self.chunks:
+            return deepcopy(self.chunks[key])
+        raise SerializerReadException("%d, %d couldn't be loaded" % key)
 
     def save_chunk(self, chunk):
         self.chunks[chunk.x, chunk.z] = deepcopy(chunk)
 
-    def load_level(self, level):
+    def load_level(self):
+        if self.level:
+            return deepcopy(self.level)
         raise SerializerReadException("Level couldn't be loaded")
 
     def save_level(self, level):
         self.level = deepcopy(level)
 
-    def load_player(self, player):
-        raise SerializerReadException("%r couldn't be loaded" % player)
+    def load_player(self, username):
+        if username in self.players:
+            return deepcopy(self.players[username])
+        raise SerializerReadException("%r couldn't be loaded" % username)
 
     def save_player(self, player):
         self.players[player.username] = deepcopy(player)
