@@ -5,7 +5,6 @@ import tempfile
 from twisted.python.filepath import FilePath
 
 from bravo.chunk import Chunk
-from bravo.entity import Player
 from bravo.errors import SerializerReadException
 from bravo.ibravo import ISerializer
 from bravo.nbt import TAG_Compound, TAG_List, TAG_String

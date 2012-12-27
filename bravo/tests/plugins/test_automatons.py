@@ -1,6 +1,4 @@
 from itertools import product
-import shutil
-import tempfile
 from unittest import TestCase
 
 from twisted.internet.defer import inlineCallbacks
@@ -25,12 +23,11 @@ class GrassMockFactory(object):
 class TestGrass(TestCase):
 
     def setUp(self):
-        self.d = tempfile.mkdtemp()
         self.bcp = BravoConfigParser()
 
         self.bcp.add_section("world unittest")
-        self.bcp.set("world unittest", "url", "file://%s" % self.d)
-        self.bcp.set("world unittest", "serializer", "anvil")
+        self.bcp.set("world unittest", "url", "")
+        self.bcp.set("world unittest", "serializer", "memory")
 
         self.w = World(self.bcp, "unittest")
         self.w.pipeline = []
@@ -45,7 +42,6 @@ class TestGrass(TestCase):
 
     def tearDown(self):
         self.w.stop()
-        shutil.rmtree(self.d)
 
     def test_trivial(self):
         pass

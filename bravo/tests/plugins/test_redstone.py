@@ -1,8 +1,5 @@
 from unittest import TestCase
 
-import shutil
-import tempfile
-
 from bravo.blocks import blocks
 from bravo.config import BravoConfigParser
 from bravo.ibravo import IDigHook
@@ -18,12 +15,11 @@ class TestRedstone(TestCase):
     def setUp(self):
         # Set up world.
         self.name = "unittest"
-        self.d = tempfile.mkdtemp()
         self.bcp = BravoConfigParser()
 
         self.bcp.add_section("world unittest")
-        self.bcp.set("world unittest", "url", "file://%s" % self.d)
-        self.bcp.set("world unittest", "serializer", "anvil")
+        self.bcp.set("world unittest", "url", "")
+        self.bcp.set("world unittest", "serializer", "memory")
 
         self.w = World(self.bcp, self.name)
         self.w.pipeline = []
@@ -38,7 +34,6 @@ class TestRedstone(TestCase):
 
     def tearDown(self):
         self.w.stop()
-        shutil.rmtree(self.d)
 
     def test_trivial(self):
         pass

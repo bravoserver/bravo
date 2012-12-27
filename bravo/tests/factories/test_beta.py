@@ -1,6 +1,3 @@
-import shutil
-import tempfile
-
 from twisted.internet import reactor
 from twisted.internet.task import Clock
 from twisted.trial import unittest
@@ -166,7 +163,6 @@ class TestBravoFactoryStarted(unittest.TestCase):
 
     def setUp(self):
         # Same setup as World, because Factory is very automagical.
-        self.d = tempfile.mkdtemp()
         self.name = "unittest"
         self.bcp = BravoConfigParser()
 
@@ -178,8 +174,8 @@ class TestBravoFactoryStarted(unittest.TestCase):
             "mode"          : "creative",
             "port"          : "0",
             "seasons"       : "winter, spring",
-            "serializer"    : "anvil",
-            "url"           : "file://%s" % self.d,
+            "serializer"    : "memory",
+            "url"           : "",
         }
         for k, v in d.items():
             self.bcp.set("world unittest", k, v)
@@ -190,7 +186,6 @@ class TestBravoFactoryStarted(unittest.TestCase):
 
     def tearDown(self):
         self.f.stopFactory()
-        shutil.rmtree(self.d)
 
     def test_trivial(self):
         pass
@@ -261,7 +256,6 @@ class TestBravoFactoryPacks(unittest.TestCase):
         The "beta" plugin pack should always work. Period.
         """
 
-        self.d = tempfile.mkdtemp()
         self.name = "unittest"
         self.bcp = BravoConfigParser()
 
@@ -271,8 +265,8 @@ class TestBravoFactoryPacks(unittest.TestCase):
             "mode"          : "creative",
             "packs"         : "beta",
             "port"          : "0",
-            "serializer"    : "anvil",
-            "url"           : "file://%s" % self.d,
+            "serializer"    : "memory",
+            "url"           : "",
         }
         for k, v in d.items():
             self.bcp.set("world unittest", k, v)
@@ -280,7 +274,5 @@ class TestBravoFactoryPacks(unittest.TestCase):
         self.f = BravoFactory(self.bcp, self.name)
         # And now start the factory.
         self.f.startFactory()
-
-    def tearDown(self):
+        # And stop it, too.
         self.f.stopFactory()
-        shutil.rmtree(self.d)

@@ -3,11 +3,8 @@ from twisted.trial import unittest
 from twisted.internet.defer import inlineCallbacks
 
 from array import array
-import os
-import shutil
-import tempfile
-
 from itertools import product
+import os
 
 from bravo.config import BravoConfigParser
 from bravo.errors import ChunkNotLoaded
@@ -17,12 +14,11 @@ class TestWorldChunks(unittest.TestCase):
 
     def setUp(self):
         self.name = "unittest"
-        self.d = tempfile.mkdtemp()
         self.bcp = BravoConfigParser()
 
         self.bcp.add_section("world unittest")
-        self.bcp.set("world unittest", "url", "file://%s" % self.d)
-        self.bcp.set("world unittest", "serializer", "anvil")
+        self.bcp.set("world unittest", "url", "")
+        self.bcp.set("world unittest", "serializer", "memory")
 
         self.w = World(self.bcp, self.name)
         self.w.pipeline = []
@@ -30,7 +26,6 @@ class TestWorldChunks(unittest.TestCase):
 
     def tearDown(self):
         self.w.stop()
-        shutil.rmtree(self.d)
 
     def test_trivial(self):
         pass
@@ -194,12 +189,11 @@ class TestWorld(unittest.TestCase):
 
     def setUp(self):
         self.name = "unittest"
-        self.d = tempfile.mkdtemp()
         self.bcp = BravoConfigParser()
 
         self.bcp.add_section("world unittest")
-        self.bcp.set("world unittest", "url", "file://%s" % self.d)
-        self.bcp.set("world unittest", "serializer", "anvil")
+        self.bcp.set("world unittest", "url", "")
+        self.bcp.set("world unittest", "serializer", "memory")
 
         self.w = World(self.bcp, self.name)
         self.w.pipeline = []
@@ -207,7 +201,6 @@ class TestWorld(unittest.TestCase):
 
     def tearDown(self):
         self.w.stop()
-        shutil.rmtree(self.d)
 
     def test_trivial(self):
         pass
@@ -230,18 +223,14 @@ class TestWorldConfig(unittest.TestCase):
 
     def setUp(self):
         self.name = "unittest"
-        self.d = tempfile.mkdtemp()
         self.bcp = BravoConfigParser()
 
         self.bcp.add_section("world unittest")
-        self.bcp.set("world unittest", "url", "file://%s" % self.d)
-        self.bcp.set("world unittest", "serializer", "anvil")
+        self.bcp.set("world unittest", "url", "")
+        self.bcp.set("world unittest", "serializer", "memory")
 
         self.w = World(self.bcp, self.name)
         self.w.pipeline = []
-
-    def tearDown(self):
-        shutil.rmtree(self.d)
 
     def test_trivial(self):
         pass
