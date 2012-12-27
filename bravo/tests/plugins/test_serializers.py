@@ -12,17 +12,17 @@ from bravo.nbt import TAG_Compound, TAG_List, TAG_String
 from bravo.nbt import TAG_Double, TAG_Byte, TAG_Short, TAG_Int
 from bravo.plugin import retrieve_plugins
 
-class TestAlphaSerializerInit(unittest.TestCase):
+class TestAnvilSerializerInit(unittest.TestCase):
     """
-    The Alpha serializer can't even get started without a valid URL.
+    The Anvil serializer can't even get started without a valid URL.
     """
 
     def setUp(self):
         plugins = retrieve_plugins(ISerializer)
-        if "alpha" not in plugins:
+        if "anvil" not in plugins:
             raise unittest.SkipTest("Plugin not present")
 
-        self.serializer = plugins["alpha"]
+        self.serializer = plugins["anvil"]
 
     def test_not_url(self):
         self.assertRaises(Exception, self.serializer.connect,
@@ -32,17 +32,17 @@ class TestAlphaSerializerInit(unittest.TestCase):
         self.assertRaises(Exception, self.serializer.connect,
             "http://www.example.com/")
 
-class TestAlphaSerializer(unittest.TestCase):
+class TestAnvilSerializer(unittest.TestCase):
 
     def setUp(self):
         self.d = tempfile.mkdtemp()
         self.folder = FilePath(self.d)
 
         plugins = retrieve_plugins(ISerializer)
-        if "alpha" not in plugins:
+        if "anvil" not in plugins:
             raise unittest.SkipTest("Plugin not present")
 
-        self.s = plugins["alpha"]
+        self.s = plugins["anvil"]
         self.s.connect("file://" + self.folder.path)
 
     def tearDown(self):

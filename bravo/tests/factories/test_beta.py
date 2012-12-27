@@ -178,7 +178,7 @@ class TestBravoFactoryStarted(unittest.TestCase):
             "mode"          : "creative",
             "port"          : "0",
             "seasons"       : "winter, spring",
-            "serializer"    : "alpha",
+            "serializer"    : "anvil",
             "url"           : "file://%s" % self.d,
         }
         for k, v in d.items():
@@ -271,7 +271,7 @@ class TestBravoFactoryPacks(unittest.TestCase):
             "mode"          : "creative",
             "packs"         : "beta",
             "port"          : "0",
-            "serializer"    : "alpha",
+            "serializer"    : "anvil",
             "url"           : "file://%s" % self.d,
         }
         for k, v in d.items():

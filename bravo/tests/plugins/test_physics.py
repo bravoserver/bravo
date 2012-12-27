@@ -26,7 +26,7 @@ class TestWater(TestCase):
 
         self.bcp.add_section("world unittest")
         self.bcp.set("world unittest", "url", "file://%s" % self.d)
-        self.bcp.set("world unittest", "serializer", "alpha")
+        self.bcp.set("world unittest", "serializer", "anvil")
 
         self.w = World(self.bcp, self.name)
         self.w.pipeline = []
