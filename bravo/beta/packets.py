@@ -540,7 +540,7 @@ packets = {
         SBInt32("x"),
         UBInt8("y"),
         SBInt32("z"),
-        UBInt8("type"),
+        UBInt16("type"),
         UBInt8("meta"),
     ),
     # XXX This covers general tile actions, not just note blocks.
