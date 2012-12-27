@@ -6,9 +6,6 @@ Bravo is a elegant, speedy, and extensible implementation of the Minecraft
 Alpha/Beta protocol. Only the server side is implemented. Bravo also has a few
 tools useful for examining the wire protocols and disk formats in Minecraft.
 
-**Bravo is currently on hiatus. If you want to see new features or bugfixes,
-either donate a patch or donate some cash.**
-
 Features
 ========
 
