@@ -5,6 +5,11 @@ BuildData = namedtuple("BuildData", "block, metadata, x, y, z, face")
 A named tuple representing data for a block which is planned to be built.
 """
 
+Level = namedtuple("Level", "seed, spawn, time")
+"""
+A named tuple representing the level data for a world.
+"""
+
 class Slot(namedtuple("Slot", "primary, secondary, quantity")):
     """
     A slot in an inventory.
