@@ -12,6 +12,7 @@ from zope.interface import implements
 from bravo.beta.structures import Slot
 from bravo.entity import entities, tiles
 from bravo.errors import SerializerReadException, SerializerWriteException
+from bravo.geometry.section import Section
 from bravo.ibravo import ISerializer
 from bravo.location import Location, Orientation, Position
 from bravo.nbt import NBTFile
@@ -276,9 +277,6 @@ class Anvil(object):
         tag["Text3"] = TAG_String(sign.text3)
         tag["Text4"] = TAG_String(sign.text4)
 
-    # Chunk serializers. These are split out in order to faciliate reuse in
-    # the Beta serializer.
-
     def _load_chunk_from_tag(self, chunk, tag):
         """
         Load a chunk from a tag.
@@ -288,18 +286,24 @@ class Anvil(object):
 
         level = tag["Level"]
 
-        # These are designed to raise if there are any issues, but still be
-        # speedy.
-        chunk.blocks = array("B")
-        chunk.blocks.fromstring(level["Blocks"].value)
+        # These fromstring() calls are designed to raise if there are any
+        # issues, but still be speedy.
+
+        # Loop through the sections and unpack anything that we find.
+        for tag in level["Sections"].tags:
+            index = tag["Y"].value
+            section = Section()
+            section.blocks = array("B")
+            section.blocks.fromstring(tag["Blocks"].value)
+            section.metadata = array("B", unpack_nibbles(tag["Data"].value))
+            chunk.sections[index] = section
+
         chunk.heightmap = array("B")
         chunk.heightmap.fromstring(level["HeightMap"].value)
         chunk.blocklight = array("B",
             unpack_nibbles(level["BlockLight"].value))
-        chunk.metadata = array("B",
-            unpack_nibbles(level["Data"].value))
-        chunk.skylight = array("B",
-            unpack_nibbles(level["SkyLight"].value))
+        chunk.metadata = array("B", unpack_nibbles(level["Data"].value))
+        chunk.skylight = array("B", unpack_nibbles(level["SkyLight"].value))
 
         chunk.populated = bool(level["TerrainPopulated"])
 
@@ -335,20 +339,24 @@ class Anvil(object):
         level["xPos"] = TAG_Int(chunk.x)
         level["zPos"] = TAG_Int(chunk.z)
 
-        level["Blocks"] = TAG_Byte_Array()
         level["HeightMap"] = TAG_Byte_Array()
         level["BlockLight"] = TAG_Byte_Array()
-        level["Data"] = TAG_Byte_Array()
         level["SkyLight"] = TAG_Byte_Array()
 
-        blocks = "".join(section.blocks.tostring()
-                         for section in chunk.sections)
-        level["Blocks"].value = blocks
+        level["Sections"] = TAG_List(type=TAG_Compound)
+        for i, s in enumerate(chunk.sections):
+            if s:
+                section = TAG_Compound()
+                section.name = ""
+                section["Y"] = TAG_Byte(i)
+                section["Blocks"] = TAG_Byte_Array()
+                section["Blocks"].value = s.blocks.tostring()
+                section["Data"] = TAG_Byte_Array()
+                section["Data"].value = pack_nibbles(s.metadata)
+                level["Sections"].tags.append(section)
+
         level["HeightMap"].value = chunk.heightmap.tostring()
         level["BlockLight"].value = pack_nibbles(chunk.blocklight)
-        metadata = "".join(pack_nibbles(section.metadata)
-                           for section in chunk.sections)
-        level["Data"].value = metadata
         level["SkyLight"].value = pack_nibbles(chunk.skylight)
 
         level["TerrainPopulated"] = TAG_Byte(chunk.populated)
