@@ -1186,6 +1186,7 @@ class BravoProtocol(BetaServerProtocol):
                     # XXX why 0? why not the actual slot?
                     slot=0,
                     primary=container.primary,
+                    count=1,
                     secondary=container.secondary,
                 )
                 self.factory.broadcast_for_others(packet, self)

@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 from construct import Struct, Container, Embed, Enum, MetaField
-from construct import MetaArray, If, Switch, Const, Peek
+from construct import MetaArray, If, Switch, Const, Peek, Magic
 from construct import OptionalGreedyRange, RepeatUntil
 from construct import Flag, PascalString, Adapter
 from construct import UBInt8, UBInt16, UBInt32, UBInt64
@@ -57,6 +57,7 @@ items = Struct("items",
         Embed(Struct("item_information",
             UBInt8("count"),
             UBInt16("secondary"),
+            Magic("\xff\xff"),
         )),
     ),
 )
