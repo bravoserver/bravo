@@ -72,8 +72,7 @@ Installing
 ==========
 
 Bravo currently requires Python 2.6 or any newer Python 2.x. It is known to
-work on CPython and PyPy. (PyPy support is currently on hiatus and will return
-when numpy support returns to PyPy.)
+work on CPython and PyPy.
 
 Bravo ships with a standard setup.py. You will need setuptools/distribute, but
 most distributions already provide it for you. Bravo depends on the following
