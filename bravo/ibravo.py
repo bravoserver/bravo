@@ -249,7 +249,7 @@ class ISerializer(IBravoPlugin):
         May return a ``Deferred`` that will fire on completion.
         """
 
-    def load_chunk(chunk):
+    def load_chunk(x, z):
         """
         Load a chunk. The chunk must exist.
 
@@ -265,7 +265,7 @@ class ISerializer(IBravoPlugin):
         May return a ``Deferred`` that will fire on completion.
         """
 
-    def load_level(level):
+    def load_level():
         """
         Load a level. The level must exist.
 
@@ -281,7 +281,7 @@ class ISerializer(IBravoPlugin):
         May return a ``Deferred`` that will fire on completion.
         """
 
-    def load_player(player):
+    def load_player(username):
         """
         Load a player. The player must exist.
 

@@ -9,8 +9,9 @@ from twisted.python import log
 from twisted.python.filepath import FilePath
 from zope.interface import implements
 
-from bravo.beta.structures import Slot
-from bravo.entity import entities, tiles
+from bravo.beta.structures import Level, Slot
+from bravo.chunk import Chunk
+from bravo.entity import entities, tiles, Player
 from bravo.errors import SerializerReadException, SerializerWriteException
 from bravo.geometry.section import Section
 from bravo.ibravo import ISerializer
@@ -445,27 +446,31 @@ class Anvil(object):
             except os.error:
                 raise Exception("Could not create world in %s" % self.folder)
 
-    def load_chunk(self, chunk):
-        name = self._name_for_region(chunk.x, chunk.z)
+    def load_chunk(self, x, z):
+        name = self._name_for_region(x, z)
         if name in self.regions:
             region = self.regions[name]
         else:
             fp = self.folder.child("region").child(name)
             if not fp.exists():
-                return
+                raise SerializerReadException("Region doesn't exist: %d, %d" %
+                                              (x, z))
 
             region = Region(fp)
             self.regions[name] = region
 
+        chunk = Chunk(x, z)
         try:
-            data = region.get_chunk(chunk.x, chunk.z)
+            data = region.get_chunk(x, z)
             tag = NBTFile(buffer=StringIO(data))
-            return self._load_chunk_from_tag(chunk, tag)
+            self._load_chunk_from_tag(chunk, tag)
         except KeyError:
             pass
         except Exception, e:
             raise SerializerReadException("%r couldn't be loaded: %s" %
                     (chunk, e))
+
+        return chunk
 
     def save_chunk(self, chunk):
         try:
@@ -487,7 +492,7 @@ class Anvil(object):
         region.create()
         region.put_chunk(chunk.x, chunk.z, data)
 
-    def load_level(self, level):
+    def load_level(self):
         fp = self.folder.child("level.dat")
         if not fp.exists():
             raise SerializerReadException("Level doesn't exist!")
@@ -498,12 +503,12 @@ class Anvil(object):
                     fp.path)
 
         try:
-            level.spawn = (tag["Data"]["SpawnX"].value,
-                tag["Data"]["SpawnY"].value,
-                tag["Data"]["SpawnZ"].value)
-
-            level.seed = tag["Data"]["RandomSeed"].value
-            level.time = tag["Data"]["Time"].value
+            spawn = (tag["Data"]["SpawnX"].value, tag["Data"]["SpawnY"].value,
+                     tag["Data"]["SpawnZ"].value)
+            seed = tag["Data"]["RandomSeed"].value
+            time = tag["Data"]["Time"].value
+            level = Level(seed, spawn, time)
+            return level
         except KeyError, e:
             # Just raise. It's probably gonna be caught and ignored anyway.
             raise SerializerReadException("Level couldn't be loaded: %s" % e)
@@ -513,17 +518,18 @@ class Anvil(object):
 
         self._write_tag(self.folder.child("level.dat"), tag)
 
-    def load_player(self, player):
-        fp = self.folder.child("players").child("%s.dat" % player.username)
+    def load_player(self, username):
+        fp = self.folder.child("players").child("%s.dat" % username)
         if not fp.exists():
-            raise SerializerReadException("%r doesn't exist!" % player)
+            raise SerializerReadException("%r doesn't exist!" % username)
 
         tag = self._read_tag(fp)
         if not tag:
             raise SerializerReadException("%r (in %s) is corrupt!" %
-                    (player, fp.path))
+                    (username, fp.path))
 
         try:
+            player = Player(username=username)
             x, y, z = [i.value for i in tag["Pos"].tags]
             player.location.pos = Position(x, y, z)
 
@@ -537,6 +543,8 @@ class Anvil(object):
         except KeyError, e:
             raise SerializerReadException("%r couldn't be loaded: %s" %
                     (player, e))
+
+        return player
 
     def save_player(self, player):
         tag = NBTFile()

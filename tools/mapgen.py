@@ -33,7 +33,6 @@ world = World(config, "mapgen")
 world.connect()
 world.pipeline = pipeline
 world.season = None
-world.seed = 0
 world.saving = True
 
 counts = [1, 2, 4, 5, 8]

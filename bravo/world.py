@@ -11,6 +11,7 @@ from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
 from twisted.internet.task import LoopingCall
 from twisted.python import log
 
+from bravo.beta.structures import Level
 from bravo.chunk import Chunk
 from bravo.entity import Player, Furnace
 from bravo.errors import ChunkNotLoaded, SerializerReadException
@@ -106,17 +107,9 @@ class World(object):
     This cache is used to speed up logins near the spawn point.
     """
 
-    spawn = (0, 0, 0)
+    level = Level(seed=0, spawn=(0, 0, 0), time=0)
     """
-    The spawn point.
-    """
-
-    time = 0
-    """
-    The current time.
-
-    This does not reflect the actual in-game time, just the time currently
-    saved in the level data.
+    The initial level data.
     """
 
     def __init__(self, config, name):
@@ -167,7 +160,7 @@ class World(object):
         # Pick a random number for the seed. Use the configured value if one
         # is present.
         seed = random.randint(0, sys.maxint)
-        self.seed = self.config.getintdefault(self.config_name, "seed", seed)
+        seed = self.config.getintdefault(self.config_name, "seed", seed)
 
         # Check if we should offload chunk requests to ampoule.
         if self.config.getbooleandefault("bravo", "ampoule", False):
@@ -180,8 +173,13 @@ class World(object):
 
         # First, try loading the level, to see if there's any data out there
         # which we can use. If not, don't worry about it.
-        d = maybeDeferred(self.serializer.load_level, self)
-        d.addCallback(lambda chaff: log.msg("Loaded level data!"))
+        d = maybeDeferred(self.serializer.load_level)
+
+        @d.addCallback
+        def cb(level):
+            self.level = level
+            log.msg("Loaded level data!")
+
         @d.addErrback
         def sre(failure):
             failure.trap(SerializerReadException)
@@ -189,7 +187,7 @@ class World(object):
 
         # And now save our level.
         if self.saving:
-            self.serializer.save_level(self)
+            self.serializer.save_level(self.level)
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
@@ -221,7 +219,7 @@ class World(object):
         self.dirty_chunk_cache.clear()
 
         # Save the level data.
-        self.serializer.save_level(self)
+        self.serializer.save_level(self.level)
 
     def enable_cache(self, size):
         """
@@ -242,8 +240,8 @@ class World(object):
         self.permanent_cache = set()
         assign = self.permanent_cache.add
 
-        x = self.spawn[0] // 16
-        z = self.spawn[2] // 16
+        x = self.level.spawn[0] // 16
+        z = self.level.spawn[2] // 16
 
         rx = xrange(x - size, x + size)
         rz = xrange(z - size, z + size)
@@ -367,13 +365,12 @@ class World(object):
             retval = yield self._pending_chunks[x, z].deferred()
             returnValue(retval)
 
-        chunk = Chunk(x, z)
         try:
-            yield maybeDeferred(self.serializer.load_chunk, chunk)
+            chunk = yield maybeDeferred(self.serializer.load_chunk, x, z)
         except SerializerReadException:
             # Looks like the chunk wasn't already on disk. Guess we're gonna
             # need to keep going.
-            pass
+            chunk = Chunk(x, z)
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
@@ -388,8 +385,8 @@ class World(object):
 
             generators = [plugin.name for plugin in self.pipeline]
 
-            d = deferToAMPProcess(MakeChunk, x=x, z=z, seed=self.seed,
-                    generators=generators)
+            d = deferToAMPProcess(MakeChunk, x=x, z=z, seed=self.level.seed,
+                                  generators=generators)
 
             # Get chunk data into our chunk object.
             def fill_chunk(kwargs):
@@ -408,7 +405,7 @@ class World(object):
         else:
             # Populate the chunk the slow way. :c
             for stage in self.pipeline:
-                stage.populate(chunk, self.seed)
+                stage.populate(chunk, self.level.seed)
 
             chunk.regenerate()
             d = succeed(chunk)
@@ -465,20 +462,24 @@ class World(object):
         :returns: a ``Deferred`` that will be fired with a ``Player``
         """
 
-        player = Player(username=username)
-        player.location.x = self.spawn[0]
-        player.location.y = self.spawn[1]
-        player.location.stance = self.spawn[1]
-        player.location.z = self.spawn[2]
+        # Get the player, possibly.
+        d = maybeDeferred(self.serializer.load_player, username)
 
-        d = maybeDeferred(self.serializer.load_player, player)
         @d.addErrback
         def eb(failure):
             failure.trap(SerializerReadException)
             log.msg("Couldn't load player %r" % username)
-        # Add a callback to return the player, since ISerializer.load_player()
-        # doesn't return the player.
-        d.addCallback(lambda none: player)
+
+            # Make a player.
+            player = Player(username=username)
+            player.location.x = self.level.spawn[0]
+            player.location.y = self.level.spawn[1]
+            player.location.stance = self.level.spawn[1]
+            player.location.z = self.level.spawn[2]
+
+            return player
+
+        # This Deferred's good to go as-is.
         return d
 
     def save_player(self, username, player):

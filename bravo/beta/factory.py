@@ -107,7 +107,7 @@ class BravoFactory(Factory):
 
         log.msg("Starting timekeeping...")
         self.timestamp = reactor.seconds()
-        self.time = self.world.time
+        self.time = self.world.level.time
         self.update_season()
         self.time_loop = LoopingCall(self.update_time)
         self.time_loop.start(2)

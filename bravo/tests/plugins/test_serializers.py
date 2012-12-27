@@ -115,15 +115,14 @@ class TestAnvilSerializer(unittest.TestCase):
         Loading a non-existent level raises an SRE.
         """
 
-        self.assertRaises(SerializerReadException, self.s.load_level, None)
+        self.assertRaises(SerializerReadException, self.s.load_level)
 
     def test_load_chunk_first(self):
         """
         Loading a non-existent chunk raises an SRE.
         """
 
-        self.assertRaises(SerializerReadException, self.s.load_chunk,
-                Chunk(0, 0))
+        self.assertRaises(SerializerReadException, self.s.load_chunk, 0, 0)
 
     def test_load_player_first(self):
         """
@@ -131,4 +130,4 @@ class TestAnvilSerializer(unittest.TestCase):
         """
 
         self.assertRaises(SerializerReadException, self.s.load_player,
-                Player(username="unittest"))
+                          "unittest")

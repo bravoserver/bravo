@@ -101,9 +101,10 @@ class OnlineAuthenticator(object):
         players = min(protocol.factory.limitConnections, 60)
 
         packet = make_packet("login", protocol=protocol.eid, username="",
-            seed=protocol.factory.world.seed, mode=protocol.factory.mode,
-            dimension=protocol.factory.world.dimension, difficulty=1,
-            height=128, players=players)
+                             seed=protocol.factory.world.level.seed,
+                             mode=protocol.factory.mode,
+                             dimension=protocol.factory.world.dimension,
+                             difficulty=1, height=128, players=players)
         protocol.transport.write(packet)
 
     def error(self, description, protocol):

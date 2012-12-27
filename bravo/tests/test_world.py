@@ -253,5 +253,5 @@ class TestWorldConfig(unittest.TestCase):
 
         self.bcp.set("world unittest", "seed", "42")
         self.w.start()
-        self.assertEqual(self.w.seed, 42)
+        self.assertEqual(self.w.level.seed, 42)
         self.w.stop()
