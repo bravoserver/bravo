@@ -672,9 +672,7 @@ class TestChestIntegration(unittest.TestCase):
         self.i.select(0)
         self.i.select(1)
         self.assertEqual(self.i.dirty_slots, {0 : None, 1 : (1, 0, 1)})
-        packets = self.i.packets_for_dirty(self.i.dirty_slots)
-        self.assertEqual(packets, '\x67\x01\x00\x00\xff\xff' +\
-                                  '\x67\x01\x00\x01\x00\x01\x01\x00\x00')
+
 
 class TestLargeChestIntegration(unittest.TestCase):
     def setUp(self):
@@ -744,9 +742,7 @@ class TestLargeChestIntegration(unittest.TestCase):
         self.i.select(0)
         self.i.select(53)
         self.assertEqual(self.i.dirty_slots, {0 : None, 53 : (1, 0, 1)})
-        packets = self.i.packets_for_dirty(self.i.dirty_slots)
-        self.assertEqual(packets, '\x67\x01\x00\x00\xff\xff' +\
-                                  '\x67\x01\x00\x35\x00\x01\x01\x00\x00')
+
 
 class TestFurnaceIntegration(unittest.TestCase):
     def setUp(self):
