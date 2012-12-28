@@ -732,7 +732,7 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.protocols[self.username] = self
 
         # Send spawn and inventory.
-        spawn = self.factory.world.spawn
+        spawn = self.factory.world.level.spawn
         packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
         packet += self.inventory.save_to_packet()
         self.transport.write(packet)
