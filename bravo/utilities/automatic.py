@@ -7,12 +7,15 @@ def naive_scan(automaton, chunk):
 
     This method is designed to be directly useable on automaton classes to
     provide the `scan()` interface.
+
+    This function depends on implementation details of ``Chunk``.
     """
 
-    for i, block in enumerate(chunk.blocks):
-        if block in automaton.blocks:
-            coords = i >> 11, (i >> 7) & 0xf, i & 0x7f
-            automaton.feed(coords)
+    for index, section in enumerate(chunk.sections):
+        if section:
+            for i, block in enumerate(section.blocks):
+                coords = i & 0xf, (i >> 8) + index * 16, i >> 4 & 0xf
+                automaton.feed(coords)
 
 def column_scan(automaton, chunk):
     """
