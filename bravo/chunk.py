@@ -243,7 +243,7 @@ class Chunk(object):
         for x in range(16):
             for z in range(16):
                 column = x * 16 + z
-                for y in range(127, -1, -1):
+                for y in range(255, -1, -1):
                     if self.get_block((x, y, z)):
                         break
 
