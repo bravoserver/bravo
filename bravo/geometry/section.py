@@ -19,6 +19,7 @@ class Section(object):
     def __init__(self):
         self.blocks = array("B", [0] * (16 * 16 * 16))
         self.metadata = array("B", [0] * (16 * 16 * 16))
+        self.skylight = array("B", [0] * (16 * 16 * 16))
 
     def get_block(self, coords):
         return self.blocks[si(*coords)]
@@ -31,3 +32,9 @@ class Section(object):
 
     def set_metadata(self, coords, metadata):
         self.metadata[si(*coords)] = metadata
+
+    def get_skylight(self, coords):
+        return self.skylight[si(*coords)]
+
+    def set_skylight(self, coords, value):
+        self.skylight[si(*coords)] = value
