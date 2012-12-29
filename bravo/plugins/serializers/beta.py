@@ -297,14 +297,14 @@ class Anvil(object):
             section.blocks = array("B")
             section.blocks.fromstring(tag["Blocks"].value)
             section.metadata = array("B", unpack_nibbles(tag["Data"].value))
+            section.skylight = array("B",
+                                     unpack_nibbles(tag["SkyLight"].value))
             chunk.sections[index] = section
 
         chunk.heightmap = array("B")
         chunk.heightmap.fromstring(level["HeightMap"].value)
         chunk.blocklight = array("B",
             unpack_nibbles(level["BlockLight"].value))
-        chunk.metadata = array("B", unpack_nibbles(level["Data"].value))
-        chunk.skylight = array("B", unpack_nibbles(level["SkyLight"].value))
 
         chunk.populated = bool(level["TerrainPopulated"])
 
@@ -354,11 +354,12 @@ class Anvil(object):
                 section["Blocks"].value = s.blocks.tostring()
                 section["Data"] = TAG_Byte_Array()
                 section["Data"].value = pack_nibbles(s.metadata)
+                section["SkyLight"] = TAG_Byte_Array()
+                section["SkyLight"].value = pack_nibbles(s.skylight)
                 level["Sections"].tags.append(section)
 
         level["HeightMap"].value = chunk.heightmap.tostring()
         level["BlockLight"].value = pack_nibbles(chunk.blocklight)
-        level["SkyLight"].value = pack_nibbles(chunk.skylight)
 
         level["TerrainPopulated"] = TAG_Byte(chunk.populated)
 

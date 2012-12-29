@@ -201,9 +201,9 @@ class Chunk(object):
         :param int x: X coordinate in chunk coords
         :param int z: Z coordinate in chunk coords
 
-        :ivar numpy.ndarray heightmap: Tracks the tallest block in each xz-column.
-        :ivar numpy.ndarray skylight: Ambient light map.
-        :ivar numpy.ndarray damaged: Array for tracking damaged coordinates.
+        :ivar array.array heightmap: Tracks the tallest block in each xz-column.
+        :ivar array.array skylight: Ambient light map.
+        :ivar array.array damaged: Array for tracking damaged coordinates.
         :ivar bool all_damaged: Flag for forcing the entire chunk to be
             damaged. This is for efficiency; past a certain point, it is not
             efficient to batch block updates or track damage. Heavily damaged
@@ -216,7 +216,6 @@ class Chunk(object):
 
         self.heightmap = array("B", [0] * (16 * 16))
         self.blocklight = array("B", [0] * (16 * 16 * 256))
-        self.skylight = array("B", [0] * (16 * 16 * 256))
 
         self.sections = [Section() for i in range(16)]
 
@@ -484,7 +483,6 @@ class Chunk(object):
         packed = []
 
         ls = segment_array(self.blocklight)
-        ss = segment_array(self.skylight)
 
         for i, section in enumerate(self.sections):
             if any(section.blocks):
@@ -499,9 +497,9 @@ class Chunk(object):
             if mask & 1 << i:
                 packed.append(pack_nibbles(l))
 
-        for i, s in enumerate(ss):
+        for i, section in enumerate(self.sections):
             if mask & 1 << i:
-                packed.append(pack_nibbles(s))
+                packed.append(pack_nibbles(section.skylight))
 
         # Fake the biome data.
         packed.append("\x00" * 256)
@@ -535,6 +533,8 @@ class Chunk(object):
         """
 
         x, y, z = coords
+        # Save the Y.
+        original_y = y
         index, y = divmod(y, 16)
 
         column = x * 16 + z
@@ -559,6 +559,9 @@ class Chunk(object):
                             break
                     self.heightmap[column] = y
 
+            # Restore the Y.
+            y = original_y
+
             # Do the blocklight at this coordinate, if appropriate.
             if block in glowing_blocks:
                 composite_glow(self.blocklight, glowing_blocks[block],
@@ -567,9 +570,9 @@ class Chunk(object):
                                               self.blocklight])
 
             # And the skylight.
-            glow = max(self.skylight[ci(nx, ny, nz)]
-                for nx, nz, ny in iter_neighbors((x, z, y)))
-            self.skylight[offset] = neighboring_light(glow, block)
+            glow = max(self.get_skylight((nx, ny, nz))
+                       for nx, nz, ny in iter_neighbors((x, z, y)))
+            self.set_skylight((x, y, z), neighboring_light(glow, block))
 
             self.dirty = True
             self.damage(coords)
@@ -605,6 +608,35 @@ class Chunk(object):
 
             self.dirty = True
             self.damage(coords)
+
+    @check_bounds
+    def get_skylight(self, coords):
+        """
+        Look up skylight value.
+
+        :param tuple coords: coordinate triplet
+        :rtype: int
+        """
+
+        x, y, z = coords
+        index, y = divmod(y, 16)
+
+        return self.sections[index].get_skylight((x, y, z))
+
+    @check_bounds
+    def set_skylight(self, coords, value):
+        """
+        Update skylight value.
+
+        :param tuple coords: coordinate triplet
+        :param int metadata:
+        """
+
+        if self.get_metadata(coords) != value:
+            x, y, z = coords
+            index, y = divmod(y, 16)
+
+            self.sections[index].set_skylight((x, y, z), value)
 
     @check_bounds
     def destroy(self, coords):
