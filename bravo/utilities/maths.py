@@ -1,4 +1,6 @@
+from itertools import product
 from math import cos, sin
+
 
 def rotated_cosine(x, y, theta, lambd):
     r"""
@@ -24,6 +26,7 @@ def rotated_cosine(x, y, theta, lambd):
 
     return -cos((x * cos(theta) - y * sin(theta)) / lambd) / 2 + 1
 
+
 def morton2(x, y):
     """
     Create a Morton number by interleaving the bits of two numbers.
@@ -45,6 +48,7 @@ def morton2(x, y):
 
     return gx | (gy << 1)
 
+
 def clamp(x, low, high):
     """
     Clamp or saturate a number to be no lower than a minimum and no higher
@@ -55,3 +59,27 @@ def clamp(x, low, high):
     """
 
     return min(max(x, low), high)
+
+
+def circling(x, y, r):
+    """
+    Generate the points of the filled integral circle of the given radius
+    around the given coordinates.
+    """
+
+    l = []
+    for i, j in product(range(-r, r + 1), repeat=2):
+        if i ** 2 + j ** 2 <= r ** 2:
+            l.append((x + i, y + j))
+    return l
+
+
+def sorted_by_distance(iterable, x, y):
+    """
+    Like ``sorted()``, but by distance to the given coordinates.
+    """
+
+    def key(t):
+        return (t[0] - x) ** 2 + (t[1] - y) ** 2
+
+    return sorted(iterable, key=key)
