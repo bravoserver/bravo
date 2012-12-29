@@ -10,6 +10,11 @@ Level = namedtuple("Level", "seed, spawn, time")
 A named tuple representing the level data for a world.
 """
 
+Settings = namedtuple("Settings", "locale, distance")
+"""
+A named tuple representing client settings.
+"""
+
 class Slot(namedtuple("Slot", "primary, secondary, quantity")):
     """
     A slot in an inventory.

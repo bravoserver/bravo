@@ -15,7 +15,7 @@ from twisted.python import log
 from twisted.web.client import getPage
 
 from bravo import version
-from bravo.beta.structures import BuildData
+from bravo.beta.structures import BuildData, Settings
 from bravo.blocks import blocks, items
 from bravo.entity import Sign
 from bravo.errors import BetaClientError, BuildError
@@ -296,6 +296,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
         Hook for client settings packets.
         """
+
+        distance = ["far", "normal", "short", "tiny"][container.distance]
+        self.settings = Settings(container.locale, distance)
 
     def poll(self, container):
         """

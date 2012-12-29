@@ -723,7 +723,7 @@ packets = {
     ),
     204: Struct("settings",
         AlphaString("locale"),
-        UBInt8("view"),
+        UBInt8("distance"),
         UBInt8("chat"),
         difficulty,
         Bool("cape"),
