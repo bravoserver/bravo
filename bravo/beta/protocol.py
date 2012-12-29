@@ -924,6 +924,7 @@ class BravoProtocol(BetaServerProtocol):
                             eid=self.player.eid,
                             slot=0,
                             primary=65535,
+                            count=1,
                             secondary=0
                         )
                         self.factory.broadcast_for_others(packet, self)
@@ -1140,6 +1141,7 @@ class BravoProtocol(BetaServerProtocol):
             eid=self.player.eid,
             slot=0,
             primary=primary,
+            count=1,
             secondary=secondary
         )
         self.factory.broadcast_for_others(packet, self)
