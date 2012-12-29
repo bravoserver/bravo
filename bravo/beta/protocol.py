@@ -5,8 +5,8 @@ from time import time
 from urlparse import urlunparse
 
 from twisted.internet import reactor
-from twisted.internet.defer import (DeferredList, gatherResults,
-    inlineCallbacks, maybeDeferred, succeed)
+from twisted.internet.defer import (DeferredList, inlineCallbacks,
+                                    maybeDeferred, succeed)
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import cooperate, deferLater, LoopingCall
 from twisted.internet.task import TaskDone, TaskFailed
@@ -31,7 +31,7 @@ from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
 from bravo.utilities.chat import username_alternatives
-from bravo.utilities.maths import clamp
+from bravo.utilities.maths import circling, clamp, sorted_by_distance
 from bravo.utilities.temporal import timestamp_from_clock
 
 # States of the protocol.
@@ -39,14 +39,6 @@ from bravo.utilities.temporal import timestamp_from_clock
 ) = range(4)
 
 SUPPORTED_PROTOCOL = 51
-
-circle = [(i, j)
-    for i, j in product(xrange(-10, 10), xrange(-10, 10))
-    if i**2 + j**2 <= 100
-]
-"""
-A list of points in a filled circle of radius 10.
-"""
 
 class BetaServerProtocol(object, Protocol, TimeoutMixin):
     """
@@ -67,6 +59,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
     player = None
     username = None
+    settings = Settings("en_US", "normal")
     motd = "Bravo Generic Beta Server"
 
     _health = 20
@@ -101,7 +94,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             106: self.wacknowledge,
             107: self.wcreative,
             130: self.sign,
-            204: self.settings,
+            204: self.settings_packet,
             254: self.poll,
             255: self.quit,
         }
@@ -292,7 +285,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Hook for sign packets.
         """
 
-    def settings(self, container):
+    def settings_packet(self, container):
         """
         Hook for client settings packets.
         """
@@ -1180,6 +1173,8 @@ class BravoProtocol(BetaServerProtocol):
         A slot was altered in creative mode.
         """
 
+        # XXX Sometimes the container doesn't contain all of this information.
+        # What then?
         applied = self.inventory.creative(container.slot, container.primary,
             container.secondary, container.count)
         if applied:
@@ -1235,6 +1230,14 @@ class BravoProtocol(BetaServerProtocol):
         for hook in self.sign_hooks:
             hook.sign_hook(self.factory, chunk, container.x, container.y,
                 container.z, [s.text1, s.text2, s.text3, s.text4], new)
+
+    def settings_packet(self, container):
+        """
+        Acknowledge a change of settings and update chunk distance.
+        """
+
+        super(BravoProtocol, self).settings_packet(container)
+        self.update_chunks()
 
     def disable_chunk(self, x, z):
         key = x, z
@@ -1312,15 +1315,11 @@ class BravoProtocol(BetaServerProtocol):
         x, y, z = self.location.pos.to_block()
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
-        # Spawn the 49 chunks in a square around the spawn, *before* spawning
-        # the player. Otherwise, there's a funky Beta 1.2 bug which causes the
-        # player to not be able to move.
-        d = gatherResults([self.enable_chunk(i, j)
-            for i, j in product(
-                xrange(bigx - 3, bigx + 3),
-                xrange(bigz - 3, bigz + 3)
-            )
-        ])
+        # Send the chunk that the player will stand on. The other chunks are
+        # not so important. There *used* to be a bug, circa Beta 1.2, that
+        # required lots of surrounding geometry to be present, but that's been
+        # fixed.
+        d = self.enable_chunk(bigx, bigz)
 
         # What to do if we can't load a given chunk? Just kick 'em.
         d.addErrback(lambda fail: self.error("Couldn't load a chunk... :c"))
@@ -1351,10 +1350,25 @@ class BravoProtocol(BetaServerProtocol):
         d.addCallback(lambda none: self.update_chunks())
 
     def update_chunks(self):
+        # Don't send chunks unless we're located.
+        if self.state != STATE_LOCATED:
+            return
+
         x, y, z = self.location.pos.to_block()
         x, chaff, z, chaff = split_coords(x, z)
 
-        new = set((i + x, j + z) for i, j in circle)
+        # These numbers come from a couple spots, including minecraftwiki, but
+        # I verified them experimentally using torches and pillars to mark
+        # distances on each setting. ~ C.
+        distances = {
+            "tiny": 2,
+            "short": 4,
+            "far": 16,
+        }
+
+        radius = distances.get(self.settings.distance, 8)
+
+        new = set(circling(x, z, radius))
         old = set(self.chunks.iterkeys())
         added = new - old
         discarded = old - new
@@ -1373,12 +1387,11 @@ class BravoProtocol(BetaServerProtocol):
                 except (TaskDone, TaskFailed):
                     pass
 
+        to_enable = sorted_by_distance(added, x, z)
+
         self.chunk_tasks = [
-            cooperate(
-                self.enable_chunk(i, j) for i, j in
-                sorted(added, key=lambda t: (t[0] - x)**2 + (t[1] - z)**2)
-            ),
-            cooperate(self.disable_chunk(i, j) for i, j in discarded)
+            cooperate(self.enable_chunk(i, j) for i, j in to_enable),
+            cooperate(self.disable_chunk(i, j) for i, j in discarded),
         ]
 
     def update_time(self):
