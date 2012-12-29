@@ -52,10 +52,8 @@ mode = creative
 seasons = winter, spring
 
 # Which serializer to use for saving worlds to disk.
-# ~ alpha: The Alpha NBT format
-# ~ beta: The Beta NBT/MCR format
-# Note: There is currently no automatic conversion from alpha to beta!
-serializer = beta
+# ~ anvil: The Anvil NBT/MCR format
+serializer = anvil
 
 # Authenticator. There are only two options:
 # ~ offline: anybody can log in, no authentication is done
