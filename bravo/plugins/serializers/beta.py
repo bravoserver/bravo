@@ -489,8 +489,10 @@ class Anvil(object):
             fp.makedirs()
         fp = fp.child(name)
 
+        # Allocate the region and put the chunk into it. Use ensure() instead
+        # of create() so that we don't trash the region.
         region = Region(fp)
-        region.create()
+        region.ensure()
         region.put_chunk(chunk.x, chunk.z, data)
 
     def load_level(self):
