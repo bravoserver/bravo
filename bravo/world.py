@@ -14,7 +14,8 @@ from twisted.python import log
 from bravo.beta.structures import Level
 from bravo.chunk import Chunk
 from bravo.entity import Player, Furnace
-from bravo.errors import ChunkNotLoaded, SerializerReadException
+from bravo.errors import (ChunkNotLoaded, SerializerReadException,
+                          SerializerWriteException)
 from bravo.ibravo import ISerializer
 from bravo.plugin import retrieve_named_plugins
 from bravo.utilities.coords import split_coords
@@ -171,6 +172,10 @@ class World(object):
             except ImportError:
                 pass
 
+        log.msg("World is %s" %
+                ("read-write" if self.saving else "read-only"))
+        log.msg("Using Ampoule: %s" % self.async)
+
         # First, try loading the level, to see if there's any data out there
         # which we can use. If not, don't worry about it.
         d = maybeDeferred(self.serializer.load_level)
@@ -185,14 +190,12 @@ class World(object):
             failure.trap(SerializerReadException)
             log.msg("Had issues loading level data, continuing anyway...")
 
-        # And now save our level.
-        if self.saving:
-            self.serializer.save_level(self.level)
+            # And now save our level.
+            if self.saving:
+                self.serializer.save_level(self.level)
 
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
-
-        log.msg("Using Ampoule: %s" % self.async)
 
         self.mob_manager = MobManager() # XXX Put this in init or here?
         self.mob_manager.world = self # XXX  Put this in the managers constructor?
@@ -451,9 +454,16 @@ class World(object):
         if not chunk.dirty or not self.saving:
             return
 
-        self.serializer.save_chunk(chunk)
+        d = maybeDeferred(self.serializer.save_chunk, chunk)
 
-        chunk.dirty = False
+        @d.addCallback
+        def cb(none):
+            chunk.dirty = False
+
+        @d.addErrback
+        def eb(failure):
+            failure.trap(SerializerWriteException)
+            log.msg("Couldn't write %r" % chunk)
 
     def load_player(self, username):
         """
