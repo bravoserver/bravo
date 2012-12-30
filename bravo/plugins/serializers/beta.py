@@ -89,12 +89,6 @@ class Anvil(object):
             "Sign": self._save_sign_to_tag,
         }
 
-        self.regions = {}
-
-    @staticmethod
-    def _name_for_region(x, z):
-        return name_for_anvil(x, z)
-
     # Disk I/O helpers. Highly useful for keeping these few lines in one
     # place.
 
@@ -448,19 +442,15 @@ class Anvil(object):
                 raise Exception("Could not create world in %s" % self.folder)
 
     def load_chunk(self, x, z):
-        name = self._name_for_region(x, z)
-        if name in self.regions:
-            region = self.regions[name]
-        else:
-            fp = self.folder.child("region").child(name)
-            if not fp.exists():
-                raise SerializerReadException("Region doesn't exist: %d, %d" %
-                                              (x, z))
+        name = name_for_anvil(x, z)
+        fp = self.folder.child("region").child(name)
+        if not fp.exists():
+            raise SerializerReadException("Region doesn't exist: %d, %d" %
+                                          (x, z))
 
-            region = Region(fp)
-            self.regions[name] = region
-
+        region = Region(fp)
         chunk = Chunk(x, z)
+
         try:
             data = region.get_chunk(x, z)
             tag = NBTFile(buffer=StringIO(data))
@@ -483,7 +473,7 @@ class Anvil(object):
         tag.write_file(buffer=b)
         data = b.getvalue()
 
-        name = self._name_for_region(chunk.x, chunk.z)
+        name = name_for_anvil(chunk.x, chunk.z)
         fp = self.folder.child("region")
         if not fp.exists():
             fp.makedirs()
