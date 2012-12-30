@@ -202,7 +202,6 @@ class Chunk(object):
         :param int z: Z coordinate in chunk coords
 
         :ivar array.array heightmap: Tracks the tallest block in each xz-column.
-        :ivar array.array skylight: Ambient light map.
         :ivar array.array damaged: Array for tracking damaged coordinates.
         :ivar bool all_damaged: Flag for forcing the entire chunk to be
             damaged. This is for efficiency; past a certain point, it is not
@@ -268,92 +267,44 @@ class Chunk(object):
         The height map must be valid for this method to produce valid results.
         """
 
-        lightmap = array("B", [0] * (16 * 16 * 256))
+        # Create an array of skylights, and a mask of dimming blocks.
+        lights = [0xf] * (16 * 16)
+        mask = [0x0] * (16 * 16)
 
-        for x, z in product(xrange(16), repeat=2):
-            offset = x * 16 + z
-
-            # The maximum lighting value, unsurprisingly, is 0xf, which is the
-            # biggest possible value for a nibble.
-            light = 0xf
-
-            # Apparently, skylights start at the block *above* the block on
-            # which the light is incident?
-            height = self.heightmap[offset] + 1
-
-            # The topmost block, regardless of type, is set to maximum
-            # lighting, as are all the blocks above it.
-            for i in xrange(height, 256):
-                lightmap[offset + i] = light
-
-            # Dim the light going throught the remaining blocks, until there
-            # is no more light left.
-            for y in range(height, -1, -1):
-                dim = blocks[self.get_block((x, y, z))].dim
-                light -= dim
-                if light <= 0:
-                    break
-
-                lightmap[offset * 256 + y] = light
-
-        # Now it's time to spread the light around. This flavor uses extra
-        # memory to speed things up; the basic idea is to spread *all* light,
-        # one glow level at a time, rather than spread each block
-        # individually.
-        max_height = max(self.heightmap)
-
-        lightable = [False] * 16 * 16 * 256 # [blocks[block].dim < 15 for block in self.blocks]
-        unlit = [x and not y for (x, y) in zip(lightable, lightmap)]
-
-        # Create a mask to find all blocks that have an unlit block as a
-        # neighbour in the xz-plane, then apply the mask to the lightmap to
-        # find all lighted blocks with one or more unlit blocks as neighbours.
-        spread = set()
-        for x, z, y in product(xrange(16), xrange(16), xrange(max_height)):
-            if not lightmap[ci(x, y, z)]:
+        # For each y-level, we're going to update the mask, apply it to the
+        # lights, apply the lights to the section, and then blur the lights
+        # and move downwards. Since empty sections are full of air, and air
+        # doesn't ever dim, ignoring empty sections should be a correct way
+        # to speed things up. Another optimization is that the process ends
+        # early if the entire slice of lights is dark.
+        for section in reversed(self.sections):
+            if not section:
                 continue
 
-            if ((x > 0  and unlit[((x - 1) * 16 + z) * 256 + y]) or
-                (x < 15 and unlit[((x + 1) * 16 + z) * 256 + y]) or
-                (z > 0  and unlit[(x * 16 + (z - 1)) * 256 + y]) or
-                (z < 15 and unlit[(x * 16 + (z + 1)) * 256 + y])):
-                spread.add((x, z, y))
+            for y in range(15, -1, -1):
+                # Early-out if there's no more light left.
+                if not any(lights):
+                    break
 
-        visited = set()
+                # Update the mask.
+                for x, z in product(range(16), repeat=2):
+                    offset = x * 16 + z
+                    block = section.get_block((x, y, z))
+                    mask[offset] = blocks[block].dim
 
-        # Run the actual glow loop. For each glow level, go over unvisited air
-        # blocks and illuminate them.
-        for glow in xrange(14, 0, -1):
-            for coords in spread:
-                if lightmap[ci(coords[0], coords[2], coords[1])] <= glow:
-                    visited.add(coords)
-                    continue
+                # Apply the mask to the lights.
+                for i, dim in enumerate(mask):
+                    # Keep it positive.
+                    lights[i] = max(0, lights[i] - dim)
 
-                for target in iter_neighbors(coords):
-                    # Skip targets that already have valid lighting.
-                    if target in visited:
-                        continue
+                # Apply the lights to the section.
+                for x, z in product(range(16), repeat=2):
+                    offset = x * 16 + z
+                    section.set_skylight((x, y, z), lights[offset])
 
-                    x, z, y = target
+                # XXX blur the lights
 
-                    if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < 256):
-                        continue
-
-                    offset = ci(x, y, z)
-
-                    # If the block's lightable and the lightmap isn't fully
-                    # lit up, then light the block appropriately and mark it
-                    # as visited.
-                    if (lightable[offset]
-                        and lightmap[offset] < glow):
-                        light = neighboring_light(glow,
-                                                  self.get_block((x, y, z)))
-                        lightmap[offset] = clamp(light, 0, 15)
-                        visited.add(target)
-            spread = visited
-            visited = set()
-
-        self.skylight = lightmap
+                # And continue moving downward.
 
     def regenerate(self):
         """

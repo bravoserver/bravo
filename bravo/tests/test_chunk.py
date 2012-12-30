@@ -88,8 +88,8 @@ class TestLightmaps(unittest.TestCase):
         # lightmap are set to 15 (fully illuminated).
         # Note that skylight of a solid block is 0, the important value
         # is the skylight of the transluscent (usually air) block above it.
-        for i in xrange(1, 32768, 128):
-            self.assertEqual(self.c.skylight[i], 0xf)
+        for x, z in product(xrange(16), repeat=2):
+            self.assertEqual(self.c.get_skylight((x, 0, z)), 0xf)
 
     def test_skylight_spread(self):
         # Fill it as if we were the boring generator.
@@ -105,8 +105,8 @@ class TestLightmaps(unittest.TestCase):
             flipx = x if x > 7 else 15 - x
             flipz = z if z > 7 else 15 - z
             target = max(flipx, flipz)
-            self.assertEqual(self.c.skylight[(x * 16 + z) * 128 + 1], target,
-                            "%d, %d" % (x, z))
+            self.assertEqual(self.c.get_skylight((x, 1, z)), target,
+                             "%d, %d" % (x, z))
 
     def test_skylight_arch(self):
         """
@@ -127,7 +127,7 @@ class TestLightmaps(unittest.TestCase):
         # bit of illumination.
         self.c.regenerate()
 
-        self.assertEqual(self.c.skylight[(1 * 16 + 1) * 128 + 1], 14)
+        self.assertEqual(self.c.get_skylight((1, 1, 1)), 14)
 
     def test_skylight_arch_leaves(self):
         """
@@ -151,7 +151,7 @@ class TestLightmaps(unittest.TestCase):
         # bit of illumination.
         self.c.regenerate()
 
-        self.assertEqual(self.c.skylight[(1 * 16 + 1) * 128 + 1], 13)
+        self.assertEqual(self.c.get_skylight((1, 1, 1)), 13)
 
     def test_skylight_arch_leaves_occluded(self):
         """
@@ -177,7 +177,7 @@ class TestLightmaps(unittest.TestCase):
         # bit of illumination.
         self.c.regenerate()
 
-        self.assertEqual(self.c.skylight[(1 * 16 + 1) * 128 + 1], 12)
+        self.assertEqual(self.c.get_skylight((1, 1, 1)), 12)
 
     def test_incremental_solid(self):
         """
@@ -191,7 +191,7 @@ class TestLightmaps(unittest.TestCase):
         # Any solid block with no dimming works. I choose dirt.
         self.c.set_block((0, 0, 0), blocks["dirt"].slot)
 
-        self.assertEqual(self.c.skylight[(0 * 16 + 0) * 128 + 0], 0)
+        self.assertEqual(self.c.get_skylight((0, 0, 0)), 0)
 
     def test_incremental_air(self):
         """
@@ -208,4 +208,4 @@ class TestLightmaps(unittest.TestCase):
 
         self.c.set_block((0, 0, 0), blocks["air"].slot)
 
-        self.assertEqual(self.c.skylight[(0 * 16 + 0) * 128 + 0], 15)
+        self.assertEqual(self.c.get_skylight((0, 0, 0)), 15)
