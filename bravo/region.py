@@ -41,6 +41,8 @@ class Region(object):
     def create(self):
         """
         Create this region as a file.
+
+        If the region already exists, this will zero it out.
         """
 
         with self.fp.open("w") as handle:
@@ -49,6 +51,14 @@ class Region(object):
             handle.write("\x00" * 8192)
 
         self.load_pages()
+
+    def ensure(self):
+        """
+        If this region's file does not already exist, create it.
+        """
+
+        if not self.fp.exists():
+            self.fp.create()
 
     def get_chunk_header(self, x, z):
         position, pages = self.positions[x, z]
