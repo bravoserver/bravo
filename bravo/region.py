@@ -50,6 +50,18 @@ class Region(object):
 
         self.load_pages()
 
+    def get_chunk_header(self, x, z):
+        position, pages = self.positions[x, z]
+
+        with self.fp.open("r") as handle:
+            handle.seek(position * 4096)
+            header = handle.read(5)
+
+        length = unpack(">L", header[:4])[0] - 1
+        version = ord(header[4])
+
+        return length, version
+
     def get_chunk(self, x, z):
         x %= 32
         z %= 32
@@ -58,15 +70,12 @@ class Region(object):
             self.load_pages()
 
         position, pages = self.positions[x, z]
+        length, version = self.get_chunk_header(x, z)
 
         with self.fp.open("r") as handle:
-            handle.seek(position * 4096)
-            data = handle.read(pages * 4096)
+            handle.seek(position * 4096 + 5)
+            data = handle.read(length)
 
-        length = unpack(">L", data[:4])[0] - 1
-        version = ord(data[4])
-
-        data = data[5:length+5]
         if version == 1:
             fileobj = GzipFile(fileobj=StringIO(data))
             data = fileobj.read()
