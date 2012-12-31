@@ -438,6 +438,8 @@ class Anvil(object):
             log.msg("Creating new world in %s" % self.folder)
             try:
                 self.folder.makedirs()
+                self.folder.child("players").makedirs()
+                self.folder.child("region").makedirs()
             except os.error:
                 raise Exception("Could not create world in %s" % self.folder)
 
@@ -474,10 +476,7 @@ class Anvil(object):
         data = b.getvalue()
 
         name = name_for_anvil(chunk.x, chunk.z)
-        fp = self.folder.child("region")
-        if not fp.exists():
-            fp.makedirs()
-        fp = fp.child(name)
+        fp = self.folder.child("region").child(name)
 
         # Allocate the region and put the chunk into it. Use ensure() instead
         # of create() so that we don't trash the region.
@@ -552,10 +551,7 @@ class Anvil(object):
 
         tag["Inventory"] = self._save_inventory_to_tag(player.inventory)
 
-        fp = self.folder.child("players")
-        if not fp.exists():
-            fp.makedirs()
-        fp = fp.child("%s.dat" % player.username)
+        fp = self.folder.child("players").child("%s.dat" % player.username)
         self._write_tag(fp, tag)
 
     def get_plugin_data_path(self, name):
