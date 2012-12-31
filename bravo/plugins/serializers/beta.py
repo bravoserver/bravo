@@ -462,10 +462,7 @@ class Anvil(object):
         return chunk
 
     def save_chunk(self, chunk):
-        try:
-            tag = self._save_chunk_to_tag(chunk)
-        except Exception, e:
-            raise SerializerWriteException(e)
+        tag = self._save_chunk_to_tag(chunk)
 
         b = StringIO()
         tag.write_file(buffer=b)
@@ -477,8 +474,12 @@ class Anvil(object):
         # Allocate the region and put the chunk into it. Use ensure() instead
         # of create() so that we don't trash the region.
         region = Region(fp)
-        region.ensure()
-        region.put_chunk(chunk.x, chunk.z, data)
+
+        try:
+            region.ensure()
+            region.put_chunk(chunk.x, chunk.z, data)
+        except IOError, e:
+            raise SerializerWriteException("Couldn't write to region: %r" % e)
 
     def load_level(self):
         fp = self.folder.child("level.dat")
