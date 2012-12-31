@@ -45,10 +45,9 @@ class Region(object):
         If the region already exists, this will zero it out.
         """
 
-        with self.fp.open("w") as handle:
-            # Create the file and zero out the header, plus a spare page for
-            # Notchian software.
-            handle.write("\x00" * 8192)
+        # Create the file and zero out the header, plus a spare page for
+        # Notchian software.
+        self.fp.setContent("\x00" * 8192)
 
         self.load_pages()
 
