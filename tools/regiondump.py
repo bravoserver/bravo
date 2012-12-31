@@ -21,6 +21,13 @@ if not fp.exists():
 region = Region(fp)
 region.load_pages()
 
+if region.free_pages:
+    print "Free pages:", sorted(region.free_pages)
+else:
+    print "No free pages."
+
+print "Chunks:"
+
 for (x, z) in region.positions:
     length, version = region.get_chunk_header(x, z)
-    print "(%d, %d): v%d, %.2fKiB" % (x, z, version, length / 1024)
+    print " ~ (%d, %d): v%d, %.2fKiB" % (x, z, version, length / 1024)
