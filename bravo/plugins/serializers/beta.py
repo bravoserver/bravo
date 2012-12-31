@@ -19,7 +19,7 @@ from bravo.location import Location, Orientation, Position
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
-from bravo.region import Region
+from bravo.region import MissingChunk, Region
 from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 from bravo.utilities.paths import name_for_anvil
 
@@ -446,10 +446,6 @@ class Anvil(object):
     def load_chunk(self, x, z):
         name = name_for_anvil(x, z)
         fp = self.folder.child("region").child(name)
-        if not fp.exists():
-            raise SerializerReadException("Region doesn't exist: %d, %d" %
-                                          (x, z))
-
         region = Region(fp)
         chunk = Chunk(x, z)
 
@@ -457,8 +453,8 @@ class Anvil(object):
             data = region.get_chunk(x, z)
             tag = NBTFile(buffer=StringIO(data))
             self._load_chunk_from_tag(chunk, tag)
-        except KeyError:
-            pass
+        except MissingChunk:
+            raise SerializerReadException("No chunk %r in region" % chunk)
         except Exception, e:
             raise SerializerReadException("%r couldn't be loaded: %s" %
                     (chunk, e))

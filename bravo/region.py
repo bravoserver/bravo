@@ -2,6 +2,11 @@ from gzip import GzipFile
 from StringIO import StringIO
 from struct import pack, unpack
 
+class MissingChunk(Exception):
+    """
+    The requested chunk isn't in this region.
+    """
+
 class Region(object):
     """
     An MCRegion-style paged chunk file.
@@ -49,7 +54,8 @@ class Region(object):
         # Notchian software.
         self.fp.setContent("\x00" * 8192)
 
-        self.load_pages()
+        self.free_pages = set()
+        self.positions = {}
 
     def ensure(self):
         """
@@ -77,6 +83,9 @@ class Region(object):
 
         if not self.positions:
             self.load_pages()
+
+        if (x, z) not in self.positions:
+            raise MissingChunk((x, z))
 
         position, pages = self.positions[x, z]
         length, version = self.get_chunk_header(x, z)
