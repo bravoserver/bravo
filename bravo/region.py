@@ -63,7 +63,7 @@ class Region(object):
         """
 
         if not self.fp.exists():
-            self.fp.create()
+            self.create()
 
     def get_chunk_header(self, x, z):
         position, pages = self.positions[x, z]
