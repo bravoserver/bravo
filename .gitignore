@@ -5,3 +5,6 @@ bravo.log
 twistd.pid
 dropin.cache
 website/output/*
+Bravo.egg-info/*
+build/*
+dist/*
