@@ -39,28 +39,43 @@ class TestChunkBlocks(unittest.TestCase):
         self.assertEqual(self.c.get_block((2, 2, 2)), 2)
         self.assertEqual(self.c.get_block((3, 3, 3)), 3)
 
-    def test_set_block_correct_heightmap(self):
+    def test_set_block_heightmap(self):
         """
-        Test heightmap update for a single column.
+        Heightmaps work.
         """
 
         self.c.populated = True
 
-        self.assertEqual(self.c.heightmap[0], 0)
+        self.c.set_block((0, 20, 0), 1)
+        self.assertEqual(self.c.heightmap[0], 20)
+
+    def test_set_block_heightmap_underneath(self):
+        """
+        A block placed underneath the highest block will not alter the
+        heightmap.
+        """
+
+        self.c.populated = True
+
         self.c.set_block((0, 20, 0), 1)
         self.assertEqual(self.c.heightmap[0], 20)
 
         self.c.set_block((0, 10, 0), 1)
         self.assertEqual(self.c.heightmap[0], 20)
 
+    def test_set_block_heightmap_destroyed(self):
+        """
+        Upon destruction of the highest block, the heightmap will point at the
+        next-highest block.
+        """
+
+        self.c.populated = True
+
         self.c.set_block((0, 30, 0), 1)
-        self.assertEqual(self.c.heightmap[0], 30)
-
-        self.c.destroy((0, 10, 0))
-        self.assertEqual(self.c.heightmap[0], 30)
-
+        self.c.set_block((0, 10, 0), 1)
         self.c.destroy((0, 30, 0))
-        self.assertEqual(self.c.heightmap[0], 20)
+        self.assertEqual(self.c.heightmap[0], 10)
+
 
 class TestLightmaps(unittest.TestCase):
 
