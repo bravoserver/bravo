@@ -2,5 +2,5 @@
 .. _PyPy: http://pypy.org/
 .. _Twisted: http://twistedmatrix.com/
 .. _Bravo: http://www.bravoserver.org/
-.. _issue tracker: https://github.com/MostAwesomeDude/bravo/issues
+.. _issue tracker: https://github.com/bravoserver/bravo/issues
 .. _mailing list: http://lists.bravoserver.org/listinfo.cgi/bravo-dev-bravoserver.org
