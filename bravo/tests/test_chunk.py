@@ -39,14 +39,6 @@ class TestChunkBlocks(unittest.TestCase):
         self.assertEqual(self.c.get_block((2, 2, 2)), 2)
         self.assertEqual(self.c.get_block((3, 3, 3)), 3)
 
-    def test_single_block_damage_packet(self):
-        chunk = Chunk(2, 1)
-        chunk.populated = True
-        chunk.set_block((2, 4, 8), 1)
-        chunk.set_metadata((2, 4, 8), 2)
-        packet = chunk.get_damage_packet()
-        self.assertEqual(packet, '\x35\x00\x00\x00\x22\x04\x00\x00\x00\x18\x01\x02')
-
     def test_set_block_correct_heightmap(self):
         """
         Test heightmap update for a single column.
