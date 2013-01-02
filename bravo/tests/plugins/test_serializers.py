@@ -1,6 +1,7 @@
 import unittest
 import shutil
 import tempfile
+import platform
 
 from twisted.python.filepath import FilePath
 
@@ -97,6 +98,8 @@ class TestAnvilSerializer(unittest.TestCase):
         self.assertEqual(tag["Level"]["xPos"].value, 1)
         self.assertEqual(tag["Level"]["zPos"].value, 2)
 
+    @unittest.skipIf("windows" in platform.system().lower(), 
+                    "Windows can't handle this properly")
     def test_save_plugin_data(self):
         data = 'Foo\nbar'
         self.s.save_plugin_data('plugin1', data)
