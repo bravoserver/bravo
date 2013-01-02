@@ -484,15 +484,12 @@ class Chunk(object):
         """
 
         x, y, z = coords
-        # Save the Y.
-        original_y = y
-        index, y = divmod(y, 16)
+        index, section_y = divmod(y, 16)
 
         column = x * 16 + z
-        offset = column * 256 + y
 
         if self.get_block(coords) != block:
-            self.sections[index].set_block((x, y, z), block)
+            self.sections[index].set_block((x, section_y, z), block)
 
             if not self.populated:
                 return
@@ -509,9 +506,6 @@ class Chunk(object):
                         if self.get_block((x, y, z)):
                             break
                     self.heightmap[column] = y
-
-            # Restore the Y.
-            y = original_y
 
             # Do the blocklight at this coordinate, if appropriate.
             if block in glowing_blocks:
