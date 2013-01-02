@@ -21,19 +21,19 @@ class BravoIRCClient(IRCClient):
         for factory in self.factories:
             factory.chat_consumers.add(self)
 
-        self.name = "irc %s" % config
+        self.name = "irc %s" % name
         self.config = config
 
-        self.host = self.config.get(self.config, "server")
-        self.nickname = self.config.get(self.config, "nick")
+        self.host = self.config.get(self.name, "server")
+        self.nickname = self.config.get(self.name, "nick")
 
         self.channels = set()
 
-        log.msg("Spawned IRC client '%s'!" % config)
+        log.msg("Spawned IRC client '%s'!" % name)
 
     def signedOn(self):
-        for channel in self.config.get(self.config, "channels").split(","):
-            key = self.config.getdefault(self.config, "%s_key" % channel,
+        for channel in self.config.get(self.name, "channels").split(","):
+            key = self.config.getdefault(self.name, "%s_key" % channel,
                 None)
             self.join(channel, key)
 
@@ -78,8 +78,8 @@ class BravoIRC(ClientFactory):
         self.factories = factories
         self.name = name
         self.config = config
-        self.host = self.config.get("irc %s" % config, "server")
-        self.port = self.config.getint("irc %s" % config, "port")
+        self.host = self.config.get("irc %s" % name, "server")
+        self.port = self.config.getint("irc %s" % name, "port")
 
     def buildProtocol(self, a):
         p = self.protocol(self.factories, self.config, self.name)
