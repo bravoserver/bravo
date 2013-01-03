@@ -88,7 +88,7 @@ class Tracks(object):
             return
 
         # Use facing direction of player to set correct track tile
-        yaw = player.location.yaw
+        yaw, pitch = player.location.ori.to_degs()
         if 30 < yaw < 60:
             metadata = CORNER_SE
         elif 120 < yaw < 150:
