@@ -7,7 +7,8 @@ from twisted.internet.task import deferLater
 
 from construct import Container
 
-from bravo.beta.protocol import BetaServerProtocol, BravoProtocol
+from bravo.beta.protocol import (BetaServerProtocol, BravoProtocol,
+                                 STATE_LOCATED)
 from bravo.chunk import Chunk
 from bravo.config import BravoConfigParser
 from bravo.errors import BetaClientError
@@ -164,6 +165,8 @@ class TestBravoProtocolChunks(TestCase):
         self.bcp = BravoConfigParser()
         self.p = BravoProtocol(self.bcp, "unittest")
         self.p.setTimeout(None)
+
+        self.p.state = STATE_LOCATED
 
     def test_trivial(self):
         pass
