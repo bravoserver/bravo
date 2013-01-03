@@ -170,6 +170,8 @@ class Pickup(Entity):
 
         x, y, z = self.location.pos
 
+        return ""
+
         return make_packet("pickup", eid=self.eid, primary=self.item[0],
                 secondary=self.item[1], count=self.quantity, x=x, y=y, z=z,
                 yaw=0, pitch=0, roll=0)
