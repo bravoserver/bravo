@@ -1,6 +1,7 @@
 from array import array
 from functools import wraps
 from itertools import product
+from struct import pack
 from warnings import warn
 
 from bravo.blocks import blocks, glowing_blocks
@@ -400,22 +401,24 @@ class Chunk(object):
             # Chunk data structures are ((x * 16) + z) * 256) + y, or in
             # bit-twiddler's parlance, x << 12 | z << 8 | y. This is *exactly*
             # the format required for batch updates.
-            coords = []
-            types = []
-            metadata = []
+            records = []
+
             for index, value in enumerate(self.damaged):
                 if value:
                     # divmod() trick for coords.
                     index, y = divmod(index, 256)
                     x, z = divmod(index, 16)
 
-                    coords.append(index)
-                    types.append(self.get_block((x, y, z)))
-                    metadata.append(self.get_metadata((x, y, z)))
+                    block = self.get_block((x, y, z))
+                    metadata = self.get_metadata((x, y, z))
+
+                    record = index << 16 | block << 4 | metadata
+                    records.append(record)
+
+            data = "".join(pack(">I", x) for x in records)
 
             return make_packet("batch", x=self.x, z=self.z,
-                length=len(coords), coords=coords, types=types,
-                metadata=metadata)
+                               count=len(records), data=data)
 
     def clear_damage(self):
         """
