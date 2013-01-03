@@ -466,17 +466,17 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         # Special case: Ascend at most once, if the current spot isn't good.
         if count == 0:
-            if not column[y] or column[y + 1] or column[y + 2]:
+            if (not column[y]) or column[y + 1] or column[y + 2]:
                 # Yeah, we're gonna need to move.
                 count += 1
             else:
                 # Nope, we're fine where we are.
                 return True
 
-        for i in xrange(y, 126):
+        for i in xrange(y, 255):
             # Find the next spot above us which has a platform and two empty
             # blocks of air.
-            if column[i] and not column[i + 1] and not column[i + 2]:
+            if column[i] and (not column[i + 1]) and not column[i + 2]:
                 count -= 1
                 if not count:
                     break
