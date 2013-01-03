@@ -194,6 +194,7 @@ class Chunk(object):
         filled out.
     """
 
+    all_damaged = False
     dirty = True
     populated = False
 
@@ -203,7 +204,6 @@ class Chunk(object):
         :param int z: Z coordinate in chunk coords
 
         :ivar array.array heightmap: Tracks the tallest block in each xz-column.
-        :ivar array.array damaged: Array for tracking damaged coordinates.
         :ivar bool all_damaged: Flag for forcing the entire chunk to be
             damaged. This is for efficiency; past a certain point, it is not
             efficient to batch block updates or track damage. Heavily damaged
@@ -222,9 +222,7 @@ class Chunk(object):
         self.entities = set()
         self.tiles = {}
 
-        self.damaged = array("B", [0] * (16 * 16 * 256))
-
-        self.all_damaged = False
+        self.damaged = set()
 
     def __repr__(self):
         return "Chunk(%d, %d)" % (self.x, self.z)
@@ -328,12 +326,13 @@ class Chunk(object):
 
         x, y, z = coords
 
-        self.damaged[ci(x, y, z)] = 1
+        self.damaged.add(coords)
 
         # The number 176 represents the threshold at which it is cheaper to
         # resend the entire chunk instead of individual blocks.
-        if sum(self.damaged) > 176:
+        if len(self.damaged) > 176:
             self.all_damaged = True
+            self.damaged.clear()
 
     def is_damaged(self):
         """
@@ -343,7 +342,7 @@ class Chunk(object):
         :returns: True if any damage is pending on this chunk, False if not.
         """
 
-        return self.all_damaged or any(self.damaged)
+        return self.all_damaged or bool(self.damaged)
 
     def get_damage_packet(self):
         """
@@ -373,20 +372,18 @@ class Chunk(object):
         if self.all_damaged:
             # Resend the entire chunk!
             return self.save_to_packet()
-        elif not any(self.damaged):
+        elif not self.damaged:
             # Send nothing at all; we don't even have a scratch on us.
             return ""
-        elif sum(self.damaged) == 1:
+        elif len(self.damaged) == 1:
             # Use a single block update packet. Find the first (only) set bit
             # in the damaged array, and use it as an index.
-            index = next(i for i, value in enumerate(self.damaged) if value)
+            coords = next(iter(self.damaged))
 
-            # divmod() trick for coords.
-            index, y = divmod(index, 256)
-            x, z = divmod(index, 16)
+            block = self.get_block(coords)
+            metadata = self.get_metadata(coords)
 
-            block = self.get_block((x, y, z))
-            metadata = self.get_metadata((x, y, z))
+            x, y, z = coords
 
             return make_packet("block",
                     x=x + self.x * 16,
@@ -396,26 +393,18 @@ class Chunk(object):
                     meta=metadata)
         else:
             # Use a batch update.
-            # Coordinates are, magically, packed in exactly the same way as
-            # the indices for chunk data structures.
-            # Chunk data structures are ((x * 16) + z) * 256) + y, or in
-            # bit-twiddler's parlance, x << 12 | z << 8 | y. This is *exactly*
-            # the format required for batch updates.
             records = []
 
-            for index, value in enumerate(self.damaged):
-                if value:
-                    # divmod() trick for coords.
-                    index, y = divmod(index, 256)
-                    x, z = divmod(index, 16)
+            for coords in self.damaged:
+                block = self.get_block(coords)
+                metadata = self.get_metadata(coords)
 
-                    block = self.get_block((x, y, z))
-                    metadata = self.get_metadata((x, y, z))
+                x, y, z = coords
 
-                    record = index << 16 | block << 4 | metadata
-                    records.append(record)
+                record = x << 28 | z << 24 | y << 16 | block << 4 | metadata
+                records.append(record)
 
-            data = "".join(pack(">I", x) for x in records)
+            data = "".join(pack(">I", record) for record in records)
 
             return make_packet("batch", x=self.x, z=self.z,
                                count=len(records), data=data)
@@ -425,7 +414,7 @@ class Chunk(object):
         Clear this chunk's damage.
         """
 
-        self.damaged = array("B", [0] * (16 * 16 * 256))
+        self.damaged.clear()
         self.all_damaged = False
 
     def save_to_packet(self):
