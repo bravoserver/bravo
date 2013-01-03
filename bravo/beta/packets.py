@@ -50,7 +50,6 @@ position = Struct("position",
 orientation = Struct("orientation", BFloat32("rotation"), BFloat32("pitch"))
 
 # Notchian item packing
-# TODO: Needs an update
 items = Struct("items",
     SBInt16("primary"),
     If(lambda context: context["primary"] >= 0,
