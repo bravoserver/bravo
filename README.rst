@@ -80,7 +80,6 @@ most distributions already provide it for you. Bravo depends on the following
 external libraries from PyPI:
 
  * construct, version 2.03 or later
- * numpy
  * Twisted, version 11.0 or later
 
 If installing modular Twisted, Twisted Conch is required.
