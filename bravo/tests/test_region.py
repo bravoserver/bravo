@@ -1,6 +1,4 @@
-from unittest import TestCase
-
-from tempfile import NamedTemporaryFile
+from twisted.trial.unittest import TestCase
 
 from twisted.python.filepath import FilePath
 
@@ -9,8 +7,7 @@ from bravo.region import Region
 class TestRegion(TestCase):
 
     def setUp(self):
-        self.temp = NamedTemporaryFile()
-        self.fp = FilePath(self.temp.name)
+        self.fp = FilePath(self.mktemp())
         self.region = Region(self.fp)
 
     def test_trivial(self):
@@ -18,4 +15,5 @@ class TestRegion(TestCase):
 
     def test_create(self):
         self.region.create()
-        self.assertEqual(self.temp.read(), "\x00" * 8192)
+        with self.fp.open("r") as handle:
+            self.assertEqual(handle.read(), "\x00" * 8192)
