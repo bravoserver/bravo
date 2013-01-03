@@ -702,11 +702,13 @@ class BravoProtocol(BetaServerProtocol):
         # Init players' inventory window.
         self.inventory = InventoryWindow(self.player.inventory)
 
+        # *Now* we are in our factory's list of protocols. Be aware.
+        self.factory.protocols[self.username] = self
+
         # Announce our presence.
-        packet = make_packet("chat",
-            message="%s is joining the game..." % self.username)
-        packet += make_packet("players", name=self.username, online=True,
-            ping=0)
+        self.factory.chat("%s is joining the game..." % self.username)
+        packet = make_packet("players", name=self.username, online=True,
+                             ping=0)
         self.factory.broadcast(packet)
 
         # Craft our avatar and send it to already-connected other players.
@@ -715,17 +717,17 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_others(packet, self)
 
         # And of course spawn all of those players' avatars in our client as
-        # well. Note that, at this point, we are not listed in the factory's
-        # list of protocols, so we won't accidentally send one of these to
-        # ourselves.
+        # well.
         for protocol in self.factory.protocols.itervalues():
+            # Skip over ourselves; otherwise, the client tweaks out and
+            # usually either dies or locks up.
+            if protocol is self:
+                continue
+
             packet = protocol.player.save_to_packet()
             packet += protocol.player.save_equipment_to_packet()
             self.transport.write(packet)
             self.write_packet("create", eid=protocol.player.eid)
-
-        # *Now* we are in our factory's list of protocols. Be aware.
-        self.factory.protocols[self.username] = self
 
         # Send spawn and inventory.
         spawn = self.factory.world.level.spawn
