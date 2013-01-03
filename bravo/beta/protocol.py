@@ -1334,10 +1334,6 @@ class BravoProtocol(BetaServerProtocol):
             self.state = STATE_LOCATED
             # Ensure that we're above-ground.
             self.ascend(0)
-            # XXX for now, drop down from way up high down onto the ground.
-            # ascend() is busted, I think, and there's no good way to get up
-            # this high.
-            self.location.pos = self.location.pos._replace(y=250 * 32)
         d.addCallback(lambda none: self.update_location())
         d.addCallback(lambda none: self.position_changed())
 
