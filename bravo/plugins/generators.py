@@ -127,7 +127,7 @@ class WaterTableGenerator(object):
         Generate a flat water table halfway up the map.
         """
 
-        for x, z, y in product(xrange(16), xrange(16), xrange(64)):
+        for x, z, y in product(xrange(16), xrange(16), xrange(62)):
             if chunk.get_block((x, y, z)) == blocks["air"].slot:
                 chunk.set_block((x, y, z), blocks["spring"].slot)
 
