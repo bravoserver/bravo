@@ -96,8 +96,6 @@ host
 url
     The path to the folder to use for loading and saving world data. Must be a
     valid URL.
-authenticator
-    Which authentication plugin to use.
 serializer
     Which serializer to use for saving worlds. Currently, the "anvil"
     serializers is provided for compatibility with modern MC clients and

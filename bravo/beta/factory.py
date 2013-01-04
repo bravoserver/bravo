@@ -11,10 +11,10 @@ from zope.interface import implements
 from bravo.beta.packets import make_packet
 from bravo.beta.protocol import BravoProtocol, KickedProtocol
 from bravo.entity import entities
-from bravo.ibravo import (ISortedPlugin, IAutomaton, IAuthenticator,
-        ITerrainGenerator, IUseHook, ISignHook, IPreDigHook, IDigHook,
-        IPreBuildHook, IPostBuildHook, IWindowOpenHook, IWindowClickHook,
-        IWindowCloseHook)
+from bravo.ibravo import (ISortedPlugin, IAutomaton, ITerrainGenerator,
+                          IUseHook, ISignHook, IPreDigHook, IDigHook,
+                          IPreBuildHook, IPostBuildHook, IWindowOpenHook,
+                          IWindowClickHook, IWindowCloseHook)
 from bravo.location import Location
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
 from bravo.policy.packs import packs as available_packs
@@ -44,9 +44,6 @@ class BravoFactory(Factory):
     time = 0
     day = 0
     eid = 1
-
-    handshake_hook = None
-    login_hook = None
 
     interfaces = []
 
@@ -84,13 +81,6 @@ class BravoFactory(Factory):
 
     def startFactory(self):
         log.msg("Initializing factory for world '%s'..." % self.name)
-
-        authenticator = self.config.get(self.config_name, "authenticator")
-        selected = retrieve_named_plugins(IAuthenticator, [authenticator])[0]
-
-        log.msg("Using authenticator %s" % selected.name)
-        self.handshake_hook = selected.handshake
-        self.login_hook = selected.login
 
         # Get our plugins set up.
         self.register_plugins()

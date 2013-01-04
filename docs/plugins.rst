@@ -14,23 +14,7 @@ Beta
 ----
 
 The Beta plugin pack, called "beta", provides all of Bravo's Beta
-compatibility in one single line of configuration. This pack does not select
-an authenticator, so an authenticator is still required.
-
-Authenticators
-==============
-
-Offline
--------
-
-Offline authentication does no checking against the official minecraft.net
-server, so it can be used when minecraft.net is down or the network is
-unreachable for any reason. On the downside, it provides no actual security.
-
-Online
-------
-
-Online authentication is the traditional authentication with minecraft.net.
+compatibility in one single line of configuration.
 
 .. _terrain_generator_plugins:
 

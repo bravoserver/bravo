@@ -19,8 +19,6 @@ functionality.
 Plugins
 =======
 
-.. autoclass:: bravo.ibravo.IAuthenticator
-
 .. autoclass:: bravo.ibravo.IAutomaton
 
 .. autoclass:: bravo.ibravo.IChatCommand

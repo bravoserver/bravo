@@ -55,14 +55,6 @@ seasons = winter, spring
 # ~ anvil: The Anvil NBT/MCR format
 serializer = anvil
 
-# Authenticator. There are only two options:
-# ~ offline: anybody can log in, no authentication is done
-# ~ online: only people logged into minecraft.net can log in
-# Bravo also supports the password authentication scheme; see the docs for
-# details.
-#authenticator = online
-authenticator = offline
-
 # This option enables a permanent cache of geometry, which persists regardless
 # of the number of clients connected to this world. It greatly speeds up login
 # at the cost of memory usage. This option will also cause the world to

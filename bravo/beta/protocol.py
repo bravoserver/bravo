@@ -35,8 +35,7 @@ from bravo.utilities.maths import circling, clamp, sorted_by_distance
 from bravo.utilities.temporal import timestamp_from_clock
 
 # States of the protocol.
-(STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED, STATE_LOCATED
-) = range(4)
+(STATE_UNAUTHENTICATED, STATE_AUTHENTICATED, STATE_LOCATED) = range(3)
 
 SUPPORTED_PROTOCOL = 51
 
@@ -74,7 +73,6 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         self.handlers = {
             0: self.ping,
-            1: self.login,
             2: self.handshake,
             3: self.chat,
             7: self.use,
@@ -120,29 +118,53 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         self.latency = now - then
 
-    def login(self, container):
+    def handshake(self, container):
         """
-        Hook for login packets.
+        Hook for handshake packets.
 
         Override this to customize how logins are handled. By default, this
         method will only confirm that the negotiated wire protocol is the
-        correct version, and then it will run the ``authenticated()``
-        callback.
+        correct version, copy data out of the packet and onto the protocol,
+        and then run the ``authenticated`` callback.
+
+        This method will call the ``pre_handshake`` method hook prior to
+        logging in the client.
         """
+
+        self.username = container.username
 
         if container.protocol < SUPPORTED_PROTOCOL:
             # Kick old clients.
             self.error("This server doesn't support your ancient client.")
+            return
         elif container.protocol > SUPPORTED_PROTOCOL:
             # Kick new clients.
             self.error("This server doesn't support your newfangled client.")
-        else:
-            reactor.callLater(0, self.authenticated)
+            return
 
-    def handshake(self, container):
+        log.msg("Handshaking with client, protocol version %d" %
+                container.protocol)
+
+        if not self.pre_handshake():
+            log.msg("Pre-handshake hook failed; kicking client")
+            self.error("You failed the pre-handshake hook.")
+            return
+
+        players = min(self.factory.limitConnections, 20)
+
+        self.write_packet("login", eid=self.eid, leveltype="default",
+                          mode=self.factory.mode,
+                          dimension=self.factory.world.dimension,
+                          difficulty="peaceful", unused=0, maxplayers=players)
+
+        self.authenticated()
+
+    def pre_handshake(self):
         """
-        Hook for handshake packets.
+        Whether this client should be logged in.
         """
+
+        return True
 
     def chat(self, container):
         """
@@ -360,13 +382,6 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
     # State-change callbacks
     # Feel free to override these, but call them at some point.
-
-    def challenged(self):
-        """
-        Called when the client has started authentication with the server.
-        """
-
-        self.state = STATE_CHALLENGED
 
     def authenticated(self):
         """
@@ -691,6 +706,23 @@ class BravoProtocol(BetaServerProtocol):
 
         log.msg("Registered client plugin hooks!")
 
+    def pre_handshake(self):
+        """
+        Set up username and get going.
+        """
+
+        if self.username in self.factory.protocols:
+            # This username's already taken; find a new one.
+            for name in username_alternatives(username):
+                if name not in self.factory.protocols:
+                    container.username = name
+                    break
+            else:
+                self.error("Your username is already taken.")
+                return False
+
+        return True
+
     @inlineCallbacks
     def authenticated(self):
         BetaServerProtocol.authenticated(self)
@@ -798,51 +830,6 @@ class BravoProtocol(BetaServerProtocol):
                 if self.location.distance(entity.location) <= (radius * 32)]
             for i in yieldables:
                 yield i
-
-    def login(self, container):
-        """
-        Handle a login packet.
-
-        This method wraps a login hook which is permitted to do just about
-        anything, as long as it's asynchronous. The hook returns a
-        ``Deferred``, which is chained to authenticate the user or disconnect
-        them depending on the results of the authentication.
-        """
-
-        # Check the username. If it's "Player", then the client is almost
-        # certainly cracked, so we'll need to give them a better username.
-        # Thankfully, there's a utility function for finding better usernames.
-        username = container.username
-
-        if username in self.factory.protocols:
-            for name in username_alternatives(username):
-                if name not in self.factory.protocols:
-                    container.username = name
-                    break
-            else:
-                self.error("Your username is already taken.")
-                return
-
-
-        if container.protocol < SUPPORTED_PROTOCOL:
-            # Kick old clients.
-            self.error("This server doesn't support your ancient client.")
-            return
-        elif container.protocol > SUPPORTED_PROTOCOL:
-            # Kick new clients.
-            self.error("This server doesn't support your newfangled client.")
-            return
-
-        log.msg("Authenticating client, protocol version %d" %
-            container.protocol)
-
-        d = self.factory.login_hook(self, container)
-        d.addErrback(lambda *args, **kwargs: self.transport.loseConnection())
-        d.addCallback(lambda *args, **kwargs: self.authenticated())
-
-    def handshake(self, container):
-        if not self.factory.handshake_hook(self, container):
-            self.transport.loseConnection()
 
     def chat(self, container):
         if container.message.startswith("/"):

@@ -168,7 +168,6 @@ class TestBravoFactoryStarted(unittest.TestCase):
 
         self.bcp.add_section("world unittest")
         d = {
-            "authenticator" : "offline",
             "automatons"    : "",
             "generators"    : "",
             "mode"          : "creative",
@@ -261,7 +260,6 @@ class TestBravoFactoryPacks(unittest.TestCase):
 
         self.bcp.add_section("world unittest")
         d = {
-            "authenticator" : "offline",
             "mode"          : "creative",
             "packs"         : "beta",
             "port"          : "0",
