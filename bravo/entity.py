@@ -85,8 +85,10 @@ class Player(Entity):
         else:
             item = item[0]
 
-        return make_packet("player", eid=self.eid, username=self.username,
-                x=x, y=y, z=z, yaw=yaw, pitch=pitch, item=item, metadata={})
+        packet = make_packet("player", eid=self.eid, username=self.username,
+                             x=x, y=y, z=z, yaw=yaw, pitch=pitch, item=item,
+                             metadata={})
+        return packet
 
     def save_equipment_to_packet(self):
         """

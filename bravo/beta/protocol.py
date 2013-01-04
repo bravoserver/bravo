@@ -744,8 +744,8 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast(packet)
 
         # Craft our avatar and send it to already-connected other players.
-        packet = self.player.save_to_packet()
-        packet += make_packet("create", eid=self.player.eid)
+        packet = make_packet("create", eid=self.player.eid)
+        packet += self.player.save_to_packet()
         self.factory.broadcast_for_others(packet, self)
 
         # And of course spawn all of those players' avatars in our client as
@@ -756,10 +756,10 @@ class BravoProtocol(BetaServerProtocol):
             if protocol is self:
                 continue
 
+            self.write_packet("create", eid=protocol.player.eid)
             packet = protocol.player.save_to_packet()
             packet += protocol.player.save_equipment_to_packet()
             self.transport.write(packet)
-            self.write_packet("create", eid=protocol.player.eid)
 
         # Send spawn and inventory.
         spawn = self.factory.world.level.spawn
