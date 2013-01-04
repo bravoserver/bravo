@@ -174,8 +174,8 @@ class Location(object):
         # the top of the world; this tend to strand entities up in the sky
         # where they cannot get down. We also forbid entities from falling
         # past bedrock.
-        if not (32 * 1) <= y <= (32 * 254):
-            y = clamp(y, 32 * 1, 32 * 254)
+        if not (32 * 1) <= y:
+            y = max(y, 32 * 1)
             self.pos = self.pos._replace(y=y)
             clamped = True
 
