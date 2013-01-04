@@ -835,7 +835,7 @@ class BravoProtocol(BetaServerProtocol):
         if container.message.startswith("/"):
             pp = {"factory": self.factory}
 
-            commands = retrieve_plugins(IChatCommand, parameters=pp)
+            commands = retrieve_plugins(IChatCommand, factory=self.factory)
             # Register aliases.
             for plugin in commands.values():
                 for alias in plugin.aliases:

@@ -24,7 +24,7 @@ class Help(object):
     implements(IChatCommand, IConsoleCommand)
 
     def __init__(self, factory):
-        self.pp = {"factory": factory}
+        self.factory = factory
 
     def general_help(self, plugins):
         """
@@ -65,22 +65,18 @@ class Help(object):
         return help_text
 
     def chat_command(self, username, parameters):
+        plugins = retrieve_plugins(IChatCommand, factory=self.factory)
         if parameters:
-            return self.specific_help(retrieve_plugins(IChatCommand,
-                parameters=self.pp),
-                "".join(parameters))
+            return self.specific_help(plugins, "".join(parameters))
         else:
-            return self.general_help(retrieve_plugins(IChatCommand,
-                parameters=self.pp))
+            return self.general_help(plugins)
 
     def console_command(self, parameters):
+        plugins = retrieve_plugins(IConsoleCommand, factory=self.factory)
         if parameters:
-            return self.specific_help(retrieve_plugins(IConsoleCommand,
-                parameters=self.pp),
-                "".join(parameters))
+            return self.specific_help(plugins, "".join(parameters))
         else:
-            return self.general_help(retrieve_plugins(IConsoleCommand,
-                parameters=self.pp))
+            return self.general_help(plugins)
 
     name = "help"
     aliases = tuple()
