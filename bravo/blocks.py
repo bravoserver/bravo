@@ -463,18 +463,21 @@ sapling_names = [
     "normal-sapling",
     "pine-sapling",
     "birch-sapling",
+    "jungle-sapling",
 ]
 
 log_names = [
     "normal-log",
     "pine-log",
     "birch-log",
+    "jungle-log",
 ]
 
-leave_names = [
-    "normal-leave",
-    "pine-leave",
-    "birch-leave",
+leaf_names = [
+    "normal-leaf",
+    "pine-leaf",
+    "birch-leaf",
+    "jungle-leaf",
 ]
 
 coal_names = [
@@ -689,7 +692,7 @@ for base_item, names in _secondary_items.iteritems():
         items[name] = item
 
 _secondary_blocks = {
-    blocks["leaves"]: leave_names,
+    blocks["leaves"]: leaf_names,
     blocks["log"]: log_names,
     blocks["sapling"]: sapling_names,
     blocks["step"]: step_names,

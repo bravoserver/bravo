@@ -462,7 +462,8 @@ class SaplingGenerator(object):
             morton = morton2(chunk.x * 16 + x, chunk.z * 16 + z)
 
             if not all(morton % factor for factor in factors):
-                species = morton % 3
+                # Magic number is how many tree types are available
+                species = morton % 4 
                 # Plant a sapling.
                 y = chunk.height_at(x, z)
                 if chunk.get_block((x, y, z)) in self.ground:
