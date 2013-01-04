@@ -104,12 +104,9 @@ class Player(Entity):
                 continue
 
             primary, secondary, count = item
-            packet += make_packet("entity-equipment",
-                eid=self.eid,
-                slot=slot,
-                primary=primary,
-                secondary=secondary
-            )
+            packet += make_packet("entity-equipment", eid=self.eid, slot=slot,
+                                  primary=primary, secondary=secondary,
+                                  count=1)
         return packet
 
 class Painting(Entity):

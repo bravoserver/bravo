@@ -29,6 +29,7 @@ Bugfixes
 * Fixed client being kicked when shooting arrows (#378)
 * Removed magic numbers in painting directions (#379)
 * Allowed placement of certain creative blocks (#392)
+* Fixed incorrect packet formatting in Player entities (#396)
 * Colorized nicks in server join messages (#399)
 * Re-enabled track orientation (#404)
 
