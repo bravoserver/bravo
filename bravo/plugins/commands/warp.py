@@ -49,7 +49,7 @@ class Home(object):
             x, y, z, yaw, pitch = homes[username]
         else:
             yield "Teleporting %s to spawn" % username
-            x, y, z = self.factory.world.spawn
+            x, y, z = self.factory.world.level.spawn
             yaw, pitch = 0, 0
 
         l.pos = Position.from_player(x, y, z)
