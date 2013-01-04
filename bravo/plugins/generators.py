@@ -100,16 +100,14 @@ class ComplexGenerator(object):
 
         factor = 1 / 256
 
-        for x, z, y in product(xrange(16), xrange(16), xrange(128)):
+        for x, z, y in product(xrange(16), xrange(16), xrange(256)):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
             sample = octaves3(magx, magz, y * factor, 6)
 
-            if sample > 0.1:
+            if sample > 0.5:
                 chunk.set_block((x, y, z), blocks["stone"].slot)
-            elif sample > 0:
-                chunk.set_block((x, y, z), blocks["dirt"].slot)
 
     name = "complex"
 
