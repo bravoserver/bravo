@@ -7,13 +7,13 @@ class TestComplete(TestCase):
     def test_complete_single(self):
         i = u"comp"
         o = [u"completion"]
-        e = u"completion"
+        e = u"completion "
         self.assertEqual(complete(i, o), e)
 
     def test_complete_multiple(self):
         i = u"comp"
         o = [u"completion", u"computer"]
-        e = u"completion\u0000computer"
+        e = u"completion \u0000computer "
         self.assertEqual(complete(i, o), e)
 
     def test_complete_none(self):
@@ -26,4 +26,10 @@ class TestComplete(TestCase):
         i = u"comp"
         o = [u"invalid"]
         e = u""
+        self.assertEqual(complete(i, o), e)
+
+    def test_complete_single_tail(self):
+        i = u"tab comp"
+        o = [u"completion"]
+        e = u"completion "
         self.assertEqual(complete(i, o), e)
