@@ -41,7 +41,6 @@ Extended Features
    * Authentication
 
      * Offline
-     * Online
 
    * Commands
 
@@ -90,21 +89,31 @@ python-twisted-words or twisted-words in package managers.
 For web service support, Twisted Web must be installed; it is generally called
 python-twisted-web or twisted-web.
 
+Windows
+-------
+
+No installation required, a standalone executable is available at:
+
+::
+
+ http://bravoserver.org/downloads.html
+
+
 Debian & Ubuntu
 ---------------
 
-Debian and its derivatives, like Ubuntu, have Numpy and Twisted in their
+Debian and its derivatives, like Ubuntu, have Twisted in their
 package managers.
 
 ::
 
- $ sudo aptitude install python-numpy python-twisted
+ $ sudo aptitude install python-twisted
 
 If you are tight on space, you can install only part of Twisted.
 
 ::
 
- $ sudo aptitude install python-numpy python-twisted-core python-twisted-bin python-twisted-conch
+ $ sudo aptitude install python-twisted-core python-twisted-bin python-twisted-conch
 
 A Note about Ubuntu
 ^^^^^^^^^^^^^^^^^^^
@@ -117,21 +126,21 @@ of all Twisted packages.
 Fedora
 ------
 
-Numpy and Twisted can be installed from the standard Fedora repository.
+Twisted can be installed from the standard Fedora repository.
 
 ::
 
- $ sudo yum install numpy python-twisted python-twisted-conch
+ $ sudo yum install python-twisted python-twisted-conch
 
 Gentoo
 ------
 
-Gentoo doesn't (yet) carry a Construct new enough for Bravo, but it does have
-Numpy and Twisted.
+Gentoo does carry a Construct new enough for Bravo, but it does have to be
+unmasked.
 
 ::
 
- # emerge numpy twisted twisted-conch
+ # emerge twisted twisted-conch
 
 LFS/Virtualenv/Standalone
 -------------------------
@@ -163,13 +172,7 @@ bravo.ini.example to bravo.ini, and put it in one of these locations:
  * ~/.bravo/
  * Your working directory
 
-And then run the TAC to start Bravo!
-
-::
-
- $ twistd -ny bravo.tac
-
-Alternatively, a Twisted plugin is provided as well:
+And then run the Twisted plugin:
 
 ::
 
