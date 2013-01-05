@@ -95,3 +95,12 @@ def username_alternatives(n):
     # And that's it for now. If you really have this many players with the
     # same name, maybe you should announce "Stop logging on as
     # 'Sephiroth'" and see if they listen. >:3
+
+def complete(needle, possibilities):
+    """
+    Perform completion on a string using a list of possible strings.
+
+    Returns a single string containing all possibilities.
+    """
+
+    return u"\u0000".join(s for s in possibilities if s.startswith(needle))
