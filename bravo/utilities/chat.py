@@ -96,11 +96,16 @@ def username_alternatives(n):
     # same name, maybe you should announce "Stop logging on as
     # 'Sephiroth'" and see if they listen. >:3
 
-def complete(needle, possibilities):
+
+def complete(sentence, possibilities):
     """
     Perform completion on a string using a list of possible strings.
 
     Returns a single string containing all possibilities.
     """
 
-    return u"\u0000".join(s for s in possibilities if s.startswith(needle))
+    words = sentence.split()
+    tail = words[-1].lower()
+    tails = [s + u" " for s in possibilities if s.lower().startswith(tail)]
+
+    return u"\u0000".join(tails)
