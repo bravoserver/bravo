@@ -30,7 +30,7 @@ from bravo.beta.packets import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
-from bravo.utilities.chat import username_alternatives
+from bravo.utilities.chat import complete, username_alternatives
 from bravo.utilities.maths import circling, clamp, sorted_by_distance
 from bravo.utilities.temporal import timestamp_from_clock
 
@@ -92,6 +92,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             106: self.wacknowledge,
             107: self.wcreative,
             130: self.sign,
+            203: self.complete,
             204: self.settings_packet,
             254: self.poll,
             255: self.quit,
@@ -305,6 +306,11 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     def sign(self, container):
         """
         Hook for sign packets.
+        """
+
+    def complete(self, container):
+        """
+        Hook for tab-completion packets.
         """
 
     def settings_packet(self, container):
@@ -1219,6 +1225,18 @@ class BravoProtocol(BetaServerProtocol):
         for hook in self.sign_hooks:
             hook.sign_hook(self.factory, chunk, container.x, container.y,
                 container.z, [s.text1, s.text2, s.text3, s.text4], new)
+
+    def complete(self, container):
+        """
+        Attempt to tab-complete user names.
+        """
+
+        needle = container.autocomplete
+        usernames = self.factory.protocols.keys()
+
+        results = complete(needle, usernames)
+
+        self.write_packet("tab", autocomplete=results)
 
     def settings_packet(self, container):
         """
