@@ -524,6 +524,13 @@ unbreakables.add(7)  # Bedrock
 unbreakables.add(10) # Lava
 unbreakables.add(11) # Lava spring
 
+# When one of these is targeted and a block is placed, these are replaced
+softblocks = set()
+softblocks.add(30)  # Cobweb
+softblocks.add(31)  # Tall grass
+softblocks.add(70)  # Snow
+softblocks.add(106) # Vines
+
 dims = {}
 
 dims[0]  = 0 # Air
