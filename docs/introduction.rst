@@ -86,9 +86,9 @@ Q & A
  think you have found a bug, you can directly report it on the Github issue
  tracker as well.
 
- Please, please, please read the installation instructions first, as well as
- the comments in bravo.ini.example. I did not type them out so that they could
- be ignored. :3
+ Please, please, please read the installation instructions in the README first,
+ as well as the comments in bravo.ini.example. I did not type them out so that
+ they could be ignored. :3
 
 Credits
 =======
