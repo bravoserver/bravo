@@ -87,7 +87,7 @@ class Tree(object):
             self.height = randint(4, 7)
         else:
             self.height = height
-
+        self.species = 0    # default to oak
         self.pos = pos
 
     def prepare(self, world):
@@ -110,6 +110,7 @@ class StickTree(Tree):
         x, y, z = self.pos
         for i in xrange(self.height):
             world.sync_set_block((x, y, z), blocks["log"].slot)
+            world.sync_set_metadata((x, y, z), self.species)
             y += 1
 
 class NormalTree(StickTree):
@@ -138,6 +139,7 @@ class NormalTree(StickTree):
                 z = self.pos[2] + zoff
 
                 world.sync_set_block((x, y, z), blocks["leaves"].slot)
+                world.sync_set_metadata((x, y, z), self.species)
 
 class BambooTree(StickTree):
     """
@@ -216,6 +218,7 @@ class ProceduralTree(Tree):
             coord[secidx1] = sec1
             coord[secidx2] = sec2
             world.sync_set_block(coord, matidx)
+            world.sync_set_metadata(coord, self.species)
 
     def shapefunc(self, y):
         """
@@ -311,6 +314,7 @@ class ProceduralTree(Tree):
             self.foliage_cluster(coord,world)
         for x, y, z in foliage_coords:
             world.sync_set_block((x, y, z), blocks["log"].slot)
+            world.sync_set_metadata((x, y, z), self.species)
             if LIGHTTREE == 1:
                 world.sync_set_block((x, y + 1, z), blocks["lightstone"].slot)
             elif LIGHTTREE in [2,4]:
@@ -441,6 +445,7 @@ class RoundTree(ProceduralTree):
     foliage_shape = [2, 3, 3, 2.5, 1.6]
 
     def prepare(self, world):
+        self.species = 2 # birch wood
         ProceduralTree.prepare(self, world)
         self.trunkradius *= 0.8
         self.trunkheight *= 0.7
@@ -472,6 +477,7 @@ class ConeTree(ProceduralTree):
     foliage_shape = [3, 2.6, 2, 1]
 
     def prepare(self, world):
+        self.species = 1 # pine wood
         ProceduralTree.prepare(self, world)
         self.trunkradius *= 0.5
 
@@ -493,6 +499,7 @@ class RainforestTree(ProceduralTree):
     foliage_shape = [3.4, 2.6]
 
     def prepare(self, world):
+        self.species = 3 # jungle wood
         # TODO: play with these numbers until jungles look right
         self.height = randint(10, 20)
         self.trunkradius = randint(5, 15)
