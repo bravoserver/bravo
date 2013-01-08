@@ -412,10 +412,10 @@ class ProceduralTree(Tree):
         if num_of_clusters_per_y < 1:
             num_of_clusters_per_y = 1
         # make sure we don't spend too much time off the top of the map
-        if yend > 127:
-            yend = 127
-        if ystart > 127:
-            ystart = 127
+        if yend > 255:
+            yend = 255
+        if ystart > 255:
+            ystart = 255
         for y in xrange(yend, ystart, -1):
             for i in xrange(num_of_clusters_per_y):
                 shapefac = self.shapefunc(y - ystart)
@@ -489,11 +489,13 @@ class RainforestTree(ProceduralTree):
     """
     A big rainforest tree.
     """
-
     branchslope = 1
     foliage_shape = [3.4, 2.6]
 
     def prepare(self, world):
+        # TODO: play with these numbers until jungles look right
+        self.height = randint(10, 20)
+        self.trunkradius = randint(5, 15)
         ProceduralTree.prepare(self, world)
         self.trunkradius /= PHI + 1
         self.trunkheight *= .9
@@ -501,10 +503,9 @@ class RainforestTree(ProceduralTree):
     def shapefunc(self, y):
         # Bottom 4/5 of the tree is probably branch-free.
         if y < self.height * 0.8:
-            if self.edgeheight < self.height:
-                twigs = ProceduralTree.shapefunc(self,y)
-                if twigs is not None and random() < 0.07:
-                    return twigs
+            twigs = ProceduralTree.shapefunc(self,y)
+            if twigs is not None and random() < 0.07:
+                return twigs
             return None
         else:
             width = self.height * 1 / (IPHI + 1)

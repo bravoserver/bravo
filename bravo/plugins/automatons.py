@@ -10,7 +10,7 @@ from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
-from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
+from bravo.terrain.trees import ConeTree, NormalTree, RoundTree, RainforestTree
 from bravo.utilities.automatic import column_scan
 from bravo.world import ChunkNotLoaded
 
@@ -29,7 +29,7 @@ class Trees(object):
         NormalTree,
         ConeTree,
         RoundTree,
-        NormalTree,
+        RainforestTree,
     ]
 
     def __init__(self, factory):
