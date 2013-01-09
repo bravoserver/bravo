@@ -181,5 +181,5 @@ class Door(object):
 
     name = "door"
 
-    before = tuple("build_snow",)
+    before = tuple()
     after = tuple()

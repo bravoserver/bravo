@@ -48,7 +48,6 @@ beta = {
     "post_build_hooks": ["alpha_sand_gravel"],
     "pre_build_hooks": [
         "bed",
-        "build_snow",
         "chest",
         "door",
         "fertilizer",

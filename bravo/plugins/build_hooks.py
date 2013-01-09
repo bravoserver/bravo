@@ -67,38 +67,5 @@ class Sign(object):
 
     name = "sign"
 
-    before = ("build_snow",)
-    after = tuple()
-
-class BuildSnow(object):
-    """
-    Makes building on snow behave correctly.
-
-    You almost certainly want to enable this plugin.
-    """
-
-    implements(IPreBuildHook)
-
-    def __init__(self, factory):
-        self.factory = factory
-
-    def pre_build_hook(self, player, builddata):
-        d = self.factory.world.get_block((builddata.x, builddata.y,
-            builddata.z))
-
-        @d.addCallback
-        def adjust_block(block):
-            block = blocks[block]
-            if block.vanishes:
-                # Building any block on snow causes snow to get replaced.
-                bd = builddata._replace(face="+y", y=builddata.y - 1)
-            else:
-                bd = builddata
-            return True, bd, False
-
-        return d
-
-    name = "build_snow"
-
-    before = tuple()
+    before = ()
     after = tuple()

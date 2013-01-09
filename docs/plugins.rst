@@ -161,8 +161,6 @@ enabled.
  * **bravo_snow**: Make snow fall as if affected by gravity.
  * **build**: Enable placement of blocks from inventory onto the terrain.
    (Beta)
- * **build_snow**: Adjust things built on top of snow to replace the snow.
-   (Beta)
  * **redstone**: Enable physics for placed redstone. (Beta)
  * **tile**: Register tiles. Required for signs, furnaces, chests, etc. (Beta)
  * **tracks**: Align minecart tracks. (Beta)

@@ -84,5 +84,5 @@ class Bed(object):
 
     name = "bed"
 
-    before = ("build_snow",) # plugins that come before this plugin
+    before = () # plugins that come before this plugin
     after = tuple()

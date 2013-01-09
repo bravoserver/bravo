@@ -340,7 +340,7 @@ class Furnace(object):
 
     name = "furnace"
 
-    before = ("windows", "build_snow") # plugins that comes before this plugin
+    before = ("windows",) # plugins that comes before this plugin
     after = tuple()
 
 class Chest(object):
@@ -502,5 +502,5 @@ class Chest(object):
 
     name = "chest"
 
-    before = ("build_snow",)
+    before = ()
     after = tuple()
