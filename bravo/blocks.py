@@ -29,10 +29,11 @@ class Block(object):
         "ratio",
         "replace",
         "slot",
+        "vanishes",
     )
 
     def __init__(self, slot, name, secondary=0, drop=None, replace=0, ratio=1,
-        quantity=1, dim=16, breakable=True, orientation=None):
+        quantity=1, dim=16, breakable=True, orientation=None, vanishes=False):
         """
         :param int slot: The index of this block. Must be globally unique.
         :param str name: A common name for this block.
@@ -56,6 +57,8 @@ class Block(object):
         :param tuple orientation: The orientation data for a block. See
             :meth:`orientable` for an explanation. The data should be in standard
             face order.
+        :param bool vanishes: Whether this block vanishes, or is replaced by,
+            another block when built upon.
         """
 
         self.slot = slot
@@ -73,6 +76,7 @@ class Block(object):
         self.quantity = quantity
         self.dim = dim
         self.breakable = breakable
+        self.vanishes = vanishes
 
         if orientation:
             self._o_dict = dict(zip(faces, orientation))
@@ -653,6 +657,8 @@ _add_block(Block(75, "redstone-torch-off", orientation=(None, 5, 4, 3, 2, 1), di
 _add_block(Block(76, "redstone-torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Stone buttons are orientable and don't dim.
 _add_block(Block(77, "stone-button", orientation=(None, None, 1, 2, 3, 4), dim=0))
+# Snow vanishes upon build.
+_add_block(Block(78, "snow", vanishes=True))
 # Ice drops nothing, is replaced by springs, and dims by 3.
 _add_block(Block(79, "ice", drop=(0, 0), replace=9, dim=3))
 # Clay drops 4 clay balls.
@@ -693,6 +699,7 @@ for i, name in enumerate(block_names):
 
     b = Block(i, name, **kwargs)
     _add_block(b)
+
 
 for i, name in enumerate(item_names):
     kwargs = {}

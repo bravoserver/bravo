@@ -88,7 +88,8 @@ class BuildSnow(object):
 
         @d.addCallback
         def adjust_block(block):
-            if block == blocks["snow"].slot:
+            block = blocks[block]
+            if block.vanishes:
                 # Building any block on snow causes snow to get replaced.
                 bd = builddata._replace(face="+y", y=builddata.y - 1)
             else:
