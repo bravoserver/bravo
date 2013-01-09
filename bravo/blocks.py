@@ -285,6 +285,24 @@ block_names = [
     "nether-brick-fence",
     "nether-brick-stairs",
     "nether-wart-block", # 0x73
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "", # 0x80
+    "emerald-ore",
+    "",
+    "",
+    "",
+    "emerald", # 0x85
 ]
 
 item_names = [
@@ -411,6 +429,16 @@ item_names = [
     "fermented-spider-eye",
     "blaze-powder",
     "magma-cream", # 0x17a
+    "",
+    "",
+    "",
+    "",
+    "",
+    "", # 0x180
+    "",
+    "",
+    "",
+    "emerald", #0x184
 ]
 
 special_item_names = [
