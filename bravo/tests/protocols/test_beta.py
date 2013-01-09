@@ -43,30 +43,6 @@ class TestBetaServerProtocol(TestCase):
     def test_trivial(self):
         pass
 
-    def test_reject_ancient_and_newfangled_clients(self):
-        """
-        Directly test the login() method for client protocol checking.
-        """
-
-        error_called = [False]
-        def error(reason):
-            error_called[0] = True
-        self.patch(self.p, "error", error)
-
-        container = Container()
-        container.protocol = 1
-        self.p.login(container)
-
-        self.assertTrue(error_called[0])
-
-        error_called[0] = False
-
-        container = Container()
-        container.protocol = 42
-        self.p.login(container)
-
-        self.assertTrue(error_called[0])
-
     def test_health_initial(self):
         """
         The client's health should start at 20.
