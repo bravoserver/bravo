@@ -306,7 +306,7 @@ block_names = [
     "",
     "",
     "",
-    "emerald", # 0x85
+    "emerald-block", # 0x85
 ]
 
 item_names = [

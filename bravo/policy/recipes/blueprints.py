@@ -263,8 +263,8 @@ all_blueprints = (
         blocks["lightstone"], "lightstone"),
     three_by_three(items["lapis-lazuli"], items["lapis-lazuli"],
         blocks["lapis-lazuli-block"], "lapis-lazuli-block"),
-    three_by_three(items["emerald"], items["emerald"], blocks["emerald"],
-                   "emerald-block"),
+    three_by_three(items["emerald"], items["emerald"],
+                   blocks["emerald-block"], "emerald-block"),
     # Some blocks.
     three_by_three(items["string"], items["string"], blocks["wool"], "wool"),
     three_by_one(blocks["stone"], blocks["stone-step"], 3, "stone-step"),
