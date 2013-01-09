@@ -986,9 +986,14 @@ class BravoProtocol(BetaServerProtocol):
 
     @inlineCallbacks
     def build(self, container):
-        if container.x == -1 and container.z == -1 and container.y == 255:
-            # Lala-land build packet. Discard it for now.
-            return
+        """
+        Handle a build packet.
+
+        Several things must happen. First, the packet's contents need to be
+        examined to ensure that the packet is valid. A check is done to see if
+        the packet is opening a windowed object. If not, then a build is
+        run.
+        """
 
         # Is the target being selected?
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
