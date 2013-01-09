@@ -1020,6 +1020,12 @@ class BravoProtocol(BetaServerProtocol):
         if container.face == "noop":
             return
 
+        # If the target block is vanishable, then adjust our aim accordingly.
+        target = blocks[chunk.get_block((smallx, container.y, smallz))]
+        if target.vanishes:
+            container.face = "+y"
+            container.y -= 1
+
         if container.primary in blocks:
             block = blocks[container.primary]
         elif container.primary in items:
