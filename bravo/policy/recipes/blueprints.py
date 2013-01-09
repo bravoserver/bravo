@@ -251,7 +251,8 @@ all_blueprints = (
     two_by_two(blocks["wood"], blocks["workbench"], "workbench"),
     hollow_eight(blocks["cobblestone"], blocks["furnace"], "furnace"),
     hollow_eight(blocks["wood"], blocks["chest"], "chest"),
-    # Some blocks.
+    # A handful of smelted/mined things which can be crafted into solid
+    # blocks.
     three_by_three(items["iron-ingot"], items["iron-ingot"], blocks["iron"],
             "iron-block"),
     three_by_three(items["gold-ingot"], items["gold-ingot"], blocks["gold"],
@@ -262,6 +263,9 @@ all_blueprints = (
         blocks["lightstone"], "lightstone"),
     three_by_three(items["lapis-lazuli"], items["lapis-lazuli"],
         blocks["lapis-lazuli-block"], "lapis-lazuli-block"),
+    three_by_three(items["emerald"], items["emerald"], blocks["emerald"],
+                   "emerald-block"),
+    # Some blocks.
     three_by_three(items["string"], items["string"], blocks["wool"], "wool"),
     three_by_one(blocks["stone"], blocks["stone-step"], 3, "stone-step"),
     three_by_one(blocks["cobblestone"], blocks["cobblestone-step"], 3,
