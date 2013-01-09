@@ -32,6 +32,13 @@ parser.add_option("-i", "--interval",
     metavar="INTERVAL",
     help="Time to wait between connections",
 )
+parser.add_option("-p", "--port",
+    dest="port",
+    type="int",
+    default=25565,
+    metavar="PORT",
+    help="Port to use",
+)
 options, arguments = parser.parse_args()
 if len(arguments) != 1:
     parser.error("Need exactly one argument")
@@ -63,9 +70,12 @@ class TrickleProtocol(Protocol):
         """
 
         length = random.randint(18, 20)
-        self.payload = "\x02\x00%s%s" % (
-            pack(">b", length),
-            "".join(random.choice(string.printable) for i in range(length)))
+        self.payload = "\x02\x33%s%s%s%s" % (
+            pack(">H", length),
+            "".join(random.choice(string.printable) for i in range(length)),
+            pack(">H", length),
+            "".join(random.choice(string.printable) for i in range(length)),
+        )
         self.index = 0
 
     def connectionMade(self):
@@ -109,8 +119,10 @@ class TrickleFactory(Factory):
     pending = 0
 
     def __init__(self):
-        self.endpoint = TCP4ClientEndpoint(reactor, arguments[0], 25565,
+        self.endpoint = TCP4ClientEndpoint(reactor, arguments[0], options.port,
             timeout=2)
+
+        log.msg("Using host %s, port %d" % (arguments[0], options.port))
 
         LoopingCall(self.log_status).start(1)
         LoopingCall(self.spawn_connection).start(options.interval)
