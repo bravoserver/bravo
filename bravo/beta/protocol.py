@@ -1029,10 +1029,6 @@ class BravoProtocol(BetaServerProtocol):
                 container.primary)
             return
 
-        # it's the top of the world, you can't build here
-        if container.y == 127 and container.face == '+y':
-            return
-
         # Run pre-build hooks. These hooks are able to interrupt the build
         # process.
         builddata = BuildData(block, 0x0, container.x, container.y,
