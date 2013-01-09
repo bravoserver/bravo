@@ -50,8 +50,9 @@ from twisted.internet import pollreactor
 pollreactor.install()
 
 from twisted.internet import reactor
-from twisted.internet.error import (ConnectBindError, ConnectionRefusedError,
-    DNSLookupError, TimeoutError)
+from twisted.internet.error import (ConnectBindError, ConnectError,
+                                    ConnectionRefusedError, DNSLookupError,
+                                    TimeoutError)
 from twisted.internet.protocol import Factory, Protocol
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.task import LoopingCall
@@ -137,14 +138,14 @@ class TrickleFactory(Factory):
 
             def eb(failure):
                 self.pending -= 1
-                if failure.check(TimeoutError):
-                    pass
-                elif failure.check(ConnectBindError):
+                if failure.check(ConnectBindError):
                     warn_ulimit()
                 elif failure.check(ConnectionRefusedError):
                     exit_refused()
                 elif failure.check(DNSLookupError):
                     warn_dns()
+                elif failure.check(TimeoutError, ConnectError):
+                    pass
                 else:
                     log.msg(failure)
             d.addErrback(eb)
