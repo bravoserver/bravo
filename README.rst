@@ -38,17 +38,13 @@ Extended Features
 
  * Pluggable architecture
 
-   * Authentication
-
-     * Offline
-
    * Commands
 
      * Inventory control
      * Teleports
      * Time of day
 
-   * Geometry generation
+   * Terrain generation
 
      * Erosion
      * Simplex noise, 2D and 3D
@@ -201,8 +197,7 @@ FAQ
 ===
 
 The FAQ moved to the docs; see docs/faq.rst, or more usefully,
-http://docs.bravoserver.org/introduction.html#q-a or
-http://bravo.readthedocs.org/en/latest/faq.html for processed copies.
+http://bravo.readthedocs.org/en/latest/faq.html for an HTML version.
 
 License
 =======
