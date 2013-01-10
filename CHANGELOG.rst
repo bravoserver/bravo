@@ -1,5 +1,5 @@
-next
-====
+2.0
+===
 
 Compatibility
 -------------
@@ -10,18 +10,32 @@ Compatibility
   * All hooking plugins that expect to have access to a factory must now have
     an ``__init__()`` which takes a ``factory`` keyword argument.
 * Recipes and seasons are no longer pluggable.
-* The Alpha and Beta serializers have been removed in favor of a single Anvil
-  serializer. (Contact the developers if you need Alpha/Beta support!)
-* Online authentication was broken and has been disabled.
+* Breakage related to the year-long hiatus has been largely fixed.
+
+  * The 1.4.x protocol is now supported, without server-side encryption.
+  * The Alpha and Beta serializers have been removed in favor of a single Anvil
+    serializer. (Contact the developers if you need Alpha/Beta support!)
+  * Online authentication was broken and has been disabled.
+  * Ascension and the ``/ascend`` command are unbroken. (#390)
+  * Chat commands are enabled again. (#391)
+  * Building on snow has been moved from pluggable to core functionality.
+    (#410)
 * ``Location``'s API has been cleaned up and made internally consistent.
   (#368, #373)
+* Server configuration must now be specified with ``-c`` on the command line
+  when starting Bravo. (#386)
+* Water level has been lowered a couple blocks, for consistency with Vanilla
+  terrain generation. (#411)
+* Bravo now boasts support for the Win32 operating system platform, with build
+  scripts in-tree. (#412)
 
 Features
 --------
 
 * Seeds can be set for worlds in configuration files (#239)
 * Plugins can be grouped into packs, and there is a pack for Beta (#380)
-* Added command-line option for path to configuration file (#386)
+* Jack-o-lanterns are available in creative (#392)
+* Emerald blocks, ores, and items are available in creative (#394)
 
 Bugfixes
 --------
