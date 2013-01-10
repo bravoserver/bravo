@@ -163,6 +163,8 @@ class World(object):
         seed = random.randint(0, sys.maxint)
         seed = self.config.getintdefault(self.config_name, "seed", seed)
 
+        self.level = self.level._replace(seed=seed)
+
         # Check if we should offload chunk requests to ampoule.
         if self.config.getbooleandefault("bravo", "ampoule", False):
             try:
