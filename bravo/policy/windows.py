@@ -24,6 +24,27 @@ class Chest(object):
     identifier = "chest"
 
 
+class Workbench(object):
+    """
+    The workbench/crafting window.
+    """
+
+    implements(IWindow)
+
+    def open(self):
+        pass
+
+    def close(self):
+        pass
+
+    def action(self, slot, button, transaction, shifted, item):
+        return False
+
+    slots = 2
+    title = ""
+    identifier = "workbench"
+
+
 class Furnace(object):
     """
     The furnace window.

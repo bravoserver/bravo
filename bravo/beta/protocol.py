@@ -1002,7 +1002,8 @@ class BravoProtocol(BetaServerProtocol):
         run.
         """
 
-        # Is the target being selected?
+        # Is the target within our purview? We don't do a very strict
+        # containment check, but we *do* require that the chunk be loaded.
         bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
         try:
             chunk = self.chunks[bigx, bigz]
@@ -1016,6 +1017,17 @@ class BravoProtocol(BetaServerProtocol):
         if target.name == "chest":
             from bravo.policy.windows import Chest
             w = Chest()
+            self.windows[self.wid] = w
+
+            w.open()
+            self.write_packet("window-open", wid=self.wid, type=w.identifier,
+                              title=w.title, slots=w.slots)
+
+            self.wid += 1
+            return
+        elif target.name == "workbench":
+            from bravo.policy.windows import Workbench
+            w = Workbench()
             self.windows[self.wid] = w
 
             w.open()
@@ -1175,7 +1187,6 @@ class BravoProtocol(BetaServerProtocol):
         )
         self.factory.broadcast_for_others(packet, self)
 
-    @inlineCallbacks
     def wclose(self, container):
         wid = container.wid
         if wid == 0:
@@ -1187,12 +1198,6 @@ class BravoProtocol(BetaServerProtocol):
         else:
             self.error("WID %d doesn't exist." % wid)
 
-        return
-        # run all hooks
-        for hook in self.close_hooks:
-            yield maybeDeferred(hook.close_hook, self, container)
-
-    @inlineCallbacks
     def waction(self, container):
         wid = container.wid
         if wid in self.windows:
@@ -1204,15 +1209,6 @@ class BravoProtocol(BetaServerProtocol):
                               acknowledged=result)
         else:
             self.error("WID %d doesn't exist." % wid)
-
-        return
-        # run hooks until handled
-        handled = False
-        for hook in self.click_hooks:
-            res = yield maybeDeferred(hook.click_hook, self, container)
-            handled = handled or res
-        self.write_packet("window-token", wid=container.wid,
-            token=container.token, acknowledged=handled)
 
     def wcreative(self, container):
         """
