@@ -28,7 +28,7 @@ set_seed(options.seed)
 x, y, w, h = (float(i) for i in arguments)
 
 handle = open("noise.pnm", "wb")
-handle.write("P2\n")
+handle.write("P3\n")
 handle.write("%d %d\n" % (WIDTH, HEIGHT))
 handle.write("255\n")
 
@@ -62,7 +62,17 @@ for j in xrange(HEIGHT):
             noise = simplex2(xcoord, ycoord)
 
         rounded = int((noise + 1) * 127.5)
-        handle.write("%d " % rounded)
+        if rounded < 10:
+            handle.write("0 0 0 ")
+        elif rounded < 128:
+            handle.write("0 0 255 ")
+        elif rounded < 192:
+            handle.write("0 255 0 ")
+        elif rounded < 240:
+            handle.write("255 255 0 ")
+        else:
+            handle.write("255 0 255 ")
+        # handle.write("%d " % rounded)
     handle.write("\n")
 
 handle.close()
