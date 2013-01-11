@@ -68,7 +68,9 @@ for j in xrange(HEIGHT):
             noise = simplex2(xcoord, ycoord)
 
         if options.color:
-            if noise < -1:
+            if noise < -0.5678:
+                handle.write("0 0 255 ")
+            elif noise < -0.567:
                 handle.write("255 0 0 ")
             elif noise < 0:
                 handle.write("0 0 255 ")
