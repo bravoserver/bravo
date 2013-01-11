@@ -11,11 +11,13 @@ WIDTH, HEIGHT = 800, 800
 
 parser = optparse.OptionParser()
 parser.add_option("-o", "--octaves", help="Number of octaves to generate",
-    type="int", default=1)
+                  type="int", default=1)
 parser.add_option("-s", "--seed", help="Random seed to use", type="int",
-    default=0)
+                  default=0)
 parser.add_option("-f", "--offset", help="Difference offset", type="str",
-default="")
+                  default="")
+parser.add_option("-c", "--color", help="Toggle false colors",
+                  action="store_true", default=False)
 
 options, arguments = parser.parse_args()
 
@@ -28,7 +30,10 @@ set_seed(options.seed)
 x, y, w, h = (float(i) for i in arguments)
 
 handle = open("noise.pnm", "wb")
-handle.write("P3\n")
+if options.color:
+    handle.write("P3\n")
+else:
+    handle.write("P2\n")
 handle.write("%d %d\n" % (WIDTH, HEIGHT))
 handle.write("255\n")
 
@@ -41,6 +46,7 @@ print "Coords: %f, %f" % (x, y)
 print "Window: %fx%f" % (w, h)
 print "Octaves: %d" % options.octaves
 print "Offsets: %f, %f" % (xoffset, yoffset)
+print "Color:", options.color
 
 for j in xrange(HEIGHT):
     for i in xrange(WIDTH):
@@ -62,17 +68,19 @@ for j in xrange(HEIGHT):
             noise = simplex2(xcoord, ycoord)
 
         rounded = int((noise + 1) * 127.5)
-        if rounded < 10:
-            handle.write("0 0 0 ")
-        elif rounded < 128:
-            handle.write("0 0 255 ")
-        elif rounded < 192:
-            handle.write("0 255 0 ")
-        elif rounded < 240:
-            handle.write("255 255 0 ")
+        if options.color:
+            if rounded < 16:
+                handle.write("255 0 0 ")
+            elif rounded < 128:
+                handle.write("0 0 255 ")
+            elif rounded < 192:
+                handle.write("0 255 0 ")
+            elif rounded < 240:
+                handle.write("255 255 0 ")
+            else:
+                handle.write("255 0 255 ")
         else:
-            handle.write("255 0 255 ")
-        # handle.write("%d " % rounded)
+            handle.write("%d " % rounded)
     handle.write("\n")
 
 handle.close()
