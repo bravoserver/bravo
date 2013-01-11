@@ -374,7 +374,13 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         for header, payload in packets:
             if header in self.handlers:
-                self.handlers[header](payload)
+                d = maybeDeferred(self.handlers[header], payload)
+
+                @d.addErrback
+                def eb(failure):
+                    log.err("Error while handling packet %d" % header)
+                    log.err(failure)
+                    return None
             else:
                 log.err("Didn't handle parseable packet %d!" % header)
                 log.err(payload)
