@@ -37,32 +37,6 @@ class comblist(object):
             return
         raise IndexError
 
-def pad_to_stride(recipe, rstride, cstride):
-    """
-    Pad a recipe out to a given stride.
-
-    :param tuple recipe: a recipe
-    :param int rstride: stride of the recipe
-    :param int cstride: stride of the crafting table
-    """
-
-    def grouper(n, iterable):
-        args = [iter(iterable)] * n
-        for i in zip(*args):
-            yield i
-
-    if rstride > cstride:
-        raise ValueError("Recipe is wider than crafting!")
-
-    pad = (None,) * (cstride - rstride)
-    g = grouper(rstride, recipe)
-    padded = list(next(g))
-    for row in g:
-        padded.extend(pad)
-        padded.extend(row)
-
-    return padded
-
 class SlotsSet(SerializableSlots):
     '''
     Base calss for different slot configurations except player's inventory
