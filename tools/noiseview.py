@@ -67,19 +67,19 @@ for j in xrange(HEIGHT):
         else:
             noise = simplex2(xcoord, ycoord)
 
-        rounded = min(255, max(0, int((noise + 1) * 127.5)))
         if options.color:
-            if rounded < 16:
+            if noise < -1:
                 handle.write("255 0 0 ")
-            elif rounded < 128:
+            elif noise < 0:
                 handle.write("0 0 255 ")
-            elif rounded < 192:
+            elif noise < 0.5:
                 handle.write("0 255 0 ")
-            elif rounded < 240:
+            elif noise < 0.9375:
                 handle.write("255 255 0 ")
             else:
                 handle.write("255 0 255 ")
         else:
+            rounded = min(255, max(0, int((noise + 1) * 127.5)))
             handle.write("%d " % rounded)
     handle.write("\n")
 
