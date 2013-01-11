@@ -66,7 +66,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
     def __init__(self):
         self.chunks = dict()
-        self.windows = []
+        self.windows = {}
         self.wid = 1
 
         self.location = Location()
@@ -1010,6 +1010,21 @@ class BravoProtocol(BetaServerProtocol):
             self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
             return
 
+        target = blocks[chunk.get_block((smallx, container.y, smallz))]
+
+        # If it's a chest, hax.
+        if target.name == "chest":
+            from bravo.policy.windows import Chest
+            w = Chest()
+            self.windows[self.wid] = w
+
+            w.open()
+            self.write_packet("window-open", wid=self.wid, type=w.identifier,
+                              title=w.title, slots=w.slots)
+
+            self.wid += 1
+            return
+
         # Try to open it first
         for hook in self.open_hooks:
             window = yield maybeDeferred(hook.open_hook, self, container,
@@ -1033,7 +1048,6 @@ class BravoProtocol(BetaServerProtocol):
             return
 
         # If the target block is vanishable, then adjust our aim accordingly.
-        target = blocks[chunk.get_block((smallx, container.y, smallz))]
         if target.vanishes:
             container.face = "+y"
             container.y -= 1
@@ -1163,12 +1177,35 @@ class BravoProtocol(BetaServerProtocol):
 
     @inlineCallbacks
     def wclose(self, container):
+        wid = container.wid
+        if wid == 0:
+            # WID 0 is reserved for the client inventory.
+            pass
+        elif wid in self.windows:
+            w = self.windows.pop(wid)
+            w.close()
+        else:
+            self.error("WID %d doesn't exist." % wid)
+
+        return
         # run all hooks
         for hook in self.close_hooks:
             yield maybeDeferred(hook.close_hook, self, container)
 
     @inlineCallbacks
     def waction(self, container):
+        wid = container.wid
+        if wid in self.windows:
+            w = self.windows[wid]
+            result = w.action(container.slot, container.button,
+                              container.token, container.shift,
+                              container.primary)
+            self.write_packet("window-token", wid=wid, token=container.token,
+                              acknowledged=result)
+        else:
+            self.error("WID %d doesn't exist." % wid)
+
+        return
         # run hooks until handled
         handled = False
         for hook in self.click_hooks:
