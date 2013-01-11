@@ -503,3 +503,28 @@ class IWorldResource(IBravoPlugin, IResource):
     """
     Interface for a world specific web resource.
     """
+
+
+class IWindow(Interface):
+    """
+    An openable window.
+    """
+
+    def open():
+        """
+        Open a window.
+
+        Returns the title of the window and number of slots in the window.
+        """
+
+    def close():
+        """
+        Close a window.
+        """
+
+    def action(slot, button, transaction, shifted, item):
+        """
+        Perform an action.
+
+        Returns whether the action was successful.
+        """
