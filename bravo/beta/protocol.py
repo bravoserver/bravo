@@ -521,6 +521,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         message, then closes the connection.
         """
 
+        log.msg("Error: %s" % message)
         self.transport.write(make_error_packet(message))
         self.transport.loseConnection()
 
