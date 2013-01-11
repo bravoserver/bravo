@@ -10,5 +10,5 @@ Windows users can download a minecraft-like single executable for bravo.
 
  * Required vcredist_x86: http://www.microsoft.com/en-us/download/details.aspx?id=29
 
- * Development: http://www.mediafire.com/download.php?cfnp4pbfcten3mj
- * 2.0: http://www.mediafire.com/download.php?ye2g6i8lc9np9zd
+ * git-39103de (Jan 04, 2013): http://www.mediafire.com/download.php?cfnp4pbfcten3mj
+ * 2.0         (Jan 10, 2013): http://www.mediafire.com/download.php?ye2g6i8lc9np9zd
