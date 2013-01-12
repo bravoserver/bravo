@@ -298,8 +298,8 @@ block_names = [
     "",
     "",
     "",
-    "",
-    "",
+    "double-wooden-slab",
+    "single-wooden-slab",
     "",
     "", # 0x80
     "emerald-ore",
