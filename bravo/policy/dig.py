@@ -87,7 +87,7 @@ def is_effective_against(block, slot):
             blocks["cobblestone"].slot,
             blocks["diamond-block"].slot,
             blocks["diamond-ore"].slot,
-            blocks["double-step"].slot,
+            blocks["double-stone-slab"].slot,
             blocks["gold"].slot,
             blocks["gold-ore"].slot,
             blocks["ice"].slot,
@@ -97,7 +97,7 @@ def is_effective_against(block, slot):
             blocks["lapis-lazuli-ore"].slot,
             blocks["mossy-cobblestone"].slot,
             blocks["sandstone"].slot,
-            blocks["step"].slot,
+            blocks["single-stone-slab"].slot,
             blocks["stone"].slot,
         )
 

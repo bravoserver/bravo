@@ -13,7 +13,7 @@ tracks_allowed_on = set([
     blocks["diamond-block"].slot,
     blocks["diamond-ore"].slot,
     blocks["dirt"].slot,
-    blocks["double-step"].slot,
+    blocks["double-stone-slab"].slot,
     blocks["glass"].slot,                # Bravo only -- not Notchy
     blocks["glowing-redstone-ore"].slot,
     blocks["gold"].slot,

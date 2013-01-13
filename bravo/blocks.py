@@ -216,8 +216,8 @@ block_names = [
     "red-mushroom",
     "gold",
     "iron",
-    "double-step",
-    "step",
+    "double-stone-slab",
+    "single-stone-slab",
     "brick",
     "tnt",
     "bookshelf",
@@ -518,10 +518,10 @@ coal_names = [
 ]
 
 step_names = [
-    "stone-step",
-    "sandstone-step",
-    "wooden-step",
-    "cobblestone-step",
+    "single-stone-slab",
+    "single-sandstone-slab",
+    "single-wooden-slab",
+    "single-cobblestone-slab",
 ]
 
 drops = {}
@@ -730,7 +730,7 @@ _secondary_blocks = {
     blocks["leaves"]: leaf_names,
     blocks["log"]: log_names,
     blocks["sapling"]: sapling_names,
-    blocks["step"]: step_names,
+    blocks["single-stone-slab"]: step_names,
     blocks["wool"]: wool_names,
 }
 

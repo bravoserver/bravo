@@ -33,7 +33,7 @@ snow_resistant = set([
     blocks["signpost"].slot,
     blocks["snow"].slot,
     blocks["spring"].slot,
-    blocks["step"].slot,
+    blocks["single-stone-slab"].slot,
     blocks["stone-button"].slot,
     blocks["stone-plate"].slot,
     blocks["stone-stairs"].slot,
