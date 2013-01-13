@@ -10,6 +10,47 @@ from construct import BFloat32, BFloat64
 from construct import BitStruct, BitField
 from construct import StringAdapter, LengthValueAdapter, Sequence
 
+def IPacket(object):
+    """
+    Interface for packets.
+    """
+
+    def parse(buf, offset):
+        """
+        Parse a packet out of the given buffer, starting at the given offset.
+
+        If the parse is successful, returns a tuple of the parsed packet and
+        the next packet offset in the buffer.
+
+        If the parse fails due to insufficient data, returns a tuple of None
+        and the amount of data required before the parse can be retried.
+
+        Exceptions may be raised if the parser finds invalid data.
+        """
+
+def nt(name, fmt, *args):
+    """
+    Make a customized namedtuple.
+    """
+    from struct import Struct
+
+    s = Struct(fmt)
+
+    @classmethod
+    def parse(cls, buf, offset):
+        if len(buf) >= s.size + offset:
+            unpacked = s.unpack_from(buf, offset)
+            return cls(*unpacked), s.size + offset
+        else:
+            return None, s.size - len(buf)
+
+    methods = {
+        "parse": parse,
+    }
+
+    return type(name, (namedtuple(name, *args),), methods)
+
+
 DUMP_ALL_PACKETS = False
 
 # Strings.
