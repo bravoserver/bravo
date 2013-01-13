@@ -28,10 +28,11 @@ def IPacket(object):
         Exceptions may be raised if the parser finds invalid data.
         """
 
-def nt(name, fmt, *args):
+def simple(name, fmt, *args):
     """
-    Make a customized namedtuple.
+    Make a customized namedtuple representing a simple, primitive packet.
     """
+
     from struct import Struct
 
     s = Struct(fmt)
@@ -44,8 +45,12 @@ def nt(name, fmt, *args):
         else:
             return None, s.size - len(buf)
 
+    def build(self):
+        return s.pack(*self)
+
     methods = {
         "parse": parse,
+        "build": build,
     }
 
     return type(name, (namedtuple(name, *args),), methods)

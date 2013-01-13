@@ -1,11 +1,11 @@
 from unittest import TestCase
 
-from bravo.beta.packets import nt
+from bravo.beta.packets import simple
 
 class TestPacketBuilder(TestCase):
 
     def setUp(self):
-        self.cls = nt("Test", ">BH", "unit, test")
+        self.cls = simple("Test", ">BH", "unit, test")
 
     def test_trivial(self):
         pass
@@ -36,3 +36,8 @@ class TestPacketBuilder(TestCase):
         self.assertEqual(result.unit, 42)
         self.assertEqual(result.test, 32)
         self.assertEqual(offset, 4)
+
+    def test_build(self):
+        packet = self.cls(42, 32)
+        result = packet.build()
+        self.assertEqual(result, "\x2a\x00\x20")
