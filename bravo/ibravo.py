@@ -522,9 +522,19 @@ class IWindow(Interface):
         Close a window.
         """
 
-    def action(slot, button, transaction, shifted, item):
+    def alter(slot, old):
         """
-        Perform an action.
+        Notify the window that a slot has been altered.
 
-        Returns whether the action was successful.
+        The old slot data is passed in as `old`.
+        """
+
+    def damaged():
+        """
+        Retrieve the damaged slot numbers.
+        """
+
+    def undamage():
+        """
+        Forget about damage.
         """
