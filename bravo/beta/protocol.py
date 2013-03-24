@@ -37,7 +37,7 @@ from bravo.utilities.temporal import timestamp_from_clock
 # States of the protocol.
 (STATE_UNAUTHENTICATED, STATE_AUTHENTICATED, STATE_LOCATED) = range(3)
 
-SUPPORTED_PROTOCOL = 51
+SUPPORTED_PROTOCOL = 60
 
 class BetaServerProtocol(object, Protocol, TimeoutMixin):
     """
