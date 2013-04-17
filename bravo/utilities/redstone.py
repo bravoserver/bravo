@@ -83,7 +83,6 @@ class Asic(object):
             if circuit.name == "wire":
                 yield circuit
 
-
     def find_wires(self, x, y, z):
         """
         Collate a group of neighboring wires, starting at a certain point.

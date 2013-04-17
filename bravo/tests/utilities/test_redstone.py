@@ -26,7 +26,6 @@ class TestTruthifyBlock(TestCase):
         self.assertEqual(truthify_block(True, blocks["lever"].slot, 0x3),
                          (blocks["lever"].slot, 0xb))
 
-
     def test_wire_idempotence(self):
         """
         A wire which is already on shouldn't have its value affected by

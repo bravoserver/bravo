@@ -551,7 +551,6 @@ drops[111] = (0, 0)   # Lily Pad
 drops[115] = (372, 0) # Nether Wart BLock      -> Nether Wart
 
 
-
 unbreakables = set()
 
 unbreakables.add(0)  # Air

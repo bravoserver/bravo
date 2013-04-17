@@ -254,7 +254,6 @@ class TAG_Compound(TAG, DictMixin):
     def keys(self):
         return [tag.name for tag in self.tags]
 
-
     #Printing and Formatting of tree
     def __repr__(self):
         return '%i Entries' % len(self.tags)
