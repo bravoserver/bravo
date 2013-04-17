@@ -861,6 +861,7 @@ class BravoProtocol(BetaServerProtocol):
                 def cb(iterable):
                     for line in iterable:
                         self.write_packet("chat", message=line)
+
                 def eb(error):
                     self.write_packet("chat", message="Error: %s" %
                         error.getErrorMessage())
@@ -1331,6 +1332,7 @@ class BravoProtocol(BetaServerProtocol):
             return succeed(None)
 
         d = self.factory.world.request_chunk(x, z)
+
         @d.addCallback
         def cb(chunk):
             self.chunks[x, z] = chunk

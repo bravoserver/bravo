@@ -133,6 +133,7 @@ class WorldMap(Resource):
 
     def render_GET(self, request):
         d = flattenString(request, self.element)
+
         def complete_request(html):
             if not request._disconnected:
                 request.write(html)
@@ -225,6 +226,7 @@ class AutomatonStats(Resource):
 
     def render_GET(self, request):
         d = flattenString(request, AutomatonStatsElement(self.factory))
+
         def complete_request(html):
             if not request._disconnected:
                 request.write(html)

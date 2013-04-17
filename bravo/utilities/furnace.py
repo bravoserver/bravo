@@ -69,6 +69,7 @@ def furnace_on_off(factory, coords, state):
     bigx, smallx, bigz, smallz, y = coords
     block = state and blocks["burning-furnace"] or blocks["furnace"]
     d = factory.world.request_chunk(bigx, bigz)
+
     @d.addCallback
     def replace_furnace_block(chunk):
         chunk.set_block((smallx, y, smallz), block.slot)

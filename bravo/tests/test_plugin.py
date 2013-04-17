@@ -130,6 +130,7 @@ class ITestInterface(zope.interface.Interface):
 
     name = zope.interface.Attribute("")
     attr = zope.interface.Attribute("")
+
     def meth(arg):
         pass
 

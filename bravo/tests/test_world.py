@@ -214,6 +214,7 @@ class TestWorld(unittest.TestCase):
 
         # For bonus points, assert that the player's username is correct.
         d = self.w.load_player("unittest")
+
         @d.addCallback
         def cb(player):
             self.assertEqual(player.username, "unittest")

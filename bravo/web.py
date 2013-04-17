@@ -125,6 +125,7 @@ class BravoResource(Resource):
                 request.write(s)
 
         d = flatten(request, self.element, write)
+
         @d.addCallback
         def complete_request(html):
             if not request._disconnected:

@@ -101,6 +101,7 @@ def processClickMessage(factory, player, window, container):
                 # ...and mark the chunk dirty
                 bigx, smallx, bigz, smallz, y = window.coords
                 d = factory.world.request_chunk(bigx, bigz)
+
                 @d.addCallback
                 def mark_chunk_dirty(chunk):
                     chunk.dirty = True
@@ -287,6 +288,7 @@ class Furnace(object):
         # inform content of furnace was probably changed
         bigx, x, bigz, z, y = window.coords
         d = self.factory.world.request_chunk(bigx, bigz)
+
         @d.addCallback
         def on_change(chunk):
             furnace = self.get_furnace_tile(chunk, (x, y, z))

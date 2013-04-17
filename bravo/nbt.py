@@ -86,6 +86,7 @@ class TAG_Double(_TAG_Numeric):
 
 class TAG_Byte_Array(TAG):
     id = TAG_BYTE_ARRAY
+
     def __init__(self, buffer=None):
         super(TAG_Byte_Array, self).__init__()
         self.value = ''
@@ -108,6 +109,7 @@ class TAG_Byte_Array(TAG):
 
 class TAG_String(TAG):
     id = TAG_STRING
+
     def __init__(self, value=None, name=None, buffer=None):
         super(TAG_String, self).__init__(value, name)
         if buffer:
@@ -134,6 +136,7 @@ class TAG_String(TAG):
 #== Collection Tags ==#
 class TAG_List(TAG):
     id = TAG_LIST
+
     def __init__(self, type=None, value=None, name=None, buffer=None):
         super(TAG_List, self).__init__(value, name)
         if type:
@@ -177,6 +180,7 @@ class TAG_List(TAG):
 
 class TAG_Compound(TAG, DictMixin):
     id = TAG_COMPOUND
+
     def __init__(self, buffer=None):
         super(TAG_Compound, self).__init__()
         self.tags = []

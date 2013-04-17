@@ -334,6 +334,7 @@ class BravoFactory(Factory):
         self.register_entity(entity)
 
         d = self.world.request_chunk(bigx, bigz)
+
         @d.addCallback
         def cb(chunk):
             chunk.entities.add(entity)
@@ -373,6 +374,7 @@ class BravoFactory(Factory):
         bigz = entity.location.pos.z // 16
 
         d = self.world.request_chunk(bigx, bigz)
+
         @d.addCallback
         def cb(chunk):
             chunk.entities.discard(entity)

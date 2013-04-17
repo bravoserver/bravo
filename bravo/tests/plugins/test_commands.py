@@ -77,6 +77,7 @@ class TestGive(PluginMixin, TestCase):
         """
 
         called = [False]
+
         def cb(a, b, c):
             called[0] = True
         self.patch(self.f, "give", cb)

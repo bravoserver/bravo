@@ -212,6 +212,7 @@ class TestBravoFactoryStarted(unittest.TestCase):
         # Our check consists of counting the number of times broadcast is
         # called.
         count = [0]
+
         def broadcast(packet):
             count[0] += 1
         self.patch(self.f, "broadcast", broadcast)

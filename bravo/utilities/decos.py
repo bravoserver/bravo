@@ -16,6 +16,7 @@ def timed(f):
     """
 
     timers[f] = (0, 0)
+
     @wraps(f)
     def deco(*args, **kwargs):
         before = time()
