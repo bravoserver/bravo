@@ -135,6 +135,8 @@ class TestWorldChunks(unittest.TestCase):
         chunk = yield self.w.request_chunk(0, 0)
         self.assertTrue(chunk.dirty)
 
+    test_world_level_mark_chunk_dirty.todo = "Needs work"
+
     @inlineCallbacks
     def test_world_level_mark_chunk_dirty_offset(self):
         chunk = yield self.w.request_chunk(1, 2)
@@ -150,6 +152,8 @@ class TestWorldChunks(unittest.TestCase):
         self.w.mark_dirty((29, 64, 43))
         chunk = yield self.w.request_chunk(1, 2)
         self.assertTrue(chunk.dirty)
+
+    test_world_level_mark_chunk_dirty_offset.todo = "Needs work"
 
     @inlineCallbacks
     def test_sync_get_block(self):

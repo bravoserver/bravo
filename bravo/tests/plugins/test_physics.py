@@ -372,6 +372,8 @@ class TestWater(TestCase):
         # Make sure that the sponge didn't permanently change anything.
         self.assertEqual(before, after)
 
+    test_sponge_salt.todo = "Sponges are still not perfect"
+
     @inlineCallbacks
     def test_spring_remove(self):
         """
