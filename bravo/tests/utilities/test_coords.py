@@ -1,6 +1,8 @@
 import unittest
 
-from bravo.utilities.coords import adjust_coords_for_face, iterneighbors
+from bravo.utilities.coords import (adjust_coords_for_face, itercube,
+                                    iterneighbors)
+
 
 class TestAdjustCoords(unittest.TestCase):
 
@@ -10,6 +12,7 @@ class TestAdjustCoords(unittest.TestCase):
         adjusted = adjust_coords_for_face(coords, "+x")
 
         self.assertEqual(adjusted, (1, 1, 2))
+
 
 class TestIterNeighbors(unittest.TestCase):
 
@@ -22,3 +25,11 @@ class TestIterNeighbors(unittest.TestCase):
         x, y, z = 0, 0, 0
 
         self.assertTrue((0, 1, 0) in iterneighbors(x, y, z))
+
+
+class TestIterCube(unittest.TestCase):
+
+    def test_no_cube(self):
+        x, y, z, r = 0, -2, 0, 1
+
+        self.assertEqual(list(itercube(x, y, z, r)), [])

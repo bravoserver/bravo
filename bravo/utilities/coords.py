@@ -2,6 +2,7 @@
 Utilities for coordinate handling and munging.
 """
 
+from itertools import product
 from math import floor, ceil
 
 
@@ -105,3 +106,20 @@ def iterneighbors(x, y, z):
         (-1,  0,  0)):
         if 0 <= y + dy < 256:
             yield x + dx, y + dy, z + dz
+
+
+def itercube(x, y, z, r):
+    """
+    Yield an iterable of coordinates in a cube around a given block.
+
+    Coordinates with invalid Y values are discarded automatically.
+    """
+
+    bx = x - r
+    tx = x + r + 1
+    by = max(y - r, 0)
+    ty = min(y + r + 1, 256)
+    bz = z - r
+    tz = z + r + 1
+
+    return product(xrange(bx, tx), xrange(by, ty), xrange(bz, tz))
