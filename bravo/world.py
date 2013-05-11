@@ -22,6 +22,11 @@ from bravo.utilities.coords import split_coords
 from bravo.utilities.temporal import PendingEvent
 from bravo.mobmanager import MobManager
 
+class ImpossibleCoordinates(Exception):
+    """
+    A coordinate could not ever be valid.
+    """
+
 def coords_to_chunk(f):
     """
     Automatically look up the chunk for the coordinates, and convert world
@@ -31,6 +36,10 @@ def coords_to_chunk(f):
     @wraps(f)
     def decorated(self, coords, *args, **kwargs):
         x, y, z = coords
+
+        # Fail early if Y is OOB.
+        if not 0 <= y < 256:
+            raise ImpossibleCoordinates("Y value %d is impossible" % y)
 
         bigx, smallx, bigz, smallz = split_coords(x, z)
         d = self.request_chunk(bigx, bigz)
@@ -52,8 +61,13 @@ def sync_coords_to_chunk(f):
     def decorated(self, coords, *args, **kwargs):
         x, y, z = coords
 
+        # Fail early if Y is OOB.
+        if not 0 <= y < 256:
+            raise ImpossibleCoordinates("Y value %d is impossible" % y)
+
         bigx, smallx, bigz, smallz = split_coords(x, z)
         bigcoords = bigx, bigz
+
         if bigcoords in self.chunk_cache:
             chunk = self.chunk_cache[bigcoords]
         elif bigcoords in self.dirty_chunk_cache:
