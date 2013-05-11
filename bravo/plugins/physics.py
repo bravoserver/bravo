@@ -7,6 +7,7 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
+from bravo.utilities.coords import iterneighbors
 from bravo.utilities.spatial import Block2DSpatialDict, Block3DSpatialDict
 from bravo.world import ChunkNotLoaded
 
@@ -317,14 +318,7 @@ class Fluid(object):
                 self.tracked.add(coords)
 
         else:
-            for (dx, dy, dz) in (
-                ( 0, 0,  0),
-                ( 0, 0,  1),
-                ( 0, 0, -1),
-                ( 0, 1,  0),
-                ( 1, 0,  0),
-                (-1, 0,  0)):
-                coords = x + dx, y + dy, z + dz
+            for coords in iterneighbors(x, y, z):
                 test_block = yield self.factory.world.get_block(coords)
                 if test_block in (self.spring, self.fluid):
                     self.tracked.add(coords)
