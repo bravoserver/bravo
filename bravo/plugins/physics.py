@@ -7,7 +7,7 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IAutomaton, IDigHook
 from bravo.utilities.automatic import naive_scan
-from bravo.utilities.coords import iterneighbors
+from bravo.utilities.coords import itercube, iterneighbors
 from bravo.utilities.spatial import Block2DSpatialDict, Block3DSpatialDict
 from bravo.world import ChunkNotLoaded
 
@@ -94,11 +94,7 @@ class Fluid(object):
         self.sponges[x, y, z] = True
 
         # Destroy the water! Destroy!
-        for coords in product(
-            xrange(x - 2, x + 3),
-            xrange(max(y - 2, 0), min(y + 3, 128)),
-            xrange(z - 2, z + 3),
-            ):
+        for coords in itercube(x, y, z, 2):
             try:
                 target = w.sync_get_block(coords)
                 if target == self.spring:
@@ -113,11 +109,7 @@ class Fluid(object):
 
         # And now mark our surroundings so that they can be
         # updated appropriately.
-        for coords in product(
-            xrange(x - 3, x + 4),
-            xrange(max(y - 3, 0), min(y + 4, 128)),
-            xrange(z - 3, z + 4),
-            ):
+        for coords in itercube(x, y, z, 3):
             if coords != (x, y, z):
                 self.new.add(coords)
 
@@ -237,8 +229,7 @@ class Fluid(object):
 
     def remove_sponge(self, x, y, z):
         # The evil sponge tyrant is gone. Flow, minions, flow!
-        for coords in product(xrange(x - 3, x + 4),
-            xrange(max(y - 3, 0), min(y + 4, 128)), xrange(z - 3, z + 4)):
+        for coords in itercube(x, y, z, 3):
             if coords != (x, y, z):
                 self.new.add(coords)
 
@@ -310,11 +301,7 @@ class Fluid(object):
         # Check for sponges first, since they will mark the entirety of the
         # area.
         if block == self.sponge:
-            for coords in product(
-                xrange(x - 3, x + 4),
-                xrange(max(y - 3, 0), min(y + 4, 128)),
-                xrange(z - 3, z + 4),
-                ):
+            for coords in itercube(x, y, z, 3):
                 self.tracked.add(coords)
 
         else:
