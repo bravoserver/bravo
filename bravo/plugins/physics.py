@@ -239,14 +239,16 @@ class Fluid(object):
         # Neighbors on the xz-level.
         neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
                 (x, y, z + 1))
-        # Our downstairs pal.
-        below = (x, y - 1, z)
 
         # Destroyed spring. Add neighbors and below to blocks to update.
         del self.springs[x, z]
 
         self.new.update(neighbors)
-        self.new.add(below)
+
+        if y:
+            # Our downstairs pal.
+            below = x, y - 1, z
+            self.new.add(below)
 
     def process(self):
         w = self.factory.world
