@@ -136,7 +136,7 @@ class Grass(object):
                 grasses = 0
                 # Intentional shadow.
                 for x, y, z in product(xrange(x - 1, x + 2),
-                    xrange(y - 1, y + 4), xrange(z - 1, z + 2)):
+                    xrange(max(y - 1, 0), y + 4), xrange(z - 1, z + 2)):
                     # Early-exit to avoid block lookup if we finish early.
                     if grasses >= 8:
                         break
