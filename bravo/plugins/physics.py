@@ -1,4 +1,4 @@
-from itertools import chain, product
+from itertools import chain
 
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
@@ -73,8 +73,7 @@ class Fluid(object):
     scan = naive_scan
 
     def update_fluid(self, w, coords, falling, level=0):
-
-        if not 0 <= coords[1] < 128:
+        if not 0 <= coords[1] < 256:
             return False
 
         block = w.sync_get_block(coords)
@@ -126,8 +125,6 @@ class Fluid(object):
         # Neighbors on the xz-level.
         neighbors = ((x - 1, y, z), (x + 1, y, z), (x, y, z - 1),
             (x, y, z + 1))
-        # Our downstairs pal.
-        below = (x, y - 1, z)
 
         # Spawn water from springs.
         for coords in neighbors:
@@ -138,7 +135,10 @@ class Fluid(object):
 
         # Is this water falling down to the next y-level? We don't really
         # care, but we'll run the update nonetheless.
-        self.update_fluid(w, below, True)
+        if y > 0:
+            # Our downstairs pal.
+            below = x, y - 1, z
+            self.update_fluid(w, below, True)
 
     def add_fluid(self, w, x, y, z):
         # Neighbors on the xz-level.
@@ -161,7 +161,8 @@ class Fluid(object):
             # Oh noes, we're drying up! We should mark our neighbors and dry
             # ourselves up.
             self.new.update(neighbors)
-            self.new.add(below)
+            if y:
+                self.new.add(below)
             w.sync_destroy((x, y, z))
             return
 
@@ -185,7 +186,8 @@ class Fluid(object):
         if newmd > self.levels and current_md < FALLING:
             # We should dry up.
             self.new.update(neighbors)
-            self.new.add(below)
+            if y:
+                self.new.add(below)
             w.sync_destroy((x, y, z))
             return
 
@@ -205,7 +207,7 @@ class Fluid(object):
         # but *not* both.
 
         # Fall down to the next y-level, if possible.
-        if self.update_fluid(w, below, True, newmd):
+        if y and self.update_fluid(w, below, True, newmd):
             return
 
         # Clamp our newmd and assign. Also, set ourselves again; we changed
