@@ -10,6 +10,11 @@ from bravo.geometry.section import Section
 from bravo.utilities.bits import pack_nibbles
 from bravo.utilities.maths import clamp
 
+CHUNK_HEIGHT = 256
+"""
+The total height of chunks.
+"""
+
 class ChunkWarning(Warning):
     """
     Somebody did something inappropriate to this chunk, but it probably isn't
