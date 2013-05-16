@@ -7,6 +7,8 @@ from random import choice, random, randint
 from zope.interface import Interface, implements
 
 from bravo.blocks import blocks
+from bravo.chunk import CHUNK_HEIGHT
+
 
 PHI = (sqrt(5) - 1) * 0.5
 IPHI = (sqrt(5) + 1) * 0.5
@@ -37,7 +39,7 @@ def dist_to_mat(cord, vec, matidxlist, world, invert=False, limit=None):
         x = int(curcord[0])
         y = int(curcord[1])
         z = int(curcord[2])
-        if not 0 <= y < 128:
+        if not 0 <= y < CHUNK_HEIGHT:
             break
         block = world.sync_get_block((x, y, z))
 

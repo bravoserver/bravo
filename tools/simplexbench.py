@@ -4,11 +4,12 @@ from functools import wraps
 from time import time
 
 from bravo.simplex import set_seed, simplex2, simplex3, octaves2, octaves3
+from bravo.chunk import CHUNK_HEIGHT
 
 print "Be patient; this benchmark takes a minute or so to run each test."
 
 chunk2d = 16 * 16
-chunk3d = chunk2d * 128
+chunk3d = chunk2d * CHUNK_HEIGHT
 
 set_seed(time())
 

@@ -338,7 +338,7 @@ class CliffGenerator(object):
                 current_height > 63 and height > 63):
                 for y in range(height - 3):
                     chunk.set_block((x, y, z), blocks["stone"].slot)
-                for y in range(y, 128):
+                for y in range(y, CHUNK_HEIGHT // 2):
                     chunk.set_block((x, y, z), blocks["air"].slot)
 
     name = "cliffs"
@@ -406,7 +406,7 @@ class CaveGenerator(object):
             magx = (chunk.x * 16 + x) * xzfactor
             magz = (chunk.z * 16 + z) * xzfactor
 
-            for y in range(128):
+            for y in range(CHUNK_HEIGHT):
                 if not chunk.get_block((x, y, z)):
                     continue
 

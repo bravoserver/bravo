@@ -25,7 +25,7 @@ class TestGenerators(unittest.TestCase):
 
         plugin.populate(self.chunk, 0)
         for x, y, z in product(xrange(16), xrange(CHUNK_HEIGHT), xrange(16)):
-            if y < 128:
+            if y < CHUNK_HEIGHT // 2:
                 self.assertEqual(self.chunk.get_block((x, y, z)),
                     bravo.blocks.blocks["stone"].slot)
             else:
