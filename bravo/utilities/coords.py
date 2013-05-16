@@ -89,6 +89,19 @@ def adjust_coords_for_face(coords, face):
     return x, y, z
 
 
+XZ = list(product(range(16), repeat=2))
+"""
+The xz-coords for a chunk.
+"""
+
+def iterchunk():
+    """
+    Yield an iterable of x, z, y coordinates for an entire chunk.
+    """
+
+    return product(range(16), range(16), range(256))
+
+
 def iterneighbors(x, y, z):
     """
     Yield an iterable of neighboring block coordinates.
