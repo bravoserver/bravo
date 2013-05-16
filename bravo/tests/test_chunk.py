@@ -4,6 +4,7 @@ from itertools import product
 
 from bravo.blocks import blocks
 from bravo.chunk import Chunk
+from bravo.utilities.coords import XZ
 
 class TestChunkBlocks(unittest.TestCase):
 
@@ -87,7 +88,7 @@ class TestLightmaps(unittest.TestCase):
 
     def test_boring_skylight_values(self):
         # Fill it as if we were the boring generator.
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             self.c.set_block((x, 0, z), 1)
         self.c.regenerate()
 
@@ -95,14 +96,14 @@ class TestLightmaps(unittest.TestCase):
         # lightmap are set to 15 (fully illuminated).
         # Note that skylight of a solid block is 0, the important value
         # is the skylight of the transluscent (usually air) block above it.
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             self.assertEqual(self.c.get_skylight((x, 0, z)), 0xf)
 
     test_boring_skylight_values.todo = "Skylight maths is still broken"
 
     def test_skylight_spread(self):
         # Fill it as if we were the boring generator.
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             self.c.set_block((x, 0, z), 1)
         # Put a false floor up to block the light.
         for x, z in product(xrange(1, 15), repeat=2):
@@ -110,7 +111,7 @@ class TestLightmaps(unittest.TestCase):
         self.c.regenerate()
 
         # Test that a gradient emerges.
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             flipx = x if x > 7 else 15 - x
             flipz = z if z > 7 else 15 - z
             target = max(flipx, flipz)
@@ -125,7 +126,7 @@ class TestLightmaps(unittest.TestCase):
         """
 
         # Floor.
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             self.c.set_block((x, 0, z), 1)
 
         # Arch of bedrock, with an empty spot in the middle, which will be our
@@ -148,7 +149,7 @@ class TestLightmaps(unittest.TestCase):
         """
 
         # Floor.
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             self.c.set_block((x, 0, z), 1)
 
         # Arch of bedrock, with an empty spot in the middle, which will be our
@@ -175,7 +176,7 @@ class TestLightmaps(unittest.TestCase):
         """
 
         # Floor.
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             self.c.set_block((x, 0, z), 1)
 
         # Arch of bedrock, with an empty spot in the middle, which will be our

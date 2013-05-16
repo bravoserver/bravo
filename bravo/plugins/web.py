@@ -1,4 +1,3 @@
-from itertools import product
 from StringIO import StringIO
 import os
 import time
@@ -13,9 +12,10 @@ from twisted.web.http import datetimeToString
 
 from zope.interface import implements
 
+from bravo import __file__
 from bravo.blocks import blocks
 from bravo.ibravo import IWorldResource
-from bravo import __file__
+from bravo.utilities.coords import XZ
 
 worldmap_xml = os.path.join(os.path.dirname(__file__), 'plugins',
                             'worldmap.html')
@@ -79,7 +79,7 @@ class ChunkIllustrator(Resource):
         request.setHeader('content-type', 'image/png')
         i = Image.new("RGB", (16, 16))
         pbo = i.load()
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             y = chunk.height_at(x, z)
             block = chunk.blocks[x, z, y]
             if block in block_colors:

@@ -1,9 +1,8 @@
-from itertools import product
-
 from zope.interface import implements
 
 from bravo.blocks import blocks
 from bravo.ibravo import ISeason
+from bravo.utilities.coords import CHUNK_HEIGHT, XZ
 
 snow_resistant = set([
     blocks["air"].slot,
@@ -62,9 +61,9 @@ class Winter(object):
         chunk.regenerate_heightmap()
 
         # Lay snow over anything not already snowed and not snow-resistant.
-        for x, z in product(xrange(16), xrange(16)):
+        for x, z in XZ:
             height = chunk.height_at(x, z)
-            if height == 127:
+            if height == CHUNK_HEIGHT - 1:
                 continue
 
             top_block = chunk.get_block((x, height, z))

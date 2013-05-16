@@ -8,12 +8,8 @@ from bravo.blocks import blocks, glowing_blocks
 from bravo.beta.packets import make_packet
 from bravo.geometry.section import Section
 from bravo.utilities.bits import pack_nibbles
+from bravo.utilities.coords import CHUNK_HEIGHT, XZ, iterchunk
 from bravo.utilities.maths import clamp
-
-CHUNK_HEIGHT = 256
-"""
-The total height of chunks.
-"""
 
 class ChunkWarning(Warning):
     """
@@ -254,7 +250,7 @@ class Chunk(object):
     def regenerate_blocklight(self):
         lightmap = array("L", [0] * (16 * 16 * CHUNK_HEIGHT))
 
-        for x, y, z in product(xrange(16), xrange(CHUNK_HEIGHT), xrange(16)):
+        for x, z, y in iterchunk():
             block = self.get_block((x, y, z))
             if block in glowing_blocks:
                 composite_glow(lightmap, glowing_blocks[block], x, y, z)
@@ -291,7 +287,7 @@ class Chunk(object):
                     break
 
                 # Update the mask.
-                for x, z in product(range(16), repeat=2):
+                for x, z in XZ:
                     offset = x * 16 + z
                     block = section.get_block((x, y, z))
                     mask[offset] = blocks[block].dim
@@ -302,7 +298,7 @@ class Chunk(object):
                     lights[i] = max(0, lights[i] - dim)
 
                 # Apply the lights to the section.
-                for x, z in product(range(16), repeat=2):
+                for x, z in XZ:
                     offset = x * 16 + z
                     section.set_skylight((x, y, z), lights[offset])
 

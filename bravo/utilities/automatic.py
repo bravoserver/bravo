@@ -1,4 +1,4 @@
-from itertools import product
+from bravo.utilities.coords import XZ
 
 def naive_scan(automaton, chunk):
     """
@@ -26,7 +26,7 @@ def column_scan(automaton, chunk):
     This method can be used directly in automaton classes to provide `scan()`.
     """
 
-    for x, z in product(range(16), repeat=2):
+    for x, z in XZ:
         y = chunk.height_at(x, z)
         if chunk.get_block((x, y, z)) in automaton.blocks:
             automaton.feed((x + chunk.x * 16, y, z + chunk.z * 16))

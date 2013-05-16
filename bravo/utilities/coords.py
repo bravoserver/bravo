@@ -5,8 +5,11 @@ Utilities for coordinate handling and munging.
 from itertools import product
 from math import floor, ceil
 
-from bravo.chunk import CHUNK_HEIGHT
 
+CHUNK_HEIGHT = 256
+"""
+The total height of chunks.
+"""
 
 def polar_round_vector(vector):
     """

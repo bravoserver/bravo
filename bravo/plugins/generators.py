@@ -7,7 +7,7 @@ from random import Random
 from zope.interface import implements
 
 from bravo.blocks import blocks
-from bravo.chunk import CHUNK_HEIGHT
+from bravo.chunk import CHUNK_HEIGHT, XZ, iterchunk
 from bravo.ibravo import ITerrainGenerator
 from bravo.simplex import octaves2, octaves3, set_seed
 from bravo.utilities.maths import morton2
@@ -62,7 +62,7 @@ class SimplexGenerator(object):
 
         factor = 1 / 256
 
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
@@ -101,7 +101,7 @@ class ComplexGenerator(object):
 
         factor = 1 / 256
 
-        for x, z, y in product(xrange(16), xrange(16), xrange(CHUNK_HEIGHT)):
+        for x, z, y in iterchunk():
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
@@ -151,7 +151,7 @@ class ErosionGenerator(object):
 
         chunk.regenerate_heightmap()
 
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             y = chunk.height_at(x, z)
 
             if chunk.get_block((x, y, z)) == blocks["stone"].slot:
@@ -178,7 +178,7 @@ class GrassGenerator(object):
 
         chunk.regenerate_heightmap()
 
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             y = chunk.height_at(x, z)
 
             if (chunk.get_block((x, y, z)) == blocks["dirt"].slot and
@@ -216,7 +216,7 @@ class BeachGenerator(object):
 
         chunk.regenerate_heightmap()
 
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             y = chunk.height_at(x, z)
 
             while y > 60 and chunk.get_block((x, y, z)) in self.above:
@@ -246,7 +246,7 @@ class OreGenerator(object):
         xzfactor = 1 / 16
         yfactor = 1 / 32
 
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             for y in range(chunk.height_at(x, z) + 1):
                 magx = (chunk.x * 16 + x) * xzfactor
                 magz = (chunk.z * 16 + z) * xzfactor
@@ -298,7 +298,7 @@ class SafetyGenerator(object):
         top two layers to avoid players getting stuck at the top.
         """
 
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             chunk.set_block((x, 0, z), blocks["bedrock"].slot)
             chunk.set_block((x, 126, z), blocks["air"].slot)
             chunk.set_block((x, 127, z), blocks["air"].slot)
@@ -327,7 +327,7 @@ class CliffGenerator(object):
         set_seed(seed)
 
         factor = 1 / 256
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             magx = ((chunk.x + 32) * 16 + x) * factor
             magz = ((chunk.z + 32) * 16 + z) * factor
             height = octaves2(magx, magz, 6)
@@ -365,7 +365,7 @@ class FloatGenerator(object):
         R.seed(seed)
 
         factor = 1 / 256
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             magx = ((chunk.x+16) * 16 + x) * factor
             magz = ((chunk.z+16) * 16 + z) * factor
 
@@ -402,7 +402,7 @@ class CaveGenerator(object):
         xzfactor = 1 / 128
         yfactor = 1 / 64
 
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             magx = (chunk.x * 16 + x) * xzfactor
             magz = (chunk.z * 16 + z) * xzfactor
 
@@ -458,13 +458,13 @@ class SaplingGenerator(object):
         R.seed(seed)
         factors = R.choice(list(combinations(self.primes, 3)))
 
-        for x, z in product(xrange(16), repeat=2):
+        for x, z in XZ:
             # Make a Morton number.
             morton = morton2(chunk.x * 16 + x, chunk.z * 16 + z)
 
             if not all(morton % factor for factor in factors):
                 # Magic number is how many tree types are available
-                species = morton % 4 
+                species = morton % 4
                 # Plant a sapling.
                 y = chunk.height_at(x, z)
                 if chunk.get_block((x, y, z)) in self.ground:

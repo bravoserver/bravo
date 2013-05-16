@@ -6,6 +6,7 @@ import bravo.blocks
 from bravo.chunk import Chunk, CHUNK_HEIGHT
 import bravo.ibravo
 import bravo.plugin
+from bravo.utilities.coords import iterchunk
 
 class TestGenerators(unittest.TestCase):
 
@@ -24,7 +25,7 @@ class TestGenerators(unittest.TestCase):
         plugin = self.p["boring"]
 
         plugin.populate(self.chunk, 0)
-        for x, y, z in product(xrange(16), xrange(CHUNK_HEIGHT), xrange(16)):
+        for x, z, y in iterchunk():
             if y < CHUNK_HEIGHT // 2:
                 self.assertEqual(self.chunk.get_block((x, y, z)),
                     bravo.blocks.blocks["stone"].slot)
