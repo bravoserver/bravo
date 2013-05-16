@@ -12,7 +12,7 @@ from twisted.internet.task import LoopingCall
 from twisted.python import log
 
 from bravo.beta.structures import Level
-from bravo.chunk import Chunk
+from bravo.chunk import Chunk, CHUNK_HEIGHT
 from bravo.entity import Player, Furnace
 from bravo.errors import (ChunkNotLoaded, SerializerReadException,
                           SerializerWriteException)
@@ -38,7 +38,7 @@ def coords_to_chunk(f):
         x, y, z = coords
 
         # Fail early if Y is OOB.
-        if not 0 <= y < 256:
+        if not 0 <= y < CHUNK_HEIGHT:
             raise ImpossibleCoordinates("Y value %d is impossible" % y)
 
         bigx, smallx, bigz, smallz = split_coords(x, z)
@@ -62,7 +62,7 @@ def sync_coords_to_chunk(f):
         x, y, z = coords
 
         # Fail early if Y is OOB.
-        if not 0 <= y < 256:
+        if not 0 <= y < CHUNK_HEIGHT:
             raise ImpossibleCoordinates("Y value %d is impossible" % y)
 
         bigx, smallx, bigz, smallz = split_coords(x, z)

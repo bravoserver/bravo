@@ -3,14 +3,14 @@ import unittest
 from itertools import product
 
 import bravo.blocks
-import bravo.chunk
+from bravo.chunk import Chunk, CHUNK_HEIGHT
 import bravo.ibravo
 import bravo.plugin
 
 class TestGenerators(unittest.TestCase):
 
     def setUp(self):
-        self.chunk = bravo.chunk.Chunk(0, 0)
+        self.chunk = Chunk(0, 0)
 
         self.p = bravo.plugin.retrieve_plugins(bravo.ibravo.ITerrainGenerator)
 
@@ -24,7 +24,7 @@ class TestGenerators(unittest.TestCase):
         plugin = self.p["boring"]
 
         plugin.populate(self.chunk, 0)
-        for x, y, z in product(xrange(16), xrange(256), xrange(16)):
+        for x, y, z in product(xrange(16), xrange(CHUNK_HEIGHT), xrange(16)):
             if y < 128:
                 self.assertEqual(self.chunk.get_block((x, y, z)),
                     bravo.blocks.blocks["stone"].slot)

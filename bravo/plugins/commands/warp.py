@@ -3,6 +3,7 @@ from StringIO import StringIO
 
 from zope.interface import implements
 
+from bravo.chunk import CHUNK_HEIGHT
 from bravo.ibravo import IChatCommand, IConsoleCommand
 from bravo.location import Orientation, Position
 from bravo.utilities.coords import split_coords
@@ -275,7 +276,8 @@ class Descend(object):
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
         chunk = self.factory.world.sync_request_chunk((x, y, z))
-        column = [chunk.get_block((smallx, i, smallz)) for i in range(256)]
+        column = [chunk.get_block((smallx, i, smallz))
+                  for i in range(CHUNK_HEIGHT)]
 
         # Find the next spot below us which has a platform and two empty
         # blocks of air.

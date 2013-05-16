@@ -17,6 +17,7 @@ from twisted.web.client import getPage
 from bravo import version
 from bravo.beta.structures import BuildData, Settings
 from bravo.blocks import blocks, items
+from bravo.chunk import CHUNK_HEIGHT
 from bravo.entity import Sign
 from bravo.errors import BetaClientError, BuildError
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
@@ -489,7 +490,8 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
         chunk = self.chunks[bigx, bigz]
-        column = [chunk.get_block((smallx, i, smallz)) for i in range(256)]
+        column = [chunk.get_block((smallx, i, smallz))
+                  for i in range(CHUNK_HEIGHT)]
 
         # Special case: Ascend at most once, if the current spot isn't good.
         if count == 0:

@@ -7,6 +7,7 @@ from random import Random
 from zope.interface import implements
 
 from bravo.blocks import blocks
+from bravo.chunk import CHUNK_HEIGHT
 from bravo.ibravo import ITerrainGenerator
 from bravo.simplex import octaves2, octaves3, set_seed
 from bravo.utilities.maths import morton2
@@ -100,7 +101,7 @@ class ComplexGenerator(object):
 
         factor = 1 / 256
 
-        for x, z, y in product(xrange(16), xrange(16), xrange(256)):
+        for x, z, y in product(xrange(16), xrange(16), xrange(CHUNK_HEIGHT)):
             magx = (chunk.x * 16 + x) * factor
             magz = (chunk.z * 16 + z) * factor
 
@@ -373,7 +374,7 @@ class FloatGenerator(object):
             height = int(height + 70)
 
             if abs(chunk.heightmap[x * 16 + z] - height) < 10:
-                height = 256
+                height = CHUNK_HEIGHT
             else:
                 height = height - 30 + R.randint(-15, 10)
 

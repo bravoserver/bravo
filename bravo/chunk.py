@@ -25,7 +25,7 @@ def check_bounds(f):
     """
     Decorate a function or method to have its first positional argument be
     treated as an (x, y, z) tuple which must fit inside chunk boundaries of
-    16, 256, and 16, respectively.
+    16, CHUNK_HEIGHT, and 16, respectively.
 
     A warning will be raised if the bounds check fails.
     """
@@ -35,7 +35,7 @@ def check_bounds(f):
         x, y, z = coords
 
         # Coordinates were out-of-bounds; warn and run away.
-        if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < 256):
+        if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < CHUNK_HEIGHT):
             warn("Coordinates %s are OOB in %s() of %s, ignoring call"
                 % (coords, f.func_name, chunk), ChunkWarning, stacklevel=2)
             # A concession towards where this decorator will be used. The
@@ -55,7 +55,7 @@ def ci(x, y, z):
     difference. Hopefully this is faster on PyPy than on CPython.
     """
 
-    return (x * 16 + z) * 256 + y
+    return (x * 16 + z) * CHUNK_HEIGHT + y
 
 def segment_array(a):
     """
@@ -102,7 +102,7 @@ def composite_glow(target, strength, x, y, z):
 
     ambient = glow[strength]
 
-    xbound, zbound, ybound = 16, 256, 16
+    xbound, zbound, ybound = 16, CHUNK_HEIGHT, 16
 
     sx = x - strength
     sy = y - strength
@@ -168,7 +168,7 @@ def iter_neighbors(coords):
 
         if not (0 <= nx < 16 and
             0 <= nz < 16 and
-            0 <= ny < 256):
+            0 <= ny < CHUNK_HEIGHT):
             continue
 
         yield nx, nz, ny
@@ -191,7 +191,7 @@ class Chunk(object):
 
     Chunks are large pieces of world geometry (block data). The blocks, light
     maps, and associated metadata are stored in chunks. Chunks are
-    always measured 16x256x16 and are aligned on 16x16 boundaries in
+    always measured 16xCHUNK_HEIGHTx16 and are aligned on 16x16 boundaries in
     the xz-plane.
 
     :cvar bool dirty: Whether this chunk needs to be flushed to disk.
@@ -220,7 +220,7 @@ class Chunk(object):
         self.z = int(z)
 
         self.heightmap = array("B", [0] * (16 * 16))
-        self.blocklight = array("B", [0] * (16 * 16 * 256))
+        self.blocklight = array("B", [0] * (16 * 16 * CHUNK_HEIGHT))
 
         self.sections = [Section() for i in range(16)]
 
@@ -252,9 +252,9 @@ class Chunk(object):
                 self.heightmap[column] = y
 
     def regenerate_blocklight(self):
-        lightmap = array("L", [0] * (16 * 16 * 256))
+        lightmap = array("L", [0] * (16 * 16 * CHUNK_HEIGHT))
 
-        for x, y, z in product(xrange(16), xrange(256), xrange(16)):
+        for x, y, z in product(xrange(16), xrange(CHUNK_HEIGHT), xrange(16)):
             block = self.get_block((x, y, z))
             if block in glowing_blocks:
                 composite_glow(lightmap, glowing_blocks[block], x, y, z)

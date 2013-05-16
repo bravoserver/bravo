@@ -5,6 +5,8 @@ Utilities for coordinate handling and munging.
 from itertools import product
 from math import floor, ceil
 
+from bravo.chunk import CHUNK_HEIGHT
+
 
 def polar_round_vector(vector):
     """
@@ -104,7 +106,7 @@ def iterneighbors(x, y, z):
         ( 0, -1,  0),
         ( 1,  0,  0),
         (-1,  0,  0)):
-        if 0 <= y + dy < 256:
+        if 0 <= y + dy < CHUNK_HEIGHT:
             yield x + dx, y + dy, z + dz
 
 
@@ -118,7 +120,7 @@ def itercube(x, y, z, r):
     bx = x - r
     tx = x + r + 1
     by = max(y - r, 0)
-    ty = min(y + r + 1, 256)
+    ty = min(y + r + 1, CHUNK_HEIGHT)
     bz = z - r
     tz = z + r + 1
 
