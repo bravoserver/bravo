@@ -311,7 +311,6 @@ class Furnace(object):
                                                 - 45 + 360) % 360) / 90]
             metadata = blocks["furnace"].orientation(orientation)
             builddata = builddata._replace(metadata=metadata)
-            print "fix metadata"
 
         # Not much to do, just tell the chunk about this tile.
         chunk = yield self.factory.world.request_chunk(bigx, bigz)
@@ -363,7 +362,6 @@ class Chest(object):
             z = chunk.z * 16 + z
             log.msg("Chest at (%d, %d, %d) do not have tile or tile type mismatch" %
                     (x, y, z))
-            print chunk.tiles
             chest = None
         return chest
 
