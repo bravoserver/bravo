@@ -142,8 +142,9 @@ class NormalTree(StickTree):
             else:
                 rad = 2
             for xoff, zoff in product(xrange(-rad, rad + 1), repeat=2):
+                # XXX Wait, sorry, what.
                 if (random() > PHI and abs(xoff) == abs(zoff) == rad or
-                       xoff == zoff == 0):
+                    xoff == zoff == 0):
                     continue
 
                 x = self.pos[0] + xoff
@@ -222,7 +223,7 @@ class ProceduralTree(Tree):
         secidx2 = (1 + diraxis) % 3
         coord = [0] * 3
         for off1, off2 in product(xrange(-rad, rad + 1), repeat=2):
-            thisdist = sqrt((abs(off1) + .5)**2 + (abs(off2) + .5)**2)
+            thisdist = sqrt((abs(off1) + .5) ** 2 + (abs(off2) + .5) ** 2)
             if thisdist > radius:
                 continue
             pri = center[diraxis]
@@ -245,7 +246,7 @@ class ProceduralTree(Tree):
         :returns: radius, or None
         """
 
-        if random() < 100 / ((self.height)**2) and y < self.trunkheight:
+        if random() < 100 / ((self.height) ** 2) and y < self.trunkheight:
             return self.height * .12
         return None
 
@@ -295,9 +296,9 @@ class ProceduralTree(Tree):
         # secdelta1 and ...2 are the amount the associated values change
         # for every step along the prime axis.
         secdelta1 = delta[secidx1]
-        secfac1 = float(secdelta1)/delta[primidx]
+        secfac1 = float(secdelta1) / delta[primidx]
         secdelta2 = delta[secidx2]
-        secfac2 = float(secdelta2)/delta[primidx]
+        secfac2 = float(secdelta2) / delta[primidx]
         # Initialize coord.  These values could be anything, since
         # they are overwritten.
         coord = [0] * 3
@@ -306,13 +307,13 @@ class ProceduralTree(Tree):
         endoffset = delta[primidx] + primsign
         for primoffset in xrange(0, endoffset, primsign):
             primloc = start[primidx] + primoffset
-            secloc1 = int(start[secidx1] + primoffset*secfac1)
-            secloc2 = int(start[secidx2] + primoffset*secfac2)
+            secloc1 = int(start[secidx1] + primoffset * secfac1)
+            secloc2 = int(start[secidx2] + primoffset * secfac2)
             coord[primidx] = primloc
             coord[secidx1] = secloc1
             coord[secidx2] = secloc2
             primdist = abs(delta[primidx])
-            radius = endsize + (startsize-endsize) * abs(delta[primidx]
+            radius = endsize + (startsize - endsize) * abs(delta[primidx]
                                 - primoffset) / primdist
             self.cross_section(coord, radius, primidx, blockdata, world)
 
@@ -325,13 +326,13 @@ class ProceduralTree(Tree):
 
         foliage_coords = self.foliage_cords
         for coord in foliage_coords:
-            self.foliage_cluster(coord,world)
+            self.foliage_cluster(coord, world)
         for x, y, z in foliage_coords:
             world.sync_set_block((x, y, z), blocks["log"].slot)
             world.sync_set_metadata((x, y, z), self.species)
             if LIGHTTREE == 1:
                 world.sync_set_block((x, y + 1, z), blocks["lightstone"].slot)
-            elif LIGHTTREE in [2,4]:
+            elif LIGHTTREE in [2, 4]:
                 world.sync_set_block((x + 1, y, z), blocks["lightstone"].slot)
                 world.sync_set_block((x - 1, y, z), blocks["lightstone"].slot)
                 if LIGHTTREE == 4:
@@ -345,23 +346,24 @@ class ProceduralTree(Tree):
         height = self.height
         topy = treeposition[1] + int(self.trunkheight + 0.5)
         # endrad is the base radius of the branches at the trunk
-        endrad = max(self.trunkradius * (1 - self.trunkheight/height), 1)
+        endrad = max(self.trunkradius * (1 - self.trunkheight / height), 1)
         for coord in self.foliage_cords:
-            dist = (sqrt(float(coord[0]-treeposition[0])**2 +
-                            float(coord[2]-treeposition[2])**2))
-            ydist = coord[1]-treeposition[1]
+            # XXX here too
+            dist = (sqrt(float(coord[0] - treeposition[0]) ** 2 +
+                            float(coord[2] - treeposition[2]) ** 2))
+            ydist = coord[1] - treeposition[1]
             # value is a magic number that weights the probability
             # of generating branches properly so that
             # you get enough on small trees, but not too many
             # on larger trees.
             # Very difficult to get right... do not touch!
-            value = (self.branchdensity * 220 * height)/((ydist + dist) ** 3)
+            value = (self.branchdensity * 220 * height) / ((ydist + dist) ** 3)
             if value < random():
                 continue
 
             posy = coord[1]
             slope = self.branchslope + (0.5 - random()) * .16
-            if coord[1] - dist*slope > topy:
+            if coord[1] - dist * slope > topy:
                 # Another random rejection, for branches between
                 # the top of the trunk and the crown of the tree
                 threshhold = 1 / height
@@ -370,23 +372,23 @@ class ProceduralTree(Tree):
                 branchy = topy
                 basesize = endrad
             else:
-                branchy = posy-dist*slope
-                basesize = (endrad + (self.trunkradius-endrad) *
+                branchy = posy - dist * slope
+                basesize = (endrad + (self.trunkradius - endrad) *
                          (topy - branchy) / self.trunkheight)
             startsize = (basesize * (1 + random()) * PHI *
-                         (dist/height)**PHI)
+                         (dist/height) ** PHI)
             if startsize < 1.0:
                 startsize = 1.0
             rndr = sqrt(random()) * basesize * PHI
             rndang = random() * 2 * pi
-            rndx = int(rndr*sin(rndang) + 0.5)
-            rndz = int(rndr*cos(rndang) + 0.5)
-            startcoord = [treeposition[0]+rndx,
+            rndx = int(rndr * sin(rndang) + 0.5)
+            rndz = int(rndr * cos(rndang) + 0.5)
+            startcoord = [treeposition[0] + rndx,
                           int(branchy),
-                          treeposition[2]+rndz]
+                          treeposition[2] + rndz]
             endsize = 1.0
             self.taperedcylinder(startcoord, coord, startsize, endsize, world,
-                blocks["log"].slot)
+                                 blocks["log"].slot)
 
     def make_trunk(self, world):
         """
@@ -402,10 +404,10 @@ class ProceduralTree(Tree):
         midrad = max(self.trunkradius * (1 - end_size_factor * .5), endrad)
 
         # Make the lower and upper sections of the trunk.
-        self.taperedcylinder([x,starty,z], [x,midy,z], self.trunkradius,
-            midrad, world, blocks["log"].slot)
-        self.taperedcylinder([x,midy,z], [x,topy,z], midrad, endrad, world,
-            blocks["log"].slot)
+        self.taperedcylinder([x, starty, z], [x, midy, z], self.trunkradius,
+                             midrad, world, blocks["log"].slot)
+        self.taperedcylinder([x, midy, z], [x, topy, z], midrad, endrad,
+                             world, blocks["log"].slot)
 
         #Make the branches.
         self.make_branches(world)
@@ -426,7 +428,7 @@ class ProceduralTree(Tree):
         self.branchdensity = 1.0
         foliage_coords = []
         ystart = treeposition[1]
-        num_of_clusters_per_y = int(1.5 + (self.height / 19)**2)
+        num_of_clusters_per_y = int(1.5 + (self.height / 19) ** 2)
         if num_of_clusters_per_y < 1:
             num_of_clusters_per_y = 1
         # make sure we don't spend too much time off the top of the map
@@ -439,13 +441,13 @@ class ProceduralTree(Tree):
                 shapefac = self.shapefunc(y - ystart)
                 if shapefac is None:
                     continue
-                r = (sqrt(random()) + .328)*shapefac
+                r = (sqrt(random()) + .328) * shapefac
 
-                theta = random()*2*pi
-                x = int(r*sin(theta)) + treeposition[0]
-                z = int(r*cos(theta)) + treeposition[2]
+                theta = random() * 2 * pi
+                x = int(r * sin(theta)) + treeposition[0]
+                z = int(r * cos(theta)) + treeposition[2]
 
-                foliage_coords += [[x,y,z]]
+                foliage_coords += [[x, y, z]]
 
         self.foliage_cords = foliage_coords
 
@@ -469,16 +471,16 @@ class RoundTree(ProceduralTree):
         twigs = ProceduralTree.shapefunc(self, y)
         if twigs is not None:
             return twigs
-        if y < self.height * (.282 + .1 * sqrt(random())) :
+        if y < self.height * (.282 + .1 * sqrt(random())):
             return None
         radius = self.height / 2
         adj = self.height / 2 - y
-        if adj == 0 :
+        if adj == 0:
             dist = radius
         elif abs(adj) >= radius:
             dist = 0
         else:
-            dist = sqrt((radius**2) - (adj**2))
+            dist = sqrt((radius ** 2) - (adj ** 2))
         dist *= PHI
         return dist
 
@@ -529,7 +531,7 @@ class RainforestTree(ProceduralTree):
     def shapefunc(self, y):
         # Bottom 4/5 of the tree is probably branch-free.
         if y < self.height * 0.8:
-            twigs = ProceduralTree.shapefunc(self,y)
+            twigs = ProceduralTree.shapefunc(self, y)
             if twigs is not None and random() < 0.07:
                 return twigs
             return None
@@ -571,10 +573,12 @@ class MangroveTree(RoundTree):
         for coord in self.foliage_cords:
             # First, set the threshhold for randomly selecting this
             # coordinate for root creation.
-            dist = (sqrt(float(coord[0]-treeposition[0])**2 +
-                            float(coord[2]-treeposition[2])**2))
-            ydist = coord[1]-treeposition[1]
-            value = (self.branchdensity * 220 * height)/((ydist + dist) ** 3)
+                # XXX factor out into utility function
+            dist = (sqrt(float(coord[0] - treeposition[0]) ** 2 +
+                    float(coord[2] - treeposition[2]) ** 2))
+            ydist = coord[1] - treeposition[1]
+            value = ((self.branchdensity * 220 * height) /
+                     ((ydist + dist) ** 3))
             # Randomly skip roots, based on the above threshold
             if value < random():
                 continue
@@ -587,16 +591,16 @@ class MangroveTree(RoundTree):
             # Offset the root origin location by a random amount
             # (radialy) from the starting location.
             rndr = sqrt(random()) * rootbaseradius * PHI
-            rndang = random()*2*pi
-            rndx = int(rndr*sin(rndang) + 0.5)
-            rndz = int(rndr*cos(rndang) + 0.5)
-            rndy = int(random()*rootbaseradius*0.5)
-            startcoord = [rootx+rndx,treeposition[1]+rndy,rootz+rndz]
+            rndang = random() * 2 * pi
+            rndx = int(rndr * sin(rndang) + 0.5)
+            rndz = int(rndr * cos(rndang) + 0.5)
+            rndy = int(random() * rootbaseradius * 0.5)
+            startcoord = [rootx + rndx, treeposition[1] + rndy, rootz + rndz]
             # offset is the distance from the root base to the root tip.
-            offset = [startcoord[i]-coord[i] for i in xrange(3)]
+            offset = [startcoord[i] - coord[i] for i in xrange(3)]
             # If this is a mangrove tree, make the roots longer.
             offset = [int(val * IPHI - 1.5) for val in offset]
-            rootstartsize = (rootbaseradius * IPHI * abs(offset[1])/
+            rootstartsize = (rootbaseradius * IPHI * abs(offset[1]) /
                              (height * IPHI))
             rootstartsize = max(rootstartsize, 1.0)
 
@@ -610,12 +614,12 @@ class MangroveTree(RoundTree):
         trunkradius = self.trunkradius
         treeposition = self.pos
         starty = treeposition[1]
-        midy = treeposition[1]+int(trunkheight * 1 / (PHI + 1))
-        topy = treeposition[1]+int(trunkheight + 0.5)
+        midy = treeposition[1] + int(trunkheight * 1 / (PHI + 1))
+        topy = treeposition[1] + int(trunkheight + 0.5)
         # In this method, x and z are the position of the trunk.
         x = treeposition[0]
         z = treeposition[2]
-        end_size_factor = trunkheight/height
+        end_size_factor = trunkheight / height
         endrad = max(trunkradius * (1 - end_size_factor), 1)
         midrad = max(trunkradius * (1 - end_size_factor * .5), endrad)
 
@@ -624,7 +628,7 @@ class MangroveTree(RoundTree):
         startrad = trunkradius * .8
         # rootbases is used later in self.makeroots(...) as
         # starting locations for the roots.
-        rootbases = [[x,z,startrad]]
+        rootbases = [[x, z, startrad]]
         buttress_radius = trunkradius * 0.382
         # posradius is how far the root buttresses should be offset
         # from the trunk.
@@ -633,29 +637,28 @@ class MangroveTree(RoundTree):
         posradius = posradius * (IPHI + 1)
         num_of_buttresses = int(sqrt(trunkradius) + 3.5)
         for i in xrange(num_of_buttresses):
-            rndang = random()*2*pi
-            thisposradius = posradius * (0.9 + random()*.2)
+            rndang = random() * 2 * pi
+            thisposradius = posradius * (0.9 + random() * .2)
             # thisx and thisz are the x and z position for the base of
             # the root buttress.
             thisx = x + int(thisposradius * sin(rndang))
             thisz = z + int(thisposradius * cos(rndang))
             # thisbuttressradius is the radius of the buttress.
             # Currently, root buttresses do not taper.
-            thisbuttressradius = max(buttress_radius * (PHI + random()),
-                1)
+            thisbuttressradius = max(buttress_radius * (PHI + random()), 1)
             # Make the root buttress.
             self.taperedcylinder([thisx, starty, thisz], [x, midy, z],
-                thisbuttressradius, thisbuttressradius, world,
-                blocks["log"].slot)
+                                 thisbuttressradius, thisbuttressradius,
+                                 world, blocks["log"].slot)
             # Add this root buttress as a possible location at
             # which roots can spawn.
-            rootbases += [[thisx,thisz,thisbuttressradius]]
+            rootbases += [[thisx, thisz, thisbuttressradius]]
 
         # Make the lower and upper sections of the trunk.
-        self.taperedcylinder([x,starty,z], [x,midy,z], startrad, midrad,
-            world, blocks["log"].slot)
-        self.taperedcylinder([x,midy,z], [x,topy,z], midrad, endrad, world,
-            blocks["log"].slot)
+        self.taperedcylinder([x, starty, z], [x, midy, z], startrad, midrad,
+                             world, blocks["log"].slot)
+        self.taperedcylinder([x, midy, z], [x, topy, z], midrad, endrad,
+                             world, blocks["log"].slot)
 
         #Make the branches
         self.make_branches(world)
