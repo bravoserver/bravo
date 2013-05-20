@@ -80,6 +80,9 @@ class ITree(Interface):
         """
 
 
+OAK, PINE, BIRCH, JUNGLE = range(4)
+
+
 class Tree(object):
     """
     Set up the interface for tree objects.  Designed for subclassing.
@@ -87,12 +90,13 @@ class Tree(object):
 
     implements(ITree)
 
+    species = OAK
+
     def __init__(self, pos, height=None):
         if height is None:
             self.height = randint(4, 7)
         else:
             self.height = height
-        self.species = 0    # default to oak
         self.pos = pos
 
     def prepare(self, world):
@@ -451,11 +455,12 @@ class RoundTree(ProceduralTree):
     A rounded deciduous tree.
     """
 
+    species = BIRCH
+
     branchslope = 1 / (PHI + 1)
     foliage_shape = [2, 3, 3, 2.5, 1.6]
 
     def prepare(self, world):
-        self.species = 2 # birch wood
         ProceduralTree.prepare(self, world)
         self.trunkradius *= 0.8
         self.trunkheight *= 0.7
@@ -483,11 +488,12 @@ class ConeTree(ProceduralTree):
     A conifer.
     """
 
+    species = PINE
+
     branchslope = 0.15
     foliage_shape = [3, 2.6, 2, 1]
 
     def prepare(self, world):
-        self.species = 1 # pine wood
         ProceduralTree.prepare(self, world)
         self.trunkradius *= 0.5
 
@@ -506,12 +512,14 @@ class RainforestTree(ProceduralTree):
     """
     A big rainforest tree.
     """
+
+    species = JUNGLE
+
     branchslope = 1
     foliage_shape = [3.4, 2.6]
 
     def prepare(self, world):
-        self.species = 3 # jungle wood
-        # TODO: play with these numbers until jungles look right
+        # XXX play with these numbers until jungles look right
         self.height = randint(10, 20)
         self.trunkradius = randint(5, 15)
         ProceduralTree.prepare(self, world)
