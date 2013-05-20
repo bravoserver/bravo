@@ -26,6 +26,7 @@ Phi and inverse phi constants.
 # 4 adds lights all around the base of each cluster for lots of light
 LIGHTTREE = 0
 
+
 def dist_to_mat(cord, vec, matidxlist, world, invert=False, limit=None):
     """
     Find the distance from the given coordinates to any of a set of blocks
@@ -54,6 +55,7 @@ def dist_to_mat(cord, vec, matidxlist, world, invert=False, limit=None):
             break
     return iterations
 
+
 class ITree(Interface):
     """
     An ideal Platonic tree.
@@ -76,6 +78,7 @@ class ITree(Interface):
         """
         Write foliage (leaves, lanterns) to the world.
         """
+
 
 class Tree(object):
     """
@@ -101,6 +104,7 @@ class Tree(object):
     def make_foliage(self, world):
         pass
 
+
 class StickTree(Tree):
     """
     A large stick or log.
@@ -114,6 +118,7 @@ class StickTree(Tree):
             world.sync_set_block((x, y, z), blocks["log"].slot)
             world.sync_set_metadata((x, y, z), self.species)
             y += 1
+
 
 class NormalTree(StickTree):
     """
@@ -143,6 +148,7 @@ class NormalTree(StickTree):
                 world.sync_set_block((x, y, z), blocks["leaves"].slot)
                 world.sync_set_metadata((x, y, z), self.species)
 
+
 class BambooTree(StickTree):
     """
     A bamboo-like tree.
@@ -161,6 +167,7 @@ class BambooTree(StickTree):
                 z = self.pos[2] + zoff
                 world.sync_set_block((x, y, z), blocks["leaves"].slot)
 
+
 class PalmTree(StickTree):
     """
     A traditional palm tree.
@@ -176,6 +183,7 @@ class PalmTree(StickTree):
                 x = self.pos[0] + xoff
                 z = self.pos[2] + zoff
                 world.sync_set_block((x, y, z), blocks["leaves"].slot)
+
 
 class ProceduralTree(Tree):
     """
@@ -493,6 +501,7 @@ class ConeTree(ProceduralTree):
         # Radius.
         return max((self.height - y) / (PHI + 1), 0)
 
+
 class RainforestTree(ProceduralTree):
     """
     A big rainforest tree.
@@ -521,6 +530,7 @@ class RainforestTree(ProceduralTree):
             topdist = (self.height - y) / (self.height * 0.2)
             dist = width * (PHI + topdist) * (PHI + random()) * 1 / (IPHI + 1)
             return dist
+
 
 class MangroveTree(RoundTree):
     """
