@@ -1,5 +1,13 @@
 from itertools import product
-from math import cos, sin
+from math import cos, sin, sqrt
+
+
+def dist(first, second):
+    """
+    Calculate the distance from one point to another.
+    """
+
+    return sqrt(sum((x - y) ** 2 for x, y in zip(first, second)))
 
 
 def rotated_cosine(x, y, theta, lambd):

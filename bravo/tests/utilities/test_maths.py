@@ -1,6 +1,14 @@
 import unittest
 
-from bravo.utilities.maths import clamp, morton2
+from bravo.utilities.maths import clamp, dist, morton2
+
+
+class TestDistance(unittest.TestCase):
+
+    def test_pythagorean_triple(self):
+        five = dist((0, 0), (3, 4))
+        self.assertAlmostEqual(five, 5)
+
 
 class TestMorton(unittest.TestCase):
 
@@ -18,6 +26,7 @@ class TestMorton(unittest.TestCase):
 
     def test_second_full(self):
         self.assertEqual(morton2(0x0, 0xffff), 0xaaaaaaaa)
+
 
 class TestClamp(unittest.TestCase):
 
