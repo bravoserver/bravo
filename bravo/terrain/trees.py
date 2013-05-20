@@ -8,6 +8,7 @@ from zope.interface import Interface, implements
 
 from bravo.blocks import blocks
 from bravo.chunk import CHUNK_HEIGHT
+from bravo.utilities.maths import dist
 
 
 PHI = (sqrt(5) - 1) * 0.5
@@ -348,22 +349,21 @@ class ProceduralTree(Tree):
         # endrad is the base radius of the branches at the trunk
         endrad = max(self.trunkradius * (1 - self.trunkheight / height), 1)
         for coord in self.foliage_cords:
-            # XXX here too
-            dist = (sqrt(float(coord[0] - treeposition[0]) ** 2 +
-                            float(coord[2] - treeposition[2]) ** 2))
+            distance = dist((coord[0], coord[2]),
+                            (treeposition[0], treeposition[2]))
             ydist = coord[1] - treeposition[1]
             # value is a magic number that weights the probability
             # of generating branches properly so that
             # you get enough on small trees, but not too many
             # on larger trees.
             # Very difficult to get right... do not touch!
-            value = (self.branchdensity * 220 * height) / ((ydist + dist) ** 3)
+            value = (self.branchdensity * 220 * height) / ((ydist + distance) ** 3)
             if value < random():
                 continue
 
             posy = coord[1]
             slope = self.branchslope + (0.5 - random()) * .16
-            if coord[1] - dist * slope > topy:
+            if coord[1] - distance * slope > topy:
                 # Another random rejection, for branches between
                 # the top of the trunk and the crown of the tree
                 threshhold = 1 / height
@@ -372,11 +372,11 @@ class ProceduralTree(Tree):
                 branchy = topy
                 basesize = endrad
             else:
-                branchy = posy - dist * slope
+                branchy = posy - distance * slope
                 basesize = (endrad + (self.trunkradius - endrad) *
                          (topy - branchy) / self.trunkheight)
             startsize = (basesize * (1 + random()) * PHI *
-                         (dist/height) ** PHI)
+                         (distance / height) ** PHI)
             if startsize < 1.0:
                 startsize = 1.0
             rndr = sqrt(random()) * basesize * PHI
@@ -476,13 +476,13 @@ class RoundTree(ProceduralTree):
         radius = self.height / 2
         adj = self.height / 2 - y
         if adj == 0:
-            dist = radius
+            distance = radius
         elif abs(adj) >= radius:
-            dist = 0
+            distance = 0
         else:
-            dist = sqrt((radius ** 2) - (adj ** 2))
-        dist *= PHI
-        return dist
+            distance = dist((0, 0), (radius, adj))
+        distance *= PHI
+        return distance
 
 
 class ConeTree(ProceduralTree):
@@ -538,8 +538,8 @@ class RainforestTree(ProceduralTree):
         else:
             width = self.height * 1 / (IPHI + 1)
             topdist = (self.height - y) / (self.height * 0.2)
-            dist = width * (PHI + topdist) * (PHI + random()) * 1 / (IPHI + 1)
-            return dist
+            distance = width * (PHI + topdist) * (PHI + random()) * 1 / (IPHI + 1)
+            return distance
 
 
 class MangroveTree(RoundTree):
@@ -573,12 +573,11 @@ class MangroveTree(RoundTree):
         for coord in self.foliage_cords:
             # First, set the threshhold for randomly selecting this
             # coordinate for root creation.
-                # XXX factor out into utility function
-            dist = (sqrt(float(coord[0] - treeposition[0]) ** 2 +
-                    float(coord[2] - treeposition[2]) ** 2))
+            distance = dist((coord[0], coord[2]),
+                            (treeposition[0], treeposition[2]))
             ydist = coord[1] - treeposition[1]
             value = ((self.branchdensity * 220 * height) /
-                     ((ydist + dist) ** 3))
+                     ((ydist + distance) ** 3))
             # Randomly skip roots, based on the above threshold
             if value < random():
                 continue
