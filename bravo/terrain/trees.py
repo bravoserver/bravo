@@ -25,7 +25,8 @@ Phi and inverse phi constants.
 # 1 adds one light inside the foliage clusters for a bit of light
 # 2 adds two lights around the base of each cluster, for more light
 # 4 adds lights all around the base of each cluster for lots of light
-LIGHTTREE = 0
+DARK, ONE, TWO, FOUR = range(4)
+LIGHTING = DARK
 
 
 def dist_to_mat(cord, vec, matidxlist, world, invert=False, limit=None):
@@ -119,10 +120,9 @@ class StickTree(Tree):
 
     def make_trunk(self, world):
         x, y, z = self.pos
-        for i in xrange(self.height):
+        for y in range(y, y + self.height):
             world.sync_set_block((x, y, z), blocks["log"].slot)
             world.sync_set_metadata((x, y, z), self.species)
-            y += 1
 
 
 class NormalTree(StickTree):
@@ -217,9 +217,11 @@ class ProceduralTree(Tree):
         matdata = <int> the integer value to make the block data value.
         """
 
+        # This isn't especially likely...
         rad = int(radius + PHI)
         if rad <= 0:
             return None
+
         secidx1 = (diraxis - 1) % 3
         secidx2 = (1 + diraxis) % 3
         coord = [0] * 3
@@ -259,9 +261,7 @@ class ProceduralTree(Tree):
         This list must be set in a subclass of ProceduralTree.
         """
 
-        x = center[0]
-        y = center[1]
-        z = center[2]
+        x, y, z = center
         for i in self.foliage_shape:
             self.cross_section([x, y, z], i, 1, blocks["leaves"].slot, world)
             y += 1
@@ -331,27 +331,29 @@ class ProceduralTree(Tree):
         for x, y, z in foliage_coords:
             world.sync_set_block((x, y, z), blocks["log"].slot)
             world.sync_set_metadata((x, y, z), self.species)
-            if LIGHTTREE == 1:
+            if LIGHTING == ONE:
                 world.sync_set_block((x, y + 1, z), blocks["lightstone"].slot)
-            elif LIGHTTREE in [2, 4]:
+            elif LIGHTING == TWO:
                 world.sync_set_block((x + 1, y, z), blocks["lightstone"].slot)
                 world.sync_set_block((x - 1, y, z), blocks["lightstone"].slot)
-                if LIGHTTREE == 4:
-                    world.sync_set_block((x, y, z + 1), blocks["lightstone"].slot)
-                    world.sync_set_block((x, y, z - 1), blocks["lightstone"].slot)
+            elif LIGHTING == FOUR:
+                world.sync_set_block((x + 1, y, z), blocks["lightstone"].slot)
+                world.sync_set_block((x - 1, y, z), blocks["lightstone"].slot)
+                world.sync_set_block((x, y, z + 1), blocks["lightstone"].slot)
+                world.sync_set_block((x, y, z - 1), blocks["lightstone"].slot)
 
     def make_branches(self, world):
-        """Generate the branches and enter them in world.
         """
-        treeposition = self.pos
+        Generate the branches and enter them in world.
+        """
+
         height = self.height
-        topy = treeposition[1] + int(self.trunkheight + 0.5)
+        topy = self.pos[1] + int(self.trunkheight + 0.5)
         # endrad is the base radius of the branches at the trunk
         endrad = max(self.trunkradius * (1 - self.trunkheight / height), 1)
         for coord in self.foliage_cords:
-            distance = dist((coord[0], coord[2]),
-                            (treeposition[0], treeposition[2]))
-            ydist = coord[1] - treeposition[1]
+            distance = dist((coord[0], coord[2]), (self.pos[0], self.pos[2]))
+            ydist = coord[1] - self.pos[1]
             # value is a magic number that weights the probability
             # of generating branches properly so that
             # you get enough on small trees, but not too many
@@ -383,9 +385,9 @@ class ProceduralTree(Tree):
             rndang = random() * 2 * pi
             rndx = int(rndr * sin(rndang) + 0.5)
             rndz = int(rndr * cos(rndang) + 0.5)
-            startcoord = [treeposition[0] + rndx,
+            startcoord = [self.pos[0] + rndx,
                           int(branchy),
-                          treeposition[2] + rndz]
+                          self.pos[2] + rndz]
             endsize = 1.0
             self.taperedcylinder(startcoord, coord, startsize, endsize, world,
                                  blocks["log"].slot)
@@ -419,15 +421,14 @@ class ProceduralTree(Tree):
         Primarily, sets up the foliage cluster locations.
         """
 
-        treeposition = self.pos
         self.trunkradius = PHI * sqrt(self.height)
         if self.trunkradius < 1:
             self.trunkradius = 1
         self.trunkheight = self.height
-        yend = int(treeposition[1] + self.height)
+        yend = int(self.pos[1] + self.height)
         self.branchdensity = 1.0
         foliage_coords = []
-        ystart = treeposition[1]
+        ystart = self.pos[1]
         num_of_clusters_per_y = int(1.5 + (self.height / 19) ** 2)
         if num_of_clusters_per_y < 1:
             num_of_clusters_per_y = 1
@@ -444,8 +445,8 @@ class ProceduralTree(Tree):
                 r = (sqrt(random()) + .328) * shapefac
 
                 theta = random() * 2 * pi
-                x = int(r * sin(theta)) + treeposition[0]
-                z = int(r * cos(theta)) + treeposition[2]
+                x = int(r * sin(theta)) + self.pos[0]
+                z = int(r * cos(theta)) + self.pos[2]
 
                 foliage_coords += [[x, y, z]]
 
@@ -568,14 +569,13 @@ class MangroveTree(RoundTree):
         rootbases = [[x,z,base_radius], ...] and is the list of locations
         the roots can originate from, and the size of that location.
         """
-        treeposition = self.pos
+
         height = self.height
         for coord in self.foliage_cords:
             # First, set the threshhold for randomly selecting this
             # coordinate for root creation.
-            distance = dist((coord[0], coord[2]),
-                            (treeposition[0], treeposition[2]))
-            ydist = coord[1] - treeposition[1]
+            distance = dist((coord[0], coord[2]), (self.pos[0], self.pos[2]))
+            ydist = coord[1] - self.pos[1]
             value = ((self.branchdensity * 220 * height) /
                      ((ydist + distance) ** 3))
             # Randomly skip roots, based on the above threshold
@@ -594,7 +594,7 @@ class MangroveTree(RoundTree):
             rndx = int(rndr * sin(rndang) + 0.5)
             rndz = int(rndr * cos(rndang) + 0.5)
             rndy = int(random() * rootbaseradius * 0.5)
-            startcoord = [rootx + rndx, treeposition[1] + rndy, rootz + rndz]
+            startcoord = [rootx + rndx, self.pos[1] + rndy, rootz + rndz]
             # offset is the distance from the root base to the root tip.
             offset = [startcoord[i] - coord[i] for i in xrange(3)]
             # If this is a mangrove tree, make the roots longer.
@@ -611,13 +611,12 @@ class MangroveTree(RoundTree):
         height = self.height
         trunkheight = self.trunkheight
         trunkradius = self.trunkradius
-        treeposition = self.pos
-        starty = treeposition[1]
-        midy = treeposition[1] + int(trunkheight * 1 / (PHI + 1))
-        topy = treeposition[1] + int(trunkheight + 0.5)
+        starty = self.pos[1]
+        midy = self.pos[1] + int(trunkheight * 1 / (PHI + 1))
+        topy = self.pos[1] + int(trunkheight + 0.5)
         # In this method, x and z are the position of the trunk.
-        x = treeposition[0]
-        z = treeposition[2]
+        x = self.pos[0]
+        z = self.pos[2]
         end_size_factor = trunkheight / height
         endrad = max(trunkradius * (1 - end_size_factor), 1)
         midrad = max(trunkradius * (1 - end_size_factor * .5), endrad)
@@ -651,7 +650,7 @@ class MangroveTree(RoundTree):
                                  world, blocks["log"].slot)
             # Add this root buttress as a possible location at
             # which roots can spawn.
-            rootbases += [[thisx, thisz, thisbuttressradius]]
+            rootbases.append([thisx, thisz, thisbuttressradius])
 
         # Make the lower and upper sections of the trunk.
         self.taperedcylinder([x, starty, z], [x, midy, z], startrad, midrad,
@@ -661,3 +660,5 @@ class MangroveTree(RoundTree):
 
         #Make the branches
         self.make_branches(world)
+
+        # XXX ... and do something with the rootbases?
