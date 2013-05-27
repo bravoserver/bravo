@@ -389,6 +389,7 @@ packets = {
         metadata,
     ),
     # Spawn Dropped Item
+    # TODO: Removed in #61!!! Find out how to spawn items.
     0x15: Struct("pickup",
         UBInt32("eid"),
         Embed(items),

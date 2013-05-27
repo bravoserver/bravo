@@ -8,3 +8,4 @@ website/output/*
 Bravo.egg-info/*
 build/*
 dist/*
+.idea/

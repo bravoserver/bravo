@@ -50,6 +50,9 @@ class Position(namedtuple("Position", "x, y, z")):
 
         return int(self.x // 32), int(self.y // 32), int(self.z // 32)
 
+    def to_chunk(self):
+        return int(self.x // 32 // 16), int(self.z // 32 // 16)
+
     def distance(self, other):
         """
         Return the distance between this position and another, in absolute
@@ -174,6 +177,7 @@ class Location(object):
         # the top of the world; this tend to strand entities up in the sky
         # where they cannot get down. We also forbid entities from falling
         # past bedrock.
+        # TODO: Fix me, I'm broken
         if not (32 * 1) <= y:
             y = max(y, 32 * 1)
             self.pos = self.pos._replace(y=y)
@@ -199,11 +203,12 @@ class Location(object):
         """
 
         # Get our position.
-        x, y, z = self.pos.to_block()
+        x, y, z = self.pos.to_player()
 
         # Grab orientation.
         yaw, pitch = self.ori.to_degs()
 
+        # Note: When this packet is sent from the server, the 'y' and 'stance' fields are swapped.
         position = Container(x=x, y=self.stance, z=z, stance=y)
         orientation = Container(rotation=yaw, pitch=pitch)
         grounded = Container(grounded=self.grounded)

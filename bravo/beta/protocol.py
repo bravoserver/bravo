@@ -728,9 +728,9 @@ class BravoProtocol(BetaServerProtocol):
 
         if self.username in self.factory.protocols:
             # This username's already taken; find a new one.
-            for name in username_alternatives(username):
+            for name in username_alternatives(self.username):
                 if name not in self.factory.protocols:
-                    container.username = name
+                    self.username = name
                     break
             else:
                 self.error("Your username is already taken.")
@@ -828,8 +828,7 @@ class BravoProtocol(BetaServerProtocol):
         """
 
         chunk_radius = int(radius // 16 + 1)
-        chunkx, chaff, chunkz, chaff = split_coords(self.location.pos.x,
-                self.location.pos.z)
+        chunkx, chunkz = self.location.pos.to_chunk()
 
         minx = chunkx - chunk_radius
         maxx = chunkx + chunk_radius + 1
@@ -1408,8 +1407,7 @@ class BravoProtocol(BetaServerProtocol):
         if self.state != STATE_LOCATED:
             return
 
-        x, y, z = self.location.pos.to_block()
-        x, chaff, z, chaff = split_coords(x, z)
+        x, z = self.location.pos.to_chunk()
 
         # These numbers come from a couple spots, including minecraftwiki, but
         # I verified them experimentally using torches and pillars to mark

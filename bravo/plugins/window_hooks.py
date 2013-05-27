@@ -13,7 +13,7 @@ from bravo.location import Location
 from bravo.utilities.building import chestsAround
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
 
-def drop_items(factory, location, items, y_offset = 0):
+def drop_items(factory, location, items, y_offset=0):
     """
     Loop over items and drop all of them
 
@@ -23,11 +23,13 @@ def drop_items(factory, location, items, y_offset = 0):
 
     # XXX why am I polymorphic? :T
     if type(location) == Location:
-        x, y, z = location.x, location.y, location.z
+        x, y, z = location.pos.x, location.pos.y, location.pos.z
+        y += int(y_offset * 32) + 16
+        coords = (x, y, z)
     else:
         x, y, z = location
-    y += y_offset
-    coords = (int(x * 32) + 16, int(y * 32) + 16, int(z * 32) + 16)
+        y += y_offset
+        coords = (int(x * 32) + 16, int(y * 32) + 16, int(z * 32) + 16)
     for item in items:
         if item is None:
             continue
@@ -36,6 +38,7 @@ def drop_items(factory, location, items, y_offset = 0):
 def processClickMessage(factory, player, window, container):
 
     # Clicked out of the window
+    # TODO: change packet's slot to signed
     if container.slot == 64537: # -999
         items = window.drop_selected(bool(container.button))
         drop_items(factory, player.location.in_front_of(1), items, 1)
@@ -73,14 +76,15 @@ def processClickMessage(factory, player, window, container):
                 slot = 4 - (container.slot - 5)
 
             if item is None:
-                primary, secondary = 65535, 0
+                primary, secondary, count = -1, 0, 0
             else:
                 primary, secondary, count = item
             packet = make_packet("entity-equipment",
                 eid=player.player.eid,
                 slot=slot,
                 primary=primary,
-                secondary=secondary
+                secondary=secondary,
+                count=0
             )
             factory.broadcast_for_others(packet, player)
 

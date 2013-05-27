@@ -370,8 +370,7 @@ class BravoFactory(Factory):
         place to put this logic.
         """
 
-        bigx = entity.location.pos.x // 16
-        bigz = entity.location.pos.z // 16
+        bigx, bigz = entity.location.pos.to_chunk()
 
         d = self.world.request_chunk(bigx, bigz)
 
