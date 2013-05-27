@@ -7,7 +7,7 @@ from urlparse import urlunparse
 from twisted.internet import reactor
 from twisted.internet.defer import (DeferredList, inlineCallbacks,
                                     maybeDeferred, succeed)
-from twisted.internet.protocol import Protocol
+from twisted.internet.protocol import Protocol, connectionDone
 from twisted.internet.task import cooperate, deferLater, LoopingCall
 from twisted.internet.task import TaskDone, TaskFailed
 from twisted.protocols.policies import TimeoutMixin
@@ -73,30 +73,30 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         self.location = Location()
 
         self.handlers = {
-            0: self.ping,
-            2: self.handshake,
-            3: self.chat,
-            7: self.use,
-            9: self.respawn,
-            10: self.grounded,
-            11: self.position,
-            12: self.orientation,
-            13: self.location_packet,
-            14: self.digging,
-            15: self.build,
-            16: self.equip,
-            18: self.animate,
-            19: self.action,
-            21: self.pickup,
-            101: self.wclose,
-            102: self.waction,
-            106: self.wacknowledge,
-            107: self.wcreative,
-            130: self.sign,
-            203: self.complete,
-            204: self.settings_packet,
-            254: self.poll,
-            255: self.quit,
+            0x00: self.ping,
+            0x02: self.handshake,
+            0x03: self.chat,
+            0x07: self.use,
+            0x09: self.respawn,
+            0x0a: self.grounded,
+            0x0b: self.position,
+            0x0c: self.orientation,
+            0x0d: self.location_packet,
+            0x0e: self.digging,
+            0x0f: self.build,
+            0x10: self.equip,
+            0x12: self.animate,
+            0x13: self.action,
+            0x15: self.pickup,
+            0x65: self.wclose,
+            0x66: self.waction,
+            0x6a: self.wacknowledge,
+            0x6b: self.wcreative,
+            0x82: self.sign,
+            0xcb: self.complete,
+            0xcc: self.settings_packet,
+            0xfe: self.poll,
+            0xff: self.quit,
         }
 
         self._ping_loop = LoopingCall(self.update_ping)
@@ -379,14 +379,14 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
                 @d.addErrback
                 def eb(failure):
-                    log.err("Error while handling packet %d" % header)
+                    log.err("Error while handling packet 0x%.2x" % header)
                     log.err(failure)
                     return None
             else:
-                log.err("Didn't handle parseable packet %d!" % header)
+                log.err("Didn't handle parseable packet 0x%.2x!" % header)
                 log.err(payload)
 
-    def connectionLost(self, reason):
+    def connectionLost(self, reason=connectionDone):
         if self._ping_loop.running:
             self._ping_loop.stop()
 
@@ -609,6 +609,7 @@ class KickedProtocol(BetaServerProtocol):
     """
 
     def __init__(self, reason=None):
+        BetaServerProtocol.__init__(self)
         if reason:
             self.reason = reason
         else:
@@ -618,6 +619,7 @@ class KickedProtocol(BetaServerProtocol):
 
     def connectionMade(self):
         self.error("%s" % self.reason)
+
 
 class BetaProxyProtocol(BetaServerProtocol):
     """
@@ -725,7 +727,6 @@ class BravoProtocol(BetaServerProtocol):
         """
         Set up username and get going.
         """
-
         if self.username in self.factory.protocols:
             # This username's already taken; find a new one.
             for name in username_alternatives(self.username):
@@ -781,6 +782,10 @@ class BravoProtocol(BetaServerProtocol):
         packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
         packet += self.inventory.save_to_packet()
         self.transport.write(packet)
+
+        # TODO: Send Abilities (0xca)
+        # TODO: Update Health (0x08)
+        # TODO: Update Experience (0x2b)
 
         # Send weather.
         self.transport.write(self.factory.vane.make_packet())
@@ -1450,7 +1455,7 @@ class BravoProtocol(BetaServerProtocol):
         time = int(self.factory.time)
         self.write_packet("time", timestamp=time, time=time % 24000)
 
-    def connectionLost(self, reason):
+    def connectionLost(self, reason=connectionDone):
         """
         Cleanup after a lost connection.
 

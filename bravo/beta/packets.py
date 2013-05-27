@@ -9,6 +9,7 @@ from construct import SBInt8, SBInt16, SBInt32
 from construct import BFloat32, BFloat64
 from construct import BitStruct, BitField
 from construct import StringAdapter, LengthValueAdapter, Sequence
+from construct import ConstructError
 
 def IPacket(object):
     """
@@ -95,6 +96,7 @@ position = Struct("position",
 )
 orientation = Struct("orientation", BFloat32("rotation"), BFloat32("pitch"))
 
+# TODO: this must be replaced with 'slot' (see below)
 # Notchian item packing (slot data)
 items = Struct("items",
     SBInt16("primary"),
@@ -107,9 +109,83 @@ items = Struct("items",
     ),
 )
 
+Speed = namedtuple('speed', 'x y z')
+
+class Slot(object):
+    def __init__(self, item_id=-1, count=1, damage=0, nbt=None):
+        self.item_id = item_id
+        self.count = count
+        self.damage = damage
+        # TODO: Implement packing/unpacking of gzipped NBT data
+        self.nbt = nbt
+
+    @classmethod
+    def fromItem(cls, item, count):
+        return cls(item[0], count, item[1])
+
+    @property
+    def is_empty(self):
+        return self.item_id == -1
+
+    def __len__(self):
+        return 0 if self.nbt is None else len(self.nbt)
+
+    def __repr__(self):
+        from bravo.blocks import items
+        if self.is_empty:
+            return 'Slot()'
+        elif len(self):
+            return 'Slot(%s, count=%d, damage=%d, +nbt:%dB)' % (
+                str(items[self.item_id]), self.count, self.damage, len(self)
+            )
+        else:
+            return 'Slot(%s, count=%d, damage=%d)' % (
+                str(items[self.item_id]), self.count, self.damage
+            )
+
+    def __eq__(self, other):
+        return (self.item_id == other.item_id and
+                self.count == other.count and
+                self.damage == self.damage and
+                self.nbt == self.nbt)
+
+class SlotAdapter(Adapter):
+
+    def _decode(self, obj, context):
+        if obj.item_id == -1:
+            s = Slot(obj.item_id)
+        else:
+            s = Slot(obj.item_id, obj.count, obj.damage, obj.nbt)
+        return s
+
+    def _encode(self, obj, context):
+        if not isinstance(obj, Slot):
+            raise ConstructError('Slot object expected')
+        if obj.is_empty:
+            return Container(item_id=-1)
+        else:
+            return Container(item_id=obj.item_id, count=obj.count, damage=obj.damage,
+                             nbt_len=len(obj) if len(obj) else -1, nbt=obj.nbt)
+
+slot = SlotAdapter(
+    Struct("slot",
+        SBInt16("item_id"),
+        If(lambda context: context["item_id"] >= 0,
+            Embed(Struct("item_information",
+                UBInt8("count"),
+                UBInt16("damage"),
+                SBInt16("nbt_len"),
+                If(lambda context: context["nbt_len"] >= 0,
+                    MetaField("nbt", lambda ctx: ctx["nbt_len"])
+                )
+            )),
+        )
+    )
+)
+
+
 Metadata = namedtuple("Metadata", "type value")
-metadata_types = ["byte", "short", "int", "float", "string", "slot",
-    "coords"]
+metadata_types = ["byte", "short", "int", "float", "string", "slot", "coords"]
 
 # Metadata adaptor.
 class MetadataAdapter(Adapter):
@@ -117,7 +193,7 @@ class MetadataAdapter(Adapter):
     def _decode(self, obj, context):
         d = {}
         for m in obj.data:
-            d[m.id.second] = Metadata(metadata_types[m.id.first], m.value)
+            d[m.id.key] = Metadata(metadata_types[m.id.type], m.value)
         return d
 
     def _encode(self, obj, context):
@@ -125,7 +201,7 @@ class MetadataAdapter(Adapter):
         for k, v in obj.iteritems():
             t, value = v
             d = Container(
-                id=Container(first=metadata_types.index(t), second=k),
+                id=Container(type=metadata_types.index(t), key=k),
                 value=value,
                 peeked=None)
             c.data.append(d)
@@ -143,19 +219,7 @@ metadata_switch = {
     2: UBInt32("value"),
     3: BFloat32("value"),
     4: AlphaString("value"),
-    5: Struct("slot",  # is the same as 'items' defined above
-        SBInt16("primary"),
-        If(lambda context: context["primary"] >= 0,
-            Embed(Struct("item_information",
-                UBInt8("count"),
-                UBInt16("secondary"),
-                SBInt16("nbt-len"),
-                If(lambda context: context["nbt-len"] >= 0,
-                    Embed(MetaField("nbt-data", lambda ctx: ctx["nbt-len"]))
-                )
-            )),
-        ),
-    ),
+    5: slot,
     6: Struct("coords",
         UBInt32("x"),
         UBInt32("y"),
@@ -169,10 +233,10 @@ metadata = MetadataAdapter(
         RepeatUntil(lambda obj, context: obj["peeked"] == 0x7f,
             Struct("data",
                 BitStruct("id",
-                    BitField("first", 3),
-                    BitField("second", 5),
+                    BitField("type", 3),
+                    BitField("key", 5),
                 ),
-                Switch("value", lambda context: context["id"]["first"],
+                Switch("value", lambda context: context["id"]["type"],
                     metadata_switch),
                 Peek(UBInt8("peeked")),
             ),
@@ -388,18 +452,6 @@ packets = {
         SBInt16("item"),
         metadata,
     ),
-    # Spawn Dropped Item
-    # TODO: Removed in #61!!! Find out how to spawn items.
-    0x15: Struct("pickup",
-        UBInt32("eid"),
-        Embed(items),
-        SBInt32("x"),
-        SBInt32("y"),
-        SBInt32("z"),
-        UBInt8("yaw"),
-        UBInt8("pitch"),
-        UBInt8("roll"),
-    ),
     0x16: Struct("collect",
         UBInt32("eid"),
         UBInt32("destination"),
@@ -560,7 +612,7 @@ packets = {
             happy_particle=14,
             magic_particle=15,
             shaking=16,
-            firework=17
+            firework=17,
         ),
     ),
     0x27: Struct("attach",
@@ -726,7 +778,7 @@ packets = {
             npc_trade=6,
             beacon=7,
             anvil=8,
-            hopper=9
+            hopper=9,
         ),
         AlphaString("title"),
         UBInt8("slots"),
@@ -842,7 +894,7 @@ packets = {
         Enum(UBInt8("position"),
             as_list=0,
             sidebar=1,
-            below_name=2
+            below_name=2,
         ),
         AlphaString("score_name"),
     ),

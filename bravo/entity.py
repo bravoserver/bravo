@@ -6,7 +6,7 @@ from twisted.python import log
 from bravo.inventory import Inventory
 from bravo.inventory.slots import ChestStorage, FurnaceStorage
 from bravo.location import Location
-from bravo.beta.packets import make_packet
+from bravo.beta.packets import make_packet, Speed, Slot
 from bravo.utilities.geometry import gen_close_point
 from bravo.utilities.maths import clamp
 from bravo.utilities.furnace import (furnace_recipes, furnace_on_off,
@@ -87,7 +87,12 @@ class Player(Entity):
 
         packet = make_packet("player", eid=self.eid, username=self.username,
                              x=x, y=y, z=z, yaw=yaw, pitch=pitch, item=item,
-                             metadata={})
+                             # http://www.wiki.vg/Entities#Objects
+                             metadata={
+                                 0: ('byte', 0),     # Flags
+                                 1: ('short', 300),  # Drowning counter
+                                 8: ('int', 0),      # Color of the bubbling effects
+                             })
         return packet
 
     def save_equipment_to_packet(self):
@@ -169,11 +174,18 @@ class Pickup(Entity):
 
         x, y, z = self.location.pos
 
-        return ""
+        packets = make_packet('object', eid=self.eid, type='item_stack',
+                              x=x, y=y, z=z, yaw=0, pitch=0, data=1,
+                              speed=Speed(0, 0, 0))
 
-        return make_packet("pickup", eid=self.eid, primary=self.item[0],
-                secondary=self.item[1], count=self.quantity, x=x, y=y, z=z,
-                yaw=0, pitch=0, roll=0)
+        packets += make_packet('metadata', eid=self.eid,
+                               # See http://www.wiki.vg/Entities#Objects
+                               metadata={
+                                   0: ('byte', 0),     # Flags
+                                   1: ('short', 300),  # Drowning counter
+                                   10: ('slot', Slot.fromItem(self.item, self.quantity))
+                               })
+        return packets
 
 class Mob(Entity):
     """
