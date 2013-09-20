@@ -98,14 +98,15 @@ class TestAnvilSerializer(unittest.TestCase):
         self.assertEqual(tag["Level"]["xPos"].value, 1)
         self.assertEqual(tag["Level"]["zPos"].value, 2)
 
-    @unittest.skipIf("windows" in platform.system().lower(), 
-                    "Windows can't handle this properly")
     def test_save_plugin_data(self):
         data = 'Foo\nbar'
         self.s.save_plugin_data('plugin1', data)
         self.assertTrue(self.folder.child('plugin1.dat').exists())
         with self.folder.child('plugin1.dat').open() as f:
             self.assertEqual(f.read(), data)
+
+    if "win" in platform.system().lower():
+        test_save_plugin_data.todo = "Windows can't handle this test"
 
     def test_no_plugin_data_corruption(self):
         data = 'Foo\nbar'
