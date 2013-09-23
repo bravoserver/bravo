@@ -24,5 +24,3 @@ class TestInfiniPacketStream(unittest.TestCase):
     def test_ping_stream(self):
         raw = "\x00\x01\x00\x00\x00\x06\x00\x10\x00\x4d\x3c\x7d\x7c"
         packets, leftovers = parse_packets(raw)
-
-    test_ping_stream.todo = "Construct doesn't like InfiniCraft"
