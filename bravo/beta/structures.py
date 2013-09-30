@@ -10,10 +10,47 @@ Level = namedtuple("Level", "seed, spawn, time")
 A named tuple representing the level data for a world.
 """
 
-Settings = namedtuple("Settings", "locale, distance")
-"""
-A named tuple representing client settings.
-"""
+
+class Settings(object):
+    """
+    Client settings and preferences.
+
+    Ephermal settings representing a client's preferred way of interacting with
+    the server.
+    """
+
+    locale = "en_US"
+    distance = "normal"
+
+    god_mode = False
+    can_fly = False
+    flying = False
+    creative = False
+
+    # XXX what should these actually default to?
+    walking_speed = 0
+    flying_speed = 0
+
+    def __init__(self, presentation=None, interaction=None):
+        if presentation:
+            self.update_presentation(presentation)
+        if interaction:
+            self.update_interaction(interaction)
+
+    def update_presentation(self, presentation):
+        self.locale = presentation["locale"]
+        distance = presentation["distance"]
+        self.distance = ["far", "normal", "short", "tiny"][distance]
+
+    def update_interaction(self, interaction):
+        flags = interaction["flags"]
+        self.god_mode = bool(flags & 0x8)
+        self.can_fly = bool(flags & 0x4)
+        self.flying = bool(flags & 0x2)
+        self.creative = bool(flags & 0x1)
+        self.walking_speed = interaction["walk-speed"]
+        self.flying_speed = interaction["fly-speed"]
+
 
 class Slot(namedtuple("Slot", "primary, secondary, quantity")):
     """

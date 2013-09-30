@@ -59,7 +59,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
     player = None
     username = None
-    settings = Settings("en_US", "normal")
+    settings = Settings()
     motd = "Bravo Generic Beta Server"
 
     _health = 20
@@ -93,6 +93,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             0x6a: self.wacknowledge,
             0x6b: self.wcreative,
             0x82: self.sign,
+            0xca: self.client_settings,
             0xcb: self.complete,
             0xcc: self.settings_packet,
             0xfe: self.poll,
@@ -309,6 +310,13 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Hook for sign packets.
         """
 
+    def client_settings(self, container):
+        """
+        Hook for interaction setting packets.
+        """
+
+        self.settings.update_interaction(container)
+
     def complete(self, container):
         """
         Hook for tab-completion packets.
@@ -316,11 +324,10 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
     def settings_packet(self, container):
         """
-        Hook for client settings packets.
+        Hook for presentation setting packets.
         """
 
-        distance = ["far", "normal", "short", "tiny"][container.distance]
-        self.settings = Settings(container.locale, distance)
+        self.settings.update_presentation(container)
 
     def poll(self, container):
         """
