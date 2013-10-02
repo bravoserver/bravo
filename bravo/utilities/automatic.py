@@ -1,5 +1,6 @@
 from bravo.utilities.coords import XZ
 
+
 def naive_scan(automaton, chunk):
     """
     Utility function which can be used to implement a naive, slow, but
@@ -11,11 +12,15 @@ def naive_scan(automaton, chunk):
     This function depends on implementation details of ``Chunk``.
     """
 
+    acceptable = automaton.blocks
+
     for index, section in enumerate(chunk.sections):
         if section:
             for i, block in enumerate(section.blocks):
-                coords = i & 0xf, (i >> 8) + index * 16, i >> 4 & 0xf
-                automaton.feed(coords)
+                if block in acceptable:
+                    coords = i & 0xf, (i >> 8) + index * 16, i >> 4 & 0xf
+                    automaton.feed(coords)
+
 
 def column_scan(automaton, chunk):
     """
@@ -26,7 +31,9 @@ def column_scan(automaton, chunk):
     This method can be used directly in automaton classes to provide `scan()`.
     """
 
+    acceptable = automaton.blocks
+
     for x, z in XZ:
         y = chunk.height_at(x, z)
-        if chunk.get_block((x, y, z)) in automaton.blocks:
+        if chunk.get_block((x, y, z)) in acceptable:
             automaton.feed((x + chunk.x * 16, y, z + chunk.z * 16))
