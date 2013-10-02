@@ -22,10 +22,12 @@ from bravo.utilities.coords import split_coords
 from bravo.utilities.temporal import PendingEvent
 from bravo.mobmanager import MobManager
 
+
 class ImpossibleCoordinates(Exception):
     """
     A coordinate could not ever be valid.
     """
+
 
 def coords_to_chunk(f):
     """
@@ -51,6 +53,7 @@ def coords_to_chunk(f):
         return d
 
     return decorated
+
 
 def sync_coords_to_chunk(f):
     """
@@ -78,6 +81,7 @@ def sync_coords_to_chunk(f):
         return f(self, chunk, (smallx, y, smallz), *args, **kwargs)
 
     return decorated
+
 
 class World(object):
     """
@@ -160,7 +164,7 @@ class World(object):
         self.serializer.connect(world_url)
 
         log.msg("World started on %s, using serializer %s" %
-            (world_url, self.serializer.name))
+                (world_url, self.serializer.name))
 
     def start(self):
         """
@@ -213,8 +217,10 @@ class World(object):
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
 
-        self.mob_manager = MobManager() # XXX Put this in init or here?
-        self.mob_manager.world = self # XXX  Put this in the managers constructor?
+        # XXX Put this in init or here?
+        self.mob_manager = MobManager()
+        # XXX  Put this in the managers constructor?
+        self.mob_manager.world = self
 
     def stop(self):
         """
@@ -347,7 +353,7 @@ class World(object):
         # XXX slightly icky, print statements are bad
         # Register the chunk's entities with our parent factory.
         for entity in chunk.entities:
-            if hasattr(entity,'loop'):
+            if hasattr(entity, 'loop'):
                 print "Started mob!"
                 self.mob_manager.start_mob(entity)
             else:
