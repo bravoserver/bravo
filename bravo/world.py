@@ -23,6 +23,40 @@ from bravo.utilities.temporal import PendingEvent
 from bravo.mobmanager import MobManager
 
 
+class ChunkCache(object):
+    """
+    A cache which holds references to all chunks which should be held in
+    memory.
+
+    This cache remembers chunks that were recently used, that are in permanent
+    residency, and so forth. Its exact caching algorithm is currently null.
+
+    When chunks dirty themselves, they are expected to notify the cache, which
+    will then schedule an eviction for the chunk.
+    """
+
+    _perm = None
+    """
+    A permanent cache of chunks which are never evicted from memory.
+
+    This cache is used to speed up logins near the spawn point.
+    """
+
+    def __init__(self):
+        self._perm = {}
+
+    def pin(self, chunk):
+        self._perm[chunk.x, chunk.z] = chunk
+
+    def unpin(self, chunk):
+        del self._perm[chunk.x, chunk.z]
+
+    def get(self, coords):
+        if coords in self._perm:
+            return self._perm[coords]
+        return None
+
+
 class ImpossibleCoordinates(Exception):
     """
     A coordinate could not ever be valid.
@@ -119,16 +153,14 @@ class World(object):
     The world dimension. Valid values are earth, sky, and nether.
     """
 
-    permanent_cache = None
-    """
-    A permanent cache of chunks which are never evicted from memory.
-
-    This cache is used to speed up logins near the spawn point.
-    """
-
     level = Level(seed=0, spawn=(0, 0, 0), time=0)
     """
     The initial level data.
+    """
+
+    _cache = None
+    """
+    The chunk cache.
     """
 
     def __init__(self, config, name):
@@ -163,7 +195,7 @@ class World(object):
         self.serializer = serializers[0]
         self.serializer.connect(world_url)
 
-        log.msg("World started on %s, using serializer %s" %
+        log.msg("World connected on %s, using serializer %s" %
                 (world_url, self.serializer.name))
 
     def start(self):
@@ -175,6 +207,9 @@ class World(object):
         """
 
         self.connect()
+
+        # Create our cache.
+        self._cache = ChunkCache()
 
         # Pick a random number for the seed. Use the configured value if one
         # is present.
@@ -214,6 +249,13 @@ class World(object):
             if self.saving:
                 self.serializer.save_level(self.level)
 
+        # Start up the permanent cache.
+        # has_option() is not exactly desirable, but it's appropriate here
+        # because we don't want to take any action if the key is unset.
+        if self.config.has_option(self.config_name, "perm_cache"):
+            cache_level = self.config.getint(self.config_name, "perm_cache")
+            self.enable_cache(cache_level)
+
         self.chunk_management_loop = LoopingCall(self.sort_chunks)
         self.chunk_management_loop.start(1)
 
@@ -243,6 +285,9 @@ class World(object):
         self.chunk_cache.clear()
         self.dirty_chunk_cache.clear()
 
+        # Destroy the cache.
+        self._cache = None
+
         # Save the level data.
         self.serializer.save_level(self.level)
 
@@ -262,8 +307,7 @@ class World(object):
 
         log.msg("Setting cache size to %d, please hold..." % size)
 
-        self.permanent_cache = set()
-        assign = self.permanent_cache.add
+        assign = self._cache.pin
 
         x = self.level.spawn[0] // 16
         z = self.level.spawn[2] // 16
@@ -381,6 +425,12 @@ class World(object):
         :returns: ``Deferred`` that will be called with the ``Chunk``
         """
 
+        # First, try the cache.
+        cached = self._cache.get((x, z))
+        if cached is not None:
+            returnValue(cached)
+
+        # Then, legacy caches.
         if (x, z) in self.chunk_cache:
             returnValue(self.chunk_cache[x, z])
         elif (x, z) in self.dirty_chunk_cache:

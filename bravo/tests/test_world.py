@@ -8,7 +8,24 @@ import os
 
 from bravo.config import BravoConfigParser
 from bravo.errors import ChunkNotLoaded
-from bravo.world import World
+from bravo.world import ChunkCache, World
+
+
+class MockChunk(object):
+
+    def __init__(self, x, z):
+        self.x = x
+        self.z = z
+
+
+class TestChunkCache(unittest.TestCase):
+
+    def test_pin_single(self):
+        cc = ChunkCache()
+        chunk = MockChunk(1, 2)
+        cc.pin(chunk)
+        self.assertIs(cc.get((1, 2)), chunk)
+
 
 class TestWorldChunks(unittest.TestCase):
 
@@ -29,6 +46,12 @@ class TestWorldChunks(unittest.TestCase):
 
     def test_trivial(self):
         pass
+
+    @inlineCallbacks
+    def test_request_chunk_identity(self):
+        first = yield self.w.request_chunk(0, 0)
+        second = yield self.w.request_chunk(0, 0)
+        self.assertIs(first, second)
 
     @inlineCallbacks
     def test_get_block(self):
@@ -189,6 +212,7 @@ class TestWorldChunks(unittest.TestCase):
 
         return d
 
+
 class TestWorld(unittest.TestCase):
 
     def setUp(self):
@@ -223,6 +247,7 @@ class TestWorld(unittest.TestCase):
         def cb(player):
             self.assertEqual(player.username, "unittest")
         return d
+
 
 class TestWorldConfig(unittest.TestCase):
 
