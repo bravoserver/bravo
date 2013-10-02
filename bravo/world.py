@@ -8,7 +8,7 @@ import weakref
 from twisted.internet import reactor
 from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
                                     returnValue, succeed)
-from twisted.internet.task import LoopingCall
+from twisted.internet.task import LoopingCall, coiterate
 from twisted.python import log
 
 from bravo.beta.structures import Level
@@ -303,22 +303,33 @@ class World(object):
         Notchian client's chunk buffer.
 
         :param int size: The taxicab radius of the cache, in chunks
+
+        :returns: A ``Deferred`` which will fire when the cache has been
+        adjusted.
         """
 
         log.msg("Setting cache size to %d, please hold..." % size)
 
         assign = self._cache.pin
 
+        def worker(x, z):
+            log.msg("Adding %d, %d to cache..." % (x, z))
+            return self.request_chunk(x, z).addCallback(assign)
+
         x = self.level.spawn[0] // 16
         z = self.level.spawn[2] // 16
 
         rx = xrange(x - size, x + size)
         rz = xrange(z - size, z + size)
-        for x, z in product(rx, rz):
-            log.msg("Adding %d, %d to cache..." % (x, z))
-            self.request_chunk(x, z).addCallback(assign)
+        work = (worker(x, z) for x, z in product(rx, rz))
 
-        log.msg("Cache size is now %d!" % size)
+        d = coiterate(work)
+
+        @d.addCallback
+        def notify(none):
+            log.msg("Cache size is now %d!" % size)
+
+        return d
 
     def sort_chunks(self):
         """

@@ -54,6 +54,15 @@ class TestWorldChunks(unittest.TestCase):
         self.assertIs(first, second)
 
     @inlineCallbacks
+    def test_request_chunk_cached_identity(self):
+        # Turn on the cache and get a few chunks in there, then request a
+        # chunk that is in the cache.
+        yield self.w.enable_cache(1)
+        first = yield self.w.request_chunk(0, 0)
+        second = yield self.w.request_chunk(0, 0)
+        self.assertIs(first, second)
+
+    @inlineCallbacks
     def test_get_block(self):
         chunk = yield self.w.request_chunk(0, 0)
 
