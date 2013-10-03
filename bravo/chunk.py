@@ -181,6 +181,7 @@ def neighboring_light(glow, block):
 
     return clamp(glow - blocks[block].dim, 0, 15)
 
+
 class Chunk(object):
     """
     A chunk of blocks.
@@ -196,8 +197,18 @@ class Chunk(object):
     """
 
     all_damaged = False
-    dirty = True
     populated = False
+
+    dirtied = None
+    """
+    Optional hook to be called when this chunk becomes dirty.
+    """
+
+    _dirty = True
+    """
+    Internal flag describing whether the chunk is dirty. Don't touch directly;
+    use the ``dirty`` property instead.
+    """
 
     def __init__(self, x, z):
         """
@@ -229,6 +240,18 @@ class Chunk(object):
         return "Chunk(%d, %d)" % (self.x, self.z)
 
     __str__ = __repr__
+
+    @property
+    def dirty(self):
+        return self._dirty
+
+    @dirty.setter
+    def dirty(self, value):
+        if value and not self._dirty:
+            # Notify whoever cares.
+            if self.dirtied is not None:
+                self.dirtied(self)
+        self._dirty = value
 
     def regenerate_heightmap(self):
         """
