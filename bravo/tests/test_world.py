@@ -113,7 +113,7 @@ class TestWorldChunks(unittest.TestCase):
         chunk.blocks.fromstring(os.urandom(32768))
 
         # Evict the chunk and grab it again.
-        self.w.save_chunk(chunk)
+        yield self.w.save_chunk(chunk)
         del chunk
         self.w.chunk_cache.clear()
         self.w.dirty_chunk_cache.clear()
@@ -134,7 +134,7 @@ class TestWorldChunks(unittest.TestCase):
         chunk.blocks.fromstring(os.urandom(32768))
 
         # Evict the chunk and grab it again.
-        self.w.save_chunk(chunk)
+        yield self.w.save_chunk(chunk)
         del chunk
         self.w.chunk_cache.clear()
         self.w.dirty_chunk_cache.clear()
@@ -153,7 +153,7 @@ class TestWorldChunks(unittest.TestCase):
         chunk.metadata.fromstring(os.urandom(32768))
 
         # Evict the chunk and grab it again.
-        self.w.save_chunk(chunk)
+        yield self.w.save_chunk(chunk)
         del chunk
         self.w.chunk_cache.clear()
         self.w.dirty_chunk_cache.clear()
@@ -170,7 +170,7 @@ class TestWorldChunks(unittest.TestCase):
         chunk = yield self.w.request_chunk(0, 0)
 
         # Reload chunk.
-        self.w.save_chunk(chunk)
+        yield self.w.save_chunk(chunk)
         del chunk
         self.w.chunk_cache.clear()
         self.w.dirty_chunk_cache.clear()
@@ -186,7 +186,7 @@ class TestWorldChunks(unittest.TestCase):
         chunk = yield self.w.request_chunk(1, 2)
 
         # Reload chunk.
-        self.w.save_chunk(chunk)
+        yield self.w.save_chunk(chunk)
         del chunk
         self.w.chunk_cache.clear()
         self.w.dirty_chunk_cache.clear()

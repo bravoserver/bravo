@@ -262,6 +262,7 @@ class World(object):
         # XXX  Put this in the managers constructor?
         self.mob_manager.world = self
 
+    @inlineCallbacks
     def stop(self):
         """
         Stop managing the world.
@@ -271,13 +272,15 @@ class World(object):
 
         Note to callers: If you want the world time to be accurate, don't
         forget to write it back before calling this method!
+
+        :returns: A ``Deferred`` that fires after the world has stopped.
         """
 
         self.chunk_management_loop.stop()
 
         # Flush all dirty chunks to disk.
         for chunk in self.dirty_chunk_cache.itervalues():
-            self.save_chunk(chunk)
+            yield self.save_chunk(chunk)
 
         # Evict all chunks.
         self.chunk_cache.clear()
@@ -287,7 +290,7 @@ class World(object):
         self._cache = None
 
         # Save the level data.
-        self.serializer.save_level(self.level)
+        yield maybeDeferred(self.serializer.save_level, self.level)
 
     def enable_cache(self, size):
         """
@@ -539,20 +542,32 @@ class World(object):
         returnValue(retval)
 
     def save_chunk(self, chunk):
+        """
+        Write a chunk to the serializer.
+
+        Note that this method does nothing when the given chunk is not dirty
+        or saving is off!
+
+        :returns: A ``Deferred`` which will fire after the chunk has been
+        saved with the chunk.
+        """
 
         if not chunk.dirty or not self.saving:
-            return
+            return succeed(chunk)
 
         d = maybeDeferred(self.serializer.save_chunk, chunk)
 
         @d.addCallback
         def cb(none):
             chunk.dirty = False
+            return chunk
 
         @d.addErrback
         def eb(failure):
             failure.trap(SerializerWriteException)
             log.msg("Couldn't write %r" % chunk)
+
+        return d
 
     def load_player(self, username):
         """
