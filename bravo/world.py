@@ -35,15 +35,9 @@ class ChunkCache(object):
     will then schedule an eviction for the chunk.
     """
 
-    _perm = None
-    """
-    A permanent cache of chunks which are never evicted from memory.
-
-    This cache is used to speed up logins near the spawn point.
-    """
-
     def __init__(self):
         self._perm = {}
+        self._dirty = {}
 
     def pin(self, chunk):
         self._perm[chunk.x, chunk.z] = chunk
@@ -54,7 +48,11 @@ class ChunkCache(object):
     def get(self, coords):
         if coords in self._perm:
             return self._perm[coords]
-        return None
+        # Returns None if not found!
+        return self._dirty.get(coords)
+
+    def dirtied(self, chunk):
+        self._dirty[chunk.x, chunk.z] = chunk
 
 
 class ImpossibleCoordinates(Exception):
@@ -451,12 +449,20 @@ class World(object):
             retval = yield self._pending_chunks[x, z].deferred()
             returnValue(retval)
 
+        # Create a new chunk object, since the cache turned up empty.
         try:
             chunk = yield maybeDeferred(self.serializer.load_chunk, x, z)
         except SerializerReadException:
             # Looks like the chunk wasn't already on disk. Guess we're gonna
             # need to keep going.
             chunk = Chunk(x, z)
+
+        # Add in our magic dirtiness hook so that the cache can be aware of
+        # chunks who have been...naughty.
+        chunk.dirtied = self._cache.dirtied
+        if chunk.dirty:
+            # The chunk was already dirty!? Oh, naughty indeed!
+            self._cache.dirtied(chunk)
 
         if chunk.populated:
             self.chunk_cache[x, z] = chunk
