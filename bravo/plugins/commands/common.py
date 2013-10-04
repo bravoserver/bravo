@@ -255,7 +255,7 @@ class Quit(object):
         self.factory.broadcast(packet)
 
         yield "Saving all chunks to disk..."
-        for chunk in self.factory.world.dirty_chunk_cache.itervalues():
+        for chunk in self.factory.world._cache.iterdirty():
             yield self.factory.world.save_chunk(chunk)
 
         yield "Halting."
@@ -278,7 +278,7 @@ class SaveAll(object):
     def console_command(self, parameters):
         yield "Flushing all chunks..."
 
-        for chunk in self.factory.world.chunk_cache.itervalues():
+        for chunk in self.factory.world._cache.iterdirty():
             yield self.factory.world.save_chunk(chunk)
 
         yield "Save complete!"

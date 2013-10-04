@@ -115,8 +115,6 @@ class TestWorldChunks(unittest.TestCase):
         # Evict the chunk and grab it again.
         yield self.w.save_chunk(chunk)
         del chunk
-        self.w.chunk_cache.clear()
-        self.w.dirty_chunk_cache.clear()
         chunk = yield self.w.request_chunk(0, 0)
 
         for x, y, z in product(xrange(2), repeat=3):
@@ -136,8 +134,6 @@ class TestWorldChunks(unittest.TestCase):
         # Evict the chunk and grab it again.
         yield self.w.save_chunk(chunk)
         del chunk
-        self.w.chunk_cache.clear()
-        self.w.dirty_chunk_cache.clear()
         chunk = yield self.w.request_chunk(-1, -1)
 
         for x, y, z in product(xrange(2), repeat=3):
@@ -155,8 +151,6 @@ class TestWorldChunks(unittest.TestCase):
         # Evict the chunk and grab it again.
         yield self.w.save_chunk(chunk)
         del chunk
-        self.w.chunk_cache.clear()
-        self.w.dirty_chunk_cache.clear()
         chunk = yield self.w.request_chunk(0, 0)
 
         for x, y, z in product(xrange(2), repeat=3):
@@ -172,8 +166,6 @@ class TestWorldChunks(unittest.TestCase):
         # Reload chunk.
         yield self.w.save_chunk(chunk)
         del chunk
-        self.w.chunk_cache.clear()
-        self.w.dirty_chunk_cache.clear()
         chunk = yield self.w.request_chunk(0, 0)
 
         self.assertFalse(chunk.dirty)
@@ -188,8 +180,6 @@ class TestWorldChunks(unittest.TestCase):
         # Reload chunk.
         yield self.w.save_chunk(chunk)
         del chunk
-        self.w.chunk_cache.clear()
-        self.w.dirty_chunk_cache.clear()
         chunk = yield self.w.request_chunk(1, 2)
 
         self.assertFalse(chunk.dirty)

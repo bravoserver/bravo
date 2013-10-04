@@ -45,14 +45,24 @@ class ChunkCache(object):
     def unpin(self, chunk):
         del self._perm[chunk.x, chunk.z]
 
+    def put(self, chunk):
+        # XXX expand caching strategy
+        pass
+
     def get(self, coords):
         if coords in self._perm:
             return self._perm[coords]
         # Returns None if not found!
         return self._dirty.get(coords)
 
+    def cleaned(self, chunk):
+        del self._dirty[chunk.x, chunk.z]
+
     def dirtied(self, chunk):
         self._dirty[chunk.x, chunk.z] = chunk
+
+    def iterdirty(self):
+        return self._dirty.itervalues()
 
 
 class ImpossibleCoordinates(Exception):
@@ -103,11 +113,9 @@ def sync_coords_to_chunk(f):
         bigx, smallx, bigz, smallz = split_coords(x, z)
         bigcoords = bigx, bigz
 
-        if bigcoords in self.chunk_cache:
-            chunk = self.chunk_cache[bigcoords]
-        elif bigcoords in self.dirty_chunk_cache:
-            chunk = self.dirty_chunk_cache[bigcoords]
-        else:
+        chunk = self._cache.get(bigcoords)
+
+        if chunk is None:
             raise ChunkNotLoaded("Chunk (%d, %d) isn't loaded" % bigcoords)
 
         return f(self, chunk, (smallx, y, smallz), *args, **kwargs)
@@ -170,9 +178,6 @@ class World(object):
 
         self.config = config
         self.config_name = "world %s" % name
-
-        self.chunk_cache = weakref.WeakValueDictionary()
-        self.dirty_chunk_cache = dict()
 
         self._pending_chunks = dict()
 
@@ -254,7 +259,7 @@ class World(object):
             cache_level = self.config.getint(self.config_name, "perm_cache")
             self.enable_cache(cache_level)
 
-        self.chunk_management_loop = LoopingCall(self.sort_chunks)
+        self.chunk_management_loop = LoopingCall(self.flush_chunk)
         self.chunk_management_loop.start(1)
 
         # XXX Put this in init or here?
@@ -278,13 +283,9 @@ class World(object):
 
         self.chunk_management_loop.stop()
 
-        # Flush all dirty chunks to disk.
-        for chunk in self.dirty_chunk_cache.itervalues():
+        # Flush all dirty chunks to disk. Don't bother cleaning them off.
+        for chunk in self._cache.iterdirty():
             yield self.save_chunk(chunk)
-
-        # Evict all chunks.
-        self.chunk_cache.clear()
-        self.dirty_chunk_cache.clear()
 
         # Destroy the cache.
         self._cache = None
@@ -332,29 +333,19 @@ class World(object):
 
         return d
 
-    def sort_chunks(self):
+    def flush_chunk(self):
         """
-        Sort out the internal caches.
+        Flush a dirty chunk.
 
         This method will always block when there are dirty chunks.
         """
 
-        first = True
-
-        all_chunks = dict(self.dirty_chunk_cache)
-        all_chunks.update(self.chunk_cache)
-        self.chunk_cache.clear()
-        self.dirty_chunk_cache.clear()
-        for coords, chunk in all_chunks.iteritems():
-            if chunk.dirty:
-                if first:
-                    first = False
-                    self.save_chunk(chunk)
-                    self.chunk_cache[coords] = chunk
-                else:
-                    self.dirty_chunk_cache[coords] = chunk
-            else:
-                self.chunk_cache[coords] = chunk
+        for chunk in self._cache.iterdirty():
+            # Save a single chunk, and add a callback to remove it from the
+            # cache when it's been cleaned.
+            d = self.save_chunk(chunk)
+            d.addCallback(self._cache.cleaned)
+            break
 
     def save_off(self):
         """
@@ -367,8 +358,7 @@ class World(object):
         if not self.saving:
             return
 
-        d = dict(self.chunk_cache)
-        self.chunk_cache = d
+        self.chunk_management_loop.stop()
         self.saving = False
 
     def save_on(self):
@@ -379,8 +369,7 @@ class World(object):
         if self.saving:
             return
 
-        d = weakref.WeakValueDictionary(self.chunk_cache)
-        self.chunk_cache = d
+        self.chunk_management_loop.start(1)
         self.saving = True
 
     def postprocess_chunk(self, chunk):
@@ -442,12 +431,8 @@ class World(object):
         if cached is not None:
             returnValue(cached)
 
-        # Then, legacy caches.
-        if (x, z) in self.chunk_cache:
-            returnValue(self.chunk_cache[x, z])
-        elif (x, z) in self.dirty_chunk_cache:
-            returnValue(self.dirty_chunk_cache[x, z])
-        elif (x, z) in self._pending_chunks:
+        # Is it pending?
+        if (x, z) in self._pending_chunks:
             # Rig up another Deferred and wrap it up in a to-go box.
             retval = yield self._pending_chunks[x, z].deferred()
             returnValue(retval)
@@ -468,7 +453,7 @@ class World(object):
             self._cache.dirtied(chunk)
 
         if chunk.populated:
-            self.chunk_cache[x, z] = chunk
+            self._cache.put(chunk)
             self.postprocess_chunk(chunk)
             if self.factory:
                 self.factory.scan_chunk(chunk)
@@ -522,7 +507,7 @@ class World(object):
 
             self.postprocess_chunk(chunk)
 
-            self.dirty_chunk_cache[x, z] = chunk
+            self._cache.dirtied(chunk)
             del self._pending_chunks[x, z]
 
             return chunk

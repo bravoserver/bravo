@@ -89,16 +89,15 @@ class BravoWorldElement(Element):
     def status(self, request, tag):
         world = self.factory.world
         l = []
-        total = (len(world.chunk_cache) + len(world.dirty_chunk_cache) +
-            len(world._pending_chunks))
+        total = 0 + len(world._cache._dirty) + len(world._pending_chunks)
         l.append(tags.li("Total chunks: %d" % total))
-        l.append(tags.li("Clean chunks: %d" % len(world.chunk_cache)))
-        l.append(tags.li("Dirty chunks: %d" % len(world.dirty_chunk_cache)))
+        l.append(tags.li("Clean chunks: %d" % 0))
+        l.append(tags.li("Dirty chunks: %d" % len(world._cache._dirty)))
         l.append(tags.li("Chunks being generated: %d" %
-            len(world._pending_chunks)))
-        if world.permanent_cache:
+                         len(world._pending_chunks)))
+        if world._cache._perm:
             l.append(tags.li("Permanent cache: enabled, %d chunks" %
-                len(world.permanent_cache)))
+                             len(world._cache._perm)))
         else:
             l.append(tags.li("Permanent cache: disabled"))
         status = tags.ul(*l)

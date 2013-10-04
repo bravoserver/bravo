@@ -510,8 +510,7 @@ class BravoFactory(Factory):
         I'm gonna have a chat with you.
         """
 
-        for chunk in chain(self.world.chunk_cache.itervalues(),
-            self.world.dirty_chunk_cache.itervalues()):
+        for chunk in self.world._cache.iterdirty():
             self.flush_chunk(chunk)
 
     def give(self, coords, block, quantity):

@@ -64,8 +64,8 @@ class Status(object):
             dirty = len([i for i in protocol.chunks.values() if i.dirty])
             yield "%s: %d chunks (%d dirty)" % (name, count, dirty)
 
-        chunk_count = len(self.factory.world.chunk_cache)
-        dirty = len(self.factory.world.dirty_chunk_cache)
+        chunk_count = 0 # len(self.factory.world.chunk_cache)
+        dirty = len(self.factory.world._cache._dirty)
         chunk_count += dirty
         yield "World cache: %d chunks (%d dirty)" % (chunk_count, dirty)
 
