@@ -8,16 +8,15 @@ class Pane(object):
     A composite window which combines an inventory and a specialized window.
     """
 
-    def __init__(self, inventory, block):
+    def __init__(self, inventory, window):
         self.inventory = inventory
-        self.window = window_for_block(block)()
-        self.window.open()
+        self.window = window
 
     def open(self):
-        pass
+        return self.window.open()
 
     def close(self):
-        pass
+        self.window.close()
 
     def action(self, slot, button, transaction, shifted, item):
         return False
@@ -34,27 +33,27 @@ class Chest(object):
 
     implements(IWindow)
 
+    title = "Unnamed Chest"
+    identifier = "chest"
+
     def __init__(self):
         self._damaged = set()
         self.slots = dict((x, None) for x in range(36))
 
     def open(self):
-        pass
+        return self.identifier, self.title, len(self.slots)
 
     def close(self):
         pass
 
-    def altered(self, slot, old):
+    def altered(self, slot, old, new):
         self._damaged.add(slot)
 
     def damaged(self):
-        return iter(self._damaged)
+        return sorted(self._damaged)
 
     def undamage(self):
         self._damaged.clear()
-
-    title = "derp"
-    identifier = "chest"
 
 
 class Workbench(object):
@@ -64,18 +63,19 @@ class Workbench(object):
 
     implements(IWindow)
 
+    title = ""
+    identifier = "workbench"
+
+    slots = 2
+
     def open(self):
-        pass
+        return self.identifier, self.title, self.slots
 
     def close(self):
         pass
 
-    def action(self, slot, button, transaction, shifted, item):
-        return False
-
-    slots = 2
-    title = ""
-    identifier = "workbench"
+    def altered(self, slot, old, new):
+        pass
 
 
 class Furnace(object):
@@ -88,10 +88,15 @@ class Furnace(object):
 
 def window_for_block(block):
     if block.name == "chest":
-        return Chest
+        return Chest()
     elif block.name == "workbench":
-        return Workbench
+        return Workbench()
     elif block.name == "furnace":
-        return Furnace
+        return Furnace()
 
     return None
+
+
+def pane(inventory, block):
+    window = window_for_block(block)
+    return Pane(inventory, window)

@@ -508,13 +508,38 @@ class IWorldResource(IBravoPlugin, IResource):
 class IWindow(Interface):
     """
     An openable window.
+
+    ``IWindow`` generalizes the single-purpose dedicated windows used
+    primarily by blocks which have storage and/or timers associated with them.
+    A window is an object which has some slots which can hold items and
+    blocks, and is receptive to a general protocol which alters those slots in
+    a structured fashion. However, windows do not know about player
+    inventories, and cannot perform wire-protocol-specific actions.
+
+    This interface is the answer to several questions:
+        * How can we write code for workbenches and chests without having to
+          duplicate inventory management code?
+        * How can combination locks or other highly-customized windows be
+          designed?
+        * Is it possible to abstract away the low-level details of mouse
+          actions and instead discuss semantic movement of items through an
+          inventory's various slots and between window panes?
+        * Can windows have background processes happening which result in
+          periodic changes to their viewers?
+
+    Damage tracking might need to be event-driven.
     """
+
+    slots = Attribute("""
+        A mapping of slot numbers to slot data.
+        """)
 
     def open():
         """
         Open a window.
 
-        Returns the title of the window and number of slots in the window.
+        :returns: The identifier of the window, the title of the window, and
+                  the number of slots in the window.
         """
 
     def close():
@@ -522,16 +547,18 @@ class IWindow(Interface):
         Close a window.
         """
 
-    def alter(slot, old):
+    def altered(slot, old, new):
         """
-        Notify the window that a slot has been altered.
+        Notify the window that a slot's data should be changed.
 
-        The old slot data is passed in as `old`.
+        Both the old and new slots are provided.
         """
 
     def damaged():
         """
         Retrieve the damaged slot numbers.
+
+        :returns: A sequence of slot numbers.
         """
 
     def undamage():
