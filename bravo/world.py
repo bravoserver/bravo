@@ -1,6 +1,6 @@
 from array import array
 from functools import wraps
-from itertools import product
+from itertools import imap, product
 import random
 import sys
 import weakref
@@ -60,6 +60,9 @@ class ChunkCache(object):
 
     def dirtied(self, chunk):
         self._dirty[chunk.x, chunk.z] = chunk
+
+    def iterperm(self):
+        return self._perm.itervalues()
 
     def iterdirty(self):
         return self._dirty.itervalues()
@@ -139,7 +142,7 @@ class World(object):
     surrounding objects without an owner.
     """
 
-    season = None
+    _season = None
     """
     The current `ISeason`.
     """
@@ -180,6 +183,18 @@ class World(object):
         self.config_name = "world %s" % name
 
         self._pending_chunks = dict()
+
+    @property
+    def season(self):
+        return self._season
+
+    @season.setter
+    def season(self, value):
+        if self._season != value:
+            self._season = value
+            if self._cache is not None:
+                # Issue 388: Apply the season to the permanent cache.
+                coiterate(imap(value.transform, self._cache.iterperm()))
 
     def connect(self):
         """
