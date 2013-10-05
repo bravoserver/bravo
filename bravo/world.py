@@ -3,7 +3,6 @@ from functools import wraps
 from itertools import imap, product
 import random
 import sys
-import weakref
 
 from twisted.internet import reactor
 from twisted.internet.defer import (inlineCallbacks, maybeDeferred,

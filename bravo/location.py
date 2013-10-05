@@ -8,7 +8,6 @@ import operator
 from construct import Container
 
 from bravo.beta.packets import make_packet
-from bravo.utilities.maths import clamp
 
 def _combinator(op):
     def f(self, other):
@@ -178,6 +177,7 @@ class Location(object):
         # where they cannot get down. We also forbid entities from falling
         # past bedrock.
         # TODO: Fix me, I'm broken
+        # XXX how am I broken?
         if not (32 * 1) <= y:
             y = max(y, 32 * 1)
             self.pos = self.pos._replace(y=y)

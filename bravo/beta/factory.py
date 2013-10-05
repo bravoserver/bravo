@@ -1,5 +1,5 @@
 from collections import defaultdict
-from itertools import chain, product
+from itertools import product
 
 from twisted.internet import reactor
 from twisted.internet.interfaces import IPushProducer

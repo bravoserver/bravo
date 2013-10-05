@@ -1,5 +1,5 @@
 from twisted.application.internet import TCPClient, TCPServer
-from twisted.application.service import Application, MultiService
+from twisted.application.service import MultiService
 from twisted.application.strports import service as serviceForEndpoint
 from twisted.internet.protocol import Factory
 from twisted.python import log

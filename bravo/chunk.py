@@ -527,8 +527,8 @@ class Chunk(object):
             if block in glowing_blocks:
                 composite_glow(self.blocklight, glowing_blocks[block],
                     x, y, z)
-                self.blocklight = array("B", [clamp(x, 0, 15) for x in
-                                              self.blocklight])
+                bl = [clamp(light, 0, 15) for light in self.blocklight]
+                self.blocklight = array("B", bl)
 
             # And the skylight.
             glow = max(self.get_skylight((nx, ny, nz))
