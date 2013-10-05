@@ -7,8 +7,6 @@ from bravo.beta.structures import Slot
 from bravo.inventory import SerializableSlots
 from bravo.inventory.slots import Crafting, Workbench, LargeChestStorage
 
-class NextLoop(Exception):
-    pass
 
 class Window(SerializableSlots):
     """
@@ -128,62 +126,55 @@ class Window(SerializableSlots):
         reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
 
         if container is self.slots.crafting or container is self.slots.fuel:
-            targets = (self.inventory.storage, self.inventory.holdables)
+            targets = self.inventory.storage, self.inventory.holdables
         elif container is self.slots.crafted or container is self.slots.storage:
-            targets = (self.inventory.holdables, self.inventory.storage)
+            targets = self.inventory.holdables, self.inventory.storage
             # in this case notchian client enumerates from the end. o_O
             loop_over = reverse_enumerate
         elif container is self.inventory.storage:
-            if len(self.slots.storage):
-                targets = (self.slots.storage,)
+            if self.slots.storage:
+                targets = self.slots.storage,
             else:
-                targets = (self.inventory.holdables,)
+                targets = self.inventory.holdables,
         elif container is self.inventory.holdables:
-            if len(self.slots.storage):
-                targets = (self.slots.storage,)
+            if self.slots.storage:
+                targets = self.slots.storage,
             else:
-                targets = (self.inventory.storage,)
+                targets = self.inventory.storage,
         else:
             return False
 
-        # find same item to stack
         initial_quantity = item_quantity = item.quantity
-        while item_quantity:
-            try:
-                qty_before = item_quantity
-                for stash in targets:
-                    for i, slot in loop_over(stash):
-                        if slot is not None and slot.holds(item) and slot.quantity < 64 \
-                                and slot.primary not in blocks.unstackable:
-                            count = slot.quantity + item_quantity
-                            if count > 64:
-                                count, item_quantity = 64, count - 64
-                            else:
-                                item_quantity = 0
-                            stash[i] = slot.replace(quantity=count)
-                            container[index] = item.replace(quantity=item_quantity)
-                            self.mark_dirty(stash, i)
-                            self.mark_dirty(container, index)
-                            if item_quantity == 0:
-                                container[index] = None
-                                return True
-                            # one more loop for rest of items
-                            raise NextLoop # break to outer while loop
-                # find empty space to move
-                for stash in targets:
-                    for i, slot in loop_over(stash):
-                        if slot is None:
-                            stash[i] = item.replace(quantity=item_quantity)
-                            container[index] = None
-                            self.mark_dirty(stash, i)
-                            self.mark_dirty(container, index)
-                            return True
-                if item_quantity == qty_before:
-                    # did one loop but was not able to put any of the items
-                    break
-            except NextLoop:
-                # used to break out of all 'for' loops
-                pass
+
+        # find same item to stack
+        for stash in targets:
+            for i, slot in loop_over(stash):
+                if slot is not None and slot.holds(item) and slot.quantity < 64 \
+                        and slot.primary not in blocks.unstackable:
+                    count = slot.quantity + item_quantity
+                    if count > 64:
+                        count, item_quantity = 64, count - 64
+                    else:
+                        item_quantity = 0
+                    stash[i] = slot.replace(quantity=count)
+                    container[index] = item.replace(quantity=item_quantity)
+                    self.mark_dirty(stash, i)
+                    self.mark_dirty(container, index)
+                    if item_quantity == 0:
+                        container[index] = None
+                        return True
+
+        # find empty space to move
+        for stash in targets:
+            for i, slot in loop_over(stash):
+                if slot is None:
+                    # XXX bug; might overflow a slot!
+                    stash[i] = item.replace(quantity=item_quantity)
+                    container[index] = None
+                    self.mark_dirty(stash, i)
+                    self.mark_dirty(container, index)
+                    return True
+
         return initial_quantity != item_quantity
 
     def select(self, slot, alternate=False, shift=False):

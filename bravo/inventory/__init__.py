@@ -3,8 +3,6 @@ from itertools import chain
 from bravo import blocks
 from bravo.beta.structures import Slot
 
-class NextLoop(Exception):
-    pass
 
 class SerializableSlots(object):
     '''
@@ -23,7 +21,7 @@ class SerializableSlots(object):
             # XXX why will it break everything? :T
             raise AttributeError # otherwise it will break everything
         for target in self.metalist:
-            if len(target):
+            if target:
                 target[:], l = l[:len(target)], l[len(target):]
 
     def save_to_list(self):
@@ -49,36 +47,28 @@ class Inventory(SerializableSlots):
         :returns: quantity of items that did not fit inventory
         """
 
-        while quantity:
-            try:
-                qty_before = quantity
-                # Try to stack first
-                for stash in (self.holdables, self.storage):
-                    for i, slot in enumerate(stash):
-                        if slot is not None and slot.holds(item) and slot.quantity < 64 \
-                                            and slot.primary not in blocks.unstackable:
-                            count = slot.quantity + quantity
-                            if count > 64:
-                                count, quantity = 64, count - 64
-                            else:
-                                quantity = 0
-                            stash[i] = slot.replace(quantity=count)
-                            if quantity == 0:
-                                return 0
-                            # one more loop for rest of items
-                            raise NextLoop # break to outer while loop
-                # try to find empty space
-                for stash in (self.holdables, self.storage):
-                    for i, slot in enumerate(stash):
-                        if slot is None:
-                            stash[i] = Slot(item[0], item[1], quantity)
-                            return 0
-                if qty_before == quantity:
-                    # did one loop but was not able to put any of the items
-                    break
-            except NextLoop:
-                # used to break out of all 'for' loops
-                pass
+        # Try to stack first
+        for stash in (self.holdables, self.storage):
+            for i, slot in enumerate(stash):
+                if slot is not None and slot.holds(item) and slot.quantity < 64 \
+                                    and slot.primary not in blocks.unstackable:
+                    count = slot.quantity + quantity
+                    if count > 64:
+                        count, quantity = 64, count - 64
+                    else:
+                        quantity = 0
+                    stash[i] = slot.replace(quantity=count)
+                    if quantity == 0:
+                        return 0
+
+        # try to find empty space
+        for stash in (self.holdables, self.storage):
+            for i, slot in enumerate(stash):
+                if slot is None:
+                    # XXX bug; might overflow a slot!
+                    stash[i] = Slot(item[0], item[1], quantity)
+                    return 0
+
         return quantity
 
     def consume(self, item, index):
@@ -163,15 +153,14 @@ class Inventory(SerializableSlots):
     def load_from_list(self, l):
         SerializableSlots.load_from_list(self, l)
         # reverse armor slots (notchian)
-        self.armor = [i for i in reversed(self.armor)]
+        self.armor.reverse()
 
     def save_to_list(self):
-        # save armor
-        tmp_armor = self.armor
         # reverse armor (notchian)
-        self.armor = [i for i in reversed(self.armor)]
+        self.armor.reverse()
         # generate the list
         l = SerializableSlots.save_to_list(self)
         # restore armor
-        self.armor = tmp_armor
+        self.armor.reverse()
+
         return l
