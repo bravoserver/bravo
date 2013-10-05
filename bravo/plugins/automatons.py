@@ -2,7 +2,7 @@ from __future__ import division
 
 from collections import deque
 from itertools import product
-from random import randint, random
+from random import Random, randint
 
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -88,12 +88,13 @@ class Grass(object):
 
     implements(IAutomaton, IDigHook)
 
-    blocks = (blocks["dirt"].slot,)
+    blocks = blocks["dirt"].slot,
     step = 1
 
     def __init__(self, factory):
         self.factory = factory
 
+        self.r = Random()
         self.tracked = deque()
         self.loop = LoopingCall(self.process)
 
@@ -145,7 +146,7 @@ class Grass(object):
                         grasses += 1
 
                 # Randomly determine whether we are finished.
-                if grasses / 8 >= random():
+                if grasses / 8 >= self.r.random():
                     # Hey, let's make some grass.
                     self.factory.world.set_block(coords, blocks["grass"].slot)
                     # And schedule the chunk to be flushed.

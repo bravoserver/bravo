@@ -202,9 +202,9 @@ class TestGrass(TestCase):
             self.hook.feed((1, 1, 2))
             self.hook.feed((2, 1, 2))
 
-            # Run to completion. This can take varying amounts of time
-            # depending on the RNG, but it should be fairly speedy.
-            # XXX patch the RNG so we can do this deterministically
+            # Run to completion. This is still done with a live RNG, but we
+            # patch it here for determinism.
+            self.hook.r.seed(42)
             while self.hook.tracked:
                 self.hook.process()
 
