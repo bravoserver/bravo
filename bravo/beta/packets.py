@@ -353,7 +353,7 @@ packets = {
         UBInt8("button"),
     ),
     0x08: Struct("health",
-        UBInt16("hp"),
+        BFloat32("hp"),
         UBInt16("fp"),
         BFloat32("saturation"),
     ),
@@ -438,6 +438,7 @@ packets = {
             start_sprint=4,
             stop_sprint=5,
         ),
+        UBInt32("unknown"),
     ),
     0x14: Struct("player",
         UBInt32("eid"),
@@ -552,6 +553,12 @@ packets = {
         SBInt32("z"),
         UBInt16("quantity"),
     ),
+    0x1b: Struct("steer",
+        BFloat32("first"),
+        BFloat32("second"),
+        Bool("third"),
+        Bool("fourth"),
+    ),
     0x1c: Struct("velocity",
         UBInt32("eid"),
         SBInt16("dx"),
@@ -617,8 +624,9 @@ packets = {
     ),
     0x27: Struct("attach",
         UBInt32("eid"),
-        # -1 for detatching
+        # XXX -1 for detatching
         UBInt32("vid"),
+        UBInt8("unknown"),
     ),
     0x28: Struct("metadata",
         UBInt32("eid"),
@@ -639,6 +647,8 @@ packets = {
         UBInt16("level"),
         UBInt16("total"),
     ),
+    # XXX 0x2c, server to client, needs to be implemented, needs special
+    # UUID-packing techniques
     0x33: Struct("chunk",
         SBInt32("x"),
         SBInt32("z"),
@@ -783,6 +793,8 @@ packets = {
         AlphaString("title"),
         UBInt8("slots"),
         UBInt8("use_title"),
+        # XXX iff type == 0xb (currently unknown) write an extra secret int
+        # here. WTF?
     ),
     0x65: Struct("window-close",
         UBInt8("wid"),
@@ -844,9 +856,15 @@ packets = {
         UBInt8("action"),
         PascalString("nbt_data", length_field=UBInt16("length")),  # gzipped
     ),
+    0x85: Struct("0x85",
+        UBInt8("first"),
+        UBInt32("second"),
+        UBInt32("third"),
+        UBInt32("fourth"),
+    ),
     0xc8: Struct("statistics",
-        UBInt32("sid"), # XXX I could be an Enum
-        UBInt8("count"),
+        UBInt32("sid"), # XXX I should be an Enum!
+        UBInt32("count"),
     ),
     0xc9: Struct("players",
         AlphaString("name"),
@@ -855,8 +873,8 @@ packets = {
     ),
     0xca: Struct("abilities",
         UBInt8("flags"),
-        UBInt8("fly-speed"),
-        UBInt8("walk-speed"),
+        BFloat32("fly-speed"),
+        BFloat32("walk-speed"),
     ),
     0xcb: Struct("tab",
         AlphaString("autocomplete"),
@@ -939,6 +957,8 @@ packets = {
         PascalString("key", length_field=UBInt16("key-len")),
         PascalString("token", length_field=UBInt16("token-len")),
     ),
+    # XXX changed structure, looks like more weird-ass
+    # pseudo-backwards-compatible imperative protocol bullshit
     0xfe: Struct("poll", UBInt8("unused")),
     # TODO: rename to 'kick'
     0xff: Struct("error", AlphaString("message")),
