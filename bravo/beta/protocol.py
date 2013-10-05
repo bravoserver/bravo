@@ -1025,27 +1025,15 @@ class BravoProtocol(BetaServerProtocol):
 
         target = blocks[chunk.get_block((smallx, container.y, smallz))]
 
-        # If it's a chest, hax.
-        if target.name == "chest":
-            from bravo.policy.windows import Chest
-            w = Chest()
-            self.windows[self.wid] = w
-
-            w.open()
-            self.write_packet("window-open", wid=self.wid, type=w.identifier,
-                              title=w.title, slots=w.slots)
-
-            self.wid += 1
-            return
-        elif target.name == "workbench":
-            from bravo.policy.windows import Workbench
-            w = Workbench()
-            self.windows[self.wid] = w
-
-            w.open()
-            self.write_packet("window-open", wid=self.wid, type=w.identifier,
-                              title=w.title, slots=w.slots)
-
+        # Attempt to open a window.
+        from bravo.policy.windows import window_for_block
+        window = window_for_block(target)
+        if window is not None:
+            # We have a window!
+            self.windows[self.wid] = window
+            identifier, title, slots = window.open()
+            self.write_packet("window-open", wid=self.wid, type=identifier,
+                              title=title, slots=slots)
             self.wid += 1
             return
 
