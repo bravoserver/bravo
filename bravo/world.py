@@ -193,7 +193,10 @@ class World(object):
             self._season = value
             if self._cache is not None:
                 # Issue 388: Apply the season to the permanent cache.
-                coiterate(imap(value.transform, self._cache.iterperm()))
+                # Use a list so that we don't end up with indefinite amounts
+                # of work to do, and also so that we don't try to do work
+                # while the permanent cache is changing size.
+                coiterate(imap(value.transform, list(self._cache.iterperm())))
 
     def connect(self):
         """
