@@ -1,5 +1,6 @@
 from collections import defaultdict
 from itertools import product
+import json
 
 from twisted.internet import reactor
 from twisted.internet.interfaces import IPushProducer
@@ -441,7 +442,9 @@ class BravoFactory(Factory):
 
         log.msg("Chat: %s" % message.encode("utf8"))
 
-        packet = make_packet("chat", message=message)
+        data = json.dumps({"text": message})
+
+        packet = make_packet("chat", data=data)
         self.broadcast(packet)
 
     def broadcast(self, packet):

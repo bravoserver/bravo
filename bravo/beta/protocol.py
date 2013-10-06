@@ -1,6 +1,7 @@
 # vim: set fileencoding=utf8 :
 
 from itertools import product, chain
+import json
 from time import time
 from urlparse import urlunparse
 
@@ -574,6 +575,14 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         self.write_packet("block", x=x, y=y, z=z, type=block, meta=meta)
 
+    def send_chat(self, message):
+        """
+        Send a chat message back to the client.
+        """
+
+        data = json.dumps({"text": message})
+        self.write_packet("chat", message=data)
+
     # Automatic properties. Assigning to them causes the client to be notified
     # of changes.
 
@@ -860,6 +869,8 @@ class BravoProtocol(BetaServerProtocol):
                 yield i
 
     def chat(self, container):
+        # data = json.loads(container.data)
+        log.msg("Chat! %r" % container.data)
         if container.message.startswith("/"):
             commands = retrieve_plugins(IChatCommand, factory=self.factory)
             # Register aliases.
@@ -873,18 +884,17 @@ class BravoProtocol(BetaServerProtocol):
             if command and command in commands:
                 def cb(iterable):
                     for line in iterable:
-                        self.write_packet("chat", message=line)
+                        self.send_chat(line)
 
                 def eb(error):
-                    self.write_packet("chat", message="Error: %s" %
-                        error.getErrorMessage())
+                    self.send_chat("Error: %s" % error.getErrorMessage())
+
                 d = maybeDeferred(commands[command].chat_command,
                                   self.username, params)
                 d.addCallback(cb)
                 d.addErrback(eb)
             else:
-                self.write_packet("chat",
-                    message="Unknown command: %s" % command)
+                self.send_chat("Unknown command: %s" % command)
         else:
             # Send the message up to the factory to be chatified.
             message = "<%s> %s" % (self.username, container.message)
@@ -1396,8 +1406,7 @@ class BravoProtocol(BetaServerProtocol):
         if self.motd:
             @d.addCallback
             def motd(none):
-                self.write_packet("chat",
-                    message=self.motd.replace("<tagline>", get_motd()))
+                self.send_chat(self.motd.replace("<tagline>", get_motd()))
 
         # Finally, start the secondary chunk loop.
         d.addCallback(lambda none: self.update_chunks())

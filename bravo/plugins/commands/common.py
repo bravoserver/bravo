@@ -1,3 +1,4 @@
+import json
 from textwrap import wrap
 
 from twisted.internet import reactor
@@ -186,7 +187,8 @@ class Say(object):
     def console_command(self, parameters):
         message = "[Server] %s" % " ".join(parameters)
         yield message
-        packet = make_packet("chat", message=message)
+        data = json.dumps({"text": message})
+        packet = make_packet("chat", data=data)
         self.factory.broadcast(packet)
 
     name = "say"

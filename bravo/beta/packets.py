@@ -329,7 +329,7 @@ packets = {
         UBInt32("port"),
     ),
     0x03: Struct("chat",
-        AlphaString("message"),
+        AlphaString("data"),
     ),
     0x04: Struct("time",
         # Total Ticks
