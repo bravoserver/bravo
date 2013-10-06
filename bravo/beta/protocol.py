@@ -38,7 +38,7 @@ from bravo.utilities.temporal import timestamp_from_clock
 # States of the protocol.
 (STATE_UNAUTHENTICATED, STATE_AUTHENTICATED, STATE_LOCATED) = range(3)
 
-SUPPORTED_PROTOCOL = 74
+SUPPORTED_PROTOCOL = 78
 
 class BetaServerProtocol(object, Protocol, TimeoutMixin):
     """
@@ -339,6 +339,8 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         servers for status.
         """
 
+        log.msg("Poll data: %r" % container.data)
+
         players = unicode(len(self.factory.protocols))
         max_players = unicode(self.factory.limitConnections or 1000000)
 
@@ -530,7 +532,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         message, then closes the connection.
         """
 
-        log.msg("Error: %s" % message)
+        log.msg("Error: %r" % message)
         self.transport.write(make_error_packet(message))
         self.transport.loseConnection()
 

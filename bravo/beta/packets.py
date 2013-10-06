@@ -957,9 +957,14 @@ packets = {
         PascalString("key", length_field=UBInt16("key-len")),
         PascalString("token", length_field=UBInt16("token-len")),
     ),
-    # XXX changed structure, looks like more weird-ass
-    # pseudo-backwards-compatible imperative protocol bullshit
-    0xfe: Struct("poll", UBInt8("unused")),
+    0xfe: Struct("poll",
+        Magic("\x01" # Poll packet constant
+              "\xfa" # Followed by a plugin message
+              "\x00\x0b" # Length of plugin channel name
+              + u"MC|PingHost".encode("ucs2") # Plugin channel name
+        ),
+        PascalString("data", length_field=UBInt16("length")),
+    ),
     # TODO: rename to 'kick'
     0xff: Struct("error", AlphaString("message")),
 }
