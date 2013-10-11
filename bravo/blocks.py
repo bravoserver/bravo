@@ -307,6 +307,11 @@ block_names = [
     "",
     "",
     "emerald-block", # 0x85
+    "",
+    "",
+    "",
+    "",
+    "beacon", # 0x8a
 ]
 
 item_names = [
@@ -437,12 +442,23 @@ item_names = [
     "",
     "",
     "",
-    "spawn-egg",
+    "spawn-egg", # 0x17f
     "", # 0x180
     "",
     "",
     "",
     "emerald", #0x184
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "nether-star", # 0x18f
 ]
 
 special_item_names = [
