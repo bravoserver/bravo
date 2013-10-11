@@ -1081,8 +1081,8 @@ class BravoProtocol(BetaServerProtocol):
         elif container.primary in items:
             block = items[container.primary]
         else:
-            log.err("Ignoring request to place unknown block %d" %
-                container.primary)
+            log.err("Ignoring request to place unknown block 0x%x" %
+                    container.primary)
             return
 
         # Run pre-build hooks. These hooks are able to interrupt the build
