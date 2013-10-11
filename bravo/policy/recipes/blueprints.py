@@ -525,4 +525,15 @@ all_blueprints = (
     Blueprint("sticky-piston", (1, 2),
         ((items["slimeball"].key, 1), (blocks["piston"].key, 1)),
         (blocks["sticky-piston"].key, 1)),
+    Blueprint("beacon", (3, 3), (
+        (blocks["glass"].key, 1),
+        (blocks["glass"].key, 1),
+        (blocks["glass"].key, 1),
+        (blocks["glass"].key, 1),
+        (items["nether-star"].key, 1),
+        (blocks["glass"].key, 1),
+        (blocks["obsidian"].key, 1),
+        (blocks["obsidian"].key, 1),
+        (blocks["obsidian"].key, 1),
+    ), (blocks["beacon"].key, 1)),
 )
