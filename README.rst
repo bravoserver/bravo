@@ -88,12 +88,9 @@ python-twisted-web or twisted-web.
 Windows
 -------
 
-No installation required, a standalone executable is available at:
-
-::
-
- http://bravoserver.org/downloads.html
-
+Windows is no longer directly supported. Though if python and dependencies are 
+installed, it should work just fine. Due note, as of this writing, Twisted only
+supports Win32 so make sure to only use Win32 python packages.
 
 Debian & Ubuntu
 ---------------
