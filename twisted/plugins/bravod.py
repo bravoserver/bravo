@@ -1,3 +1,4 @@
+import os
 from zope.interface import implements
 
 from twisted.application.service import IServiceMaker
@@ -15,11 +16,19 @@ class BravoServiceMaker(object):
     tapname = "bravo"
     description = "A Minecraft server"
     options = BravoOptions
+    locations = ['/etc/bravo', os.path.expanduser('~/.bravo'), '.']
 
     def makeService(self, options):
         # Grab our configuration file's path.
         conf = options["config"]
-        path = FilePath(conf)
+        # If config is default value, check locations for configuration file.
+        if conf == options.optParameters[0][2]:
+            for location in self.locations:
+                path = FilePath(os.path.join(location, conf))
+                if path.exists():
+                    break
+        else:
+            path = FilePath(conf)
         if not path.exists():
             raise RuntimeError("Couldn't find config file %r" % conf)
 
