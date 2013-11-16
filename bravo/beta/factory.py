@@ -28,9 +28,10 @@ from bravo.world import World
     STATE_LOCATED) = range(4)
 
 circle = [(i, j)
-    for i, j in product(xrange(-5, 5), xrange(-5, 5))
-    if i**2 + j**2 <= 25
-]
+          for i, j in product(xrange(-5, 5), xrange(-5, 5))
+          if i**2 + j**2 <= 25
+          ]
+
 
 class BravoFactory(Factory):
     """
@@ -72,11 +73,8 @@ class BravoFactory(Factory):
         if self.mode not in ("creative", "survival"):
             raise Exception("Unsupported mode %s" % self.mode)
 
-        self.limitConnections = self.config.getintdefault(self.config_name,
-                                                            "limitConnections",
-                                                            0)
-        self.limitPerIP = self.config.getintdefault(self.config_name,
-                                                      "limitPerIP", 0)
+        self.limitConnections = self.config.getintdefault(self.config_name, "limitConnections", 0)
+        self.limitPerIP = self.config.getintdefault(self.config_name, "limitPerIP", 0)
 
         self.vane = WeatherVane(self)
 
@@ -157,8 +155,7 @@ class BravoFactory(Factory):
 
         # We are ignoring values less that 1, but making sure not to go over
         # the connection limit.
-        if (self.limitConnections
-            and len(self.protocols) >= self.limitConnections):
+        if (self.limitConnections and len(self.protocols) >= self.limitConnections):
             log.msg("Reached maximum players, turning %s away." % addr.host)
             p = KickedProtocol("The player limit has already been reached."
                                " Please try again later.")
@@ -166,8 +163,7 @@ class BravoFactory(Factory):
             return p
 
         # Do our connection-per-IP check.
-        if (self.limitPerIP and
-            self.connectedIPs[addr.host] >= self.limitPerIP):
+        if (self.limitPerIP and self.connectedIPs[addr.host] >= self.limitPerIP):
             log.msg("At maximum connections for %s already, dropping." % addr.host)
             p = KickedProtocol("There are too many players connected from this IP.")
             p.factory = self
@@ -269,8 +265,7 @@ class BravoFactory(Factory):
                 plugins = retrieve_sorted_plugins(interface, l, factory=self)
             else:
                 plugins = retrieve_named_plugins(interface, l, factory=self)
-            log.msg("Using %s: %s" % (t.replace("_", " "),
-                ", ".join(plugin.name for plugin in plugins)))
+            log.msg("Using %s: %s" % (t.replace("_", " "), ", ".join(plugin.name for plugin in plugins)))
             setattr(self, t, plugins)
 
         # Deal with seasons.
@@ -309,7 +304,7 @@ class BravoFactory(Factory):
             "dig_hooks",
             "sign_hooks",
             "use_hooks",
-            ]:
+        ]:
             delattr(self, name)
 
     def create_entity(self, x, y, z, name, **kwargs):
@@ -335,7 +330,7 @@ class BravoFactory(Factory):
             log.msg("Created entity %s" % entity)
             # XXX Maybe just send the entity object to the manager instead of
             # the following?
-            if hasattr(entity,'loop'):
+            if hasattr(entity, 'loop'):
                 self.world.mob_manager.start_mob(entity)
 
         return entity
@@ -533,7 +528,7 @@ class BravoFactory(Factory):
 
         while quantity > 0:
             entity = self.create_entity(x // 32, y // 32, z // 32, "Item",
-                item=block, quantity=min(quantity, 64))
+                                        item=block, quantity=min(quantity, 64))
 
             packet = entity.save_to_packet()
             packet += make_packet("create", eid=entity.eid)
