@@ -28,8 +28,8 @@ class WeatherVane(object):
         # XXX this probably should use the factory's mode rather than
         # hardcoding creative mode. Probably.
         if self.weather == "rainy":
-            return make_packet("change_game_state", state="start_rain", value=0)
+            return make_packet("change_game_state", reason="start_rain", value=0)
         elif self.weather == "sunny":
-            return make_packet("change_game_state", state="stop_rain", value=0)
+            return make_packet("change_game_state", reason="stop_rain", value=0)
         else:
             return ""

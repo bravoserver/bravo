@@ -440,7 +440,7 @@ class Chunk(object):
             data = "".join(pack(">I", record) for record in records)
 
             return make_packet("multi_block_change", chunk_x=self.x, chunk_z=self.z,
-                               count=len(records), data=data)
+                               count=len(records), data_size=len(data), data=data)
 
     def clear_damage(self):
         """
@@ -479,10 +479,12 @@ class Chunk(object):
 
         # Fake the biome data.
         packed.append("\x00" * 256)
+        data = ''.join(packed)
 
-        packet = make_packet("chunk_data", x=self.x, z=self.z, continuous=True,
+        packet = make_packet("chunk_data", chunk_x=self.x, chunk_z=self.z, continuous=True,
                              primary_bitmap=mask, add_bitmap=0x0,
-                             compressed_data=''.join(packed))
+                             compressed_size=len(data),
+                             compressed_data=data)
         return packet
 
     @check_bounds

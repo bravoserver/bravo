@@ -101,7 +101,7 @@ class Crafting(SlotsSet):
             self.crafted[0] = None
         else:
             provides = self.recipe.provides
-            self.crafted[0] = Slot(provides[0][0], provides[0][1], provides[1])
+            self.crafted[0] = Slot(provides[0][0], provides[1], provides[0][1])
 
     def select_crafted(self, index, alternate, shift, selected=None):
         """
@@ -243,7 +243,7 @@ class FurnaceStorage(SlotsSet):
             else:
                 sslot = selected
                 if sslot.holds(self.crafted[0]):
-                    selected = sslot.increment(self.crafted[0].quantity)
+                    selected = sslot.increment(self.crafted[0].count)
                     self.crafted[0] = None
                 else:
                     # Mismatch; don't allow it.

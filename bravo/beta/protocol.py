@@ -16,7 +16,7 @@ from twisted.python import log
 from twisted.web.client import getPage
 
 from bravo import version
-from bravo.beta.structures import BuildData, Settings
+from bravo.beta.structures import BuildData, Settings, Slot
 from bravo.blocks import blocks, items
 from bravo.chunk import CHUNK_HEIGHT
 from bravo.entity import Sign
@@ -65,44 +65,6 @@ def AlphaString(name):
 
 def Bool(*args, **kwargs):
     return Flag(*args, default=True, **kwargs)
-
-
-class Slot(object):
-    def __init__(self, item_id=-1, count=1, damage=0, nbt=None):
-        self.item_id = item_id
-        self.count = count
-        self.damage = damage
-        # TODO: Implement packing/unpacking of gzipped NBT data
-        self.nbt = nbt
-
-    @classmethod
-    def fromItem(cls, item, count):
-        return cls(item[0], count, item[1])
-
-    @property
-    def is_empty(self):
-        return self.item_id == -1
-
-    def __len__(self):
-        return 0 if self.nbt is None else len(self.nbt)
-
-    def __repr__(self):
-        if self.is_empty:
-            return 'Slot()'
-        elif len(self):
-            return 'Slot(%d, count=%d, damage=%d, +nbt:%dB)' % (
-                self.item_id, self.count, self.damage, len(self)
-            )
-        else:
-            return 'Slot(%d, count=%d, damage=%d)' % (
-                self.item_id, self.count, self.damage
-            )
-
-    def __eq__(self, other):
-        return (self.item_id == other.item_id and
-                self.count == other.count and
-                self.damage == self.damage and
-                self.nbt == self.nbt)
 
 
 class SlotAdapter(Adapter):
@@ -441,6 +403,19 @@ client_status = {
 
 client_status_enum = Enum(UBInt8('status'), **client_status)
 
+game_state = {
+    'bad_bed': 0,
+    'start_rain': 1,
+    'stop_rain': 2,
+    'mode_change': 3,
+    'run_credits': 4,
+    'demo-messages': 5,  # New!
+    'arrow_hits_player': 6,  # New!
+    'fade_value': 7,  # New!
+    'fade_time': 8,  # New!
+}
+
+game_state_enum = Enum(UBInt8('reason'), **game_state)
 
 # Commonly-occurring packet elements.
 grounded = Struct("grounded",
@@ -659,8 +634,8 @@ clientbound = {
         0x01: Struct('join',
                      SBInt32('eid'),
                      UBInt8('gamemode'),
-                     SBInt8('dimension'),
-                     UBInt8('difficulty'),
+                     dimension_enum,
+                     difficulty_enum,
                      UBInt8('max_players'),
                      AlphaString('level_type'),
                      ),
@@ -687,18 +662,15 @@ clientbound = {
                      BFloat32('food_saturation'),
                      ),
         0x07: Struct('respawn',
-                     SBInt32('dimension'),
-                     UBInt8('difficulty'),
+                     dimension_enum,
+                     difficulty_enum,
                      UBInt8('gamemode'),
                      AlphaString('level_type'),
                      ),
         0x08: Struct('player_position_and_look',
-                     BFloat64('x'),
-                     BFloat64('y'),
-                     BFloat64('z'),
-                     BFloat32('yaw'),
-                     BFloat32('pitch'),
-                     Bool('on_ground'),
+                     position,
+                     orientation,
+                     grounded,
                      ),
         0x09: Struct('held_item',
                      UBInt8('slot'),
@@ -868,7 +840,7 @@ clientbound = {
                      ),
         0x21: Struct('chunk_data',
                      SBInt32('chunk_x'),
-                     SBInt32('chunk_y'),
+                     SBInt32('chunk_z'),
                      Bool('continuous'),
                      UBInt16('primary_bitmap'),
                      UBInt16('add_bitmap'),
@@ -963,7 +935,7 @@ clientbound = {
                      SBInt32('number'),
                      ),
         0x2b: Struct('change_game_state',
-                     UBInt8('reason'),
+                     game_state_enum,
                      BFloat32('value'),
                      ),
         0x2c: Struct('spawn_global_entity',
@@ -1630,6 +1602,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             return
 
         x, y, z = self.location.pos
+        print "update_location: x=%d, y=%d, z=%d" % (x, y, z)
         yaw, pitch = self.location.ori.to_fracs()
 
         # Inform everybody of our new location.
@@ -1742,7 +1715,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
 
         data = json.dumps({"text": message})
-        self.write_packet("chat", message=data)
+        self.write_packet("chat", json=data)
 
     # Automatic properties. Assigning to them causes the client to be notified
     # of changes.
@@ -2536,6 +2509,7 @@ class BravoProtocol(BetaServerProtocol):
 
         log.msg("Initial, position %d, %d, %d" % self.location.pos)
         x, y, z = self.location.pos.to_block()
+        log.msg("new x=%d, y=%d, z=%d" % (x, y, z))
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
         # Send the chunk that the player will stand on. The other chunks are
@@ -2613,7 +2587,7 @@ class BravoProtocol(BetaServerProtocol):
 
     def update_time(self):
         time = int(self.factory.time)
-        self.write_packet("time", timestamp=time, time=time % 24000)
+        self.write_packet("time", age_of_world=time, time_of_day=time % 24000)
 
     def connectionLost(self, reason=connectionDone):
         """

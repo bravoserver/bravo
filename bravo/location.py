@@ -137,7 +137,7 @@ class Location(object):
         self.ori = Orientation(0.0, 0.0)
 
         # Whether we are in the air.
-        self.grounded = False
+        self.grounded = True  # False
 
     @classmethod
     def at_block(cls, x, y, z):
@@ -217,6 +217,8 @@ class Location(object):
         orientation = Container(rotation=yaw, pitch=pitch)
         grounded = Container(grounded=self.grounded)
 
+        print "Player position and look time!"
+        print "x = %d, y = %d, z = %d, orientation = %s, grounded = %s" % (x, y, z, orientation, grounded)
         packet = make_packet("player_position_and_look", position=position,
                              orientation=orientation, grounded=grounded)
 

@@ -302,11 +302,8 @@ packet = Struct("packet",
 
 class PacketAdapter(LengthValueAdapter):
     def _encode(self, obj, ctx):
-        print('len payload: %d' % len(obj['payload']))
-        print('header: %d, len header: %d' % (obj.header, len(VarInt("header").build(obj['header']))))
         lenobj = len(VarInt("header").build(obj['header'])) + len(obj['payload'])
         newobj = Container(length=lenobj, header=obj.header, payload=obj.payload)
-        print lenobj, newobj
         return newobj
 
 packet_adapter = PacketAdapter(packet)
@@ -376,16 +373,18 @@ def make_packet(packet_name, mode='play', *args, **kwargs):
     if packet_name not in clientbound_by_name[mode]:
         print "Name %s not in mode %s!" % (packet_name, mode)
     header = clientbound_by_name[mode][packet_name]
-    print "Name: %s, mode: %s, header: 0x%.2x" % (packet_name, mode, header)
     for arg in args:
         kwargs.update(dict(arg))
     if kwargs == {}:
-        print "DAMMIT"
         kwargs = {'string': ''}
-    print Container(**kwargs)
     if 'string' in kwargs:
         payload = AlphaString("string").build(kwargs['string'])
     else:
-        payload = clientbound[mode][header].build(Container(**kwargs))
+        try:
+            payload = clientbound[mode][header].build(Container(**kwargs))
+        except Exception as e:
+            print "Oh crap."
+            # print "Container = ", Container(**kwargs)
+            raise e
     new_packet = Container(header=header, payload=payload)
     return packet_adapter.build(new_packet)

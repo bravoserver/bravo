@@ -104,7 +104,7 @@ class Window(SerializableSlots):
         lc = ListContainer()
         for item in chain(*self.metalist):
             if item is None:
-                lc.append(Slot(-1, 0, 0))
+                lc.append(Slot())
             else:
                 lc.append(slot(item_id=item.item_id,
                                count=item.count,
@@ -404,7 +404,7 @@ class SharedWindow(Window):
         packets = ""
         for slot, item in dirty_slots.iteritems():
             if item is None:
-                packets += make_packet("set_slot", wid=self.wid, slot_no=slot, slot=Slot(-1, 0, 0))
+                packets += make_packet("set_slot", wid=self.wid, slot_no=slot, slot=Slot())
             else:
                 packets += make_packet("set_slot", wid=self.wid, slot_no=slot,
                                        slot=Slot(item_id=item.item_id, count=item.count, damage=item.damage))
