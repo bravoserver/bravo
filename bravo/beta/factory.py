@@ -439,7 +439,9 @@ class BravoFactory(Factory):
 
         data = json.dumps({"text": message})
 
-        packet = make_packet("chat", data=data)
+        log.msg("Chat Data: %s" % data)
+
+        packet = make_packet("chat", json=data)
         self.broadcast(packet)
 
     def broadcast(self, packet):
