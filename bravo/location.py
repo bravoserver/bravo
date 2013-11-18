@@ -219,7 +219,7 @@ class Location(object):
 
         print "Player position and look time!"
         print "x = %d, y = %d, z = %d, orientation = %s, grounded = %s" % (x, y, z, orientation, grounded)
-        packet = make_packet("player_position_and_look", position=position,
+        packet = make_packet("player_position_and_look", x=x, y=y, z=z,
                              orientation=orientation, grounded=grounded)
 
         return packet

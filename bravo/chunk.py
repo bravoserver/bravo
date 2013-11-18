@@ -450,9 +450,9 @@ class Chunk(object):
         self.damaged.clear()
         self.all_damaged = False
 
-    def save_to_packet(self):
+    def generate_packet_fodder(self, continuous=True, sky_light=True):
         """
-        Generate a chunk packet.
+        Return packed data for transmission.
         """
 
         mask = 0
@@ -477,12 +477,19 @@ class Chunk(object):
             if mask & 1 << i:
                 packed.append(pack_nibbles(section.skylight))
 
-        # May need to fake add array.
-        packed.append("\x00" * 128)
-
         # Fake the biome data.
         packed.append("\x00" * 256)
         data = ''.join(packed).encode("zlib")
+
+        # Return mask and data.
+        return mask, data
+
+    def save_to_packet(self):
+        """
+        Generate a chunk packet.
+        """
+
+        mask, data = self.generate_packet_fodder()
 
         packet = make_packet("chunk_data", chunk_x=self.x, chunk_z=self.z, continuous=True,
                              primary_bitmap=mask, add_bitmap=0x0,

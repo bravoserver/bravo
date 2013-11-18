@@ -440,7 +440,7 @@ block_target = Struct('block_target',
 
 # Packets.
 serverbound = {
-    'auth': {
+    'handshaking': {
         0x00: Struct('handshaking',
                      VarInt('protocol'),
                      AlphaString('name'),
@@ -565,8 +565,8 @@ serverbound = {
                      ),
         0x13: Struct('player_abilities',
                      UBInt8('flags'),
-                     BFloat32('fly-speed'),
-                     BFloat32('walk-speed'),
+                     BFloat32('fly_speed'),
+                     BFloat32('walk_speed'),
                      ),
         0x14: Struct('tab',
                      AlphaString('autocomplete'),  # text
@@ -592,7 +592,7 @@ serverbound = {
 serverbound_by_name = dict((k, dict((iv.name, ik) for (ik, iv) in serverbound[k].iteritems())) for (k, v) in serverbound.iteritems())
 
 clientbound = {
-    'auth': {
+    'handshaking': {
         0x00: Struct('handshaking',
                      AlphaString('json'),
                      ),
@@ -668,7 +668,9 @@ clientbound = {
                      AlphaString('level_type'),
                      ),
         0x08: Struct('player_position_and_look',
-                     position,
+                     BFloat64("x"),
+                     BFloat64("y"),
+                     BFloat64("z"),
                      orientation,
                      grounded,
                      ),
@@ -888,7 +890,7 @@ clientbound = {
                      MetaArray(lambda ctx: ctx['count'],
                                Struct('metadata',
                                       SBInt32('chunk_x'),
-                                      SBInt32('chunk_y'),
+                                      SBInt32('chunk_z'),
                                       SBInt16('primary_bitmap'),
                                       SBInt16('add_bitmap'),
                                       ),
@@ -1084,7 +1086,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     packet = None
 
     state = STATE_UNAUTHENTICATED
-    mode = 'auth'  # JMT: replace with state soon!
+    mode = 'handshaking'  # JMT: replace with state soon!
 
     buf = ""
     parser = None
@@ -1579,6 +1581,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
         Send a packet to the client.
         """
+        print "writing a packet yay -- packet_name %s" % packet_name
         self.transport.write(make_packet(packet_name, mode=self.mode, *args, **kwargs))
 
     def update_ping(self):
@@ -1893,6 +1896,7 @@ class BravoProtocol(BetaServerProtocol):
     @inlineCallbacks
     def authenticated(self):
         BetaServerProtocol.authenticated(self)
+        self.mode = 'play'
 
         # Init player, and copy data into it.
         self.player = yield self.factory.world.load_player(self.username)
@@ -1904,6 +1908,21 @@ class BravoProtocol(BetaServerProtocol):
 
         # *Now* we are in our factory's list of protocols. Be aware.
         self.factory.protocols[self.username] = self
+
+        # Actually join the game.
+        self.write_packet('join', eid=self.player.eid, gamemode=0, dimension='earth', difficulty='peaceful', max_players=self.factory.limitConnections, level_type="default")
+
+        # Advertise our brand.
+        self.write_packet('plugin_message', channel='MC|Brand', data='bravo')
+
+        # Where are we going to spawn anyway?
+
+        # Shower me with player abilities!
+        kwargs = self.settings.make_interaction_packet_fodder()
+        self.write_packet('player_abilities', **kwargs)
+
+        # What are we holding in our hands?
+        self.write_packet('held_item', slot=0)
 
         # Announce our presence.
         self.factory.chat("%s is joining the game..." % self.username)
@@ -2485,6 +2504,7 @@ class BravoProtocol(BetaServerProtocol):
 
         packet = chunk.save_to_packet()
         self.transport.write(packet)
+        log.msg("Chunk sent!")
 
         for entity in chunk.entities:
             log.msg(entity)
@@ -2630,7 +2650,7 @@ class BravoProtocol(BetaServerProtocol):
                 except (TaskDone, TaskFailed):
                     pass
 
-    # 'auth' packets first!
+    # 'handshaking' packets first!
     def handle_handshaking(self, packet):
         if packet.protocol != SUPPORTED_PROTOCOL:
             self.error("This server does not support your client's protocol.")
@@ -2650,7 +2670,6 @@ class BravoProtocol(BetaServerProtocol):
         self.username = packet.username
         self.uuid = uuid4().bytes
         self.write_packet('login_success', uuid=self.uuid, username=self.username)
-        self.mode = 'play'
         self.authenticated()
 
     def handle_status_request(self, packet):
@@ -2666,14 +2685,14 @@ class BravoProtocol(BetaServerProtocol):
 
     def handle_status_ping(self, packet):
         self.write_packet('status_ping', time=packet.time)
-        self.mode = 'auth'
+        self.mode = 'handshaking'
 
     def handle_keepalive(self, packet):
         # JMT: this assumes the ping value is time related
         # wiki.vg/Protocol says different:
         # basically, server sends random ID, client returns same.
         now = timestamp_from_clock(reactor)
-        then = container.keepalive_id
+        then = packet.keepalive_id
         latency = now - then
 
     def handle_chat(self, packet):
@@ -2737,10 +2756,12 @@ class BravoProtocol(BetaServerProtocol):
         return NotImplementedError
 
     def handle_client_settings(self, packet):
+        # JMT: The packet has more than the object
         self.settings.update_presentation(container)
 
     def handle_client_status(self, packet):
         return NotImplementedError
 
     def handle_plugin_message(self, packet):
-        return NotImplementedError
+        print "Plugin!"
+        print packet

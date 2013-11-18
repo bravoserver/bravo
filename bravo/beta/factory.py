@@ -27,9 +27,10 @@ from bravo.world import World
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
 
+# JMT: testing a bigger circle  was 5 25
 circle = [(i, j)
-          for i, j in product(xrange(-5, 5), xrange(-5, 5))
-          if i**2 + j**2 <= 25
+          for i, j in product(xrange(-10, 10), xrange(-10, 10))
+          if i**2 + j**2 <= 100
           ]
 
 
