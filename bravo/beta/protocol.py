@@ -455,12 +455,12 @@ serverbound = {
                      MetaField('token', lambda ctx: ctx['token_len']),
                      ),
     },
-    'mid-auth': {
+    'login': {
         0x00: Struct('login_start',
                      AlphaString('username'),
                      ),
     },
-    'mid-status': {
+    'status': {
         0x00: Struct('status_request',
                      UBInt8('unknown'),
                      ),
@@ -607,7 +607,7 @@ clientbound = {
                      AlphaString('reason'),
                      ),
     },
-    'mid-status': {
+    'status': {
         0x00: Struct('status_response',
                      AlphaString('json'),
                      ),
@@ -618,7 +618,7 @@ clientbound = {
                      AlphaString('reason'),
                      ),
     },
-    'mid-auth': {
+    'login': {
         0x02: Struct('login_success',
                      AlphaString('uuid'),
                      AlphaString('username'),
@@ -1602,7 +1602,6 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             return
 
         x, y, z = self.location.pos
-        print "update_location: x=%d, y=%d, z=%d" % (x, y, z)
         yaw, pitch = self.location.ori.to_fracs()
 
         # Inform everybody of our new location.
@@ -2488,6 +2487,7 @@ class BravoProtocol(BetaServerProtocol):
         self.transport.write(packet)
 
         for entity in chunk.entities:
+            log.msg(entity)
             packet = entity.save_to_packet()
             self.transport.write(packet)
 
@@ -2507,9 +2507,8 @@ class BravoProtocol(BetaServerProtocol):
         # Disable located hooks. We'll re-enable them at the end.
         self.state = STATE_AUTHENTICATED
 
-        log.msg("Initial, position %d, %d, %d" % self.location.pos)
+        log.msg("Initial position %d, %d, %d" % self.location.pos)
         x, y, z = self.location.pos.to_block()
-        log.msg("new x=%d, y=%d, z=%d" % (x, y, z))
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
         # Send the chunk that the player will stand on. The other chunks are
@@ -2633,16 +2632,13 @@ class BravoProtocol(BetaServerProtocol):
 
     # 'auth' packets first!
     def handle_handshaking(self, packet):
-        log.msg('handle_handshaking')
-        log.msg(packet)
         if packet.protocol != SUPPORTED_PROTOCOL:
             self.error("This server does not support your client's protocol.")
             return ''
         if packet.next_state == 'status':
-            self.mode = 'mid-status'
+            self.mode = 'status'
         elif packet.next_state == 'login':
-            log.msg('login packet received, setting mode to mid-auth')
-            self.mode = 'mid-auth'
+            self.mode = 'login'
         else:
             log.msg('unexpected next state value: %s' % packet.next_state)
         return ''
@@ -2651,7 +2647,6 @@ class BravoProtocol(BetaServerProtocol):
         return NotImplementedError
 
     def handle_login_start(self, packet):
-        log.msg('handle_login_start')
         self.username = packet.username
         self.uuid = uuid4().bytes
         self.write_packet('login_success', uuid=self.uuid, username=self.username)
@@ -2659,21 +2654,6 @@ class BravoProtocol(BetaServerProtocol):
         self.authenticated()
 
     def handle_status_request(self, packet):
-#         {
-# 	"version": {
-# 		"name": "13w41a",
-# 		"protocol": 0
-# 	},
-# 	"players": {
-# 		"max": 100,
-# 		"online": 5,
-# 		"sample":[
-# 			{"name":"Thinkofdeath", "id":""}
-# 		]
-# 	},
-# 	"description": {"text":"Hello world"},
-# 	"favicon": "data:image/png;base64,<data>"
-# }
         version = '"version":{"name":"1.7.2","protocol":4}'
         description = '"description":{"text":"OMG Bravo!"}'
         if len(self.factory.protocols) > 0:
@@ -2682,7 +2662,6 @@ class BravoProtocol(BetaServerProtocol):
             samples = ''
         players = '"players":{"max":%d,"online":%d%s}' % (self.factory.limitConnections, len(self.factory.protocols), samples)
         json_string = '{%s,%s,%s}' % (description, players, version)
-        log.msg('status response: %s' % json_string)
         self.write_packet('status_response', json=json_string)
 
     def handle_status_ping(self, packet):

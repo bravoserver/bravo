@@ -477,9 +477,12 @@ class Chunk(object):
             if mask & 1 << i:
                 packed.append(pack_nibbles(section.skylight))
 
+        # May need to fake add array.
+        packed.append("\x00" * 128)
+
         # Fake the biome data.
         packed.append("\x00" * 256)
-        data = ''.join(packed)
+        data = ''.join(packed).encode("zlib")
 
         packet = make_packet("chunk_data", chunk_x=self.x, chunk_z=self.z, continuous=True,
                              primary_bitmap=mask, add_bitmap=0x0,
