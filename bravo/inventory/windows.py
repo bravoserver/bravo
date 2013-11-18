@@ -104,12 +104,13 @@ class Window(SerializableSlots):
         lc = ListContainer()
         for item in chain(*self.metalist):
             if item is None:
-                lc.append(Container(primary=-1))
+                lc.append(Slot())
             else:
-                lc.append(Container(primary=item.primary,
-                    secondary=item.secondary, count=item.quantity))
+                lc.append(slot(item_id=item.primary,
+                               count=item.quantity,
+                               damage=item.secondary))
 
-        packet = make_packet("inventory", wid=self.wid, length=len(lc), items=lc)
+        packet = make_packet("window_items", wid=self.wid, count=len(lc), items=lc)
         return packet
 
     def select_stack(self, container, index):
@@ -121,7 +122,7 @@ class Window(SerializableSlots):
         if item is None:
             return False
 
-        loop_over = enumerate # default enumerator - from start to end
+        loop_over = enumerate  # default enumerator - from start to end
         # same as enumerate() but in reverse order
         reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
 
@@ -201,11 +202,10 @@ class Window(SerializableSlots):
             return False
 
         if l is self.inventory.armor:
-            result, self.selected = self.inventory.select_armor(index,
-                                         alternate, shift, self.selected)
+            result, self.selected = self.inventory.select_armor(index, alternate, shift, self.selected)
             return result
         elif l is self.slots.crafted:
-            if shift: # shift-click on crafted slot
+            if shift:  # shift-click on crafted slot
                 # Notchian client works this way: you lose items
                 # that was not moved to inventory. So, it's not a bug.
                 if (self.select_stack(self.slots.crafted, 0)):
@@ -217,8 +217,7 @@ class Window(SerializableSlots):
                 else:
                     result = False
             else:
-                result, self.selected = self.slots.select_crafted(index,
-                                            alternate, shift, self.selected)
+                result, self.selected = self.slots.select_crafted(index, alternate, shift, self.selected)
             return result
         elif shift:
             return self.select_stack(l, index)
@@ -299,11 +298,11 @@ class Window(SerializableSlots):
     def drop_selected(self, alternate=False):
         items = []
         if self.selected is not None:
-            if alternate: # drop one item
+            if alternate:  # drop one item
                 i = Slot(self.selected.primary, self.selected.secondary, 1)
                 items.append(i)
                 self.selected = self.selected.decrement()
-            else: # drop all
+            else:  # drop all
                 items.append(self.selected)
                 self.selected = None
         return items
@@ -315,6 +314,7 @@ class Window(SerializableSlots):
     def packets_for_dirty(self, a):
         # override later in SharedWindow
         return ""
+
 
 class InventoryWindow(Window):
     '''
@@ -361,6 +361,7 @@ class InventoryWindow(Window):
         else:
             return False
 
+
 class WorkbenchWindow(Window):
 
     def __init__(self, wid, inventory):
@@ -373,6 +374,7 @@ class WorkbenchWindow(Window):
         m = [self.slots.crafted, self.slots.crafting]
         m += [self.inventory.storage, self.inventory.holdables]
         return m
+
 
 class SharedWindow(Window):
     """
@@ -387,7 +389,7 @@ class SharedWindow(Window):
         """
         Window.__init__(self, wid, inventory, slots)
         self.coords = coords
-        self.dirty_slots = {} # { slot : value, ... }
+        self.dirty_slots = {}  # { slot : value, ... }
 
     def mark_dirty(self, table, index):
         # player's inventory are not shareable slots, skip it
@@ -402,18 +404,19 @@ class SharedWindow(Window):
         packets = ""
         for slot, item in dirty_slots.iteritems():
             if item is None:
-                packets += make_packet("window-slot", wid=self.wid, slot=slot, primary=-1)
+                packets += make_packet("set_slot", wid=self.wid, slot_no=slot, slot=Slot())
             else:
-                packets += make_packet("window-slot", wid=self.wid, slot=slot,
-                                       primary=item.primary, secondary=item.secondary,
-                                       count=item.quantity)
+                packets += make_packet("set_slot", wid=self.wid, slot_no=slot,
+                                       slot=Slot(item_id=item.primary, count=item.quantity, damage=item.secondary))
         return packets
+
 
 class ChestWindow(SharedWindow):
     @property
     def metalist(self):
         m = [self.slots.storage, self.inventory.storage, self.inventory.holdables]
         return m
+
 
 class LargeChestWindow(SharedWindow):
 
@@ -425,6 +428,7 @@ class LargeChestWindow(SharedWindow):
     def metalist(self):
         m = [self.slots.storage, self.inventory.storage, self.inventory.holdables]
         return m
+
 
 class FurnaceWindow(SharedWindow):
 

@@ -3,6 +3,7 @@ from zope.interface import implements
 from bravo.utilities.coords import polar_round_vector
 from bravo.ibravo import IConsoleCommand, IChatCommand
 
+
 # Trivial hello-world command.
 # If this is ever modified, please also update the documentation;
 # docs/extending.rst includes this verbatim in order to demonstrate authoring
@@ -21,6 +22,7 @@ class Hello(object):
     name = "hello"
     aliases = tuple()
     usage = ""
+
 
 class Meliae(object):
     """
@@ -45,6 +47,7 @@ class Meliae(object):
     aliases = tuple()
     usage = "<filename>"
 
+
 class Status(object):
     """
     Print a short summary of the world's status.
@@ -64,7 +67,7 @@ class Status(object):
             dirty = len([i for i in protocol.chunks.values() if i.dirty])
             yield "%s: %d chunks (%d dirty)" % (name, count, dirty)
 
-        chunk_count = 0 # len(self.factory.world.chunk_cache)
+        chunk_count = 0  # len(self.factory.world.chunk_cache)
         dirty = len(self.factory.world._cache._dirty)
         chunk_count += dirty
         yield "World cache: %d chunks (%d dirty)" % (chunk_count, dirty)
@@ -72,6 +75,7 @@ class Status(object):
     name = "status"
     aliases = tuple()
     usage = ""
+
 
 class Colors(object):
     """
@@ -91,12 +95,11 @@ class Colors(object):
     aliases = tuple()
     usage = ""
 
+
 class Rain(object):
     """
     Perform a rain dance.
     """
-
-    # XXX I recommend that this touch the weather vane directly.
 
     implements(IChatCommand)
 
@@ -104,14 +107,11 @@ class Rain(object):
         self.factory = factory
 
     def chat_command(self, username, parameters):
-        from bravo.beta.packets import make_packet
         arg = "".join(parameters)
         if arg == "start":
-            self.factory.broadcast(make_packet("state", state="start_rain",
-                creative=False))
+            self.factory.vane("rainy")
         elif arg == "stop":
-            self.factory.broadcast(make_packet("state", state="stop_rain",
-                creative=False))
+            self.factory.vane("sunny")
         else:
             return ("Couldn't understand you!",)
         return ("*%s did the rain dance*" % (username),)
@@ -119,6 +119,7 @@ class Rain(object):
     name = "rain"
     aliases = tuple()
     usage = "<state>"
+
 
 class CreateMob(object):
     """
@@ -144,10 +145,10 @@ class CreateMob(object):
             return ("Couldn't understand you!",)
         if make:
 #            try:
-            for i in range(0,number):
+            for i in range(0, number):
                 print mob, number
                 entity = self.factory.create_entity(position.x, position.y,
-                        position.z, mob)
+                                                    position.z, mob)
                 self.factory.broadcast(entity.save_to_packet())
                 self.factory.world.mob_manager.start_mob(entity)
             return ("Made mob!",)
@@ -157,6 +158,7 @@ class CreateMob(object):
     name = "mob"
     aliases = tuple()
     usage = "<state>"
+
 
 class CheckCoords(object):
     """
@@ -171,17 +173,17 @@ class CheckCoords(object):
     def chat_command(self, username, parameters):
         offset = set()
         calc_offset = set()
-        for x in range(-1,2):
-            for y in range(0,2):
-                for z in range(-1,2):
+        for x in range(-1, 2):
+            for y in range(0, 2):
+                for z in range(-1, 2):
                     i = x/2
                     j = y
                     k = z/2
-                    offset.add((i,j,k))
+                    offset.add((i, j, k))
         for i in offset:
             calc_offset.add(polar_round_vector(i))
         for i in calc_offset:
-            self.factory.world.sync_set_block(i,8)
+            self.factory.world.sync_set_block(i, 8)
         print 'offset', offset
         print 'offsetlist', calc_offset
         return "Done"

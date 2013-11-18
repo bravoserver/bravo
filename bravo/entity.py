@@ -10,8 +10,10 @@ from bravo.beta.packets import make_packet, Speed, Slot
 from bravo.utilities.geometry import gen_close_point
 from bravo.utilities.maths import clamp
 from bravo.utilities.furnace import (furnace_recipes, furnace_on_off,
-    update_all_windows_slot, update_all_windows_progress)
+                                     update_all_windows_slot,
+                                     update_all_windows_progress)
 from bravo.blocks import furnace_fuel, unstackable
+
 
 class Entity(object):
     """
@@ -43,6 +45,7 @@ class Entity(object):
         return "%s(eid=%d, location=%s)" % (self.name, self.eid, self.location)
 
     __str__ = __repr__
+
 
 class Player(Entity):
     """
@@ -85,8 +88,11 @@ class Player(Entity):
         else:
             item = item[0]
 
-        packet = make_packet("player", eid=self.eid, username=self.username,
-                             x=x, y=y, z=z, yaw=yaw, pitch=pitch, item=item,
+        packet = make_packet("spawn_player",
+                             eid=self.eid,
+                             uuid=self.uuid,
+                             name=self.username,
+                             x=x, y=y, z=z, yaw=yaw, pitch=pitch, current_item=item,
                              # http://www.wiki.vg/Entities#Objects
                              metadata={
                                  0: ('byte', 0),     # Flags
@@ -111,10 +117,11 @@ class Player(Entity):
                 continue
 
             primary, secondary, count = item
-            packet += make_packet("entity-equipment", eid=self.eid, slot=slot,
+            packet += make_packet("entity_equipment", eid=self.eid, slot=slot,
                                   primary=primary, secondary=secondary,
                                   count=1)
         return packet
+
 
 class Painting(Entity):
     """
@@ -142,8 +149,9 @@ class Painting(Entity):
 
         x, y, z = self.location.pos
 
-        return make_packet("painting", eid=self.eid, title=self.motive, x=x,
-                y=y, z=z, face=self.face)
+        return make_packet("spawn_painting", eid=self.eid, title=self.motive, x=x,
+                           y=y, z=z, face=self.face)
+
 
 class Pickup(Entity):
     """
@@ -174,11 +182,11 @@ class Pickup(Entity):
 
         x, y, z = self.location.pos
 
-        packets = make_packet('object', eid=self.eid, type='item_stack',
+        packets = make_packet('spawn_object', eid=self.eid, type='item_stack',
                               x=x, y=y, z=z, yaw=0, pitch=0, data=1,
                               speed=Speed(0, 0, 0))
 
-        packets += make_packet('metadata', eid=self.eid,
+        packets += make_packet('entity_metadata', eid=self.eid,
                                # See http://www.wiki.vg/Entities#Objects
                                metadata={
                                    0: ('byte', 0),     # Flags
@@ -186,6 +194,7 @@ class Pickup(Entity):
                                    10: ('slot', Slot.fromItem(self.item, self.quantity))
                                })
         return packets
+
 
 class Mob(Entity):
     """
@@ -250,16 +259,16 @@ class Mob(Entity):
         # Update metadata from instance variables.
         self.update_metadata()
 
-        return make_packet("mob", eid=self.eid, type=self.name, x=x, y=y, z=z,
-                yaw=yaw, pitch=pitch, head_yaw=yaw, vx=0, vy=0, vz=0,
-                metadata=self.metadata)
+        return make_packet("spawn_mob", eid=self.eid, type=self.name, x=x, y=y, z=z,
+                           yaw=yaw, pitch=pitch, head_yaw=yaw, vx=0, vy=0, vz=0,
+                           metadata=self.metadata)
 
     def save_location_to_packet(self):
         x, y, z = self.location.pos
         yaw, pitch = self.location.ori.to_fracs()
 
-        return make_packet("teleport", eid=self.eid, x=x, y=y, z=z, yaw=yaw,
-                pitch=pitch)
+        return make_packet("entity_teleport", eid=self.eid, x=x, y=y, z=z, yaw=yaw,
+                           pitch=pitch)
 
     def update(self):
         """
@@ -271,9 +280,9 @@ class Mob(Entity):
         player = self.manager.closest_player(self.location.pos, 16)
 
         if player is None:
-            vector = (uniform(-.4,.4),
-                      uniform(-.4,.4),
-                      uniform(-.4,.4))
+            vector = (uniform(-.4, .4),
+                      uniform(-.4, .4),
+                      uniform(-.4, .4))
 
             target = self.location.pos + vector
         else:
@@ -295,7 +304,8 @@ class Mob(Entity):
 
         # XXX explain these magic numbers please
         can_go = self.manager.check_block_collision(self.location.pos,
-                (-10, 0, -10), (16, 32, 16))
+                                                    (-10, 0, -10),
+                                                    (16, 32, 16))
 
         if can_go:
             self.slide = False
@@ -315,9 +325,10 @@ class Chuck(Mob):
 
     name = "Chicken"
     offsetlist = ((.5, 0, .5),
-            (-.5, 0, .5),
-            (.5, 0, -.5),
-            (-.5, 0, -.5))
+                  (-.5, 0, .5),
+                  (.5, 0, -.5),
+                  (-.5, 0, -.5))
+
 
 class Cow(Mob):
     """
@@ -325,6 +336,7 @@ class Cow(Mob):
     """
 
     name = "Cow"
+
 
 class Creeper(Mob):
     """
@@ -350,6 +362,7 @@ class Creeper(Mob):
             17: ("byte", int(self.aura)),
         }
 
+
 class Ghast(Mob):
     """
     A very melancholy ghost.
@@ -357,12 +370,14 @@ class Ghast(Mob):
 
     name = "Ghast"
 
+
 class GiantZombie(Mob):
     """
     Like a regular zombie, but far larger.
     """
 
     name = "GiantZombie"
+
 
 class Pig(Mob):
     """
@@ -388,12 +403,14 @@ class Pig(Mob):
             16: ("byte", int(self.saddle)),
         }
 
+
 class ZombiePigman(Mob):
     """
     A zombie pigman.
     """
 
     name = "PigZombie"
+
 
 class Sheep(Mob):
     """
@@ -424,12 +441,14 @@ class Sheep(Mob):
             16: ("byte", color),
         }
 
+
 class Skeleton(Mob):
     """
     An archer skeleton.
     """
 
     name = "Skeleton"
+
 
 class Slime(Mob):
     """
@@ -455,6 +474,7 @@ class Slime(Mob):
             16: ("byte", self.size),
         }
 
+
 class Spider(Mob):
     """
     A spider.
@@ -462,12 +482,14 @@ class Spider(Mob):
 
     name = "Spider"
 
+
 class Squid(Mob):
     """
     An aquatic source of ink.
     """
 
     name = "Squid"
+
 
 class Wolf(Mob):
     """
@@ -503,35 +525,45 @@ class Wolf(Mob):
             16: ("byte", flags),
         }
 
+
 class Zombie(Mob):
     """
     A zombie.
     """
 
     name = "Zombie"
-    offsetlist = ((-.5,0,-.5), (-.5,0,.5), (.5,0,-.5), (.5,0,.5), (-.5,1,-.5), (-.5,1,.5), (.5,1,-.5), (.5,1,.5),)
+    offsetlist = ((-.5, 0, -.5),
+                  (-.5, 0, .5),
+                  (.5, 0, -.5),
+                  (.5, 0, .5),
+                  (-.5, 1, -.5),
+                  (-.5, 1, .5),
+                  (.5, 1, -.5),
+                  (.5, 1, .5),
+                  )
 
-entities = dict((entity.name, entity)
-    for entity in (
-        Chuck,
-        Cow,
-        Creeper,
-        Ghast,
-        GiantZombie,
-        Painting,
-        Pickup,
-        Pig,
-        Player,
-        Sheep,
-        Skeleton,
-        Slime,
-        Spider,
-        Squid,
-        Wolf,
-        Zombie,
-        ZombiePigman,
-    )
-)
+entities = dict((entity.name,  entity)
+                for entity in (
+                        Chuck, 
+                        Cow,
+                        Creeper,
+                        Ghast,
+                        GiantZombie,
+                        Painting,
+                        Pickup,
+                        Pig,
+                        Player,
+                        Sheep,
+                        Skeleton,
+                        Slime,
+                        Spider,
+                        Squid,
+                        Wolf,
+                        Zombie,
+                        ZombiePigman,
+                )
+                )
+
 
 class Tile(object):
     """
@@ -557,6 +589,7 @@ class Tile(object):
 
         return ""
 
+
 class Chest(Tile):
     """
     A tile that holds items.
@@ -568,6 +601,7 @@ class Chest(Tile):
         super(Chest, self).__init__(*args, **kwargs)
 
         self.inventory = ChestStorage()
+
 
 class Furnace(Tile):
     """
@@ -742,6 +776,7 @@ class Furnace(Tile):
         # By default, yes, you can craft.
         return True
 
+
 class MobSpawner(Tile):
     """
     A tile that spawns mobs.
@@ -749,12 +784,14 @@ class MobSpawner(Tile):
 
     name = "MobSpawner"
 
+
 class Music(Tile):
     """
     A tile which produces a pitch when whacked.
     """
 
     name = "Music"
+
 
 class Sign(Tile):
     """
@@ -782,17 +819,17 @@ class Sign(Tile):
         self.text4 = container.line4
 
     def save_to_packet(self):
-        packet = make_packet("sign", x=self.x, y=self.y, z=self.z,
-            line1=self.text1, line2=self.text2, line3=self.text3,
-            line4=self.text4)
+        packet = make_packet("update_sign", x=self.x, y=self.y, z=self.z,
+                             line1=self.text1, line2=self.text2,
+                             line3=self.text3, line4=self.text4)
         return packet
 
 tiles = dict((tile.name, tile)
-    for tile in (
-        Chest,
-        Furnace,
-        MobSpawner,
-        Music,
-        Sign,
-    )
+             for tile in (
+                     Chest,
+                     Furnace,
+                     MobSpawner,
+                     Music,
+                     Sign,
+             )
 )

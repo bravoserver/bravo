@@ -28,7 +28,7 @@ from bravo.infini.factory import InfiniClientFactory
 from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location, Orientation, Position
 from bravo.motd import get_motd
-from bravo.beta.packets import parse_packets, make_packet, make_error_packet
+from bravo.beta.packets import parse_packets, make_packet
 from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
@@ -36,10 +36,1068 @@ from bravo.utilities.chat import complete, username_alternatives
 from bravo.utilities.maths import circling, clamp, sorted_by_distance
 from bravo.utilities.temporal import timestamp_from_clock
 
+from uuid import uuid5
+
+from collections import namedtuple
+
+from construct import Struct, Container, Embed, Enum, MetaField
+from construct import MetaArray, If, Switch, Const, Peek, Magic
+from construct import OptionalGreedyRange, RepeatUntil
+from construct import Flag, PascalString, Adapter
+from construct import UBInt8, UBInt16, UBInt32, UBInt64
+from construct import SBInt8, SBInt16, SBInt32
+from construct import BFloat32, BFloat64
+from construct import BitStruct, BitField
+from construct import StringAdapter, LengthValueAdapter, Sequence
+from construct import ConstructError
+from varint import VarInt
+
 # States of the protocol.
 (STATE_UNAUTHENTICATED, STATE_AUTHENTICATED, STATE_LOCATED) = range(3)
 
-SUPPORTED_PROTOCOL = 78
+SUPPORTED_PROTOCOL = 4
+
+
+# Data structures required for the beta protocol.
+def AlphaString(name):
+    return PascalString(name, length_field=VarInt('length'))
+
+
+def Bool(*args, **kwargs):
+    return Flag(*args, default=True, **kwargs)
+
+
+class Slot(object):
+    def __init__(self, item_id=-1, count=1, damage=0, nbt=None):
+        self.item_id = item_id
+        self.count = count
+        self.damage = damage
+        # TODO: Implement packing/unpacking of gzipped NBT data
+        self.nbt = nbt
+
+    @classmethod
+    def fromItem(cls, item, count):
+        return cls(item[0], count, item[1])
+
+    @property
+    def is_empty(self):
+        return self.item_id == -1
+
+    def __len__(self):
+        return 0 if self.nbt is None else len(self.nbt)
+
+    def __repr__(self):
+        if self.is_empty:
+            return 'Slot()'
+        elif len(self):
+            return 'Slot(%d, count=%d, damage=%d, +nbt:%dB)' % (
+                self.item_id, self.count, self.damage, len(self)
+            )
+        else:
+            return 'Slot(%d, count=%d, damage=%d)' % (
+                self.item_id, self.count, self.damage
+            )
+
+    def __eq__(self, other):
+        return (self.item_id == other.item_id and
+                self.count == other.count and
+                self.damage == self.damage and
+                self.nbt == self.nbt)
+
+
+class SlotAdapter(Adapter):
+
+    def _decode(self, obj, context):
+        if obj.item_id == -1:
+            s = Slot(obj.item_id)
+        else:
+            s = Slot(obj.item_id, obj.count, obj.damage, obj.nbt)
+        return s
+
+    def _encode(self, obj, context):
+        if not isinstance(obj, Slot):
+            raise ConstructError('Slot object expected')
+        if obj.is_empty:
+            return Container(item_id=-1)
+        else:
+            return Container(item_id=obj.item_id, count=obj.count, damage=obj.damage,
+                             nbt_len=len(obj) if len(obj) else -1, nbt=obj.nbt)
+
+slot = SlotAdapter(
+    Struct("slot",
+           SBInt16("item_id"),
+           If(lambda context: context["item_id"] >= 0,
+              Embed(Struct("item_information",
+                           SBInt8("count"),
+                           SBInt16("damage"),
+                           SBInt16("nbt_len"),
+                           If(lambda context: context["nbt_len"] >= 0,
+                              MetaField("nbt", lambda ctx: ctx["nbt_len"])
+                              )
+                           )),
+              )
+           )
+)
+
+
+Metadata = namedtuple("Metadata", "type value")
+# JMT: merge metadata_types with metadata_switch
+metadata_types = ["byte", "short", "int", "float", "string", "slot", "coords"]
+
+
+# Metadata adaptor.
+class MetadataAdapter(Adapter):
+
+    def _decode(self, obj, context):
+        d = {}
+        for m in obj.data:
+            d[m.id.key] = Metadata(metadata_types[m.id.type], m.value)
+        return d
+
+    def _encode(self, obj, context):
+        c = Container(data=[], terminator=None)
+        for k, v in obj.iteritems():
+            t, value = v
+            d = Container(
+                id=Container(type=metadata_types.index(t), key=k),
+                value=value,
+                peeked=None)
+            c.data.append(d)
+        if c.data:
+            c.data[-1].peeked = 127
+        else:
+            c.data.append(Container(id=Container(first=0, second=0), value=0,
+                                    peeked=127))
+        return c
+
+# Metadata inner container.
+metadata_switch = {
+    0: UBInt8("value"),
+    1: SBInt16("value"),
+    2: SBInt32("value"),
+    3: BFloat32("value"),
+    4: PascalString("value"),
+    5: slot,
+    6: Struct("coords",
+              SBInt32("x"),
+              SBInt32("y"),
+              SBInt32("z"),
+              ),
+}
+
+# Metadata subconstruct.
+metadata = MetadataAdapter(
+    Struct("metadata",
+           RepeatUntil(lambda obj, context: obj["peeked"] == 0x7f,
+                       Struct("data",
+                              BitStruct("id",
+                                        BitField("type", 3),
+                                        BitField("key", 5),
+                                        ),
+                              Switch("value", lambda context: context["id"]["type"],
+                                     metadata_switch),
+                              Peek(UBInt8("peeked")),
+                              ),
+                       ),
+           Const(UBInt8("terminator"), 0x7f),
+           ),
+)
+
+# Enums.
+mobtypes = {
+    50: 'Creeper',
+    51: 'Skeleton',
+    52: 'Spider',
+    53: 'Giant Zombie',
+    54: 'Zombie',
+    55: 'Slime',
+    56: 'Ghast',
+    57: 'Zombie Pigman',
+    58: 'Enderman',
+    59: 'Cave Spider',
+    60: 'Silverfish',
+    61: 'Blaze',
+    62: 'Magma Cube',
+    63: 'Ender Dragon',
+    64: 'Wither',
+    65: 'Bat',
+    66: 'Witch',
+    90: 'Pig',
+    91: 'Sheep',
+    92: 'Cow',
+    93: 'Chicken',
+    94: 'Squid',
+    95: 'Wolf',
+    96: 'Mooshroom',
+    97: 'Snowman',
+    98: 'Ocelot',
+    99: 'Iron Golem',
+    100: 'Horse',
+    120: 'Villager',
+}
+
+objecttypes = {
+    1: 'Boat',
+    2: 'Item Stack (Slot)',
+    10: 'Minecart',
+    11: 'Minecart (storage)',
+    12: 'Minecart (powered)',
+    50: 'Activated TNT',
+    51: 'EnderCrystal',
+    60: 'Arrow (projectile)',
+    61: 'Snowball (projectile)',
+    62: 'Egg (projectile)',
+    63: 'FireBall (ghast projectile)',
+    64: 'FireCharge (blaze projectile)',
+    65: 'Thrown Enderpearl',
+    66: 'Wither Skull (projectile)',
+    70: 'Falling Objects',
+    71: 'Item frames',
+    72: 'Eye of Ender',
+    73: 'Thrown Potion',
+    74: 'Falling Dragon Egg',
+    75: 'Thrown Exp Bottle',
+    90: 'Fishing Float',
+}
+
+clientanimationtypes = {
+    0: 'Swing arm',
+    1: 'Damage animation',
+    2: 'Leave bed',
+    3: 'Eat food',
+    4: 'Critical effect',
+    5: 'Magic critical effect',
+    102: '(unknown)',
+    104: 'Crouch',
+    105: 'Uncrouch',
+}
+
+entitystatustypes = {
+    2: 'Entity hurt',
+    3: 'Entity dead',
+    6: 'Wolf taming',
+    7: 'Wolf tamed',
+    8: 'Wolf shaking water off itself',
+    9: '(of self) Eating accepted by server',
+    10: 'Sheep eating grass',
+    11: 'Iron Golem handing over a rose',
+    12: 'Spawn "heart" particles near a villager',
+    13: 'Spawn particles indicating that a villager is angry and seeking revenge',
+    14: 'Spawn happy particles near a villager',
+    15: 'Spawn a "magic" particle near the Witch',
+    16: 'Zombie converting into a villager by shaking violently (unused in recent update)',
+    17: 'A firework exploding',
+}
+
+effecttypes = {
+    1000: 'random.click',
+    1001: 'random.click',
+    1002: 'random.bow',
+    1003: 'random.door_open or random.door_close (50/50 chance)',
+    1004: 'random.fizz',
+    1005: 'Play a music disc.',  # Data: Record ID
+    1007: 'mob.ghast.charge',
+    1008: 'mob.ghast.fireball',
+    1009: 'mob.ghast.fireball, but with a lower volume.',
+    1010: 'mob.zombie.wood',
+    1011: 'mob.zombie.metal',
+    1012: 'mob.zombie.woodbreak',
+    1013: 'mob.wither.spawn',
+    1014: 'mob.wither.shoot',
+    1015: 'mob.bat.takeoff',
+    1016: 'mob.zombie.infect',
+    1017: 'mob.zombie.unfect',
+    1018: 'mob.enderdragon.end',
+    1020: 'random.anvil_break',
+    1021: 'random.anvil_use',
+    1022: 'random.anvil_land',
+    2000: 'Spawns 10 smoke particles, e.g. from a fire.',  # Data: smoke direction
+    2001: 'Block break.',  # Data: Block ID
+    2002: 'Splash potion. Particle effect + glass break sound.',  # Data: Potion ID
+    2003: 'Eye of ender entity break animation - particles and sound',
+    2004: 'Mob spawn particle effect: smoke + flames',
+    2005: 'Spawn "happy villager" effect (hearts).',
+}
+
+smokedirectiontypes = {
+    0: 'Southeast',
+    1: 'South',
+    2: 'Southwest',
+    3: 'East',
+    4: 'Up',
+    5: 'West',
+    6: 'Northeast',
+    7: 'North',
+    8: 'Northwest',
+}
+
+reasontypes = {
+    0: 'Invalid Bed',  # "tile.bed.notValid"
+    1: 'End raining',
+    2: 'Begin raining',
+    3: 'Change game mode',  # "gameMode.changed" 0 - Survival, 1 - Creative, 2 - Adventure
+    4: 'Enter credits',
+    5: 'Demo messages',  # 0 - Show welcome to demo screen, 101 - Tell movement controls, 102 - Tell jump control, 103 - Tell inventory control
+    6: 'Arrow hitting player',  # Appears to be played when an arrow strikes another player in Multiplayer
+    7: 'Fade value',  # The current darkness value. 1 = Dark, 0 = Bright, Setting the value higher causes the game to change color and freeze
+    8: 'Fade time',  # Time in ticks for the sky to fade
+}
+
+# Old enums.
+faces = {
+    'noop': -1,
+    '-y': 0,
+    '+y': 1,
+    '-z': 2,
+    '+z': 3,
+    '-x': 4,
+    '+x': 5,
+}
+
+face_enum = Enum(SBInt8('face'), **faces)
+
+dimensions = {
+    'earth': 0,
+    'sky': 1,
+    'nether': -1,
+}
+
+dimension_enum = Enum(SBInt8('dimension'), **dimensions)
+
+difficulties = {
+    'peaceful': 0,
+    'easy': 1,
+    'normal': 2,
+    'hard': 3,
+}
+
+difficulty_enum = Enum(UBInt8('difficulty'), **difficulties)
+
+modes = {
+    'survival': 0,
+    'creative': 1,
+    'adventure': 2,
+}
+
+mode_enum = Enum(UBInt8('mode'), **modes)
+
+# Packet-specific enums.
+handshaking_state = {
+    'status': 1,
+    'login': 2,
+}
+
+handshaking_state_enum = Enum(VarInt('next_state'), **handshaking_state)
+
+mouse = {
+    'left': 0,
+    'right': 1,
+}
+
+mouse_enum = Enum(UBInt8('mouse'), **mouse)
+
+player_digging_status = {
+    'started': 0,
+    'cancelled': 1,
+    'stopped': 2,
+    'dropped_stack': 3,  # New!
+    'dropped': 4,
+    'shooting': 5,  # Also eating
+}
+
+player_digging_status_enum = Enum(UBInt8('status'), **player_digging_status)
+
+server_animation = {
+    'noop': 0,
+    'arm': 1,
+    'hit': 2,
+    'leave_bed': 3,
+    # XXX FIX ME
+    'eat': 5,
+    'critical': 6,  # New!
+    'magic_critical': 7,  # New!
+    'unknown': 102,
+    'crouch': 104,
+    'uncrouch': 105,
+}
+
+server_animation_enum = Enum(UBInt8('animation'), **server_animation)
+
+entity_action = {
+    'crouch': 1,
+    'uncrouch': 2,
+    'leave_bed': 3,
+    'start_sprint': 4,
+    'stop_sprint': 5,
+}
+
+entity_action_enum = Enum(UBInt8('action'), **entity_action)
+
+client_status = {
+    'respawn': 0,
+    'stats': 1,
+    'open_inventory_achievement': 2,
+}
+
+client_status_enum = Enum(UBInt8('status'), **client_status)
+
+
+# Commonly-occurring packet elements.
+grounded = Struct("grounded",
+                  UBInt8("grounded"),  # Bool('on_ground')
+                  )
+position = Struct("position",
+                  BFloat64("x"),
+                  BFloat64("y"),
+                  BFloat64("stance"),
+                  BFloat64("z")
+                  )
+orientation = Struct("orientation",
+                     BFloat32("rotation"),  # BFloat32('yaw')
+                     BFloat32("pitch"),
+                     )
+# JMT: try adding these
+block_target = Struct('block_target',
+                      SBInt32('x'),
+                      UBInt8('y'),
+                      SBInt32('z'),
+                      )
+
+# Packets.
+serverbound = {
+    'auth': {
+        0x00: Struct('handshaking',
+                     VarInt('protocol'),
+                     AlphaString('name'),
+                     UBInt16('port'),
+                     # VarInt('next_state'),
+                     handshaking_state_enum,
+                     ),
+        0x01: Struct('encryption_response',
+                     SBInt16('key_len'),
+                     MetaField('key', lambda ctx: ctx['key_len']),
+                     SBInt16('token_len'),
+                     MetaField('token', lambda ctx: ctx['token_len']),
+                     ),
+    },
+    'mid-auth': {
+        0x00: Struct('login_start',
+                     AlphaString('username'),
+                     ),
+    },
+    'mid-status': {
+        0x00: Struct('status_request',
+                     UBInt8('unknown'),
+                     ),
+        0x01: Struct('status_ping',
+                     UBInt64('time'),
+                     ),
+    },
+    'play': {
+        0x00: Struct('keepalive',
+                     SBInt32('keepalive_id'),
+                     ),
+        0x01: Struct('chat',
+                     AlphaString('message'),
+                     ),
+        0x02: Struct('use_entity',
+                     UBInt32('target'),  # eid is apparently self
+                     mouse_enum,
+                     ),
+        0x03: Struct('player',
+                     grounded,
+                     ),
+        0x04: Struct('player_position',
+                     position,
+                     grounded,
+                     ),
+        0x05: Struct('player_look',
+                     orientation,
+                     grounded,
+                     ),
+        0x06: Struct('player_position_and_look',
+                     position,
+                     orientation,
+                     grounded,
+                     ),
+        0x07: Struct('player_digging',
+                     player_digging_status_enum,
+                     SBInt32('x'),
+                     UBInt8('y'),
+                     SBInt32('z'),
+                     face_enum,
+                     ),
+        0x08: Struct('player_block_placement',
+                     SBInt32('x'),
+                     UBInt8('y'),
+                     SBInt32('z'),
+                     face_enum,  # direction
+                     slot,
+                     UBInt8('cursorx'),
+                     UBInt8('cursory'),
+                     UBInt8('cursorz'),
+                     ),
+        0x09: Struct('held_item_change',
+                     UBInt16('slot'),
+                     ),
+        0x0a: Struct('animate',
+                     UBInt32('eid'),
+                     server_animation_enum,
+                     ),
+        0x0b: Struct('entity_action',
+                     UBInt32('eid'),
+                     entity_action_enum,
+                     UBInt32('unknown'),  # jump_boost
+                     ),
+        0x0c: Struct('steer_vehicle',
+                     BFloat32('first'),  # sideways
+                     BFloat32('second'),  # forward
+                     Bool('third'),  # jump
+                     Bool('fourth'),  # mount
+                     ),
+        0x0d: Struct('close_window',
+                     UBInt8('wid'),
+                     ),
+        0x0e: Struct('click_window',
+                     UBInt8('wid'),
+                     SBInt16('slot_no'),
+                     UBInt8('button'),
+                     UBInt16('token'),
+                     UBInt8('shift'),  # TODO: rename to 'mode'  <-- old
+                     slot,  # Embed(items),  # slot
+                     ),
+        0x0f: Struct('confirm_transaction',
+                     UBInt8('wid'),
+                     UBInt16('token'),
+                     Bool('acknowledged'),
+                     ),
+        0x10: Struct('creative_inventory_action',
+                     UBInt16('slot_no'),
+                     slot,  # Embed(items),  # slot
+                     ),
+        0x11: Struct('enchant_item',
+                     UBInt8('wid'),
+                     UBInt8('enchantment'),
+                     ),
+        0x12: Struct('update_sign',
+                     SBInt32('x'),
+                     UBInt16('y'),  # JMT: yet another y sigh
+                     SBInt32('z'),
+                     AlphaString('line1'),
+                     AlphaString('line2'),
+                     AlphaString('line3'),
+                     AlphaString('line4'),
+                     ),
+        0x13: Struct('player_abilities',
+                     UBInt8('flags'),
+                     BFloat32('fly-speed'),
+                     BFloat32('walk-speed'),
+                     ),
+        0x14: Struct('tab',
+                     AlphaString('autocomplete'),  # text
+                     ),
+        0x15: Struct('client_settings',
+                     AlphaString('locale'),
+                     UBInt8('distance'),
+                     UBInt8('chat'),
+                     Bool('unused'),
+                     difficulty_enum,
+                     Bool('cape'),
+                     ),
+        0x16: Struct('client_status',
+                     UBInt8('payload'),
+                     ),
+        0x17: Struct('plugin_message',
+                     AlphaString('channel'),
+                     PascalString('data', length_field=UBInt16('length')),
+                     ),
+    }
+}
+
+serverbound_by_name = dict((k, dict((iv.name, ik) for (ik, iv) in serverbound[k].iteritems())) for (k, v) in serverbound.iteritems())
+
+clientbound = {
+    'auth': {
+        0x00: Struct('handshaking',
+                     AlphaString('json'),
+                     ),
+        0x01: Struct('encryption_request',
+                     AlphaString('server_id'),
+                     SBInt16('key_len'),
+                     MetaField('key', lambda ctx: ctx['key_len']),
+                     SBInt16('token_len'),
+                     MetaField('token', lambda ctx: ctx['token_len']),
+                     ),
+        0x02: Struct('login_success',
+                     AlphaString('uuid'),
+                     AlphaString('username'),
+                     ),
+        0x40: Struct('disconnect',
+                     AlphaString('reason'),
+                     ),
+    },
+    'mid-status': {
+        0x00: Struct('status_response',
+                     AlphaString('json'),
+                     ),
+        0x01: Struct('status_ping',
+                     UBInt64('time'),
+                     ),
+        0x40: Struct('disconnect',
+                     AlphaString('reason'),
+                     ),
+    },
+    'mid-auth': {
+        0x40: Struct('disconnect',
+                     AlphaString('reason'),
+                     ),
+    },
+    'play': {
+        0x00: Struct('keepalive',
+                     SBInt32('keepalive_id'),
+                     ),
+        0x01: Struct('join',
+                     SBInt32('eid'),
+                     UBInt8('gamemode'),
+                     SBInt8('dimension'),
+                     UBInt8('difficulty'),
+                     UBInt8('max_players'),
+                     AlphaString('level_type'),
+                     ),
+        0x02: Struct('chat',
+                     AlphaString('json'),
+                     ),
+        0x03: Struct('time',
+                     UBInt64('age_of_world'),
+                     UBInt64('time_of_day'),
+                     ),
+        0x04: Struct('entity_equipment',
+                     SBInt32('eid'),
+                     SBInt16('slot_no'),
+                     slot,
+                     ),
+        0x05: Struct('spawn_position',
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     ),
+        0x06: Struct('update_health',
+                     BFloat32('health'),
+                     SBInt16('food'),
+                     BFloat32('food_saturation'),
+                     ),
+        0x07: Struct('respawn',
+                     SBInt32('dimension'),
+                     UBInt8('difficulty'),
+                     UBInt8('gamemode'),
+                     AlphaString('level_type'),
+                     ),
+        0x08: Struct('player_position_and_look',
+                     BFloat64('x'),
+                     BFloat64('y'),
+                     BFloat64('z'),
+                     BFloat32('yaw'),
+                     BFloat32('pitch'),
+                     Bool('on_ground'),
+                     ),
+        0x09: Struct('held_item',
+                     UBInt8('slot'),
+                     ),
+        0x0a: Struct('use_bed',
+                     SBInt32('eid'),
+                     SBInt32('x'),
+                     UBInt8('y'),
+                     SBInt32('z'),
+                     ),
+        0x0b: Struct('animation',
+                     VarInt('eid'),
+                     UBInt8('animation'),
+                     ),
+        0x0c: Struct('spawn_player',
+                     VarInt('eid'),
+                     AlphaString('uuid'),
+                     AlphaString('name'),
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     UBInt8('yaw'),
+                     UBInt8('pitch'),
+                     SBInt16('current_item'),
+                     metadata,
+                     ),
+        0x0d: Struct('collect_item',
+                     SBInt32('collected_eid'),
+                     SBInt32('collector_eid'),
+                     ),
+        0x0e: Struct('spawn_object',
+                     VarInt('eid'),
+                     UBInt8('type'),  # object types are scary
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     SBInt8('pitch'),
+                     SBInt8('yaw'),
+                     SBInt32('data'),
+                     If(lambda ctx: ctx['data'] != 0,
+                        Struct('speed',
+                               SBInt16('x'),
+                               SBInt16('y'),
+                               SBInt16('z'),
+                               ),
+                        ),
+                     ),
+        0x0f: Struct('spawn_mob',
+                     VarInt('eid'),
+                     UBInt8('type'),  # mob types are scary
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     UBInt8('pitch'),
+                     UBInt8('head_pitch'),
+                     UBInt8('yaw'),
+                     SBInt16('vx'),
+                     SBInt16('vy'),
+                     SBInt16('vz'),
+                     metadata,
+                     ),
+        0x10: Struct('spawn_painting',
+                     VarInt('eid'),
+                     AlphaString('title'),  # max len 13 ?
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     SBInt32('direction'),
+                     ),
+        0x11: Struct('spawn_experience_orb',
+                     VarInt('eid'),
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     SBInt16('count'),
+                     ),
+        0x12: Struct('entity_velocity',
+                     SBInt32('eid'),
+                     SBInt16('vx'),
+                     SBInt16('vy'),
+                     SBInt16('vz'),
+                     ),
+        0x13: Struct('destroy_entities',
+                     SBInt8('count'),
+                     MetaArray(lambda ctx: ctx['count'], SBInt32('eid')),
+                     ),
+        0x14: Struct('create_entity',
+                     SBInt32('eid'),
+                     ),
+        0x15: Struct('entity_relative_move',
+                     SBInt32('eid'),
+                     UBInt8('dx'),
+                     UBInt8('dy'),
+                     UBInt8('dz'),
+                     ),
+        0x16: Struct('entity_look',
+                     SBInt32('eid'),
+                     UBInt8('yaw'),
+                     UBInt8('pitch'),
+                     ),
+        0x17: Struct('entity_look_and_relative_move',
+                     SBInt32('eid'),
+                     UBInt8('dx'),
+                     UBInt8('dy'),
+                     UBInt8('dz'),
+                     UBInt8('yaw'),
+                     UBInt8('pitch'),
+                     ),
+        0x18: Struct('entity_teleport',
+                     SBInt32('eid'),
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     UBInt8('yaw'),
+                     UBInt8('pitch'),
+                     ),
+        0x19: Struct('entity_head_look',
+                     SBInt32('eid'),
+                     UBInt8('head_yaw'),
+                     ),
+        0x1a: Struct('entity_status',
+                     SBInt32('eid'),
+                     UBInt8('status'),
+                     ),
+        0x1b: Struct('attach_entity',
+                     SBInt32('eid'),
+                     SBInt32('vehicle'),
+                     Bool('leash'),
+                     ),
+        0x1c: Struct('entity_metadata',
+                     SBInt32('eid'),
+                     metadata,
+                     ),
+        0x1d: Struct('entity_effect',
+                     SBInt32('eid'),
+                     UBInt8('effect'),
+                     UBInt8('amplifier'),
+                     SBInt16('duration'),
+                     ),
+        0x1e: Struct('entity_remove_effect',
+                     SBInt32('eid'),
+                     UBInt8('effect'),
+                     ),
+        0x1f: Struct('set_experience',
+                     BFloat32('bar'),
+                     SBInt16('level'),
+                     SBInt16('total'),
+                     ),
+        0x20: Struct('entity_properties',
+                     SBInt32('eid'),
+                     SBInt32('count'),
+                     MetaArray(lambda ctx: ctx['count'],
+                               Struct('property',
+                                      AlphaString('key'),
+                                      BFloat64('value'),
+                                      SBInt16('list_length'),
+                                      MetaArray(lambda ctx: ctx['list_length'],
+                                                Struct('modifier',
+                                                       UBInt64('uuid_1'),
+                                                       UBInt64('uuid_2'),
+                                                       BFloat64('amount'),
+                                                       UBInt8('operation'),
+                                                       ),
+                                                ),
+                                      ),
+                               ),
+                     ),
+        0x21: Struct('chunk_data',
+                     SBInt32('chunk_x'),
+                     SBInt32('chunk_y'),
+                     Bool('continuous'),
+                     UBInt16('primary_bitmap'),
+                     UBInt16('add_bitmap'),
+                     SBInt32('compressed_size'),
+                     MetaField('compressed_data',
+                               lambda ctx: ctx['compressed_size']
+                               ),
+                     ),
+        0x22: Struct('multi_block_change',
+                     SBInt32('chunk_x'),
+                     SBInt32('chunk_z'),
+                     SBInt16('count'),
+                     SBInt32('data_size'),
+                     MetaField('data',
+                               lambda ctx: ctx['data_size']
+                               ),
+                     ),
+        0x23: Struct('block_change',
+                     SBInt32('x'),
+                     UBInt8('y'),
+                     SBInt32('z'),
+                     VarInt('block_type'),
+                     UBInt8('block_data'),
+                     ),
+        0x24: Struct('block_action',
+                     SBInt32('x'),
+                     SBInt16('y'),
+                     SBInt32('z'),
+                     UBInt8('byte_1'),
+                     UBInt8('byte_2'),
+                     VarInt('block_type'),
+                     ),
+        0x25: Struct('block_break_animation',
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     UBInt8('destroy_stage'),
+                     ),
+        0x26: Struct('map_chunk_bulk',
+                     SBInt16('count'),
+                     SBInt32('length'),
+                     Bool('sky_light_sent'),
+                     MetaField('data',
+                               lambda ctx: ctx['length']),
+                     MetaArray(lambda ctx: ctx['count'],
+                               Struct('metadata',
+                                      SBInt32('chunk_x'),
+                                      SBInt32('chunk_y'),
+                                      SBInt16('primary_bitmap'),
+                                      SBInt16('add_bitmap'),
+                                      ),
+                               ),
+                     ),
+        0x27: Struct('explosion',
+                     BFloat32('x'),
+                     BFloat32('y'),
+                     BFloat32('z'),
+                     BFloat32('radius'),
+                     SBInt32('count'),
+                     MetaField('data',
+                               lambda ctx: ctx['count']*3
+                               ),
+                     BFloat32('player_motion_x'),
+                     BFloat32('player_motion_y'),
+                     BFloat32('player_motion_z'),
+                     ),
+        0x28: Struct('effect',
+                     SBInt32('eid'),
+                     SBInt32('x'),
+                     UBInt8('y'),
+                     SBInt32('z'),
+                     SBInt32('data'),
+                     Bool('disable_relative_volume'),
+                     ),
+        0x29: Struct('sound_effect',
+                     AlphaString('sound_name'),
+                     SBInt32('effect_x'),
+                     SBInt32('effect_y'),
+                     SBInt32('effect_z'),
+                     BFloat32('volume'),
+                     UBInt8('pitch'),
+                     ),
+        0x2a: Struct('particle',
+                     AlphaString('sound_name'),
+                     BFloat32('x'),
+                     BFloat32('y'),
+                     BFloat32('z'),
+                     BFloat32('offset_x'),
+                     BFloat32('offset_y'),
+                     BFloat32('offset_z'),
+                     BFloat32('data'),
+                     SBInt32('number'),
+                     ),
+        0x2b: Struct('change_game_state',
+                     UBInt8('reason'),
+                     BFloat32('value'),
+                     ),
+        0x2c: Struct('spawn_global_entity',
+                     VarInt('eid'),
+                     UBInt8('type'),
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     ),
+        0x2d: Struct('open_window',
+                     UBInt8('wid'),
+                     UBInt8('type'),
+                     AlphaString('title'),
+                     UBInt8('slots'),
+                     Bool('use_provided_title'),
+                     If(lambda ctx: ctx['type'] == 11,
+                        SBInt32('eid'),
+                        ),
+                     ),
+        0x2e: Struct('close_window',
+                     UBInt8('wid'),
+                     ),
+        0x2f: Struct('set_slot',
+                     UBInt8('wid'),
+                     SBInt16('slot_no'),
+                     slot,
+                     ),
+        0x30: Struct('window_items',
+                     UBInt8('wid'),
+                     UBInt16('count'),
+                     MetaArray(lambda ctx: ctx['count'], slot),
+                     ),
+        0x31: Struct('window_property',
+                     UBInt8('wid'),
+                     SBInt8('property'),
+                     SBInt8('value'),
+                     ),
+        0x32: Struct('confirm_transaction',
+                     UBInt8('wid'),
+                     UBInt16('action_number'),
+                     Bool('accepted'),
+                     ),
+        0x33: Struct('update_sign',
+                     SBInt32('x'),
+                     SBInt16('y'),
+                     SBInt32('z'),
+                     AlphaString('line_1'),
+                     AlphaString('line_2'),
+                     AlphaString('line_3'),
+                     AlphaString('line_4'),
+                     ),
+        0x34: Struct('maps',
+                     VarInt('damage'),
+                     SBInt16('length'),
+                     MetaField('data', lambda ctx: ctx['length']),
+                     ),
+        0x35: Struct('update_block_entity',
+                     SBInt32('x'),
+                     SBInt16('y'),
+                     SBInt32('z'),
+                     UBInt8('action'),
+                     SBInt16('nbt_len'),
+                     If(lambda ctx: ctx['nbt_len'] > 0,
+                        MetaField('nbt', lambda ctx: ctx['nbt_len'])
+                        ),
+                     ),
+        0x36: Struct('sign_editor_open',
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     ),
+        0x37: Struct('statistics',
+                     VarInt('count'),
+                     MetaArray(lambda ctx: ctx['count'],
+                               Struct('statistic',
+                                      AlphaString('key'),
+                                      VarInt('value'),
+                                      )
+                               ),
+                     ),
+        0x38: Struct('player_list_item',
+                     AlphaString('player_name'),
+                     UBInt8('online'),
+                     UBInt16('ping'),
+                     ),
+        0x39: Struct('player_abilities',
+                     UBInt8('flags'),
+                     BFloat32('fly_speed'),
+                     BFloat32('walk_speed'),
+                     ),
+        0x3a: Struct('tab_complete',
+                     VarInt('count'),
+                     # JMT: doubtful
+                     AlphaString('match'),
+                     ),
+        0x3b: Struct('scoreboard_objective',
+                     AlphaString('name'),
+                     AlphaString('value'),
+                     UBInt8('create'),
+                     ),
+        0x3c: Struct('update_score',
+                     AlphaString('item_name'),
+                     UBInt8('update'),
+                     AlphaString('score_name'),
+                     SBInt32('value'),
+                     ),
+        0x3d: Struct('display_scoreboard',
+                     UBInt8('position'),
+                     AlphaString('score_name'),
+                     ),
+        0x3e: Struct('teams',
+                     AlphaString('team_name'),
+                     UBInt8('mode'),
+                     # JMT: Switch!
+                     AlphaString('team_display_name'),
+                     AlphaString('team_prefix'),
+                     AlphaString('team_suffix'),
+                     UBInt8('friendly_fire'),
+                     SBInt16('count'),
+                     MetaArray(lambda ctx: ctx['count'],
+                               AlphaString('player')
+                               ),
+                     ),
+        0x3f: Struct('plugin_message',
+                     AlphaString('channel'),
+                     PascalString('data', length_field=UBInt16('length')),
+                     ),
+        0x40: Struct('disconnect',
+                     AlphaString('reason'),
+                     ),
+    }
+}
+
+clientbound_by_name = dict((k, dict((iv.name, ik) for (ik, iv) in clientbound[k].iteritems())) for (k, v) in clientbound.iteritems())
 
 
 class BetaServerProtocol(object, Protocol, TimeoutMixin):
@@ -54,6 +1112,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     packet = None
 
     state = STATE_UNAUTHENTICATED
+    mode = 'auth'  # JMT: replace with state soon!
 
     buf = ""
     parser = None
@@ -74,6 +1133,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         self.location = Location()
 
+        # JMT: replace this with handle_*
         self.handlers = {
             0x00: self.ping,
             0x02: self.handshake,
@@ -373,6 +1433,95 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         log.msg("Client is quitting: %s" % container.message)
         self.transport.loseConnection()
 
+    # handle hooks for the existing protocol
+    # packet is the payload of the packet in Container form
+    def handle_handshaking(self, packet):
+        return NotImplementedError
+
+    def handle_encryption_response(self, packet):
+        return NotImplementedError
+
+    def handle_login_start(self, packet):
+        return NotImplementedError
+
+    def handle_status_request(self, packet):
+        return NotImplementedError
+
+    def handle_status_ping(self, packet):
+        return NotImplementedError
+
+    def handle_keepalive(self, packet):
+        return NotImplementedError
+
+    def handle_chat(self, packet):
+        return NotImplementedError
+
+    def handle_use_entity(self, packet):
+        return NotImplementedError
+
+    def handle_player(self, packet):
+        return NotImplementedError
+
+    def handle_player_position(self, packet):
+        return NotImplementedError
+
+    def handle_player_look(self, packet):
+        return NotImplementedError
+
+    def handle_player_position_and_look(self, packet):
+        return NotImplementedError
+
+    def handle_player_digging(self, packet):
+        return NotImplementedError
+
+    def handle_player_block_placement(self, packet):
+        return NotImplementedError
+
+    def handle_held_item_change(self, packet):
+        return NotImplementedError
+
+    def handle_animate(self, packet):
+        return NotImplementedError
+
+    def handle_entity_action(self, packet):
+        return NotImplementedError
+
+    def handle_steer_vehicle(self, packet):
+        return NotImplementedError
+
+    def handle_close_window(self, packet):
+        return NotImplementedError
+
+    def handle_click_window(self, packet):
+        return NotImplementedError
+
+    def handle_confirm_transaction(self, packet):
+        return NotImplementedError
+
+    def handle_creative_inventory_action(self, packet):
+        return NotImplementedError
+
+    def handle_enchant_item(self, packet):
+        return NotImplementedError
+
+    def handle_update_sign(self, packet):
+        return NotImplementedError
+
+    def handle_player_abilities(self, packet):
+        return NotImplementedError
+
+    def handle_tab(self, packet):
+        return NotImplementedError
+
+    def handle_client_settings(self, packet):
+        return NotImplementedError
+
+    def handle_client_status(self, packet):
+        return NotImplementedError
+
+    def handle_plugin_message(self, packet):
+        return NotImplementedError
+
     # Twisted-level data handlers and methods
     # Please don't override these needlessly, as they are pretty solid and
     # shouldn't need to be touched.
@@ -386,8 +1535,19 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             self.resetTimeout()
 
         for header, payload in packets:
-            if header in self.handlers:
-                d = maybeDeferred(self.handlers[header], payload)
+            if header in serverbound[self.mode]:  # replace with try/except ?
+                struct = serverbound[self.mode][header]
+                method = getattr(self, 'handle_%s' % struct.name)
+                if payload == '':
+                    packet = ''
+                else:
+                    try:
+                        packet = struct.parse(payload)
+                    except Exception as e:
+                        log.err(e)
+                        log.err(header)
+                        log.err(payload)
+                d = maybeDeferred(method, packet=packet)
 
                 @d.addErrback
                 def eb(failure):
@@ -443,12 +1603,17 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     # be used, then *PLEASE* use it; not using it is the same as open-coding
     # whatever you're doing, and only hurts in the long run.
 
-    def write_packet(self, header, **payload):
+    def write_packet(self, name, **payload):
         """
         Send a packet to the client.
         """
-
-        self.transport.write(make_packet(header, **payload))
+        if name not in clientbound_by_name[self.mode]:
+            log.err('Could not find packet name %s in mode %s!' % (name, self.mode))
+            return ''
+        header = clientbound_by_name[self.mode][name]
+        container = Container(**payload)
+        log.msg('name: %s, header: %d, container = %s' % (name, header, container))
+        self.transport.write(make_packet(header, container, clientbound[self.mode]))
 
     def update_ping(self):
         """
@@ -474,7 +1639,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         yaw, pitch = self.location.ori.to_fracs()
 
         # Inform everybody of our new location.
-        packet = make_packet("teleport", eid=self.player.eid, x=x, y=y, z=z,
+        packet = make_packet("entity_teleport", eid=self.player.eid, x=x, y=y, z=z,
                              yaw=yaw, pitch=pitch)
         self.factory.broadcast_for_others(packet, self)
 
@@ -536,7 +1701,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
 
         log.msg("Error: %r" % message)
-        self.transport.write(make_error_packet(message))
+        self.write_packet('disconnect', reason=message, )
         self.transport.loseConnection()
 
     def play_notes(self, notes):
@@ -613,7 +1778,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         # Check to see if this is a new value, and if so, alert everybody.
         if self._latency != value:
-            packet = make_packet("players", name=self.username, online=True,
+            packet = make_packet("player_list_item", name=self.username, online=True,
                                  ping=value)
             self.factory.broadcast(packet)
             self._latency = value
@@ -768,19 +1933,19 @@ class BravoProtocol(BetaServerProtocol):
         self.player.eid = self.eid
         self.location = self.player.location
         # Init players' inventory window.
-        self.inventory = InventoryWindow(self.player.inventory)
+        self.inventory = InventoryWindow(self.player)
 
         # *Now* we are in our factory's list of protocols. Be aware.
         self.factory.protocols[self.username] = self
 
         # Announce our presence.
         self.factory.chat("%s is joining the game..." % self.username)
-        packet = make_packet("players", name=self.username, online=True,
+        packet = make_packet("player_list_item", name=self.username, online=True,
                              ping=0)
         self.factory.broadcast(packet)
 
         # Craft our avatar and send it to already-connected other players.
-        packet = make_packet("create", eid=self.player.eid)
+        packet = make_packet("create_entity", eid=self.player.eid)
         packet += self.player.save_to_packet()
         self.factory.broadcast_for_others(packet, self)
 
@@ -792,14 +1957,14 @@ class BravoProtocol(BetaServerProtocol):
             if protocol is self:
                 continue
 
-            self.write_packet("create", eid=protocol.player.eid)
+            self.write_packet("create_entity", eid=protocol.player.eid)
             packet = protocol.player.save_to_packet()
             packet += protocol.player.save_equipment_to_packet()
             self.transport.write(packet)
 
         # Send spawn and inventory.
         spawn = self.factory.world.level.spawn
-        packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
+        packet = make_packet("spawn_position", x=spawn[0], y=spawn[1], z=spawn[2])
         packet += self.inventory.save_to_packet()
         self.transport.write(packet)
 
@@ -818,7 +1983,7 @@ class BravoProtocol(BetaServerProtocol):
     def orientation_changed(self):
         # Bang your head!
         yaw, pitch = self.location.ori.to_fracs()
-        packet = make_packet("entity-orientation", eid=self.player.eid,
+        packet = make_packet("entity_look", eid=self.player.eid,
                              yaw=yaw, pitch=pitch)
         self.factory.broadcast_for_others(packet, self)
 
@@ -836,9 +2001,8 @@ class BravoProtocol(BetaServerProtocol):
                     # partial collect
                     entity.quantity = left
                 else:
-                    packet = make_packet("collect", eid=entity.eid,
-                                         destination=self.player.eid)
-                    packet += make_packet("destroy", count=1, eid=[entity.eid])
+                    packet = make_packet("collect_item", collected_eid=entity.eid, collector_eid=self.player.eid)
+                    packet += make_packet("destroy_entities", count=1, eid=[entity.eid])
                     self.factory.broadcast(packet)
                     self.factory.destroy_entity(entity)
 
@@ -940,12 +2104,10 @@ class BravoProtocol(BetaServerProtocol):
                     # If no items in this slot are left, this player isn't
                     # holding an item anymore.
                     if i.holdables[self.player.equipped] is None:
-                        packet = make_packet("entity-equipment",
+                        packet = make_packet("entity_equipment",
                                              eid=self.player.eid,
-                                             slot=0,
-                                             primary=65535,
-                                             count=1,
-                                             secondary=0
+                                             slot_no=0,
+                                             slot=Slot(),
                                              )
                         self.factory.broadcast_for_others(packet, self)
             return
@@ -1178,12 +2340,10 @@ class BravoProtocol(BetaServerProtocol):
         else:
             primary, secondary, count = item
 
-        packet = make_packet("entity-equipment",
+        packet = make_packet("entity_equipment",
                              eid=self.player.eid,
-                             slot=0,
-                             primary=primary,
-                             count=1,
-                             secondary=secondary
+                             slot_no=0,
+                             slot=Slot(item_id=primary, count=1, damage=secondary),
                              )
         self.factory.broadcast_for_others(packet, self)
 
@@ -1236,13 +2396,13 @@ class BravoProtocol(BetaServerProtocol):
             # Inform other players about changes to this player's equipment.
             equipped_slot = self.player.equipped + 36
             if container.slot == equipped_slot:
-                packet = make_packet("entity-equipment",
+                packet = make_packet("entity_equipment",
                                      eid=self.player.eid,
                                      # XXX why 0? why not the actual slot?
-                                     slot=0,
-                                     primary=container.primary,
-                                     count=1,
-                                     secondary=container.secondary,
+                                     slot_no=0,
+                                     slot=Slot(item_id=container.primary,
+                                               count=1,
+                                               damage=container.secondary),
                                      )
                 self.factory.broadcast_for_others(packet, self)
 
@@ -1278,7 +2438,7 @@ class BravoProtocol(BetaServerProtocol):
 
         # The best part of a sign isn't making one, it's showing everybody
         # else on the server that you did.
-        packet = make_packet("sign", container)
+        packet = make_packet("update_sign", container)
         self.factory.broadcast_for_chunk(packet, bigx, bigz)
 
         # Run sign hooks.
@@ -1477,11 +2637,11 @@ class BravoProtocol(BetaServerProtocol):
 
         if self.player:
             self.factory.destroy_entity(self.player)
-            packet = make_packet("destroy", count=1, eid=[self.player.eid])
+            packet = make_packet("destroy_entities", count=1, eid=[self.player.eid])
             self.factory.broadcast(packet)
 
         if self.username:
-            packet = make_packet("players", name=self.username, online=False,
+            packet = make_packet("player_list_item", name=self.username, online=False,
                                  ping=0)
             self.factory.broadcast(packet)
             self.factory.chat("%s has left the game." % self.username)
@@ -1501,3 +2661,138 @@ class BravoProtocol(BetaServerProtocol):
                     task.stop()
                 except (TaskDone, TaskFailed):
                     pass
+
+    # 'auth' packets first!
+    def handle_handshaking(self, packet):
+        log.msg('handle_handshaking')
+        log.msg(packet)
+        if packet.protocol != SUPPORTED_PROTOCOL:
+            self.error("This server does not support your client's protocol.")
+            return ''
+        if packet.next_state == 'status':
+            self.mode = 'mid-status'
+        elif packet.next_state == 'login':
+            log.msg('login packet received, setting mode to mid-auth')
+            self.mode = 'mid-auth'
+        else:
+            log.msg('unexpected next state value: %s' % packet.next_state)
+        return ''
+
+    def handle_encryption_response(self, packet):
+        return NotImplementedError
+
+    def handle_login_start(self, packet):
+        log.msg('handle_login_start')
+        self.username = packet.username
+        self.uuid = uuid5('bravoserver', self.username)
+        self.write_packet('login_success', uuid=self.uuid, username=self.username)
+        self.mode = 'play'
+        self.authenticated()
+
+    def handle_status_request(self, packet):
+#         {
+# 	"version": {
+# 		"name": "13w41a",
+# 		"protocol": 0
+# 	},
+# 	"players": {
+# 		"max": 100,
+# 		"online": 5,
+# 		"sample":[
+# 			{"name":"Thinkofdeath", "id":""}
+# 		]
+# 	},
+# 	"description": {"text":"Hello world"},
+# 	"favicon": "data:image/png;base64,<data>"
+# }
+        version = '"version":{"name":"1.7.2","protocol":4}'
+        description = '"description":{"text":"OMG Bravo!"}'
+        if len(self.factory.protocols) > 0:
+            samples = ',"sample":[' + ''.join(['{"id":"%s","name":"%s"}' % (p.uuid, p.name) for p in self.factory.protocols]) + ']'
+        else:
+            samples = ''
+        players = '"players":{"max":%d,"online":%d%s}' % (self.factory.limitConnections, len(self.factory.protocols), samples)
+        json_string = '{%s,%s,%s}' % (description, players, version)
+        log.msg('status response: %s' % json_string)
+        self.write_packet('status_response', json=json_string)
+
+    def handle_status_ping(self, packet):
+        self.write_packet('status_ping', time=packet.time)
+        self.mode = 'auth'
+
+    def handle_keepalive(self, packet):
+        # JMT: this assumes the ping value is time related
+        # wiki.vg/Protocol says different:
+        # basically, server sends random ID, client returns same.
+        now = timestamp_from_clock(reactor)
+        then = container.keepalive_id
+        latency = now - then
+
+    def handle_chat(self, packet):
+        return NotImplementedError
+
+    def handle_use_entity(self, packet):
+        return NotImplementedError
+
+    def handle_player(self, packet):
+        return NotImplementedError
+
+    def handle_player_position(self, packet):
+        return NotImplementedError
+
+    def handle_player_look(self, packet):
+        return NotImplementedError
+
+    def handle_player_position_and_look(self, packet):
+        return NotImplementedError
+
+    def handle_player_digging(self, packet):
+        return NotImplementedError
+
+    def handle_player_block_placement(self, packet):
+        return NotImplementedError
+
+    def handle_held_item_change(self, packet):
+        return NotImplementedError
+
+    def handle_animate(self, packet):
+        return NotImplementedError
+
+    def handle_entity_action(self, packet):
+        return NotImplementedError
+
+    def handle_steer_vehicle(self, packet):
+        return NotImplementedError
+
+    def handle_close_window(self, packet):
+        return NotImplementedError
+
+    def handle_click_window(self, packet):
+        return NotImplementedError
+
+    def handle_confirm_transaction(self, packet):
+        return NotImplementedError
+
+    def handle_creative_inventory_action(self, packet):
+        return NotImplementedError
+
+    def handle_enchant_item(self, packet):
+        return NotImplementedError
+
+    def handle_update_sign(self, packet):
+        return NotImplementedError
+
+    def handle_player_abilities(self, packet):
+        return NotImplementedError
+
+    def handle_tab(self, packet):
+        return NotImplementedError
+
+    def handle_client_settings(self, packet):
+        self.settings.update_presentation(container)
+
+    def handle_client_status(self, packet):
+        return NotImplementedError
+
+    def handle_plugin_message(self, packet):
+        return NotImplementedError

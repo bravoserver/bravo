@@ -6,13 +6,14 @@ from bravo.policy.recipes.blueprints import all_blueprints
 
 all_recipes = all_ingredients + all_blueprints
 
+
 # XXX I am completely undocumented and untested; is this any way to go through
 # life? Test and document me!
 class comblist(object):
     def __init__(self, a, b):
         self.l = a, b
         self.offset = len(a)
-        self.length = sum(map(len,self.l))
+        self.length = sum(map(len, self.l))
 
     def __len__(self):
         return self.length
@@ -36,6 +37,7 @@ class comblist(object):
             self.l[1][key] = value
             return
         raise IndexError
+
 
 class SlotsSet(SerializableSlots):
     '''
@@ -64,9 +66,9 @@ class SlotsSet(SerializableSlots):
             self.storage = [None] * self.storage
         else:
             self.storage = []
-        self.dummy = [None] * 36 # represents gap in serialized structure:
-                                 # storage (27) + holdables(9) from player's
-                                 # inventory (notchian)
+        self.dummy = [None] * 36  # represents gap in serialized structure:
+                                  # storage (27) + holdables(9) from player's
+                                  # inventory (notchian)
 
     @property
     def metalist(self):
@@ -79,6 +81,7 @@ class SlotsSet(SerializableSlots):
     def close(self, wid):
         # override me, see description in Crafting
         return [], ""
+
 
 class Crafting(SlotsSet):
     '''
@@ -100,7 +103,7 @@ class Crafting(SlotsSet):
             provides = self.recipe.provides
             self.crafted[0] = Slot(provides[0][0], provides[0][1], provides[1])
 
-    def select_crafted(self, index, alternate, shift, selected = None):
+    def select_crafted(self, index, alternate, shift, selected=None):
         """
         Handle a slot selection on a crafted output.
 
@@ -169,11 +172,11 @@ class Crafting(SlotsSet):
             if itm is not None:
                 items.append(itm)
                 self.crafting[i] = None
-                packets += make_packet("window-slot", wid=wid,
-                                        slot=i+1, primary=-1)
+                packets += make_packet("set_slot", wid=wid, slot_no=i+1, slot=Slot())
         self.crafted[0] = None
 
         return items, packets
+
 
 class Workbench(Crafting):
 
@@ -182,6 +185,7 @@ class Workbench(Crafting):
     title = "Workbench"
     identifier = "workbench"
     slots_num = 9
+
 
 class ChestStorage(SlotsSet):
 
@@ -193,6 +197,7 @@ class ChestStorage(SlotsSet):
     def __init__(self):
         SlotsSet.__init__(self)
         self.title = "Chest"
+
 
 class LargeChestStorage(SlotsSet):
     """
@@ -212,6 +217,7 @@ class LargeChestStorage(SlotsSet):
     def metalist(self):
         return [self.storage]
 
+
 class FurnaceStorage(SlotsSet):
 
     #TODO: Make sure notchian furnace have following slots order:
@@ -224,7 +230,7 @@ class FurnaceStorage(SlotsSet):
     identifier = "furnace"
     slots_num = 3
 
-    def select_crafted(self, index, alternate, shift, selected = None):
+    def select_crafted(self, index, alternate, shift, selected=None):
         """
         Handle a slot selection on a crafted output.
         Returns: ( True/False, new selection )

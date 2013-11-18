@@ -1,5 +1,6 @@
 from bravo.beta.packets import make_packet
 
+
 class WeatherVane(object):
     """
     An indicator of the current weather.
@@ -27,8 +28,8 @@ class WeatherVane(object):
         # XXX this probably should use the factory's mode rather than
         # hardcoding creative mode. Probably.
         if self.weather == "rainy":
-            return make_packet("state", state="start_rain", mode="creative")
+            return make_packet("change_game_state", state="start_rain", value=0)
         elif self.weather == "sunny":
-            return make_packet("state", state="stop_rain", mode="creative")
+            return make_packet("change_game_state", state="stop_rain", value=0)
         else:
             return ""

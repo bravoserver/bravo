@@ -531,7 +531,7 @@ class BravoFactory(Factory):
                                         item=block, quantity=min(quantity, 64))
 
             packet = entity.save_to_packet()
-            packet += make_packet("create", eid=entity.eid)
+            packet += make_packet("create_entity", eid=entity.eid)
             self.broadcast(packet)
 
             quantity -= 64
