@@ -52,27 +52,29 @@ class Settings(object):
         self.flying_speed = interaction["fly-speed"]
 
 
-class Slot(namedtuple("Slot", "primary, secondary, quantity")):
+# was primary, secondary, quantity
+# now item_id, count, damage
+class Slot(namedtuple("Slot", "item_id, count, damage")):
     """
     A slot in an inventory.
 
-    Slots are essentially tuples of the primary and secondary identifiers of a
-    block or item, along with a quantity, but they provide several convenience
+    Slots are essentially tuples of the item_id and damage identifiers of a
+    block or item, along with a count, but they provide several convenience
     methods which make them a useful data structure for building inventories.
     """
 
     __slots__ = tuple()
 
     @classmethod
-    def from_key(cls, key, quantity=1):
+    def from_key(cls, key, count=1):
         """
-        Alternative constructor which loads a key instead of a primary and
-        secondary.
+        Alternative constructor which loads a key instead of a item_id and
+        damage.
 
         This is meant to simplify code which wants to create slots from keys.
         """
 
-        return cls(key[0], key[1], quantity)
+        return cls(key[0], key[1], count)
 
     def holds(self, other):
         """
@@ -82,27 +84,27 @@ class Slot(namedtuple("Slot", "primary, secondary, quantity")):
         with regular {2,3}-tuples.
         """
 
-        return self.primary == other[0] and self.secondary == other[1]
+        return self.item_id == other[0] and self.damage == other[2]
 
-    def decrement(self, quantity=1):
+    def decrement(self, count=1):
         """
-        Return a copy of this slot, with quantity decremented, or None if the
+        Return a copy of this slot, with count decremented, or None if the
         slot is empty.
         """
 
-        if quantity >= self.quantity:
+        if count >= self.count:
             return None
 
-        return self._replace(quantity=self.quantity - quantity)
+        return self._replace(count=self.count - count)
 
-    def increment(self, quantity=1):
+    def increment(self, count=1):
         """
-        Return a copy of this slot, with quantity incremented.
+        Return a copy of this slot, with count incremented.
 
         For parity with ``decrement()``.
         """
 
-        return self._replace(quantity=self.quantity + quantity)
+        return self._replace(count=self.count + count)
 
     def replace(self, **kwargs):
         """
@@ -110,7 +112,7 @@ class Slot(namedtuple("Slot", "primary, secondary, quantity")):
         """
 
         new = self._replace(**kwargs)
-        if new.quantity == 0:
+        if new.count == 0:
             return None
 
         return new

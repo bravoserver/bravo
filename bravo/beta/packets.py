@@ -306,6 +306,7 @@ class PacketAdapter(LengthValueAdapter):
         print('header: %d, len header: %d' % (obj.header, len(VarInt("header").build(obj['header']))))
         lenobj = len(VarInt("header").build(obj['header'])) + len(obj['payload'])
         newobj = Container(length=lenobj, header=obj.header, payload=obj.payload)
+        print lenobj, newobj
         return newobj
 
 packet_adapter = PacketAdapter(packet)
@@ -370,13 +371,21 @@ def parse_packets_incrementally(bytestream):
         yield header, payload
 
 
-def make_packet(header, payload, packets=None):
-    from protocol import clientbound
-    if packets is None:
-        packets = clientbound['play']
-    if isinstance(payload, str):
-        print "payload was a string -- %s" % payload
-        new_packet = Container(header=header, payload=AlphaString("string").build(payload))
+def make_packet(packet_name, mode='play', *args, **kwargs):
+    from protocol import clientbound, clientbound_by_name
+    if packet_name not in clientbound_by_name[mode]:
+        print "Name %s not in mode %s!" % (packet_name, mode)
+    header = clientbound_by_name[mode][packet_name]
+    print "Name: %s, mode: %s, header: 0x%.2x" % (packet_name, mode, header)
+    for arg in args:
+        kwargs.update(dict(arg))
+    if kwargs == {}:
+        print "DAMMIT"
+        kwargs = {'string': ''}
+    print Container(**kwargs)
+    if 'string' in kwargs:
+        payload = AlphaString("string").build(kwargs['string'])
     else:
-        new_packet = Container(header=header, payload=packets[header].build(payload))
+        payload = clientbound[mode][header].build(Container(**kwargs))
+    new_packet = Container(header=header, payload=payload)
     return packet_adapter.build(new_packet)

@@ -36,7 +36,7 @@ from bravo.utilities.chat import complete, username_alternatives
 from bravo.utilities.maths import circling, clamp, sorted_by_distance
 from bravo.utilities.temporal import timestamp_from_clock
 
-from uuid import uuid5
+from uuid import uuid4
 
 from collections import namedtuple
 
@@ -498,7 +498,7 @@ serverbound = {
                      SBInt32('keepalive_id'),
                      ),
         0x01: Struct('chat',
-                     AlphaString('message'),
+                     AlphaString('json'),
                      ),
         0x02: Struct('use_entity',
                      UBInt32('target'),  # eid is apparently self
@@ -628,10 +628,6 @@ clientbound = {
                      SBInt16('token_len'),
                      MetaField('token', lambda ctx: ctx['token_len']),
                      ),
-        0x02: Struct('login_success',
-                     AlphaString('uuid'),
-                     AlphaString('username'),
-                     ),
         0x40: Struct('disconnect',
                      AlphaString('reason'),
                      ),
@@ -648,6 +644,10 @@ clientbound = {
                      ),
     },
     'mid-auth': {
+        0x02: Struct('login_success',
+                     AlphaString('uuid'),
+                     AlphaString('username'),
+                     ),
         0x40: Struct('disconnect',
                      AlphaString('reason'),
                      ),
@@ -1603,17 +1603,11 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     # be used, then *PLEASE* use it; not using it is the same as open-coding
     # whatever you're doing, and only hurts in the long run.
 
-    def write_packet(self, name, **payload):
+    def write_packet(self, packet_name, *args, **kwargs):
         """
         Send a packet to the client.
         """
-        if name not in clientbound_by_name[self.mode]:
-            log.err('Could not find packet name %s in mode %s!' % (name, self.mode))
-            return ''
-        header = clientbound_by_name[self.mode][name]
-        container = Container(**payload)
-        log.msg('name: %s, header: %d, container = %s' % (name, header, container))
-        self.transport.write(make_packet(header, container, clientbound[self.mode]))
+        self.transport.write(make_packet(packet_name, mode=self.mode, *args, **kwargs))
 
     def update_ping(self):
         """
@@ -1621,7 +1615,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
 
         timestamp = timestamp_from_clock(reactor)
-        self.write_packet("ping", pid=timestamp)
+        self.write_packet("keepalive", keepalive_id=timestamp)
 
     def update_location(self):
         """
@@ -1778,7 +1772,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         # Check to see if this is a new value, and if so, alert everybody.
         if self._latency != value:
-            packet = make_packet("player_list_item", name=self.username, online=True,
+            packet = make_packet("player_list_item", player_name=self.username, online=True,
                                  ping=value)
             self.factory.broadcast(packet)
             self._latency = value
@@ -1931,16 +1925,17 @@ class BravoProtocol(BetaServerProtocol):
         # Init player, and copy data into it.
         self.player = yield self.factory.world.load_player(self.username)
         self.player.eid = self.eid
+        self.player.uuid = self.uuid
         self.location = self.player.location
         # Init players' inventory window.
-        self.inventory = InventoryWindow(self.player)
+        self.inventory = InventoryWindow(self.player.inventory)
 
         # *Now* we are in our factory's list of protocols. Be aware.
         self.factory.protocols[self.username] = self
 
         # Announce our presence.
         self.factory.chat("%s is joining the game..." % self.username)
-        packet = make_packet("player_list_item", name=self.username, online=True,
+        packet = make_packet("player_list_item", player_name=self.username, online=True,
                              ping=0)
         self.factory.broadcast(packet)
 
@@ -2641,7 +2636,7 @@ class BravoProtocol(BetaServerProtocol):
             self.factory.broadcast(packet)
 
         if self.username:
-            packet = make_packet("player_list_item", name=self.username, online=False,
+            packet = make_packet("player_list_item", player_name=self.username, online=False,
                                  ping=0)
             self.factory.broadcast(packet)
             self.factory.chat("%s has left the game." % self.username)
@@ -2684,7 +2679,7 @@ class BravoProtocol(BetaServerProtocol):
     def handle_login_start(self, packet):
         log.msg('handle_login_start')
         self.username = packet.username
-        self.uuid = uuid5('bravoserver', self.username)
+        self.uuid = uuid4().bytes
         self.write_packet('login_success', uuid=self.uuid, username=self.username)
         self.mode = 'play'
         self.authenticated()
