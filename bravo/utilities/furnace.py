@@ -6,16 +6,16 @@ from bravo.inventory.windows import FurnaceWindow
 Furnace recipes
 '''
 furnace_recipes = {
-    blocks["cactus"].slot     : Slot.from_key(items["green-dye"].key, 1),
-    blocks["cobblestone"].slot: Slot.from_key(blocks["stone"].key, 1),
-    blocks["diamond-ore"].slot: Slot.from_key(items["diamond"].key, 1),
-    blocks["gold-ore"].slot   : Slot.from_key(items["gold-ingot"].key, 1),
-    blocks["iron-ore"].slot   : Slot.from_key(items["iron-ingot"].key, 1),
-    blocks["log"].slot        : Slot.from_key(items["charcoal"].key, 1),
-    blocks["sand"].slot       : Slot.from_key(blocks["glass"].key, 1),
-    items["clay-balls"].slot  : Slot.from_key(items["clay-brick"].key, 1),
-    items["raw-fish"].slot    : Slot.from_key(items["cooked-fish"].key, 1),
-    items["raw-porkchop"].slot: Slot.from_key(items["cooked-porkchop"].key, 1),
+    blocks["cactus"].slot     : Slot.fromItem(items["green-dye"].key, 1),
+    blocks["cobblestone"].slot: Slot.fromItem(blocks["stone"].key, 1),
+    blocks["diamond-ore"].slot: Slot.fromItem(items["diamond"].key, 1),
+    blocks["gold-ore"].slot   : Slot.fromItem(items["gold-ingot"].key, 1),
+    blocks["iron-ore"].slot   : Slot.fromItem(items["iron-ingot"].key, 1),
+    blocks["log"].slot        : Slot.fromItem(items["charcoal"].key, 1),
+    blocks["sand"].slot       : Slot.fromItem(blocks["glass"].key, 1),
+    items["clay-balls"].slot  : Slot.fromItem(items["clay-brick"].key, 1),
+    items["raw-fish"].slot    : Slot.fromItem(items["cooked-fish"].key, 1),
+    items["raw-porkchop"].slot: Slot.fromItem(items["cooked-porkchop"].key, 1),
 }
 
 def update_all_windows_slot(factory, coords, slot, item):

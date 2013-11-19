@@ -367,7 +367,7 @@ player_digging_status = {
     'shooting': 5,  # Also eating
 }
 
-player_digging_status_enum = Enum(UBInt8('status'), **player_digging_status)
+player_digging_status_enum = Enum(UBInt8('state'), **player_digging_status)
 
 server_animation = {
     'noop': 0,
@@ -1588,9 +1588,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
         Send a keepalive to the client.
         """
-
-        timestamp = timestamp_from_clock(reactor)
-        self.write_packet("keepalive", keepalive_id=timestamp)
+        if self.mode == 'play':
+            timestamp = timestamp_from_clock(reactor)
+            self.write_packet("keepalive", keepalive_id=timestamp)
 
     def update_location(self):
         """
@@ -2668,15 +2668,15 @@ class BravoProtocol(BetaServerProtocol):
 
     def handle_login_start(self, packet):
         self.username = packet.username
-        self.uuid = uuid4().bytes
-        self.write_packet('login_success', uuid=self.uuid, username=self.username)
+        self.uuid = uuid4()
+        self.write_packet('login_success', uuid=self.uuid.bytes, username=self.username)
         self.authenticated()
 
     def handle_status_request(self, packet):
         version = '"version":{"name":"1.7.2","protocol":4}'
         description = '"description":{"text":"OMG Bravo!"}'
         if len(self.factory.protocols) > 0:
-            samples = ',"sample":[' + ''.join(['{"id":"%s","name":"%s"}' % (p.uuid, p.name) for p in self.factory.protocols]) + ']'
+            samples = ',"sample":[' + ''.join(['{"id":"%s","name":"%s"}' % ('', name) for name in self.factory.protocols]) + ']'
         else:
             samples = ''
         players = '"players":{"max":%d,"online":%d%s}' % (self.factory.limitConnections, len(self.factory.protocols), samples)
@@ -2696,28 +2696,293 @@ class BravoProtocol(BetaServerProtocol):
         latency = now - then
 
     def handle_chat(self, packet):
-        return NotImplementedError
+        log.msg("Chat! %r" % packet.json)
+        data = json.loads(packet.json)
+        log.msg("Chat loaded: %s" % data)
+        if data.startswith("/"):
+            commands = retrieve_plugins(IChatCommand, factory=self.factory)
+            # Register aliases.
+            for plugin in commands.values():
+                for alias in plugin.aliases:
+                    commands[alias] = plugin
+
+            params = data[1:].split(" ")
+            command = params.pop(0).lower()
+
+            if command and command in commands:
+                def cb(iterable):
+                    for line in iterable:
+                        self.send_chat(line)
+
+                def eb(error):
+                    self.send_chat("Error: %s" % error.getErrorMessage())
+
+                d = maybeDeferred(commands[command].chat_command,
+                                  self.username, params)
+                d.addCallback(cb)
+                d.addErrback(eb)
+            else:
+                self.send_chat("Unknown command: %s" % command)
+        else:
+            # Send the message up to the factory to be chatified.
+            message = "<%s> %s" % (self.username, data)
+            self.factory.chat(message)
 
     def handle_use_entity(self, packet):
-        return NotImplementedError
+        nearby_players = self.factory.players_near(self.player, 4)
+        for entity in chain(self.entities_near(4), nearby_players):
+            if entity.eid == packet.target:
+                for hook in self.use_hooks[entity.name]:
+                    hook.use_hook(self.factory, self.player, entity, packet.mouse == 'left')
+                break
+
+    def _grounded(self, packet):
+        self.location.grounded = bool(packet.grounded)
+
+    def _position(self, packet):
+        if self.state != STATE_LOCATED:
+            log.msg("Ignoring unlocated position!")
+            return
+
+        old_position = self.location.pos
+        position = Position.from_player(packet.position.x, packet.position.y, packet.position.z)
+        altered = False
+
+        dx, dy, dz = old_position - position
+        if any(abs(d) >= 64 for d in (dx, dy, dz)):
+            # Whoa, slow down there, cowboy. You're moving too fast. We're
+            # gonna ignore this position change completely, because it's
+            # either bogus or ignoring a recent teleport.
+            altered = True
+        else:
+            self.location.pos = position
+            self.location.stance = packet.position.stance
+
+        # Santitize location. This handles safety boundaries, illegal stance,
+        # etc.
+        altered = self.location.clamp() or altered
+
+        # If, for any reason, our opinion on where the client should be
+        # located is different than theirs, force them to conform to our point
+        # of view.
+        if altered:
+            log.msg("Not updating bogus position!")
+            self.update_location()
+
+        # If our position actually changed, fire the position change hook.
+        if old_position != position:
+            self.position_changed()
+
+    def _orientation(self, packet):
+
+        old_orientation = self.location.ori
+        orientation = Orientation.from_degs(packet.orientation.rotation, packet.orientation.pitch)
+        self.location.ori = orientation
+
+        if old_orientation != orientation:
+            self.orientation_changed()
 
     def handle_player(self, packet):
-        return NotImplementedError
+        self._grounded(packet)
 
     def handle_player_position(self, packet):
-        return NotImplementedError
+        self._position(packet)
+        self._grounded(packet)
 
     def handle_player_look(self, packet):
-        return NotImplementedError
+        self._orientation(packet)
+        self._grounded(packet)
 
     def handle_player_position_and_look(self, packet):
-        return NotImplementedError
+        self._position(packet)
+        self._orientation(packet)
+        self._grounded(packet)
 
     def handle_player_digging(self, packet):
-        return NotImplementedError
+        if packet.x == -1 and packet.z == -1 and packet.y == 255:
+            # Lala-land dig packet. Discard it for now.
+            return
+
+        # Player drops currently holding item/block.
+        if (packet.state == "dropped" and packet.face == "-y" and packet.x == 0 and packet.y == 0 and packet.z == 0):
+            i = self.player.inventory
+            holding = i.holdables[self.player.equipped]
+            if holding:
+                item_id, count, damage = holding
+                if i.consume((item_id, damage), self.player.equipped):
+                    dest = self.location.in_front_of(2)
+                    coords = dest.pos._replace(y=dest.pos.y + 1)
+                    self.factory.give(coords, (item_id, damage), 1)
+
+                    # Re-send inventory.
+                    packet = self.inventory.save_to_packet()
+                    self.transport.write(packet)
+
+                    # If no items in this slot are left, this player isn't
+                    # holding an item anymore.
+                    if i.holdables[self.player.equipped] is None:
+                        packet = make_packet("entity_equipment",
+                                             eid=self.player.eid,
+                                             slot_no=0,
+                                             slot=Slot()
+                                             )
+                        self.factory.broadcast_for_others(packet, self)
+            return
+
+        if packet.state == "shooting":
+            self.shoot_arrow()
+            return
+
+        bigx, smallx, bigz, smallz = split_coords(packet.x, packet.z)
+        coords = smallx, packet.y, smallz
+
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        block = chunk.get_block((smallx, packet.y, smallz))
+
+        if packet.state == "started":
+            # Run pre dig hooks
+            for hook in self.pre_dig_hooks:
+                cancel = yield maybeDeferred(hook.pre_dig_hook, self.player,
+                                             (packet.x, packet.y, packet.z), block)
+                if cancel:
+                    return
+
+            tool = self.player.inventory.holdables[self.player.equipped]
+            # Check to see whether we should break this block.
+            if self.dig_policy.is_1ko(block, tool):
+                self.run_dig_hooks(chunk, coords, blocks[block])
+            else:
+                # Set up a timer for breaking the block later.
+                dtime = time() + self.dig_policy.dig_time(block, tool)
+                self.last_dig = coords, block, dtime
+        elif packet.state == "stopped":
+            # The client thinks it has broken a block. We shall see.
+            if not self.last_dig:
+                return
+
+            oldcoords, oldblock, dtime = self.last_dig
+            if oldcoords != coords or oldblock != block:
+                # Nope!
+                self.last_dig = None
+                return
+
+            dtime -= time()
+
+            # When enough time has elapsed, run the dig hooks.
+            d = deferLater(reactor, max(dtime, 0), self.run_dig_hooks, chunk,
+                           coords, blocks[block])
+            d.addCallback(lambda none: setattr(self, "last_dig", None))
 
     def handle_player_block_placement(self, packet):
-        return NotImplementedError
+        # Is the target within our purview? We don't do a very strict
+        # containment check, but we *do* require that the chunk be loaded.
+        bigx, smallx, bigz, smallz = split_coords(packet.x, packet.z)
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        target = blocks[chunk.get_block((smallx, packet.y, smallz))]
+
+        # Attempt to open a window.
+        from bravo.policy.windows import window_for_block
+        window = window_for_block(target)
+        if window is not None:
+            # We have a window!
+            self.windows[self.wid] = window
+            identifier, title, slots = window.open()
+            # JMT: no horse support
+            self.write_packet('open_window', wid=self.wid, type=identifier, title=title, slots=slots, use_provided_title=True)
+            self.wid += 1
+            return
+
+        # Try to open it first
+        for hook in self.open_hooks:
+            window = yield maybeDeferred(hook.open_hook, self, packet,
+                                         chunk.get_block((smallx, packet.y, smallz)))
+            if window:
+                self.write_packet('open_window', wid=window.wid,
+                                  type=window.identifier, title=window.title, slots=windows.slots_num, use_provided_title=True)
+                packet = window.save_to_packet()
+                self.transport.write(packet)
+                # window opened
+                return
+
+        # Ignore clients that think -1 is placeable.
+        if packet.item_id == -1:
+            return
+
+        # Special case when face is "noop": Update the status of the currently
+        # held block rather than placing a new block.
+        if packet.face == "noop":
+            return
+
+        # If the target block is vanishable, then adjust our aim accordingly.
+        if target.vanishes:
+            packet.face = "+y"
+            packet.y -= 1
+
+        if packet.item_id in blocks:
+            block = blocks[packet.item_id]
+        elif packet.item_id in items:
+            block = items[packet.item_id]
+        else:
+            log.err("Ignoring request to place unknown block 0x%x" %
+                    packet.item_id)
+            return
+
+        # Run pre-build hooks. These hooks are able to interrupt the build
+        # process.
+        builddata = BuildData(block, 0x0, packet.x, packet.y,
+                              packet.z, packet.face)
+
+        for hook in self.pre_build_hooks:
+            cont, builddata, cancel = yield maybeDeferred(hook.pre_build_hook,
+                                                          self.player, builddata)
+            if cancel:
+                # Flush damaged chunks.
+                for chunk in self.chunks.itervalues():
+                    self.factory.flush_chunk(chunk)
+                return
+            if not cont:
+                break
+
+        # Run the build.
+        try:
+            yield maybeDeferred(self.run_build, builddata)
+        except BuildError:
+            return
+
+        newblock = builddata.block.slot
+        coords = adjust_coords_for_face(
+            (builddata.x, builddata.y, builddata.z), builddata.face)
+
+        # Run post-build hooks. These are merely callbacks which cannot
+        # interfere with the build process, largely because the build process
+        # already happened.
+        for hook in self.post_build_hooks:
+            yield maybeDeferred(hook.post_build_hook, self.player, coords,
+                                builddata.block)
+
+        # Feed automatons.
+        for automaton in self.factory.automatons:
+            if newblock in automaton.blocks:
+                automaton.feed(coords)
+
+        # Re-send inventory.
+        # XXX this could be optimized if/when inventories track damage.
+        packet = self.inventory.save_to_packet()
+        self.transport.write(packet)
+
+        # Flush damaged chunks.
+        for chunk in self.chunks.itervalues():
+            self.factory.flush_chunk(chunk)
 
     def handle_held_item_change(self, packet):
         return NotImplementedError
@@ -2757,7 +3022,7 @@ class BravoProtocol(BetaServerProtocol):
 
     def handle_client_settings(self, packet):
         # JMT: The packet has more than the object
-        self.settings.update_presentation(container)
+        self.settings.update_presentation(packet)
 
     def handle_client_status(self, packet):
         return NotImplementedError

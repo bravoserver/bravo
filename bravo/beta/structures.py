@@ -41,7 +41,11 @@ class Settings(object):
     def update_presentation(self, presentation):
         self.locale = presentation["locale"]
         distance = presentation["distance"]
-        self.distance = ["far", "normal", "short", "tiny"][distance]
+        try:
+            self.distance = ["far", "normal", "short", "tiny"][distance]
+        except IndexError:
+            print "Distance was %s" % distance
+            self.distance = 0
 
     def update_interaction(self, interaction):
         flags = interaction["flags"]

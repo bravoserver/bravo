@@ -90,7 +90,7 @@ class Player(Entity):
 
         packet = make_packet("spawn_player",
                              eid=self.eid,
-                             uuid=self.uuid,
+                             uuid=self.uuid.bytes,
                              name=self.username,
                              x=x, y=y, z=z, yaw=yaw, pitch=pitch, current_item=item,
                              # http://www.wiki.vg/Entities#Objects
