@@ -105,6 +105,67 @@ class Slot(object):
         self.nbt = nbt
 
     @classmethod
+    def fromItem(cls, item, count=1):
+        return cls(item_id=item[0], count=count, damage=item[1])
+
+    @classmethod
+    def from_key(cls, key, count=1):
+        print "deprecated: use fromItem!"
+        return cls(key[0], count, key[1])
+
+    @property
+    def is_empty(self):
+        return self.item_id == -1
+
+    def __len__(self):
+        return 0 if self.nbt is None else len(self.nbt)
+
+    def __repr__(self):
+        if self.is_empty:
+            return 'Slot()'
+        elif len(self):
+            return 'Slot(%d, count=%d, damage=%d, +nbt:%dB)' % (
+                self.item_id, self.count, self.damage, len(self)
+            )
+        else:
+            return 'Slot(%d, count=%d, damage=%d)' % (
+                self.item_id, self.count, self.damage
+            )
+
+    def holds(self, other):
+        if isinstance(other, Slot):
+            return (self.item_id == other.item_id and
+                    self.damage == other.damage)
+        else:
+            return (self.item_id == other[0] and
+                    self.damage == other[1])
+
+    def decrement(self, count=1):
+        if count >= self.count:
+            return None
+        self.count -= count
+
+    def increment(self, count=1):
+        if self.count + count > 64:
+            return None
+        self.count += count
+
+    def __eq__(self, other):
+        return (self.item_id == other.item_id and
+                self.count == other.count and
+                self.damage == self.damage and
+                self.nbt == self.nbt)
+
+
+class OldSlot(object):
+    def __init__(self, item_id=-1, count=1, damage=0, nbt=None):
+        self.item_id = item_id
+        self.count = count
+        self.damage = damage
+        # TODO: Implement packing/unpacking of gzipped NBT data
+        self.nbt = nbt
+
+    @classmethod
     def fromItem(cls, item, count):
         return cls(item[0], count, item[1])
 

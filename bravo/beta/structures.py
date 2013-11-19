@@ -69,7 +69,7 @@ class Settings(object):
         return {'flags': flags, 'fly_speed': self.flying_speed, 'walk_speed': self.walking_speed}
 
 
-class Slot(object):
+class StructSlot(object):
     def __init__(self, item_id=-1, count=1, damage=0, nbt=None):
         self.item_id = item_id
         self.count = count

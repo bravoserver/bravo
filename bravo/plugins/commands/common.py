@@ -229,9 +229,10 @@ class Give(object):
 
         # Get a location two blocks in front of the player.
         dest = player.player.location.in_front_of(2)
-        dest.y += 1
+        print 'give', dest
+        dest.pos.y += 1
 
-        coords = int(dest.x * 32), int(dest.y * 32), int(dest.z * 32)
+        coords = int(dest.pos.x * 32), int(dest.pos.y * 32), int(dest.pos.z * 32)
 
         self.factory.give(coords, block, count)
 

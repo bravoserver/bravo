@@ -1,4 +1,4 @@
-from bravo.beta.structures import Slot
+from bravo.beta.packets import Slot
 from bravo.blocks import blocks, items
 from bravo.inventory.windows import FurnaceWindow
 

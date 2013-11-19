@@ -2,8 +2,7 @@ from itertools import chain, izip
 from construct import Container, ListContainer
 
 from bravo import blocks
-from bravo.beta.packets import make_packet
-from bravo.beta.structures import Slot
+from bravo.beta.packets import make_packet, Slot
 from bravo.inventory import SerializableSlots
 from bravo.inventory.slots import Crafting, Workbench, LargeChestStorage
 
@@ -106,7 +105,7 @@ class Window(SerializableSlots):
             if item is None:
                 lc.append(Slot())
             else:
-                lc.append(slot(item_id=item.item_id,
+                lc.append(Slot(item_id=item.item_id,
                                count=item.count,
                                damage=item.damage))
 

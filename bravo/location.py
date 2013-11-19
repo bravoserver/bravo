@@ -217,8 +217,6 @@ class Location(object):
         orientation = Container(rotation=yaw, pitch=pitch)
         grounded = Container(grounded=self.grounded)
 
-        print "Player position and look time!"
-        print "x = %d, y = %d, z = %d, orientation = %s, grounded = %s" % (x, y, z, orientation, grounded)
         packet = make_packet("player_position_and_look", x=x, y=y, z=z,
                              orientation=orientation, grounded=grounded)
 

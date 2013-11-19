@@ -9,7 +9,8 @@ from twisted.python import log
 from twisted.python.filepath import FilePath
 from zope.interface import implements
 
-from bravo.beta.structures import Level, Slot
+from bravo.beta.structures import Level
+from bravo.beta.packets import Slot
 from bravo.chunk import Chunk
 from bravo.entity import entities, tiles, Player
 from bravo.errors import SerializerReadException, SerializerWriteException
@@ -22,6 +23,7 @@ from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
 from bravo.region import MissingChunk, Region
 from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 from bravo.utilities.paths import name_for_anvil
+
 
 class Anvil(object):
     """
@@ -106,10 +108,11 @@ class Anvil(object):
         position = tag["Pos"].tags
         rotation = tag["Rotation"].tags
         location = Location()
-        location.pos = Position(position[0].value, position[1].value,
-                position[2].value)
+        location.pos = Position(position[0].value,
+                                position[1].value,
+                                position[2].value)
         location.ori = Orientation.from_degs(rotation[0].value,
-                rotation[1].value)
+                                             rotation[1].value)
 
         location.grounded = bool(tag["OnGround"])
 
@@ -155,7 +158,8 @@ class Anvil(object):
         # Overwrite position with absolute block coordinates of image's
         # center. Original position seems to be unused.
         painting.location.pos = Position(tag["TileX"].value,
-                tag["TileY"].value, tag["TileZ"].value)
+                                         tag["TileY"].value,
+                                         tag["TileZ"].value)
 
     def _save_painting_to_tag(self, painting, tag):
         tag["Dir"] = TAG_Byte(painting.direction)
@@ -207,8 +211,9 @@ class Anvil(object):
         caller.
         """
 
-        tile = tiles[tag["id"].value](tag["x"].value, tag["y"].value,
-            tag["z"].value)
+        tile = tiles[tag["id"].value](tag["x"].value,
+                                      tag["y"].value,
+                                      tag["z"].value)
 
         self._tile_loaders[tile.name](tile, tag)
 
@@ -298,7 +303,7 @@ class Anvil(object):
         chunk.heightmap = array("B")
         chunk.heightmap.fromstring(level["HeightMap"].value)
         chunk.blocklight = array("B",
-            unpack_nibbles(level["BlockLight"].value))
+                                 unpack_nibbles(level["BlockLight"].value))
 
         chunk.populated = bool(level["TerrainPopulated"])
 
@@ -387,7 +392,8 @@ class Anvil(object):
         for item in tag.tags:
             slot = item["Slot"].value
             items[slot] = Slot(item["id"].value,
-                item["Damage"].value, item["Count"].value)
+                               item["Damage"].value,
+                               item["Count"].value)
 
         inventory.load_from_list(items)
 
@@ -397,10 +403,9 @@ class Anvil(object):
         for slot, item in enumerate(inventory.save_to_list()):
             if item is not None:
                 d = TAG_Compound()
-                id, damage, count = item
-                d["id"] = TAG_Short(id)
-                d["Damage"] = TAG_Short(damage)
-                d["Count"] = TAG_Byte(count)
+                d["id"] = TAG_Short(item.item_id)
+                d["Damage"] = TAG_Short(item.damage)
+                d["Count"] = TAG_Byte(item.count)
                 d["Slot"] = TAG_Byte(slot)
                 tag.tags.append(d)
 
@@ -457,7 +462,7 @@ class Anvil(object):
             raise SerializerReadException("No chunk %r in region" % chunk)
         except Exception, e:
             raise SerializerReadException("%r couldn't be loaded: %s" %
-                    (chunk, e))
+                                          (chunk, e))
 
         return chunk
 
@@ -489,7 +494,7 @@ class Anvil(object):
         tag = self._read_tag(self.folder.child("level.dat"))
         if not tag:
             raise SerializerReadException("Level (in %s) is corrupt!" %
-                    fp.path)
+                                          fp.path)
 
         try:
             spawn = (tag["Data"]["SpawnX"].value, tag["Data"]["SpawnY"].value,
@@ -515,7 +520,7 @@ class Anvil(object):
         tag = self._read_tag(fp)
         if not tag:
             raise SerializerReadException("%r (in %s) is corrupt!" %
-                    (username, fp.path))
+                                          (username, fp.path))
 
         try:
             player = Player(username=username)
@@ -528,10 +533,10 @@ class Anvil(object):
 
             if "Inventory" in tag:
                 self._load_inventory_from_tag(player.inventory,
-                        tag["Inventory"])
+                                              tag["Inventory"])
         except KeyError, e:
             raise SerializerReadException("%r couldn't be loaded: %s" %
-                    (player, e))
+                                          (player, e))
 
         return player
 
@@ -544,7 +549,7 @@ class Anvil(object):
 
         tag["Rotation"] = TAG_List(type=TAG_Double)
         tag["Rotation"].tags = [TAG_Double(i)
-            for i in player.location.ori.to_degs()]
+                                for i in player.location.ori.to_degs()]
 
         tag["Inventory"] = self._save_inventory_to_tag(player.inventory)
 

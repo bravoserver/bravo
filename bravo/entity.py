@@ -84,22 +84,23 @@ class Player(Entity):
 
         item = self.inventory.holdables[self.equipped]
         if item is None:
-            item = 0
+            current_item = 0
         else:
-            item = item[0]
+            current_item = item.item_id
 
         packet = make_packet("spawn_player",
                              eid=self.eid,
                              uuid=self.uuid.hex,
                              name=self.username,
-                             x=x, y=y, z=z, yaw=yaw, pitch=pitch, current_item=item,
+                             x=x, y=y, z=z,
+                             yaw=yaw, pitch=pitch,
+                             current_item=current_item,
                              # http://www.wiki.vg/Entities#Objects
                              metadata={
                                  0: ('byte', 0),     # Flags
                                  1: ('short', 300),  # Drowning counter
                                  7: ('int', 0),      # Color of the bubbling effects
                              })
-        print packet
         return packet
 
     def save_equipment_to_packet(self):
@@ -187,6 +188,7 @@ class Pickup(Entity):
                               x=x, y=y, z=z, yaw=0, pitch=0, data=1,
                               speed=Speed(0, 0, 0))
 
+        print "item=", self.item
         packets += make_packet('entity_metadata', eid=self.eid,
                                # See http://www.wiki.vg/Entities#Objects
                                metadata={
