@@ -1,5 +1,6 @@
 from bravo.blocks import blocks, items
 
+
 class SpeedyDigPolicy(object):
     """
     A digging policy which lets blocks be broken very fast.
@@ -43,6 +44,7 @@ effect = {
     items["wooden-shovel"].slot: 2,
 }
 
+
 def effect_multiplier(slot):
     """
     The multiplier for effectiveness for a given tool.
@@ -51,18 +53,19 @@ def effect_multiplier(slot):
     if not slot:
         return 1.0
 
-    primary = slot.primary
+    item_id = slot.item_id
 
-    if primary not in effect:
+    if item_id not in effect:
         return 1.0
 
-    return effect[primary]
+    return effect[item_id]
+
 
 def is_effective_against(block, slot):
-    if not slot or slot.primary not in items:
+    if not slot or slot.item_id not in items:
         return False
 
-    item = items[slot.primary]
+    item = items[slot.item_id]
 
     if item.name.endswith("-shovel"):
         return block in (
@@ -103,6 +106,7 @@ def is_effective_against(block, slot):
 
     return False
 
+
 class NotchyDigPolicy(object):
     """
     A digging policy modeled after the Notchian server dig times.
@@ -124,16 +128,16 @@ class NotchyDigPolicy(object):
             blocks["sapling"].slot,
             blocks["tnt"].slot,
             blocks["torch"].slot,
-            ):
+        ):
             return True
 
-        if block == blocks["snow"].slot and tool and tool.primary in (
+        if block == blocks["snow"].slot and tool and tool.item_id in (
             items["diamond-shovel"].slot,
             items["gold-shovel"].slot,
             items["iron-shovel"].slot,
             items["stone-shovel"].slot,
             items["wooden-shovel"].slot,
-            ):
+        ):
             return True
 
         return False

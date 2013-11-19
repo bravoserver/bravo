@@ -90,15 +90,16 @@ class Player(Entity):
 
         packet = make_packet("spawn_player",
                              eid=self.eid,
-                             uuid=self.uuid.bytes,
+                             uuid=self.uuid.hex,
                              name=self.username,
                              x=x, y=y, z=z, yaw=yaw, pitch=pitch, current_item=item,
                              # http://www.wiki.vg/Entities#Objects
                              metadata={
                                  0: ('byte', 0),     # Flags
                                  1: ('short', 300),  # Drowning counter
-                                 8: ('int', 0),      # Color of the bubbling effects
+                                 7: ('int', 0),      # Color of the bubbling effects
                              })
+        print packet
         return packet
 
     def save_equipment_to_packet(self):
@@ -116,10 +117,10 @@ class Player(Entity):
             if item is None:
                 continue
 
-            primary, secondary, count = item
+            item_id, count, damage = item
             packet += make_packet("entity_equipment", eid=self.eid, slot=slot,
-                                  primary=primary, secondary=secondary,
-                                  count=1)
+                                  item_id=item_id, damage=damage,
+                                  count=count)
         return packet
 
 
@@ -544,7 +545,7 @@ class Zombie(Mob):
 
 entities = dict((entity.name,  entity)
                 for entity in (
-                        Chuck, 
+                        Chuck,
                         Cow,
                         Creeper,
                         Ghast,
@@ -675,7 +676,7 @@ class Furnace(Tile):
                 if self.cooktime == 20:
                     # Looks like things were successfully crafted.
                     source = self.inventory.crafting[0]
-                    product = furnace_recipes[source.primary]
+                    product = furnace_recipes[source.item_id]
                     self.inventory.crafting[0] = source.decrement()
 
                     if self.inventory.crafted[0] is None:
@@ -696,7 +697,7 @@ class Furnace(Tile):
                     # We have fuel and stuff to craft, so burn a bit of fuel
                     # and craft some stuff.
                     fuel = self.inventory.fuel[0]
-                    self.burntime = self.burn_max = furnace_fuel[fuel.primary]
+                    self.burntime = self.burn_max = furnace_fuel[fuel.item_id]
                     self.inventory.fuel[0] = fuel.decrement()
 
                     if not self.running:
@@ -732,7 +733,7 @@ class Furnace(Tile):
         '''
 
         return (self.inventory.fuel[0] is not None and
-                self.inventory.fuel[0].primary in furnace_fuel)
+                self.inventory.fuel[0].item_id in furnace_fuel)
 
     def can_craft(self):
         '''
@@ -751,7 +752,7 @@ class Furnace(Tile):
             return False
 
         # No matching recipe?
-        if crafting.primary not in furnace_recipes:
+        if crafting.item_id not in furnace_recipes:
             return False
 
         # Something to craft and no current output? This is a success
@@ -760,13 +761,13 @@ class Furnace(Tile):
             return True
 
         # Unstackable output?
-        if crafted.primary in unstackable:
+        if crafted.item_id in unstackable:
             return False
 
-        recipe = furnace_recipes[crafting.primary]
+        recipe = furnace_recipes[crafting.item_id]
 
         # Recipe doesn't match current output?
-        if recipe[0] != crafted.primary:
+        if recipe[0] != crafted.item_id:
             return False
 
         # Crafting would overflow current output?

@@ -109,9 +109,9 @@ class Rain(object):
     def chat_command(self, username, parameters):
         arg = "".join(parameters)
         if arg == "start":
-            self.factory.vane("rainy")
+            self.factory.vane.weather = "rainy"
         elif arg == "stop":
-            self.factory.vane("sunny")
+            self.factory.vane.weather = "sunny"
         else:
             return ("Couldn't understand you!",)
         return ("*%s did the rain dance*" % (username),)

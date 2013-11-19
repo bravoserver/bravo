@@ -138,7 +138,7 @@ metadata_switch = {
     1: SBInt16("value"),
     2: SBInt32("value"),
     3: BFloat32("value"),
-    4: PascalString("value"),
+    4: AlphaString("value"),
     5: slot,
     6: Struct("coords",
               SBInt32("x"),
@@ -222,18 +222,6 @@ objecttypes = {
     90: 'Fishing Float',
 }
 
-clientanimationtypes = {
-    0: 'Swing arm',
-    1: 'Damage animation',
-    2: 'Leave bed',
-    3: 'Eat food',
-    4: 'Critical effect',
-    5: 'Magic critical effect',
-    102: '(unknown)',
-    104: 'Crouch',
-    105: 'Uncrouch',
-}
-
 entitystatustypes = {
     2: 'Entity hurt',
     3: 'Entity dead',
@@ -291,18 +279,6 @@ smokedirectiontypes = {
     6: 'Northeast',
     7: 'North',
     8: 'Northwest',
-}
-
-reasontypes = {
-    0: 'Invalid Bed',  # "tile.bed.notValid"
-    1: 'End raining',
-    2: 'Begin raining',
-    3: 'Change game mode',  # "gameMode.changed" 0 - Survival, 1 - Creative, 2 - Adventure
-    4: 'Enter credits',
-    5: 'Demo messages',  # 0 - Show welcome to demo screen, 101 - Tell movement controls, 102 - Tell jump control, 103 - Tell inventory control
-    6: 'Arrow hitting player',  # Appears to be played when an arrow strikes another player in Multiplayer
-    7: 'Fade value',  # The current darkness value. 1 = Dark, 0 = Bright, Setting the value higher causes the game to change color and freeze
-    8: 'Fade time',  # Time in ticks for the sky to fade
 }
 
 # Old enums.
@@ -395,6 +371,20 @@ entity_action = {
 
 entity_action_enum = Enum(UBInt8('action'), **entity_action)
 
+client_animation = {
+    'arm': 0,
+    'hit': 1,
+    'leave_bed': 2,
+    'eat': 3,
+    'critical': 4,  # New!
+    'magic_critical': 5,  # New!
+    'unknown': 102,
+    'crouch': 104,
+    'uncrouch': 105,
+}
+
+client_animation_enum = Enum(UBInt8('animation'), **client_animation)
+
 client_status = {
     'respawn': 0,
     'stats': 1,
@@ -405,11 +395,11 @@ client_status_enum = Enum(UBInt8('status'), **client_status)
 
 game_state = {
     'bad_bed': 0,
-    'start_rain': 1,
-    'stop_rain': 2,
+    'stop_rain': 1,
+    'start_rain': 2,
     'mode_change': 3,
     'run_credits': 4,
-    'demo-messages': 5,  # New!
+    'demo_messages': 5,  # New!
     'arrow_hits_player': 6,  # New!
     'fade_value': 7,  # New!
     'fade_time': 8,  # New!
@@ -515,7 +505,7 @@ serverbound = {
         0x09: Struct('held_item_change',
                      UBInt16('slot'),
                      ),
-        0x0a: Struct('animate',
+        0x0a: Struct('animation',
                      UBInt32('eid'),
                      server_animation_enum,
                      ),
@@ -685,7 +675,7 @@ clientbound = {
                      ),
         0x0b: Struct('animation',
                      VarInt('eid'),
-                     UBInt8('animation'),
+                     client_animation_enum,
                      ),
         0x0c: Struct('spawn_player',
                      VarInt('eid'),
@@ -1454,7 +1444,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     def handle_held_item_change(self, packet):
         return NotImplementedError
 
-    def handle_animate(self, packet):
+    def handle_animation(self, packet):
         return NotImplementedError
 
     def handle_entity_action(self, packet):
@@ -2466,11 +2456,11 @@ class BravoProtocol(BetaServerProtocol):
 
         eids = [e.eid for e in chunk.entities]
 
-        self.write_packet("destroy", count=len(eids), eid=eids)
+        self.write_packet("destroy_entities", count=len(eids), eid=eids)
 
         # Clear chunk data on the client.
-        self.write_packet("chunk", x=x, z=z, continuous=False, primary=0x0,
-                          add=0x0, data="")
+        empty_chunk_data = ''.join([]).encode("zlib")
+        self.write_packet("chunk_data", chunk_x=x, chunk_z=z, continuous=True, primary=0x0, add=0x0, compressed_size=len(empty_chunk_data), compressed_data=empty_chunk_data)
 
     def enable_chunk(self, x, z):
         """
@@ -2669,17 +2659,21 @@ class BravoProtocol(BetaServerProtocol):
     def handle_login_start(self, packet):
         self.username = packet.username
         self.uuid = uuid4()
-        self.write_packet('login_success', uuid=self.uuid.bytes, username=self.username)
+        print "uuid is %s" % self.uuid.hex
+        self.write_packet('login_success', uuid=self.uuid.hex, username=self.username)
         self.authenticated()
 
     def handle_status_request(self, packet):
+        p = self.factory.protocols
         version = '"version":{"name":"1.7.2","protocol":4}'
         description = '"description":{"text":"OMG Bravo!"}'
-        if len(self.factory.protocols) > 0:
-            samples = ',"sample":[' + ''.join(['{"id":"%s","name":"%s"}' % ('', name) for name in self.factory.protocols]) + ']'
+        if len(p) > 0:
+            # JMT: the id value for chryzrose was 65:31:35:32:36:32:35:30:33:66:62:39:33:39:63:63:62:62:36:66:65:61:36:33:32:31:30:33:35:34:63:62 at this point.
+            samples = ',"sample":[' + ''.join(['{"id":"%s","name":"%s"}' % (p[name].uuid.hex, name) for name in p]) + ']'
         else:
             samples = ''
-        players = '"players":{"max":%d,"online":%d%s}' % (self.factory.limitConnections, len(self.factory.protocols), samples)
+        print samples
+        players = '"players":{"max":%d,"online":%d%s}' % (self.factory.limitConnections, len(p), samples)
         json_string = '{%s,%s,%s}' % (description, players, version)
         self.write_packet('status_response', json=json_string)
 
@@ -2688,17 +2682,13 @@ class BravoProtocol(BetaServerProtocol):
         self.mode = 'handshaking'
 
     def handle_keepalive(self, packet):
-        # JMT: this assumes the ping value is time related
-        # wiki.vg/Protocol says different:
-        # basically, server sends random ID, client returns same.
         now = timestamp_from_clock(reactor)
         then = packet.keepalive_id
         latency = now - then
 
     def handle_chat(self, packet):
         log.msg("Chat! %r" % packet.json)
-        data = json.loads(packet.json)
-        log.msg("Chat loaded: %s" % data)
+        data = packet.json
         if data.startswith("/"):
             commands = retrieve_plugins(IChatCommand, factory=self.factory)
             # Register aliases.
@@ -2799,6 +2789,8 @@ class BravoProtocol(BetaServerProtocol):
         self._grounded(packet)
 
     def handle_player_digging(self, packet):
+        log.msg("digging!")
+        log.msg(packet)
         if packet.x == -1 and packet.z == -1 and packet.y == 255:
             # Lala-land dig packet. Discard it for now.
             return
@@ -2977,18 +2969,39 @@ class BravoProtocol(BetaServerProtocol):
 
         # Re-send inventory.
         # XXX this could be optimized if/when inventories track damage.
-        packet = self.inventory.save_to_packet()
-        self.transport.write(packet)
+        new_packet = self.inventory.save_to_packet()
+        self.transport.write(new_packet)
 
         # Flush damaged chunks.
         for chunk in self.chunks.itervalues():
             self.factory.flush_chunk(chunk)
 
     def handle_held_item_change(self, packet):
-        return NotImplementedError
+        self.player.equipped = container.slot
 
-    def handle_animate(self, packet):
-        return NotImplementedError
+        # Inform everyone about the item the player is holding now.
+        item = self.player.inventory.holdables[self.player.equipped]
+        if item is None:
+            # Empty slot. Use signed short -1.
+            item_id, count, damage = -1, 0, 0
+        else:
+            item_id, count, damage = item
+
+        new_packet = make_packet("entity_equipment",
+                                 eid=self.player.eid,
+                                 slot_no=0,
+                                 slot=Slot(item_id=item_id, count=count, damage=damage),
+                                 )
+        self.factory.broadcast_for_others(new_packet, self)
+
+    def handle_animation(self, packet):
+        # Broadcast the animation of the entity to everyone else. Only swing
+        # arm is send by notchian clients.
+        new_packet = make_packet('animation',
+                                 eid=self.player.eid,
+                                 animation=packet.animation
+                                 )
+        self.factory.broadcast_for_others(new_packet, self)
 
     def handle_entity_action(self, packet):
         return NotImplementedError
@@ -2997,28 +3010,97 @@ class BravoProtocol(BetaServerProtocol):
         return NotImplementedError
 
     def handle_close_window(self, packet):
-        return NotImplementedError
+        wid = packet.wid
+        if wid == 0:
+            # WID 0 is reserved for the client inventory.
+            pass
+        elif wid in self.windows:
+            w = self.windows.pop(wid)
+            w.close()
+        else:
+            self.error("WID %d doesn't exist." % wid)
 
     def handle_click_window(self, packet):
-        return NotImplementedError
+        wid = packet.wid
+        if wid in self.windows:
+            w = self.windows[wid]
+            result = w.action(packet.slot, packet.button,
+                              packet.token, packet.shift,
+                              packet.primary)
+            self.write_packet('confirm_transaction', wid=wid, token=packet.token,
+                              acknowledged=result)
+        else:
+            self.error("WID %d doesn't exist." % wid)
 
     def handle_confirm_transaction(self, packet):
         return NotImplementedError
 
     def handle_creative_inventory_action(self, packet):
-        return NotImplementedError
+        # XXX Sometimes the container doesn't contain all of this information.
+        # What then?
+        applied = self.inventory.creative(packet.slot, packet.item_id,
+                                          packet.count, packet.damage)
+        if applied:
+            # Inform other players about changes to this player's equipment.
+            equipped_slot = self.player.equipped + 36
+            if packet.slot == equipped_slot:
+                new_packet = make_packet("entity_equipment",
+                                         eid=self.player.eid,
+                                         # XXX why 0? why not the actual slot?
+                                         slot_no=0,
+                                         slot=Slot(item_id=packet.item_id,
+                                                   count=packet.count,
+                                                   damage=packet.damage),
+                                         )
+                self.factory.broadcast_for_others(new_packet, self)
 
     def handle_enchant_item(self, packet):
         return NotImplementedError
 
     def handle_update_sign(self, packet):
-        return NotImplementedError
+        bigx, smallx, bigz, smallz = split_coords(packet.x, packet.z)
+
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't handle sign in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        if (smallx, packet.y, smallz) in chunk.tiles:
+            new = False
+            s = chunk.tiles[smallx, packet.y, smallz]
+        else:
+            new = True
+            s = Sign(smallx, packet.y, smallz)
+            chunk.tiles[smallx, packet.y, smallz] = s
+
+        s.text1 = packet.line1
+        s.text2 = packet.line2
+        s.text3 = packet.line3
+        s.text4 = packet.line4
+
+        chunk.dirty = True
+
+        # The best part of a sign isn't making one, it's showing everybody
+        # else on the server that you did.
+        new_packet = make_packet("update_sign", packet)
+        self.factory.broadcast_for_chunk(new_packet, bigx, bigz)
+
+        # Run sign hooks.
+        for hook in self.sign_hooks:
+            hook.sign_hook(self.factory, chunk, packet.x, packet.y,
+                           packet.z, [s.text1, s.text2, s.text3, s.text4], new)
 
     def handle_player_abilities(self, packet):
         return NotImplementedError
 
     def handle_tab(self, packet):
-        return NotImplementedError
+        needle = container.autocomplete
+        usernames = self.factory.protocols.keys()
+
+        results = complete(needle, usernames)
+
+        self.write_packet('tab_complete', autocomplete=results)
 
     def handle_client_settings(self, packet):
         # JMT: The packet has more than the object

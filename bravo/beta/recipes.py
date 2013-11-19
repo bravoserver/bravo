@@ -15,10 +15,12 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IRecipe
 
+
 def grouper(n, iterable):
     args = [iter(iterable)] * n
     for i in zip(*args):
         yield i
+
 
 def pad_to_stride(recipe, rstride, cstride):
     """
@@ -46,10 +48,12 @@ def pad_to_stride(recipe, rstride, cstride):
 
     return padded
 
+
 class RecipeError(Exception):
     """
     Something bad happened inside a recipe.
     """
+
 
 class Blueprint(object):
     """
@@ -120,8 +124,7 @@ class Blueprint(object):
             # We need all of these slots to match. All of them.
             matches_needed = len(padded)
 
-            for i, j in zip(padded,
-                table[offset:len(padded) + offset]):
+            for i, j in zip(padded, table[offset:len(padded) + offset]):
                 if i is None and j is None:
                     matches_needed -= 1
                 elif i is not None and j is not None:
@@ -132,7 +135,7 @@ class Blueprint(object):
                         # Special case for wool, which should match on any
                         # color. Woolhax.
                         elif (skey[0] == blocks["wool"].slot and
-                              j.primary == blocks["wool"].slot):
+                              j.item_id == blocks["wool"].slot):
                             matches_needed -= 1
 
                 if matches_needed == 0:
@@ -162,6 +165,7 @@ class Blueprint(object):
                 slot = table[index]
                 table[index] = slot.decrement(rcount)
 
+
 class Ingredients(object):
     """
     Base class for ingredient-based recipes.
@@ -178,7 +182,7 @@ class Ingredients(object):
         """
         Create an ingredient-based recipe.
 
-        ``ingredients`` should be a finite iterable of (primary, secondary)
+        ``ingredients`` should be a finite iterable of (item_id, damage)
         slot tuples.
         """
 
@@ -187,7 +191,7 @@ class Ingredients(object):
         self.provides = provides
 
         # Woolhax. If there's any wool in the ingredient list, rig it to be
-        # white wool, with secondary attribute zero. Shouldn't change the
+        # white wool, with damage attribute zero. Shouldn't change the
         # sorting order, so don't bother resorting.
         for i, ingredient in enumerate(self.ingredients):
             if ingredient[0] == blocks["wool"].slot:
@@ -201,7 +205,7 @@ class Ingredients(object):
         completeness.
         """
 
-        on_the_table = sorted((i.primary, i.secondary) for i in table if i)
+        on_the_table = sorted((i.item_id, i.damage) for i in table if i)
 
         # Woolhax. See __init__.
         for i, ingredient in enumerate(on_the_table):

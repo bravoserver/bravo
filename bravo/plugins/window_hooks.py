@@ -78,13 +78,13 @@ def processClickMessage(factory, player, window, container):
                 slot = 4 - (container.slot - 5)
 
             if item is None:
-                primary, secondary, count = -1, 0, 0
+                item_id, count, damage = -1, 0, 0
             else:
-                primary, secondary, count = item
+                item_id, count, damage = item
             packet = make_packet("entity_equipment",
                                  eid=player.player.eid,
                                  slot_no=slot,
-                                 slot=Slot(item_id=primary, count=0, damage=secondary)
+                                 slot=Slot(item_id=item_id, count=count, damage=damage)
                                  )
             factory.broadcast_for_others(packet, player)
 

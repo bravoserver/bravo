@@ -82,16 +82,16 @@ orientation = Struct("orientation", BFloat32("rotation"), BFloat32("pitch"))
 
 # TODO: this must be replaced with 'slot' (see below)
 # Notchian item packing (slot data)
-items = Struct("items",
-               SBInt16("primary"),
-               If(lambda context: context["primary"] >= 0,
-                  Embed(Struct("item_information",
-                               UBInt8("count"),
-                               UBInt16("secondary"),
-                               Magic("\xff\xff"),
-                               )),
-                  ),
-               )
+# items = Struct("items",
+#                SBInt16("primary"),
+#                If(lambda context: context["primary"] >= 0,
+#                   Embed(Struct("item_information",
+#                                UBInt8("count"),
+#                                UBInt16("secondary"),
+#                                Magic("\xff\xff"),
+#                                )),
+#                   ),
+#                )
 
 Speed = namedtuple('speed', 'x y z')
 
