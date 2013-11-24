@@ -44,8 +44,10 @@ def processClickMessage(factory, player, window, container):
     if container.slot_no == -999:
         items = window.drop_selected(bool(container.button))
         drop_items(factory, player.location.in_front_of(1), items, 1)
-        player.write_packet("window-token", wid=container.wid,
-                            token=container.token, acknowledged=True)
+        player.write_packet('confirm_transaction',
+                            wid=container.wid,
+                            token=container.token,
+                            acknowledged=True)
         return
 
     # perform selection action

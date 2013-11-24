@@ -101,16 +101,18 @@ class Window(SerializableSlots):
 
     def save_to_packet(self):
         lc = ListContainer()
-        for item in chain(*self.metalist):
+        set_slots = make_packet('set_slot', wid=255, slot_no=-1, slot=Slot())
+        for index, item in enumerate(chain(*self.metalist)):
             if item is None:
-                lc.append(Slot())
+                slot = Slot()
             else:
-                lc.append(Slot(item_id=item.item_id,
-                               count=item.count,
-                               damage=item.damage))
+                slot = Slot(item_id=item.item_id, count=item.count, damage=item.damage)
+                set_slots += make_packet('set_slot', wid=self.wid, slot_no=index, slot=slot)
+            lc.append(slot)
 
         packet = make_packet("window_items", wid=self.wid, count=len(lc), slot=lc)
-        return packet
+
+        return packet+set_slots
 
     def select_stack(self, container, index):
         """

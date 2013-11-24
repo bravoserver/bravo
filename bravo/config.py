@@ -1,5 +1,6 @@
 from ConfigParser import SafeConfigParser, NoSectionError, NoOptionError
 
+
 class BravoConfigParser(SafeConfigParser):
     """
     Extended ``ConfigParser``.
@@ -55,6 +56,7 @@ class BravoConfigParser(SafeConfigParser):
             return self.getlist(section, option)
         except (NoSectionError, NoOptionError):
             return default
+
 
 def read_configuration(path):
     configuration = BravoConfigParser()

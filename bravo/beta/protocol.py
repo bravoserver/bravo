@@ -28,7 +28,7 @@ from bravo.infini.factory import InfiniClientFactory
 from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location, Orientation, Position
 from bravo.motd import get_motd
-from bravo.beta.packets import parse_packets, make_packet, Slot
+from bravo.beta.packets import parse_packets, make_packet, hexout, Slot
 from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
@@ -56,6 +56,10 @@ from varint import VarInt
 (STATE_UNAUTHENTICATED, STATE_AUTHENTICATED, STATE_LOCATED) = range(3)
 
 SUPPORTED_PROTOCOL = 4
+
+server_protocols = {
+    4: '1.7.2',
+}
 
 
 # Data structures required for the beta protocol.
@@ -166,23 +170,6 @@ metadata = MetadataAdapter(
 )
 
 # Enums.
-entitystatustypes = {
-    2: 'Entity hurt',
-    3: 'Entity dead',
-    6: 'Wolf taming',
-    7: 'Wolf tamed',
-    8: 'Wolf shaking water off itself',
-    9: '(of self) Eating accepted by server',
-    10: 'Sheep eating grass',
-    11: 'Iron Golem handing over a rose',
-    12: 'Spawn "heart" particles near a villager',
-    13: 'Spawn particles indicating that a villager is angry and seeking revenge',
-    14: 'Spawn happy particles near a villager',
-    15: 'Spawn a "magic" particle near the Witch',
-    16: 'Zombie converting into a villager by shaking violently (unused in recent update)',
-    17: 'A firework exploding',
-}
-
 effecttypes = {
     1000: 'random.click',
     1001: 'random.click',
@@ -375,6 +362,25 @@ entity_action = {
 
 entity_action_enum = Enum(UBInt8('action'), **entity_action)
 
+entity_status = {
+    'damaged': 2,
+    'killed': 3,
+    'taming': 6,
+    'tamed': 7,
+    'drying': 8,
+    'eating': 9,
+    'sheep_eat': 10,
+    'golem_rose': 11,
+    'heart_particle': 12,
+    'angry_particle': 13,
+    'happy_particle': 14,
+    'magic_particle': 15,
+    'shaking': 16,
+    'firework': 17,
+}
+
+entity_status_enum = Enum(UBInt8('status'), **entity_status)
+
 client_animation = {
     'arm': 0,
     'hit': 1,
@@ -532,8 +538,8 @@ serverbound = {
                      SBInt16('slot_no'),
                      UBInt8('button'),
                      UBInt16('token'),
-                     UBInt8('shift'),  # TODO: rename to 'mode'  <-- old
-                     slot,  # Embed(items),  # slot
+                     UBInt8('mode'),
+                     slot,
                      ),
         0x0f: Struct('confirm_transaction',
                      UBInt8('wid'),
@@ -789,7 +795,7 @@ clientbound = {
                      ),
         0x1a: Struct('entity_status',
                      SBInt32('eid'),
-                     UBInt8('status'),
+                     entity_status_enum,
                      ),
         0x1b: Struct('attach_entity',
                      SBInt32('eid'),
@@ -971,8 +977,8 @@ clientbound = {
                      ),
         0x32: Struct('confirm_transaction',
                      UBInt8('wid'),
-                     UBInt16('action_number'),
-                     Bool('accepted'),
+                     UBInt16('token'),  # action_number
+                     Bool('acknowledged'),  # accepted
                      ),
         0x33: Struct('update_sign',
                      SBInt32('x'),
@@ -1120,7 +1126,13 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         for header, payload in packets:
             if header in serverbound[self.mode]:  # replace with try/except ?
                 struct = serverbound[self.mode][header]
-                method = getattr(self, 'handle_%s' % struct.name)
+                name = 'handle_%s' % struct.name
+                try:
+                    method = getattr(self, name)
+                except AttributeError:
+                    print "no such method %s exists!" % name
+                    return ''
+                print name, hexout(payload, 60)
                 if payload == '':
                     packet = ''
                 else:
@@ -1915,9 +1927,10 @@ class BravoProtocol(BetaServerProtocol):
         self.authenticated()
 
     def handle_status_request(self, packet):
+        # XXX make proper json here!
         p = self.factory.protocols
-        version = '"version":{"name":"1.7.2","protocol":4}'
-        description = '"description":{"text":"OMG Bravo!"}'
+        version = '"version":{"name":"%s","protocol":%d}' % (server_protocols[SUPPORTED_PROTOCOL], SUPPORTED_PROTOCOL)
+        description = '"description":{"text":"%s"}' % self.motd
         if len(p) > 0:
             samples = ',"sample":[' + ''.join(['{"id":"%s","name":"%s"}' % (p[name].uuid.hex, name) for name in p]) + ']'
         else:
@@ -2120,7 +2133,6 @@ class BravoProtocol(BetaServerProtocol):
 
     @inlineCallbacks
     def handle_player_block_placement(self, packet):
-        print "player block placement: %s" % packet
         # Is the target within our purview? We don't do a very strict
         # containment check, but we *do* require that the chunk be loaded.
         bigx, smallx, bigz, smallz = split_coords(packet.x, packet.z)
@@ -2132,7 +2144,7 @@ class BravoProtocol(BetaServerProtocol):
 
         target = blocks[chunk.get_block((smallx, packet.y, smallz))]
 
-        print "target was ", target
+        print "coords were %d %d %d, target was " % (packet.x, packet.y, packet.z), target
 
         # Attempt to open a window.
         from bravo.policy.windows import window_for_block
@@ -2264,7 +2276,6 @@ class BravoProtocol(BetaServerProtocol):
         return NotImplementedError
 
     def handle_close_window(self, packet):
-        print "close_window: %s" % packet
         wid = packet.wid
         if wid == 0:
             # WID 0 is reserved for the client inventory.
@@ -2276,20 +2287,21 @@ class BravoProtocol(BetaServerProtocol):
             self.error("WID %d doesn't exist." % wid)
 
     def handle_click_window(self, packet):
-        print "click_window: %s" % packet
         wid = packet.wid
-        print "is it in self.windows?", self.windows
+        result = False
         if wid == 0:
-            pass
+            # Acknowledge all clicks to window 0
+            result = True
         elif wid in self.windows:
+            # WID 0 is reserved for the client inventory.
             w = self.windows[wid]
             result = w.action(packet.slot, packet.button,
-                              packet.token, packet.shift,
+                              packet.token, packet.mode,
                               packet.primary)
-            self.write_packet('confirm_transaction', wid=wid, token=packet.token,
-                              acknowledged=result)
         else:
             self.error("WID %d doesn't exist." % wid)
+        self.write_packet('confirm_transaction', wid=wid, token=packet.token,
+                          acknowledged=result)
 
     def handle_confirm_transaction(self, packet):
         return NotImplementedError
@@ -2368,7 +2380,7 @@ class BravoProtocol(BetaServerProtocol):
 
     def handle_client_status(self, packet):
         if packet.status == 'open_inventory_achievement':
-            self.windows[0] = self.inventory
+            pass
 
     def handle_plugin_message(self, packet):
-        print "Plugin message %s" % packet
+        pass

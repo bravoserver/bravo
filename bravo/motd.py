@@ -64,6 +64,7 @@ Still alive!
 
 motds = [i.strip() for i in motds.split("%")]
 
+
 def get_motd():
     """
     Retrieve a random MOTD.

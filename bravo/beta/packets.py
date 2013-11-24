@@ -395,7 +395,7 @@ def parse_packets(bytestream):
     if DUMP_ALL_PACKETS:
         for header, payload in l:
             print "Parsed packet 0x%.2x" % header
-            print payload
+            print hexout(payload)
 
     return l, leftovers
 
@@ -449,3 +449,9 @@ def make_packet(packet_name, mode='play', *args, **kwargs):
             raise e
     new_packet = Container(header=header, payload=payload)
     return packet_adapter.build(new_packet)
+
+
+def hexout(data, length=None):
+    if length is not None:
+        data = data[:length]
+    return ' '.join(x.encode('hex') for x in data), data
