@@ -514,7 +514,7 @@ class BravoFactory(Factory):
         """
 
         for player in self.protocols.itervalues():
-            player.transport.write(packet)
+            player.write_packets(packet)
 
     def broadcast_for_others(self, packet, protocol):
         """
@@ -526,7 +526,7 @@ class BravoFactory(Factory):
 
         for player in self.protocols.itervalues():
             if player is not protocol:
-                player.transport.write(packet)
+                player.write_packets(packet)
 
     def broadcast_for_chunk(self, packet, x, z):
         """
@@ -537,7 +537,7 @@ class BravoFactory(Factory):
 
         for player in self.protocols.itervalues():
             if (x, z) in player.chunks:
-                player.transport.write(packet)
+                player.write_packets(packet)
 
     def scan_chunk(self, chunk):
         """
@@ -560,7 +560,7 @@ class BravoFactory(Factory):
             packet = chunk.get_damage_packet()
             for player in self.protocols.itervalues():
                 if (chunk.x, chunk.z) in player.chunks:
-                    player.transport.write(packet)
+                    player.write_packets(packet)
             chunk.clear_damage()
 
     def flush_all_chunks(self):

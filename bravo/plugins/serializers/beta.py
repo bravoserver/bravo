@@ -144,13 +144,13 @@ class Anvil(object):
 
     def _load_item_from_tag(self, item, tag):
         item.item = tag["Item"]["id"].value, tag["Item"]["Damage"].value
-        item.quantity = tag["Item"]["Count"].value
+        item.count = tag["Item"]["Count"].value
 
     def _save_item_to_tag(self, item, tag):
         tag["Item"] = TAG_Compound()
         tag["Item"]["id"] = TAG_Short(item.item[0])
+        tag["Item"]["Count"] = TAG_Short(item.count)
         tag["Item"]["Damage"] = TAG_Short(item.item[1])
-        tag["Item"]["Count"] = TAG_Short(item.quantity)
 
     def _load_painting_from_tag(self, painting, tag):
         painting.direction = tag["Dir"].value

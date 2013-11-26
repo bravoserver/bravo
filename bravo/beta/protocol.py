@@ -534,7 +534,7 @@ serverbound = {
                      ),
         0x10: Struct('creative_inventory_action',
                      UBInt16('slot_no'),
-                     slot,  # Embed(items),  # slot
+                     slot,
                      ),
         0x11: Struct('enchant_item',
                      UBInt8('wid'),
@@ -1103,6 +1103,8 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     # shouldn't need to be touched.
 
     def dataReceived(self, data):
+        if self.factory.online:
+            data = decrypt(data)
         self.buf += data
 
         packets, self.buf = parse_packets(self.buf)
@@ -1189,7 +1191,17 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
         Send a packet to the client.
         """
-        self.transport.write(make_packet(packet_name, mode=self.mode, *args, **kwargs))
+        packet = make_packet(packet_name, mode=self.mode, *args, **kwargs)
+        self.write_packets(packet)
+
+    def write_packets(self, packet):
+        """
+        Send pre-assembled packets to the client.
+        """
+        if self.factory.online:
+            # Encrypt packets
+            pass
+        self.transport.write(packet)
 
     def update_ping(self):
         """
@@ -1221,7 +1233,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         # Inform ourselves of our new location.
         packet = self.location.save_to_packet()
-        self.transport.write(packet)
+        self.write_packets(packet)
 
     def ascend(self, count):
         """
@@ -1556,19 +1568,19 @@ class BravoProtocol(BetaServerProtocol):
             self.write_packet("create_entity", eid=protocol.player.eid)
             packet = protocol.player.save_to_packet()
             packet += protocol.player.save_equipment_to_packet()
-            self.transport.write(packet)
+            self.write_packets(packet)
 
         # Send spawn and inventory.
         spawn = self.factory.world.level.spawn
         packet = make_packet("spawn_position", x=spawn[0], y=spawn[1], z=spawn[2])
         packet += self.inventory.save_to_packet()
-        self.transport.write(packet)
+        self.write_packets(packet)
 
         self.health = 20
         # TODO: Update Experience (0x2b)
 
         # Send weather.
-        self.transport.write(self.factory.vane.make_packet())
+        self.write_packets(self.factory.vane.make_packet())
 
         self.send_initial_chunk_and_location()
 
@@ -1590,11 +1602,11 @@ class BravoProtocol(BetaServerProtocol):
             if entity.name != "Item":
                 continue
 
-            left = self.player.inventory.add(entity.item, entity.quantity)
-            if left != entity.quantity:
+            left = self.player.inventory.add(entity.item, entity.count)
+            if left != entity.count:
                 if left != 0:
                     # partial collect
-                    entity.quantity = left
+                    entity.count = left
                 else:
                     packet = make_packet("collect_item", collected_eid=entity.eid, collector_eid=self.player.eid)
                     packet += make_packet("destroy_entities", count=1, eid=[entity.eid])
@@ -1602,7 +1614,7 @@ class BravoProtocol(BetaServerProtocol):
                     self.factory.destroy_entity(entity)
 
                 packet = self.inventory.save_to_packet()
-                self.transport.write(packet)
+                self.write_packets(packet)
 
     def entities_near(self, radius):
         """
@@ -1749,17 +1761,17 @@ class BravoProtocol(BetaServerProtocol):
         log.msg("Sending chunk %d, %d" % (chunk.x, chunk.z))
 
         packet = chunk.save_to_packet()
-        self.transport.write(packet)
+        self.write_packets(packet)
         log.msg("Chunk sent!")
 
         for entity in chunk.entities:
             packet = entity.save_to_packet()
-            self.transport.write(packet)
+            self.write_packets(packet)
 
         for entity in chunk.tiles.itervalues():
             if entity.name == "Sign":
                 packet = entity.save_to_packet()
-                self.transport.write(packet)
+                self.write_packets(packet)
 
     def send_initial_chunk_and_location(self):
         """
@@ -2105,7 +2117,7 @@ class BravoProtocol(BetaServerProtocol):
 
                     # Re-send inventory.
                     packet = self.inventory.save_to_packet()
-                    self.transport.write(packet)
+                    self.write_packets(packet)
 
                     # If no items in this slot are left, this player isn't
                     # holding an item anymore.
@@ -2202,7 +2214,7 @@ class BravoProtocol(BetaServerProtocol):
                 self.write_packet('open_window', wid=window.wid,
                                   type=window.identifier, title=window.title, slots=windows.slots_num, use_provided_title=True)
                 new_packet = window.save_to_packet()
-                self.transport.write(new_packet)
+                self.write_packets(new_packet)
                 # window opened
                 return
 
@@ -2273,7 +2285,7 @@ class BravoProtocol(BetaServerProtocol):
         # Re-send inventory.
         # XXX this could be optimized if/when inventories track damage.
         new_packet = self.inventory.save_to_packet()
-        self.transport.write(new_packet)
+        self.write_packets(new_packet)
 
         # Flush damaged chunks.
         for chunk in self.chunks.itervalues():

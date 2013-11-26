@@ -26,6 +26,8 @@ class FakeTransport(object):
 
 class FakeFactory(object):
 
+    online = False
+
     def broadcast(self, packet):
         pass
 

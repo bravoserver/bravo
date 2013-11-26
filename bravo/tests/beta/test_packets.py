@@ -1,7 +1,8 @@
 from unittest import TestCase
 
 from bravo.beta.packets import simple, parse_packets, make_packet
-from bravo.beta.packets import Speed, Slot, slot
+from bravo.beta.packets import Speed, Slot
+from bravo.beta.protocol import slot
 
 
 class TestPacketBuilder(TestCase):
