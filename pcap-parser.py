@@ -85,7 +85,6 @@ class PcapParser:
 
     def handle_client_sent_encryption_response(self, packet):
         self.shared_secret = self.cryptRSA.decrypt(packet.secret)
-        print "The shared secret is: %s" % self.shared_secret
 
     def handle_client_sent_login_start(self, packet):
         pass
@@ -382,71 +381,94 @@ class PcapParser:
 
 class InventoryAnalyzer(PcapParser):
     def handle_client_sent_use_entity(self, packet):
+        PcapParser.handle_client_sent_use_entity(self, packet)
         print "%d: Client sent use entity: %s" % (self.index, packet)
 
     def handle_client_sent_held_item_change(self, packet):
+        PcapParser.handle_client_sent_held_item_change(self, packet)
         print "%d: Client sent held item change: %s" % (self.index, packet)
 
     def handle_client_sent_player_block_placement(self, packet):
+        PcapParser.handle_client_sent_player_block_placement(self, packet)
         print "%d: Client sent player block placement: %s" % (self.index, packet)
 
     def handle_client_sent_entity_action(self, packet):
+        PcapParser.handle_client_sent_entity_action(self, packet)
         print "%d: Client sent entity action: %s" % (self.index, packet)
 
     def handle_client_sent_close_window(self, packet):
+        PcapParser.handle_client_sent_close_window(self, packet)
         print "%d: Client sent close window: %s" % (self.index, packet)
 
     def handle_client_sent_click_window(self, packet):
+        PcapParser.handle_client_sent_click_window(self, packet)
         print "%d: Client sent click window: %s" % (self.index, packet)
 
     def handle_client_sent_confirm_transaction(self, packet):
+        PcapParser.handle_client_sent_confirm_transaction(self, packet)
         print "%d: Client sent confirm transaction: %s" % (self.index, packet)
 
     def handle_client_sent_creative_inventory_action(self, packet):
+        PcapParser.handle_client_sent_creative_inventory_action(self, packet)
         print "%d: Client sent creative inventory action: %s" % (self.index, packet)
 
     def handle_server_sent_held_item(self, packet):
+        PcapParser.handle_server_sent_held_item(self, packet)
         print "%d: Server sent held item: %s" % (self.index, packet)
 
     def handle_server_sent_collect_item(self, packet):
+        PcapParser.handle_server_sent_collect_item(self, packet)
         print "%d: Server sent collect item: %s" % (self.index, packet)
 
     def handle_server_sent_open_window(self, packet):
+        PcapParser.handle_server_sent_open_window(self, packet)
         print "%d: Server sent open window: %s" % (self.index, packet)
 
     def handle_server_sent_close_window(self, packet):
+        PcapParser.handle_server_sent_close_window(self, packet)
         print "%d: Server sent close window: %s" % (self.index, packet)
 
     def handle_server_sent_set_slot(self, packet):
+        PcapParser.handle_server_sent_set_slot(self, packet)
         print "%d: Server sent set slot: %s" % (self.index, packet)
 
     def handle_server_sent_window_items(self, packet):
+        PcapParser.handle_server_sent_window_items(self, packet)
         print "%d: Server sent window items: %s" % (self.index, packet)
 
     def handle_server_sent_window_property(self, packet):
+        PcapParser.handle_server_sent_window_property(self, packet)
         print "%d: Server sent window property: %s" % (self.index, packet)
 
     def handle_server_sent_confirm_transaction(self, packet):
+        PcapParser.handle_server_sent_confirm_transaction(self, packet)
         print "%d: Server sent confirm transaction: %s" % (self.index, packet)
 
     def handle_server_sent_spawn_object(self, packet):
+        PcapParser.handle_server_sent_spawn_object(self, packet)
         print "%d: Server sent spawn object: %s" % (self.index, packet)
 
     def handle_server_sent_entity_metadata(self, packet):
+        PcapParser.handle_server_sent_entity_metadata(self, packet)
         print "%d: Server sent entity metadata: %s" % (self.index, packet)
 
 
 class EncryptionAnalyzer(PcapParser):
     def handle_client_sent_encryption_response(self, packet):
+        PcapParser.handle_client_sent_encryption_response(self, packet)
         print "%d: Client sent encryption response: %s" % (self.index, packet)
-        self.shared_secret = self.cryptRSA.decrypt(packet.secret)
-        print "The shared secret is: %s" % self.shared_secret
 
     def handle_server_sent_encryption_request(self, packet):
+        PcapParser.handle_server_sent_encryption_request(self, packet)
         print "%d: Server sent encryption request: %s" % (self.index, packet)
 
     def handle_server_sent_join(self, packet):
+        PcapParser.handle_server_sent_join(self, packet)
         print "%d: Server sent join: %s" % (self.index, packet)
+
+    def handle_client_sent_client_settings(self, packet):
+        PcapParser.handle_client_sent_client_settings(self, packet)
+        pass
 
 
 #p = InventoryAnalyzer(sys.argv[1])

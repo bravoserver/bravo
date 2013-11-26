@@ -10,6 +10,7 @@ class BravoCryptRSA:
         self.public_key = public_key
         self.private_key = private_key
         self.server_id = server_id
+        self.cipher = PKCS1_v1_5.new(self.private_key)
 
     def public_key_pem(self):
         return self.public_key.exportKey('PEM')
@@ -20,8 +21,7 @@ class BravoCryptRSA:
     def decrypt(self, secret, strict=False):
         sentinel = Random.new().read(15+self.dsize)
 
-        cipher = PKCS1_v1_5.new(self.private_key)
-        message = cipher.decrypt(secret, sentinel)
+        message = self.cipher.decrypt(secret, sentinel)
         digest = SHA.new(message[:-self.dsize]).digest()
         if not strict or digest == message[-self.dsize:]:
             return message
@@ -52,12 +52,28 @@ class BravoCryptAES:
         if key != iv:
             print "key must match iv"
             return None
+        if len(iv) != self.bsize:
+            print "iv must be of len %d" % self.bsize
         self.key = key
-        self.iv = iv[:self.bsize]
-        self.cipher = AES.new(key, AES.MODE_CFB, iv)
+        self.iv = iv
+        self.cipher = AES.new(self.key, AES.MODE_CFB, IV=self.iv)
 
-    def stream_encrypt(self, bytestream):
-        return self.iv + self.cipher.encrypt(bytestream)
+    def encrypt(self, bytestream):
+        return self.cipher.encrypt(bytestream)
 
-    def stream_decrypt(self, bytestream):
-        return str(self.cipher.decrypt(bytestream))[self.bsize:]
+    def decrypt(self, bytestream):
+        return str(self.cipher.decrypt(self.iv+bytestream))[self.bsize:]
+
+if __name__ == '__main__':
+
+    # AES
+    key = '0123456789012345'
+    iv = key
+    cryptAES = BravoCryptAES(key=key, iv=iv)
+    plain = 'The quick young fox jumped over the lazy dog.'
+    cipher = cryptAES.encrypt(plain)
+    newplain = cryptAES.decrypt(cipher)
+    if plain != newplain:
+        print "Plain texts do not match: %s versus %s" % (plain, newplain)
+    else:
+        print "AES okay!"

@@ -1198,9 +1198,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
         Send pre-assembled packets to the client.
         """
-        if self.mode == 'play' and self.cryptAES is not None:
+        if self.cryptAES is not None:
             print "write_packets: encrypting data"
-            packet = self.cryptAES.stream_encrypt(packet)
+            packet = self.cryptAES.encrypt(packet)
         else:
             if self.factory.online:
                 print "write_packets: why is self.cryptAES None if online is true?"
@@ -1477,9 +1477,9 @@ class BravoProtocol(BetaServerProtocol):
                                            "BravoServer")
 
     def dataReceived(self, data):
-        if self.mode == 'play' and self.cryptAES is not None:
+        if self.cryptAES is not None:
             print "dataReceived: decrypting data"
-            data = stream_decrypt(data)
+            data = self.cryptAES.decrypt(data)
         else:
             if self.factory.online:
                 print "dataReceived: why is self.cryptAES None if online is true?"
@@ -1972,10 +1972,9 @@ class BravoProtocol(BetaServerProtocol):
         if check_token != self.token:
             self.error("Token decryption failed!  %s does not match %s" % (check_token, self.token))
             return ''
-        self.shared_secret = fcRSA.decrypt(packet.secret)
-        print "shared secret is: %s" % self.shared_secret
-        self.cryptAES = BravoCryptAES(key=self.shared_secret, iv=self.shared_secret)
-        hash = fcRSA.hash(secret=self.shared_secret)
+        shared_secret = fcRSA.decrypt(packet.secret)
+        self.cryptAES = BravoCryptAES(key=shared_secret, iv=shared_secret)
+        hash = fcRSA.hash(secret=shared_secret)
         response = urlopen('https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s' % (self.username, hash))
         id_dict = json.loads(response.read())
         self.uuid = id_dict[u'id']
@@ -1987,7 +1986,6 @@ class BravoProtocol(BetaServerProtocol):
         if f.online:
             server_id = f.cryptRSA.server_id
             key = f.cryptRSA.public_key_der()
-            print server_id, key
             self.token = ''.join(choice(printable) for x in range(20))
             self.write_packet('encryption_request', server_id=server_id, key=key, key_len=len(key), token=self.token, token_len=len(self.token))
         else:
