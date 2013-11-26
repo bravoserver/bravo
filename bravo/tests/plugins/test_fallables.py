@@ -5,8 +5,10 @@ from bravo.chunk import Chunk
 from bravo.ibravo import IDigHook
 from bravo.plugin import retrieve_plugins
 
+
 class FallablesMockFactory(object):
     pass
+
 
 class TestAlphaSandGravelDig(TestCase):
 

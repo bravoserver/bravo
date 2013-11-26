@@ -8,10 +8,12 @@ from bravo.ibravo import IDigHook
 import bravo.plugin
 from bravo.world import ChunkNotLoaded, World
 
+
 class PhysicsMockFactory(object):
 
     def flush_chunk(self, chunk):
         pass
+
 
 class TestWater(TestCase):
 
@@ -54,7 +56,7 @@ class TestWater(TestCase):
 
     def test_update_fluid_unloaded(self):
         self.assertRaises(ChunkNotLoaded, self.hook.update_fluid, self.w,
-            (0, 0, 0), False)
+                          (0, 0, 0), False)
 
     def test_update_fluid(self):
         d = self.w.request_chunk(0, 0)
@@ -63,7 +65,7 @@ class TestWater(TestCase):
         def cb(chunk):
             self.assertTrue(self.hook.update_fluid(self.w, (0, 0, 0), False))
             self.assertEqual(self.w.sync_get_block((0, 0, 0)),
-                blocks["water"].slot)
+                             blocks["water"].slot)
             self.assertEqual(self.w.sync_get_metadata((0, 0, 0)), 0)
 
         return d
@@ -74,7 +76,7 @@ class TestWater(TestCase):
         @d.addCallback
         def cb(chunk):
             self.assertTrue(self.hook.update_fluid(self.w, (0, 0, 0), False,
-                1))
+                                                   1))
             self.assertEqual(self.w.sync_get_metadata((0, 0, 0)), 1)
 
         return d
@@ -117,7 +119,7 @@ class TestWater(TestCase):
 
             for coords in ((2, 0, 1), (1, 0, 2), (0, 0, 1), (1, 0, 0)):
                 self.assertEqual(chunk.get_block(coords),
-                    blocks["water"].slot)
+                                 blocks["water"].slot)
                 self.assertEqual(chunk.get_metadata(coords), 0x0)
 
         return d
@@ -136,7 +138,7 @@ class TestWater(TestCase):
 
             for coords in ((1, 0, 0), (0, 0, 1)):
                 self.assertEqual(chunk.get_block(coords),
-                    blocks["water"].slot)
+                                 blocks["water"].slot)
                 self.assertEqual(chunk.get_metadata(coords), 0x0)
 
         return d
@@ -155,7 +157,7 @@ class TestWater(TestCase):
 
             for coords in ((2, 0, 0), (1, 0, 1), (0, 0, 2)):
                 self.assertEqual(chunk.get_block(coords),
-                    blocks["water"].slot)
+                                 blocks["water"].slot)
                 self.assertEqual(chunk.get_metadata(coords), 0x1)
 
         return d

@@ -12,6 +12,7 @@ from bravo.nbt import TAG_Compound, TAG_List, TAG_String
 from bravo.nbt import TAG_Double, TAG_Byte, TAG_Short, TAG_Int
 from bravo.plugin import retrieve_plugins
 
+
 class TestAnvilSerializerInit(unittest.TestCase):
     """
     The Anvil serializer can't even get started without a valid URL.
@@ -26,11 +27,12 @@ class TestAnvilSerializerInit(unittest.TestCase):
 
     def test_not_url(self):
         self.assertRaises(Exception, self.serializer.connect,
-            "/i/am/not/a/url")
+                          "/i/am/not/a/url")
 
     def test_wrong_scheme(self):
         self.assertRaises(Exception, self.serializer.connect,
-            "http://www.example.com/")
+                          "http://www.example.com/")
+
 
 class TestAnvilSerializer(unittest.TestCase):
 

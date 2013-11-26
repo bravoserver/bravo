@@ -54,10 +54,10 @@ class Inventory(SerializableSlots):
                 if slot is not None and slot.holds(item) and slot.count < 64 and slot.item_id not in blocks.unstackable:
                     total = slot.count + count
                     if total > 64:
-                        total, count = 64, count - 64
+                        total, count = 64, total - 64
                     else:
                         count = 0
-                    stash[i].count = count
+                    stash[i].count = total
                     if count == 0:
                         return 0
 
@@ -118,7 +118,7 @@ class Inventory(SerializableSlots):
             if self.armor[index] is None:
                 # Put one armor piece into the slot, decrement the amount
                 # in the selection.
-                self.armor[index] = sslot.replace(count=1)
+                self.armor[index] = Slot(item_id=sslot.item_id, count=1, damage=sslot.damage)
                 selected = sslot.decrement()
             else:
                 # If both slot and selection are the same item, do nothing.

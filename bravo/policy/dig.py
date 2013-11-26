@@ -1,4 +1,5 @@
 from bravo.blocks import blocks, items
+from bravo.beta.packets import Slot
 
 
 class SpeedyDigPolicy(object):

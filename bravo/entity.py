@@ -88,9 +88,10 @@ class Player(Entity):
         else:
             current_item = item.item_id
 
+        print self
         packet = make_packet("spawn_player",
                              eid=self.eid,
-                             uuid=self.uuid.hex,
+                             uuid=self.uuid,
                              name=self.username,
                              x=x, y=y, z=z,
                              yaw=yaw, pitch=pitch,
@@ -188,7 +189,6 @@ class Pickup(Entity):
                               x=x, y=y, z=z, yaw=0, pitch=0, data=1,
                               speed=Speed(0, 0, 0))
 
-        print "item=", self.item
         packets += make_packet('entity_metadata', eid=self.eid,
                                # See http://www.wiki.vg/Entities#Objects
                                metadata={
@@ -263,7 +263,7 @@ class Mob(Entity):
         self.update_metadata()
 
         return make_packet("spawn_mob", eid=self.eid, type=self.name, x=x, y=y, z=z,
-                           yaw=yaw, pitch=pitch, head_yaw=yaw, vx=0, vy=0, vz=0,
+                           yaw=yaw, pitch=pitch, head_pitch=pitch, vx=0, vy=0, vz=0,
                            metadata=self.metadata)
 
     def save_location_to_packet(self):

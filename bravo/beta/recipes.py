@@ -129,7 +129,7 @@ class Blueprint(object):
                     matches_needed -= 1
                 elif i is not None and j is not None:
                     skey, scount = i
-                    if j.quantity >= scount:
+                    if j.count >= scount:
                         if j.holds(skey):
                             matches_needed -= 1
                         # Special case for wool, which should match on any

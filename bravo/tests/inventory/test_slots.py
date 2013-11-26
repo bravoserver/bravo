@@ -2,8 +2,9 @@ from twisted.trial import unittest
 
 import bravo.blocks
 
-from bravo.beta.structures import Slot
+from bravo.beta.packets import Slot
 from bravo.inventory.slots import comblist, Crafting, Workbench, ChestStorage
+
 
 class TestComblist(unittest.TestCase):
 
@@ -20,12 +21,13 @@ class TestComblist(unittest.TestCase):
         self.assertEqual(self.i[1], 2)
         self.assertEqual(self.i[2], 3)
         self.assertEqual(self.i[3], 4)
-        self.assertRaises(IndexError, self.i.__getitem__, 5 )
+        self.assertRaises(IndexError, self.i.__getitem__, 5)
 
     def test_setitem(self):
         self.i[1] = 5
         self.i[2] = 6
-        self.assertRaises(IndexError, self.i.__setitem__, 5, 0 )
+        self.assertRaises(IndexError, self.i.__setitem__, 5, 0)
+
 
 class TestCraftingInternals(unittest.TestCase):
     def setUp(self):
@@ -34,6 +36,7 @@ class TestCraftingInternals(unittest.TestCase):
     def test_internals(self):
         self.assertEqual(self.i.crafted, [None])
         self.assertEqual(self.i.crafting, [None] * 4)
+
 
 class TestCraftingWood(unittest.TestCase):
     """
@@ -47,27 +50,29 @@ class TestCraftingWood(unittest.TestCase):
         self.i = Crafting()
 
     def test_check_crafting(self):
-        self.i.crafting[0] = Slot(bravo.blocks.blocks["log"].slot, 0, 1)
+        self.i.crafting[0] = Slot(bravo.blocks.blocks["log"].slot, 1, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.blocks["wood"].slot, 0, 4))
+                         Slot(bravo.blocks.blocks["wood"].slot, 4, 0))
 
+    # JMT: this test fails with self.i.crafted[0] == None
     def test_check_crafting_multiple(self):
-        self.i.crafting[0] = Slot(bravo.blocks.blocks["log"].slot, 0, 2)
+        self.i.crafting[0] = Slot(bravo.blocks.blocks["log"].slot, 2, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         # Only checking count of crafted table; the previous test assured that
         # the recipe was selected.
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.blocks["wood"].slot, 0, 4))
+                         Slot(bravo.blocks.blocks["wood"].slot, 4, 0))
 
     def test_check_crafting_offset(self):
-        self.i.crafting[1] = Slot(bravo.blocks.blocks["log"].slot, 0, 1)
+        self.i.crafting[1] = Slot(bravo.blocks.blocks["log"].slot, 1, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
+
 
 class TestCraftingSticks(unittest.TestCase):
     """
@@ -82,30 +87,31 @@ class TestCraftingSticks(unittest.TestCase):
         self.i = Crafting()
 
     def test_check_crafting(self):
-        self.i.crafting[0] = Slot(bravo.blocks.blocks["wood"].slot, 0, 1)
-        self.i.crafting[2] = Slot(bravo.blocks.blocks["wood"].slot, 0, 1)
+        self.i.crafting[0] = Slot(bravo.blocks.blocks["wood"].slot, 1, 0)
+        self.i.crafting[2] = Slot(bravo.blocks.blocks["wood"].slot, 1, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.items["stick"].slot, 0, 4))
+                         Slot(bravo.blocks.items["stick"].slot, 4, 0))
 
     def test_check_crafting_multiple(self):
-        self.i.crafting[0] = Slot(bravo.blocks.blocks["wood"].slot, 0, 2)
-        self.i.crafting[2] = Slot(bravo.blocks.blocks["wood"].slot, 0, 2)
+        self.i.crafting[0] = Slot(bravo.blocks.blocks["wood"].slot, 2, 0)
+        self.i.crafting[2] = Slot(bravo.blocks.blocks["wood"].slot, 2, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         # Only checking count of crafted table; the previous test assured that
         # the recipe was selected.
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.items["stick"].slot, 0, 4))
+                         Slot(bravo.blocks.items["stick"].slot, 4, 0))
 
     def test_check_crafting_offset(self):
-        self.i.crafting[1] = Slot(bravo.blocks.blocks["wood"].slot, 0, 1)
-        self.i.crafting[3] = Slot(bravo.blocks.blocks["wood"].slot, 0, 1)
+        self.i.crafting[1] = Slot(bravo.blocks.blocks["wood"].slot, 1, 0)
+        self.i.crafting[3] = Slot(bravo.blocks.blocks["wood"].slot, 1, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
+
 
 class TestCraftingTorches(unittest.TestCase):
     """
@@ -119,30 +125,31 @@ class TestCraftingTorches(unittest.TestCase):
         self.i = Crafting()
 
     def test_check_crafting(self):
-        self.i.crafting[0] = Slot(bravo.blocks.items["coal"].slot, 0, 1)
-        self.i.crafting[2] = Slot(bravo.blocks.items["stick"].slot, 0, 1)
+        self.i.crafting[0] = Slot(bravo.blocks.items["coal"].slot, 1, 0)
+        self.i.crafting[2] = Slot(bravo.blocks.items["stick"].slot, 1, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.blocks["torch"].slot, 0, 4))
+                         Slot(bravo.blocks.blocks["torch"].slot, 4, 0))
 
     def test_check_crafting_multiple(self):
-        self.i.crafting[0] = Slot(bravo.blocks.items["coal"].slot, 0, 2)
-        self.i.crafting[2] = Slot(bravo.blocks.items["stick"].slot, 0, 2)
+        self.i.crafting[0] = Slot(bravo.blocks.items["coal"].slot, 2, 0)
+        self.i.crafting[2] = Slot(bravo.blocks.items["stick"].slot, 2, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         # Only checking count of crafted table; the previous test assured that
         # the recipe was selected.
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.blocks["torch"].slot, 0, 4))
+                         Slot(bravo.blocks.blocks["torch"].slot, 4, 0))
 
     def test_check_crafting_offset(self):
-        self.i.crafting[1] = Slot(bravo.blocks.items["coal"].slot, 0, 1)
-        self.i.crafting[3] = Slot(bravo.blocks.items["stick"].slot, 0, 1)
+        self.i.crafting[1] = Slot(bravo.blocks.items["coal"].slot, 1, 0)
+        self.i.crafting[3] = Slot(bravo.blocks.items["stick"].slot, 1, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
+
 
 class TestWorkbenchInternals(unittest.TestCase):
     def setUp(self):
@@ -151,6 +158,7 @@ class TestWorkbenchInternals(unittest.TestCase):
     def test_internals(self):
         self.assertEqual(self.i.crafted, [None])
         self.assertEqual(self.i.crafting, [None] * 9)
+
 
 class TestCraftingShovel(unittest.TestCase):
     """
@@ -165,33 +173,34 @@ class TestCraftingShovel(unittest.TestCase):
         self.i = Workbench()
 
     def test_check_crafting(self):
-        self.i.crafting[0] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 1)
-        self.i.crafting[3] = Slot(bravo.blocks.items["stick"].slot, 0, 1)
-        self.i.crafting[6] = Slot(bravo.blocks.items["stick"].slot, 0, 1)
+        self.i.crafting[0] = Slot(bravo.blocks.blocks["cobblestone"].slot, 1, 0)
+        self.i.crafting[3] = Slot(bravo.blocks.items["stick"].slot, 1, 0)
+        self.i.crafting[6] = Slot(bravo.blocks.items["stick"].slot, 1, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.items["stone-shovel"].slot, 0, 1))
+                         Slot(bravo.blocks.items["stone-shovel"].slot, 1, 0))
 
     def test_check_crafting_multiple(self):
-        self.i.crafting[0] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
-        self.i.crafting[3] = Slot(bravo.blocks.items["stick"].slot, 0, 2)
-        self.i.crafting[6] = Slot(bravo.blocks.items["stick"].slot, 0, 2)
+        self.i.crafting[0] = Slot(bravo.blocks.blocks["cobblestone"].slot, 2, 0)
+        self.i.crafting[3] = Slot(bravo.blocks.items["stick"].slot, 2, 0)
+        self.i.crafting[6] = Slot(bravo.blocks.items["stick"].slot, 2, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         # Only checking count of crafted table; the previous test assured that
         # the recipe was selected.
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.items["stone-shovel"].slot, 0, 1))
+                         Slot(bravo.blocks.items["stone-shovel"].slot, 1, 0))
 
     def test_check_crafting_offset(self):
-        self.i.crafting[1] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
-        self.i.crafting[4] = Slot(bravo.blocks.items["stick"].slot, 0, 2)
-        self.i.crafting[7] = Slot(bravo.blocks.items["stick"].slot, 0, 2)
+        self.i.crafting[1] = Slot(bravo.blocks.blocks["cobblestone"].slot, 2, 0)
+        self.i.crafting[4] = Slot(bravo.blocks.items["stick"].slot, 2, 0)
+        self.i.crafting[7] = Slot(bravo.blocks.items["stick"].slot, 2, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
+
 
 class TestCraftingFurnace(unittest.TestCase):
     """
@@ -206,48 +215,49 @@ class TestCraftingFurnace(unittest.TestCase):
         self.i = Workbench()
 
     def test_check_crafting(self):
-        self.i.crafting[0] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 1)
-        self.i.crafting[1] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 1)
-        self.i.crafting[2] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 1)
-        self.i.crafting[3] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 1)
-        self.i.crafting[5] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 1)
-        self.i.crafting[6] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 1)
-        self.i.crafting[7] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 1)
-        self.i.crafting[8] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 1)
+        self.i.crafting[0] = Slot(bravo.blocks.blocks["cobblestone"].slot, 1, 0)
+        self.i.crafting[1] = Slot(bravo.blocks.blocks["cobblestone"].slot, 1, 0)
+        self.i.crafting[2] = Slot(bravo.blocks.blocks["cobblestone"].slot, 1, 0)
+        self.i.crafting[3] = Slot(bravo.blocks.blocks["cobblestone"].slot, 1, 0)
+        self.i.crafting[5] = Slot(bravo.blocks.blocks["cobblestone"].slot, 1, 0)
+        self.i.crafting[6] = Slot(bravo.blocks.blocks["cobblestone"].slot, 1, 0)
+        self.i.crafting[7] = Slot(bravo.blocks.blocks["cobblestone"].slot, 1, 0)
+        self.i.crafting[8] = Slot(bravo.blocks.blocks["cobblestone"].slot, 1, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertTrue(self.i.recipe)
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.blocks["furnace"].slot, 0, 1))
+                         Slot(bravo.blocks.blocks["furnace"].slot, 1, 0))
 
     def test_check_crafting_multiple(self):
-        self.i.crafting[0] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
-        self.i.crafting[1] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
-        self.i.crafting[2] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
-        self.i.crafting[3] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
-        self.i.crafting[5] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
-        self.i.crafting[6] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
-        self.i.crafting[7] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
-        self.i.crafting[8] = Slot(bravo.blocks.blocks["cobblestone"].slot, 0, 2)
+        self.i.crafting[0] = Slot(bravo.blocks.blocks["cobblestone"].slot, 2, 0)
+        self.i.crafting[1] = Slot(bravo.blocks.blocks["cobblestone"].slot, 2, 0)
+        self.i.crafting[2] = Slot(bravo.blocks.blocks["cobblestone"].slot, 2, 0)
+        self.i.crafting[3] = Slot(bravo.blocks.blocks["cobblestone"].slot, 2, 0)
+        self.i.crafting[5] = Slot(bravo.blocks.blocks["cobblestone"].slot, 2, 0)
+        self.i.crafting[6] = Slot(bravo.blocks.blocks["cobblestone"].slot, 2, 0)
+        self.i.crafting[7] = Slot(bravo.blocks.blocks["cobblestone"].slot, 2, 0)
+        self.i.crafting[8] = Slot(bravo.blocks.blocks["cobblestone"].slot, 2, 0)
         # Force crafting table to be rechecked.
         self.i.update_crafted()
         self.assertEqual(self.i.crafted[0],
-            (bravo.blocks.blocks["furnace"].slot, 0, 1))
+                         Slot(bravo.blocks.blocks["furnace"].slot, 1, 0))
+
 
 class TestChestSerialization(unittest.TestCase):
     def setUp(self):
         self.i = ChestStorage()
         self.l = [None] * len(self.i)
-        self.l[0] = 1, 0, 1
-        self.l[9] = 2, 0, 1
+        self.l[0] = 1, 1, 0
+        self.l[9] = 2, 1, 0
 
     def test_load_from_list(self):
         self.i.load_from_list(self.l)
-        self.assertEqual(self.i.storage[0], (1, 0, 1))
-        self.assertEqual(self.i.storage[9], (2, 0, 1))
+        self.assertEqual(self.i.storage[0], (1, 1, 0))
+        self.assertEqual(self.i.storage[9], (2, 1, 0))
 
     def test_save_to_list(self):
-        self.i.storage[0] = 1, 0, 1
-        self.i.storage[9] = 2, 0, 1
+        self.i.storage[0] = 1, 1, 0
+        self.i.storage[9] = 2, 1, 0
         m = self.i.save_to_list()
         self.assertEqual(m, self.l)

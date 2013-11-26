@@ -7,6 +7,7 @@ import bravo.blocks
 from bravo.ibravo import IPreBuildHook
 import bravo.plugin
 
+
 class TileMockFactory(object):
 
     def __init__(self):
@@ -21,6 +22,7 @@ class TileMockFactory(object):
                 return succeed(TileMockChunk())
 
         self.world = TileMockWorld()
+
 
 class TestSign(TestCase):
 
@@ -39,7 +41,7 @@ class TestSign(TestCase):
         self.assertTrue(success)
         self.assertFalse(cancel)
         builddata = builddata._replace(block=bravo.blocks.blocks["wall-sign"],
-            metadata=0x5)
+                                       metadata=0x5)
         self.assertEqual(builddata, newdata)
 
     @inlineCallbacks
@@ -51,7 +53,7 @@ class TestSign(TestCase):
         self.assertTrue(success)
         self.assertFalse(cancel)
         builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
-            metadata=0x8)
+                                       metadata=0x8)
         self.assertEqual(builddata, newdata)
 
     @inlineCallbacks
@@ -64,7 +66,7 @@ class TestSign(TestCase):
         self.assertTrue(success)
         self.assertFalse(cancel)
         builddata = builddata._replace(block=bravo.blocks.blocks["signpost"],
-            metadata=0x8)
+                                       metadata=0x8)
         self.assertEqual(builddata, newdata)
 
     @inlineCallbacks

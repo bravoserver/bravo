@@ -11,6 +11,7 @@ from bravo.chunk import Chunk
 from bravo.config import BravoConfigParser
 from bravo.errors import BetaClientError
 
+
 class FakeTransport(object):
 
     data = []
@@ -22,10 +23,12 @@ class FakeTransport(object):
     def loseConnection(self):
         self.lost = True
 
+
 class FakeFactory(object):
 
     def broadcast(self, packet):
         pass
+
 
 class TestBetaServerProtocol(TestCase):
 
@@ -64,7 +67,7 @@ class TestBetaServerProtocol(TestCase):
         self.p.transport.data = []
         self.p.health = 19
         self.assertEqual(len(self.p.transport.data), 1)
-        self.assertTrue(self.p.transport.data[0].startswith("\x08"))
+        self.assertTrue(self.p.transport.data[0].startswith("\x0b"))
 
     def test_health_no_change(self):
         """

@@ -80,22 +80,10 @@ position = Struct("position",
                   )
 orientation = Struct("orientation", BFloat32("rotation"), BFloat32("pitch"))
 
-# TODO: this must be replaced with 'slot' (see below)
-# Notchian item packing (slot data)
-# items = Struct("items",
-#                SBInt16("primary"),
-#                If(lambda context: context["primary"] >= 0,
-#                   Embed(Struct("item_information",
-#                                UBInt8("count"),
-#                                UBInt16("secondary"),
-#                                Magic("\xff\xff"),
-#                                )),
-#                   ),
-#                )
-
 Speed = namedtuple('speed', 'x y z')
 
 
+# JMT: the __len__ test breaks truth testing, so it was removed.
 class Slot(object):
     def __init__(self, item_id=-1, count=1, damage=0, nbt=None):
         self.item_id = item_id
@@ -110,22 +98,18 @@ class Slot(object):
 
     @classmethod
     def from_key(cls, key, count=1):
-        print "deprecated: use fromItem!"
         return cls(key[0], count, key[1])
 
     @property
     def is_empty(self):
         return self.item_id == -1
 
-    def __len__(self):
-        return 0 if self.nbt is None else len(self.nbt)
-
     def __repr__(self):
         if self.is_empty:
             return 'Slot()'
-        elif len(self):
+        elif self.nbt is not None:
             return 'Slot(%d, count=%d, damage=%d, +nbt:%dB)' % (
-                self.item_id, self.count, self.damage, len(self)
+                self.item_id, self.count, self.damage, len(self.nbt)
             )
         else:
             return 'Slot(%d, count=%d, damage=%d)' % (
@@ -144,52 +128,17 @@ class Slot(object):
         if count >= self.count:
             return None
         self.count -= count
+        return self
 
     def increment(self, count=1):
         if self.count + count > 64:
             return None
         self.count += count
+        return self
 
     def __eq__(self, other):
-        return (self.item_id == other.item_id and
-                self.count == other.count and
-                self.damage == self.damage and
-                self.nbt == self.nbt)
-
-
-class OldSlot(object):
-    def __init__(self, item_id=-1, count=1, damage=0, nbt=None):
-        self.item_id = item_id
-        self.count = count
-        self.damage = damage
-        # TODO: Implement packing/unpacking of gzipped NBT data
-        self.nbt = nbt
-
-    @classmethod
-    def fromItem(cls, item, count):
-        return cls(item[0], count, item[1])
-
-    @property
-    def is_empty(self):
-        return self.item_id == -1
-
-    def __len__(self):
-        return 0 if self.nbt is None else len(self.nbt)
-
-    def __repr__(self):
-        from bravo.blocks import items
-        if self.is_empty:
-            return 'Slot()'
-        elif len(self):
-            return 'Slot(%s, count=%d, damage=%d, +nbt:%dB)' % (
-                str(items[self.item_id]), self.count, self.damage, len(self)
-            )
-        else:
-            return 'Slot(%s, count=%d, damage=%d)' % (
-                str(items[self.item_id]), self.count, self.damage
-            )
-
-    def __eq__(self, other):
+        if not isinstance(other, Slot):
+            other = Slot(other)
         return (self.item_id == other.item_id and
                 self.count == other.count and
                 self.damage == self.damage and
@@ -212,7 +161,7 @@ class SlotAdapter(Adapter):
             return Container(item_id=-1)
         else:
             return Container(item_id=obj.item_id, count=obj.count, damage=obj.damage,
-                             nbt_len=len(obj) if len(obj) else -1, nbt=obj.nbt)
+                             nbt_len=len(obj.nbt) if obj.nbt is not None else -1, nbt=obj.nbt)
 
 slot = SlotAdapter(
     Struct("slot",
@@ -444,7 +393,6 @@ def make_packet(packet_name, mode='play', *args, **kwargs):
         try:
             payload = clientbound[mode][header].build(Container(**kwargs))
         except Exception as e:
-            print "Oh crap."
             # print "Container = ", Container(**kwargs)
             raise e
     new_packet = Container(header=header, payload=payload)

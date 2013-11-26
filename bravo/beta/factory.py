@@ -1,12 +1,17 @@
 from collections import defaultdict
 from itertools import product
 import json
+from urlparse import urlparse
+from random import choice
+from string import printable
 
 from twisted.internet import reactor
 from twisted.internet.interfaces import IPushProducer
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 from twisted.python import log
+from twisted.python.filepath import FilePath, Permissions
+from twisted.conch.ssh import keys
 from zope.interface import implements
 
 from bravo.beta.packets import make_packet
@@ -23,6 +28,12 @@ from bravo.policy.seasons import Spring, Winter
 from bravo.utilities.chat import chat_name, sanitize_chat
 from bravo.weather import WeatherVane
 from bravo.world import World
+
+# JMT: write something that checks imports for crypto code
+# and fails gracefully if they are not present
+# twisted-conch pycrypto pyasn1
+from Crypto.PublicKey import RSA
+from Crypto import Random
 
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
@@ -46,6 +57,8 @@ class BravoFactory(Factory):
     time = 0
     day = 0
     eid = 1
+
+    online = False
 
     interfaces = []
 
@@ -83,6 +96,56 @@ class BravoFactory(Factory):
 
         # Get our plugins set up.
         self.register_plugins()
+
+        # Check for online mode.
+        try:
+            self.online = self.config.get(self.config_name, 'online') == 'true'
+            key_dir_url = self.config.get(self.config_name, 'key_dir')
+        except ConfigParser.NoOptionError:
+            self.online = False
+
+        log.msg("Online mode is %s..." % self.online)
+        if self.online:
+            log.msg("Online mode tests out as true!")
+
+        if self.online is True:
+            # http://my.safaribooksonline.com/book/networking/network-management/0596100329/ssh/twistedadn-chp-10-sect-1
+            from stat import S_IRUSR, S_IWUSR, S_IXUSR
+            chmod_value = (S_IRUSR | S_IWUSR | S_IXUSR)
+            secure_permissions = Permissions(chmod_value)
+            key_dir_parsed = urlparse(key_dir_url)
+            key_dir_path = key_dir_parsed.path
+            key_dir = FilePath(key_dir_path)
+            if not key_dir.exists():
+                key_dir.makedirs()
+                # JMT: chmod should somehow take secure_permissions
+                key_dir.chmod(chmod_value)
+                key_dir.restat()
+            try:
+                if key_dir.getPermissions() == secure_permissions:
+                    public_key = key_dir.child('server_id_rsa.pub')
+                    private_key = key_dir.child('server_id_rsa')
+                    #print "A public key file does%s exist!" % ('' if public_key.exists() else ' not')
+                    #print "A private key file does%s exist!" % ('' if private_key.exists() else ' not')
+                    if not(public_key.exists() and private_key.exists()):
+                        log.msg('Generating RSA keypair...')
+                        KEY_LENGTH = 1024
+                        rsaKey = RSA.generate(KEY_LENGTH, Random.new().read)
+                        public_key.setContent(rsaKey.publickey().exportKey('PEM'))
+                        private_key.setContent(rsaKey.exportKey('PEM'))
+                    with open(public_key.path) as f:
+                        self.public_key = RSA.importKey(f.read())
+                    self.public_key_pem = self.public_key.exportKey('PEM')
+                    self.public_key_der = self.public_key.exportKey('DER')
+                    with open(private_key.path) as f:
+                        self.private_key = RSA.importKey(f.read())
+                    self.server_id = ''.join(choice(printable) for x in range(20))
+                else:
+                    log.msg('Key directory %s insecure, online mode disabled!' % key_dir_url)
+                    self.online = False
+            except IOError:
+                log.msg('Cannot write to key directory %s, online mode disabled!' % key_dir_url)
+                self.online = False
 
         log.msg("Starting world...")
         self.world.start()

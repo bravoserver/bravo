@@ -4,6 +4,9 @@ from itertools import product, chain
 import json
 from time import time
 from urlparse import urlunparse
+from urllib import urlopen
+from random import choice
+from string import printable
 
 from twisted.internet import reactor
 from twisted.internet.defer import (DeferredList, inlineCallbacks,
@@ -28,7 +31,7 @@ from bravo.infini.factory import InfiniClientFactory
 from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location, Orientation, Position
 from bravo.motd import get_motd
-from bravo.beta.packets import parse_packets, make_packet, hexout, Slot
+from bravo.beta.packets import parse_packets, make_packet, hexout, Slot, SlotAdapter
 from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
@@ -36,7 +39,7 @@ from bravo.utilities.chat import complete, username_alternatives
 from bravo.utilities.maths import circling, clamp, sorted_by_distance
 from bravo.utilities.temporal import timestamp_from_clock
 
-from uuid import uuid4
+from uuid import uuid3, NAMESPACE_DNS
 
 from collections import namedtuple
 
@@ -51,6 +54,7 @@ from construct import BitStruct, BitField
 from construct import StringAdapter, LengthValueAdapter, Sequence
 from construct import ConstructError
 from varint import VarInt
+
 
 # States of the protocol.
 (STATE_UNAUTHENTICATED, STATE_AUTHENTICATED, STATE_LOCATED) = range(3)
@@ -70,24 +74,6 @@ def AlphaString(name):
 def Bool(*args, **kwargs):
     return Flag(*args, default=True, **kwargs)
 
-
-class SlotAdapter(Adapter):
-
-    def _decode(self, obj, context):
-        if obj.item_id == -1:
-            s = Slot(obj.item_id)
-        else:
-            s = Slot(obj.item_id, obj.count, obj.damage, obj.nbt)
-        return s
-
-    def _encode(self, obj, context):
-        if not isinstance(obj, Slot):
-            raise ConstructError('Slot object expected')
-        if obj.is_empty:
-            return Container(item_id=-1)
-        else:
-            return Container(item_id=obj.item_id, count=obj.count, damage=obj.damage,
-                             nbt_len=len(obj) if len(obj) else -1, nbt=obj.nbt)
 
 slot = SlotAdapter(
     Struct("slot",
@@ -448,16 +434,16 @@ serverbound = {
                      # VarInt('next_state'),
                      handshaking_state_enum,
                      ),
-        0x01: Struct('encryption_response',
-                     SBInt16('key_len'),
-                     MetaField('key', lambda ctx: ctx['key_len']),
-                     SBInt16('token_len'),
-                     MetaField('token', lambda ctx: ctx['token_len']),
-                     ),
     },
     'login': {
         0x00: Struct('login_start',
                      AlphaString('username'),
+                     ),
+        0x01: Struct('encryption_response',
+                     SBInt16('secret_len'),
+                     MetaField('secret', lambda ctx: ctx['secret_len']),
+                     SBInt16('token_len'),
+                     MetaField('token', lambda ctx: ctx['token_len']),
                      ),
     },
     'status': {
@@ -596,13 +582,6 @@ clientbound = {
         0x00: Struct('handshaking',
                      AlphaString('json'),
                      ),
-        0x01: Struct('encryption_request',
-                     AlphaString('server_id'),
-                     SBInt16('key_len'),
-                     MetaField('key', lambda ctx: ctx['key_len']),
-                     SBInt16('token_len'),
-                     MetaField('token', lambda ctx: ctx['token_len']),
-                     ),
         0x40: Struct('disconnect',
                      AlphaString('reason'),
                      ),
@@ -619,6 +598,13 @@ clientbound = {
                      ),
     },
     'login': {
+        0x01: Struct('encryption_request',
+                     AlphaString('server_id'),
+                     SBInt16('key_len'),
+                     MetaField('key', lambda ctx: ctx['key_len']),
+                     SBInt16('token_len'),
+                     MetaField('token', lambda ctx: ctx['token_len']),
+                     ),
         0x02: Struct('login_success',
                      AlphaString('uuid'),
                      AlphaString('username'),
@@ -709,8 +695,8 @@ clientbound = {
                      SBInt32('x'),
                      SBInt32('y'),
                      SBInt32('z'),
-                     SBInt8('pitch'),
-                     SBInt8('yaw'),
+                     UBInt8('pitch'),
+                     UBInt8('yaw'),
                      SBInt32('data'),
                      If(lambda ctx: ctx['data'] != 0,
                         Struct('speed',
@@ -740,7 +726,7 @@ clientbound = {
                      SBInt32('x'),
                      SBInt32('y'),
                      SBInt32('z'),
-                     SBInt32('direction'),
+                     face_enum,  # direction
                      ),
         0x11: Struct('spawn_experience_orb',
                      VarInt('eid'),
@@ -1086,13 +1072,14 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     packet = None
 
     state = STATE_UNAUTHENTICATED
-    mode = 'handshaking'  # JMT: replace with state soon!
+    mode = 'handshaking'
 
     buf = ""
     parser = None
     handler = None
 
     player = None
+    uuid = None
     username = None
     settings = Settings()
     motd = "Bravo Generic Beta Server"
@@ -1202,7 +1189,6 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
         Send a packet to the client.
         """
-        print "writing a packet yay -- packet_name %s" % packet_name
         self.transport.write(make_packet(packet_name, mode=self.mode, *args, **kwargs))
 
     def update_ping(self):
@@ -1353,7 +1339,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             raise BetaClientError("Invalid health value %d" % value)
 
         if self._health != value:
-            self.write_packet("health", hp=value, fp=0, saturation=0)
+            # JMT: the test fails without this added line...
+            self.mode = 'play'
+            self.write_packet('update_health', health=value, food=0, food_saturation=0)
             self._health = value
 
     @property
@@ -1517,12 +1505,15 @@ class BravoProtocol(BetaServerProtocol):
     @inlineCallbacks
     def authenticated(self):
         BetaServerProtocol.authenticated(self)
-        self.mode = 'play'
-
         # Init player, and copy data into it.
         self.player = yield self.factory.world.load_player(self.username)
         self.player.eid = self.eid
         self.player.uuid = self.uuid
+        print self.username, self.uuid
+        self.write_packet('login_success', uuid=self.uuid, username=self.username)
+        self.mode = 'play'
+
+        # Set location.
         self.location = self.player.location
         # Init players' inventory window.
         self.inventory = InventoryWindow(self.player.inventory)
@@ -1573,7 +1564,7 @@ class BravoProtocol(BetaServerProtocol):
         packet += self.inventory.save_to_packet()
         self.transport.write(packet)
 
-        # TODO: Update Health (0x08)
+        self.health = 20
         # TODO: Update Experience (0x2b)
 
         # Send weather.
@@ -1917,14 +1908,59 @@ class BravoProtocol(BetaServerProtocol):
             log.msg('unexpected next state value: %s' % packet.next_state)
         return ''
 
+    def _decrypt(self, secret, strict=False):
+        from Crypto.Cipher import PKCS1_v1_5
+        from Crypto.Hash import SHA
+        from Crypto import Random
+        dsize = SHA.digest_size
+        sentinel = Random.new().read(15+dsize)
+
+        cipher = PKCS1_v1_5.new(self.factory.private_key)
+        message = cipher.decrypt(secret, sentinel)
+        digest = SHA.new(message[:-dsize]).digest()
+        if not strict or digest == message[-dsize:]:
+            return message
+        else:
+            return None
+
+    def _hash(self, server_id, secret, public_key):
+        # JMT: write tests with '' for server_id and public_key, with names for secret!
+        from Crypto.Hash import SHA
+        s = SHA.new()
+        s.update(server_id)
+        s.update(secret)
+        s.update(public_key)
+        val = int(s.hexdigest(), 16)
+        if val >= 2**159:
+            val -= 2**160
+        return '{0:{1}x}'.format(val, 20).lstrip()
+
     def handle_encryption_response(self, packet):
-        return NotImplementedError
+        f = self.factory
+        print packet
+        check_token = self._decrypt(packet.token)
+        if check_token != self.token:
+            self.error("Token decryption failed!  %s does not match %s" % (check_token, self.token))
+            return ''
+        self.shared_secret = self._decrypt(packet.secret)
+        hash = self._hash(server_id=f.server_id, secret=self.shared_secret, public_key=f.public_key_der)
+        # JMT: consider this too
+        response = urlopen('https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s' % (self.username, hash))
+        id_dict = json.loads(response.read())
+        self.uuid = id_dict[u'id']
+        print "woo -- new UUID is %s" % self.uuid
+        self.authenticated()
 
     def handle_login_start(self, packet):
         self.username = packet.username
-        self.uuid = uuid4()
-        self.write_packet('login_success', uuid=self.uuid.hex, username=self.username)
-        self.authenticated()
+        f = self.factory
+        if f.online:
+            self.token = ''.join(choice(printable) for x in range(20))
+            print "token is: %s" % self.token
+            self.write_packet('encryption_request', server_id=f.server_id, key=f.public_key_der, key_len=len(f.public_key_der), token=self.token, token_len=len(self.token))
+        else:
+            self.uuid = uuid3(NAMESPACE_DNS, self.username).hex
+            self.authenticated()
 
     def handle_status_request(self, packet):
         # XXX make proper json here!
@@ -1932,7 +1968,7 @@ class BravoProtocol(BetaServerProtocol):
         version = '"version":{"name":"%s","protocol":%d}' % (server_protocols[SUPPORTED_PROTOCOL], SUPPORTED_PROTOCOL)
         description = '"description":{"text":"%s"}' % self.motd
         if len(p) > 0:
-            samples = ',"sample":[' + ''.join(['{"id":"%s","name":"%s"}' % (p[name].uuid.hex, name) for name in p]) + ']'
+            samples = ',"sample":[' + ''.join(['{"id":"%s","name":"%s"}' % (p[name].uuid, name) for name in p]) + ']'
         else:
             samples = ''
         players = '"players":{"max":%s,"online":%s%s}' % (unicode(self.factory.limitConnections or 1000000), unicode(len(p)), samples)
@@ -2142,7 +2178,8 @@ class BravoProtocol(BetaServerProtocol):
             self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
             return
 
-        target = blocks[chunk.get_block((smallx, packet.y, smallz))]
+        target_block = chunk.get_block((smallx, packet.y, smallz))
+        target = blocks[target_block]
 
         print "coords were %d %d %d, target was " % (packet.x, packet.y, packet.z), target
 
@@ -2160,8 +2197,7 @@ class BravoProtocol(BetaServerProtocol):
 
         # Try to open it first
         for hook in self.open_hooks:
-            window = yield maybeDeferred(hook.open_hook, self, packet,
-                                         chunk.get_block((smallx, packet.y, smallz)))
+            window = yield maybeDeferred(hook.open_hook, self, packet, target_block)
             if window:
                 self.write_packet('open_window', wid=window.wid,
                                   type=window.identifier, title=window.title, slots=windows.slots_num, use_provided_title=True)

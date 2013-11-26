@@ -158,8 +158,8 @@ class Window(SerializableSlots):
                         count, item_count = 64, count - 64
                     else:
                         item_count = 0
-                    stash[i] = slot.replace(count=count)
-                    container[index] = item.replace(count=item_count)
+                    stash[i] = Slot(item_id=slot.item_id, count=count, damage=slot.damage)
+                    container[index] = Slot(item_id=item.item_id, count=item_count, damage=item.damage)
                     self.mark_dirty(stash, i)
                     self.mark_dirty(container, index)
                     if item_count == 0:
@@ -171,7 +171,7 @@ class Window(SerializableSlots):
             for i, slot in loop_over(stash):
                 if slot is None:
                     # XXX bug; might overflow a slot!
-                    stash[i] = item.replace(count=item_count)
+                    stash[i] = Slot(item_id=item.item_id, count=item_count, damage=item.damage)
                     container[index] = None
                     self.mark_dirty(stash, i)
                     self.mark_dirty(container, index)
@@ -240,9 +240,8 @@ class Window(SerializableSlots):
                     else:
                         # fill up slot to 64, move left overs to selection
                         # valid for left and right mouse click
-                        l[index] = islot.replace(count=64)
-                        self.selected = sslot.replace(
-                            count=sslot.count + islot.count - 64)
+                        l[index] = Slot(item_id=islot.item_id, count=64, damage=islot.damage)
+                        self.selected = Slot(item_id=sslot.item_id, count=sslot.count+islot.count-64, damage=sslot.damage)
                     self.mark_dirty(l, index)
             else:
                 # Default case: just swap
@@ -253,7 +252,7 @@ class Window(SerializableSlots):
             if alternate:
                 if self.selected is not None:
                     sslot = self.selected
-                    l[index] = sslot.replace(count=1)
+                    l[index] = Slot(item_id=sslot.item_id, count=1, damage=sslot.damage)
                     self.selected = sslot.decrement()
                     self.mark_dirty(l, index)
                 elif l[index] is None:
@@ -264,8 +263,8 @@ class Window(SerializableSlots):
                     islot = l[index]
                     scount = islot.count // 2
                     scount, lcount = islot.count - scount, scount
-                    l[index] = islot.replace(count=lcount)
-                    self.selected = islot.replace(count=scount)
+                    l[index] = Slot(item_id=islot.item_id, count=lcount, damage=islot.damage)
+                    self.selected = Slot(item_id=islot.item_id, count=scount, damage=islot.damage)
                     self.mark_dirty(l, index)
             else:
                 # Default case: just swap.

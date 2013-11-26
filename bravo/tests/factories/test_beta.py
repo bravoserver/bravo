@@ -5,6 +5,7 @@ from twisted.trial import unittest
 from bravo.config import BravoConfigParser
 from bravo.beta.factory import BravoFactory
 
+
 class MockProtocol(object):
 
     username = None
@@ -12,6 +13,7 @@ class MockProtocol(object):
     def __init__(self, player):
         self.player = player
         self.location = player.location if player else None
+
 
 class TestBravoFactory(unittest.TestCase):
 
@@ -117,7 +119,7 @@ class TestBravoFactory(unittest.TestCase):
         """
 
         self.bcp.set("world unittest", "seasons",
-            "winter, spring")
+                     "winter, spring")
         self.f.register_plugins()
 
         self.f.day = 0
@@ -156,6 +158,7 @@ class TestBravoFactory(unittest.TestCase):
 
         self.assertFalse(self.f.set_username(p, "Hurp"))
 
+
 class TestBravoFactoryStarted(unittest.TestCase):
     """
     Tests which require ``startFactory()`` to be called.
@@ -168,13 +171,13 @@ class TestBravoFactoryStarted(unittest.TestCase):
 
         self.bcp.add_section("world unittest")
         d = {
-            "automatons"    : "",
-            "generators"    : "",
-            "mode"          : "creative",
-            "port"          : "0",
-            "seasons"       : "winter, spring",
-            "serializer"    : "memory",
-            "url"           : "",
+            "automatons": "",
+            "generators": "",
+            "mode": "creative",
+            "port": "0",
+            "seasons": "winter, spring",
+            "serializer": "memory",
+            "url": "",
         }
         for k, v in d.items():
             self.bcp.set("world unittest", k, v)
@@ -246,6 +249,7 @@ class TestBravoFactoryStarted(unittest.TestCase):
             found = [p.eid for p in self.f.players_near(player, radius)]
             self.assertEqual(set(found), set(result))
 
+
 class TestBravoFactoryPacks(unittest.TestCase):
     """
     The plugin pack system should work.
@@ -261,11 +265,11 @@ class TestBravoFactoryPacks(unittest.TestCase):
 
         self.bcp.add_section("world unittest")
         d = {
-            "mode"          : "creative",
-            "packs"         : "beta",
-            "port"          : "0",
-            "serializer"    : "memory",
-            "url"           : "",
+            "mode": "creative",
+            "packs": "beta",
+            "port": "0",
+            "serializer": "memory",
+            "url": "",
         }
         for k, v in d.items():
             self.bcp.set("world unittest", k, v)

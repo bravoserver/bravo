@@ -8,6 +8,7 @@ import bravo.ibravo
 import bravo.plugin
 from bravo.utilities.coords import iterchunk
 
+
 class TestGenerators(unittest.TestCase):
 
     def setUp(self):
@@ -28,10 +29,10 @@ class TestGenerators(unittest.TestCase):
         for x, z, y in iterchunk():
             if y < CHUNK_HEIGHT // 2:
                 self.assertEqual(self.chunk.get_block((x, y, z)),
-                    bravo.blocks.blocks["stone"].slot)
+                                 bravo.blocks.blocks["stone"].slot)
             else:
                 self.assertEqual(self.chunk.get_block((x, y, z)),
-                    bravo.blocks.blocks["air"].slot)
+                                 bravo.blocks.blocks["air"].slot)
 
     def test_beaches_range(self):
         if "beaches" not in self.p:
@@ -47,8 +48,8 @@ class TestGenerators(unittest.TestCase):
         plugin.populate(self.chunk, 0)
         for i in range(5):
             self.assertEqual(self.chunk.get_block((i, 61 + i, i)),
-                bravo.blocks.blocks["sand"].slot,
-                "%d, %d, %d is wrong" % (i, 61 + i, i))
+                             bravo.blocks.blocks["sand"].slot,
+                             "%d, %d, %d is wrong" % (i, 61 + i, i))
 
     def test_beaches_immersed(self):
         """
@@ -75,5 +76,5 @@ class TestGenerators(unittest.TestCase):
         plugin.populate(self.chunk, 0)
         for i in range(5):
             self.assertEqual(self.chunk.get_block((i, 61 + i, i)),
-                bravo.blocks.blocks["sand"].slot,
-                "%d, %d, %d is wrong" % (i, 61 + i, i))
+                             bravo.blocks.blocks["sand"].slot,
+                             "%d, %d, %d is wrong" % (i, 61 + i, i))
