@@ -239,6 +239,7 @@ def parse_packets_incrementally(bytestream):
 
 
 def make_packet(packet_name, mode='play', *args, **kwargs):
+    print "woo make_packet: %s" % packet_name
     from protocol import clientbound, clientbound_by_name
     if packet_name not in clientbound_by_name[mode]:
         print "Name %s not in mode %s!" % (packet_name, mode)

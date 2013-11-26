@@ -20,7 +20,7 @@ from twisted.web.client import getPage
 
 from bravo import version
 from bravo.beta.structures import BuildData, Settings
-from bravo.beta.encryption import pkcs1_decrypt, sha_hash, stream_encrypt, stream_decrypt
+from bravo.beta.encryption import BravoCryptRSA, BravoCryptAES
 from bravo.blocks import blocks, items
 from bravo.chunk import CHUNK_HEIGHT
 from bravo.entity import Sign
@@ -1088,7 +1088,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     _health = 20
     _latency = 0
 
-    shared_secret = ''
+    cryptAES = None
 
     def __init__(self):
         self.chunks = dict()
@@ -1190,6 +1190,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
         Send a packet to the client.
         """
+        print "woo write packet: %s" % packet_name
         packet = make_packet(packet_name, mode=self.mode, *args, **kwargs)
         self.write_packets(packet)
 
@@ -1197,11 +1198,12 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
         Send pre-assembled packets to the client.
         """
-        if self.shared_secret != '':
-            packet = stream_encrypt(self.shared_secret, self.shared_secret, packet)
+        if self.mode == 'play' and self.cryptAES is not None:
+            print "write_packets: encrypting data"
+            packet = self.cryptAES.stream_encrypt(packet)
         else:
             if self.factory.online:
-                print "why is shared_secret blank if online is true?"
+                print "write_packets: why is self.cryptAES None if online is true?"
         self.transport.write(packet)
 
     def update_ping(self):
@@ -1475,11 +1477,12 @@ class BravoProtocol(BetaServerProtocol):
                                            "BravoServer")
 
     def dataReceived(self, data):
-        if self.shared_secret != '':
-            data = stream_decrypt(self.shared_secret, self.shared_secret, data)
+        if self.mode == 'play' and self.cryptAES is not None:
+            print "dataReceived: decrypting data"
+            data = stream_decrypt(data)
         else:
             if self.factory.online:
-                print "why is shared_secret blank if online is true?"
+                print "dataReceived: why is self.cryptAES None if online is true?"
         self.buf += data
 
         packets, self.buf = parse_packets(self.buf)
@@ -1964,13 +1967,15 @@ class BravoProtocol(BetaServerProtocol):
         return ''
 
     def handle_encryption_response(self, packet):
-        f = self.factory
-        check_token = pkcs1_decrypt(f.private_key, packet.token)
+        fcRSA = self.factory.cryptRSA
+        check_token = fcRSA.decrypt(packet.token)
         if check_token != self.token:
             self.error("Token decryption failed!  %s does not match %s" % (check_token, self.token))
             return ''
-        self.shared_secret = pkcs1_decrypt(f.private_key, packet.secret)
-        hash = sha_hash(server_id=f.server_id, secret=self.shared_secret, public_key=f.public_key_der)
+        self.shared_secret = fcRSA.decrypt(packet.secret)
+        print "shared secret is: %s" % self.shared_secret
+        self.cryptAES = BravoCryptAES(key=self.shared_secret, iv=self.shared_secret)
+        hash = fcRSA.hash(secret=self.shared_secret)
         response = urlopen('https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s' % (self.username, hash))
         id_dict = json.loads(response.read())
         self.uuid = id_dict[u'id']
@@ -1980,8 +1985,11 @@ class BravoProtocol(BetaServerProtocol):
         self.username = packet.username
         f = self.factory
         if f.online:
+            server_id = f.cryptRSA.server_id
+            key = f.cryptRSA.public_key_der()
+            print server_id, key
             self.token = ''.join(choice(printable) for x in range(20))
-            self.write_packet('encryption_request', server_id=f.server_id, key=f.public_key_der, key_len=len(f.public_key_der), token=self.token, token_len=len(self.token))
+            self.write_packet('encryption_request', server_id=server_id, key=key, key_len=len(key), token=self.token, token_len=len(self.token))
         else:
             self.uuid = uuid3(NAMESPACE_DNS, self.username).hex
             self.authenticated()

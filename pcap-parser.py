@@ -3,7 +3,7 @@ import sys
 import socket
 from bravo.beta.packets import parse_packets, hexout
 from bravo.beta.protocol import clientbound, serverbound
-from bravo.beta.encryption import pkcs1_decrypt, stream_decrypt
+from bravo.beta.encryption import BravoCryptRSA, BravoCryptAES
 from Crypto.PublicKey import RSA
 
 # This data was filtered via "tcp.port==25565"
@@ -16,7 +16,8 @@ class PcapParser:
     server = ''
     mode = 'handshaking'
     index = 0
-    shared_secret = ''
+    cryptRSA = None
+    cryptAES = None
 
     def __init__(self, filename):
         f = open(filename)
@@ -25,9 +26,11 @@ class PcapParser:
         f.close()
         # JMT: hardcode for now
         with open('/home/jmt/bravo-key/server_id_rsa.pub') as f:
-            self.public_key = RSA.importKey(f.read())
+            public_key = RSA.importKey(f.read())
         with open('/home/jmt/bravo-key/server_id_rsa') as f:
-            self.private_key = RSA.importKey(f.read())
+            private_key = RSA.importKey(f.read())
+        server_id = 'x' * 20
+        self.cryptRSA = BravoCryptRSA(public_key=public_key, private_key=private_key, server_id=server_id)
 
     def __call__(self):
         for envelope in self.packet_list:
@@ -52,9 +55,8 @@ class PcapParser:
             if mydata == '':
                 continue
             # Decryption!
-            if self.shared_secret != '':
-                new_mydata = stream_decrypt(self.shared_secret, self.shared_secret, mydata)
-                mydata = new_mydata
+            if self.cryptAES is not None:
+                mydata = stream_decrypt(mydata)
             try:
                 self.streams[streamkey] += mydata
             except KeyError:
@@ -82,7 +84,7 @@ class PcapParser:
         self.mode = packet.next_state
 
     def handle_client_sent_encryption_response(self, packet):
-        self.shared_secret = pkcs1_decrypt(self.private_key, packet.secret)
+        self.shared_secret = self.cryptRSA.decrypt(packet.secret)
         print "The shared secret is: %s" % self.shared_secret
 
     def handle_client_sent_login_start(self, packet):
@@ -437,11 +439,15 @@ class InventoryAnalyzer(PcapParser):
 class EncryptionAnalyzer(PcapParser):
     def handle_client_sent_encryption_response(self, packet):
         print "%d: Client sent encryption response: %s" % (self.index, packet)
-        self.shared_secret = pkcs1_decrypt(self.private_key, packet.secret)
+        self.shared_secret = self.cryptRSA.decrypt(packet.secret)
         print "The shared secret is: %s" % self.shared_secret
 
     def handle_server_sent_encryption_request(self, packet):
         print "%d: Server sent encryption request: %s" % (self.index, packet)
+
+    def handle_server_sent_join(self, packet):
+        print "%d: Server sent join: %s" % (self.index, packet)
+
 
 #p = InventoryAnalyzer(sys.argv[1])
 p = EncryptionAnalyzer(sys.argv[1])

@@ -17,6 +17,7 @@ from zope.interface import implements
 
 from bravo.beta.packets import make_packet
 from bravo.beta.protocol import BravoProtocol, KickedProtocol
+from bravo.beta.encryption import BravoCryptRSA
 from bravo.entity import entities
 from bravo.ibravo import (ISortedPlugin, IAutomaton, ITerrainGenerator,
                           IUseHook, ISignHook, IPreDigHook, IDigHook,
@@ -124,23 +125,22 @@ class BravoFactory(Factory):
                 key_dir.restat()
             try:
                 if key_dir.getPermissions() == secure_permissions:
-                    public_key = key_dir.child('server_id_rsa.pub')
-                    private_key = key_dir.child('server_id_rsa')
+                    public_key_file = key_dir.child('server_id_rsa.pub')
+                    private_key_file = key_dir.child('server_id_rsa')
                     #print "A public key file does%s exist!" % ('' if public_key.exists() else ' not')
                     #print "A private key file does%s exist!" % ('' if private_key.exists() else ' not')
-                    if not(public_key.exists() and private_key.exists()):
+                    if not(public_key_file.exists() and private_key_file.exists()):
                         log.msg('Generating RSA keypair...')
                         KEY_LENGTH = 1024
                         rsaKey = RSA.generate(KEY_LENGTH, Random.new().read)
-                        public_key.setContent(rsaKey.publickey().exportKey('PEM'))
-                        private_key.setContent(rsaKey.exportKey('PEM'))
-                    with open(public_key.path) as f:
-                        self.public_key = RSA.importKey(f.read())
-                    self.public_key_pem = self.public_key.exportKey('PEM')
-                    self.public_key_der = self.public_key.exportKey('DER')
-                    with open(private_key.path) as f:
-                        self.private_key = RSA.importKey(f.read())
-                    self.server_id = ''.join(choice(printable) for x in range(20))
+                        public_key_file.setContent(rsaKey.publickey().exportKey('PEM'))
+                        private_key_file.setContent(rsaKey.exportKey('PEM'))
+                    with open(public_key_file.path) as f:
+                        public_key = RSA.importKey(f.read())
+                    with open(private_key_file.path) as f:
+                        private_key = RSA.importKey(f.read())
+                    server_id = ''.join(choice(printable) for x in range(20))
+                    self.cryptRSA = BravoCryptRSA(public_key=public_key, private_key=private_key, server_id=server_id)
                 else:
                     log.msg('Key directory %s insecure, online mode disabled!' % key_dir_url)
                     self.online = False
