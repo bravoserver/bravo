@@ -1,12 +1,16 @@
 import unittest
 
 from bravo.entity import Chuck, Creeper, Painting, Player
+from uuid import uuid3, NAMESPACE_DNS
 
 
 class TestPlayerEntity(unittest.TestCase):
 
     def setUp(self):
-        self.p = Player(username="unittest")
+	username="unittest"
+        self.p = Player(username=username)
+        # JMT: hax
+        self.p.uuid = uuid3(NAMESPACE_DNS, username).hex
 
     def test_trivial(self):
         pass

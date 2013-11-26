@@ -166,7 +166,7 @@ class Pickup(Entity):
 
     name = "Item"
 
-    def __init__(self, item=(0, 0), quantity=1, **kwargs):
+    def __init__(self, item=(0, 0), count=1, **kwargs):
         """
         Create a pickup.
 
@@ -176,7 +176,7 @@ class Pickup(Entity):
         super(Pickup, self).__init__(**kwargs)
 
         self.item = item
-        self.quantity = quantity
+        self.count = count
 
     def save_to_packet(self):
         """
@@ -194,7 +194,7 @@ class Pickup(Entity):
                                metadata={
                                    0: ('byte', 0),     # Flags
                                    1: ('short', 300),  # Drowning counter
-                                   10: ('slot', Slot.fromItem(self.item, self.quantity))
+                                   10: ('slot', Slot.fromItem(self.item, self.count))
                                })
         return packets
 
@@ -685,7 +685,7 @@ class Furnace(Tile):
                         self.inventory.crafted[0] = product
                     else:
                         item = self.inventory.crafted[0]
-                        self.inventory.crafted[0] = item.increment(product.quantity)
+                        self.inventory.crafted[0] = item.increment(product.count)
 
                     update_all_windows_slot(self.factory, self.coords, 0, self.inventory.crafting[0])
                     update_all_windows_slot(self.factory, self.coords, 2, self.inventory.crafted[0])
@@ -769,11 +769,11 @@ class Furnace(Tile):
         recipe = furnace_recipes[crafting.item_id]
 
         # Recipe doesn't match current output?
-        if recipe[0] != crafted.item_id:
+        if recipe.item_id != crafted.item_id:
             return False
 
         # Crafting would overflow current output?
-        if crafted.quantity + recipe.quantity > 64:
+        if crafted.count + recipe.count > 64:
             return False
 
         # By default, yes, you can craft.

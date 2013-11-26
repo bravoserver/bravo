@@ -4,6 +4,7 @@ import json
 from urlparse import urlparse
 from random import choice
 from string import printable
+from ConfigParser import NoOptionError
 
 from twisted.internet import reactor
 from twisted.internet.interfaces import IPushProducer
@@ -101,7 +102,7 @@ class BravoFactory(Factory):
         try:
             self.online = self.config.get(self.config_name, 'online') == 'true'
             key_dir_url = self.config.get(self.config_name, 'key_dir')
-        except ConfigParser.NoOptionError:
+        except NoOptionError:
             self.online = False
 
         log.msg("Online mode is %s..." % self.online)
