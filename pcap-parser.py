@@ -3,6 +3,8 @@ import sys
 import socket
 from bravo.beta.packets import parse_packets, hexout
 from bravo.beta.protocol import clientbound, serverbound
+from bravo.beta.encryption import pkcs1_decrypt, stream_decrypt
+from Crypto.PublicKey import RSA
 
 # This data was filtered via "tcp.port==25565"
 
@@ -14,12 +16,18 @@ class PcapParser:
     server = ''
     mode = 'handshaking'
     index = 0
+    shared_secret = ''
 
     def __init__(self, filename):
         f = open(filename)
         pcap = dpkt.pcap.Reader(f)
         self.packet_list = [(ts, buf) for ts, buf in pcap]
         f.close()
+        # JMT: hardcode for now
+        with open('/home/jmt/bravo-key/server_id_rsa.pub') as f:
+            self.public_key = RSA.importKey(f.read())
+        with open('/home/jmt/bravo-key/server_id_rsa') as f:
+            self.private_key = RSA.importKey(f.read())
 
     def __call__(self):
         for envelope in self.packet_list:
@@ -43,6 +51,10 @@ class PcapParser:
             mydata = tcp.data
             if mydata == '':
                 continue
+            # Decryption!
+            if self.shared_secret != '':
+                new_mydata = stream_decrypt(self.shared_secret, self.shared_secret, mydata)
+                mydata = new_mydata
             try:
                 self.streams[streamkey] += mydata
             except KeyError:
@@ -65,12 +77,13 @@ class PcapParser:
                     except AttributeError:
                         print "Need to write %s method!" % name
 
-# serverbound packets
+    # serverbound packets
     def handle_client_sent_handshaking(self, packet):
         self.mode = packet.next_state
 
     def handle_client_sent_encryption_response(self, packet):
-        pass
+        self.shared_secret = pkcs1_decrypt(self.private_key, packet.secret)
+        print "The shared secret is: %s" % self.shared_secret
 
     def handle_client_sent_login_start(self, packet):
         pass
@@ -153,7 +166,7 @@ class PcapParser:
     def handle_client_sent_plugin_message(self, packet):
         pass
 
-# clientbound packets
+    # clientbound packets
     def handle_server_sent_handshaking(self, packet):
         pass
 
@@ -424,6 +437,8 @@ class InventoryAnalyzer(PcapParser):
 class EncryptionAnalyzer(PcapParser):
     def handle_client_sent_encryption_response(self, packet):
         print "%d: Client sent encryption response: %s" % (self.index, packet)
+        self.shared_secret = pkcs1_decrypt(self.private_key, packet.secret)
+        print "The shared secret is: %s" % self.shared_secret
 
     def handle_server_sent_encryption_request(self, packet):
         print "%d: Server sent encryption request: %s" % (self.index, packet)

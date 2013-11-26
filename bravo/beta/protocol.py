@@ -20,6 +20,7 @@ from twisted.web.client import getPage
 
 from bravo import version
 from bravo.beta.structures import BuildData, Settings
+from bravo.beta.encryption import pkcs1_decrypt, sha_hash, stream_encrypt, stream_decrypt
 from bravo.blocks import blocks, items
 from bravo.chunk import CHUNK_HEIGHT
 from bravo.entity import Sign
@@ -1087,6 +1088,8 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     _health = 20
     _latency = 0
 
+    shared_secret = ''
+
     def __init__(self):
         self.chunks = dict()
         self.windows = {}
@@ -1103,10 +1106,6 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     # shouldn't need to be touched.
 
     def dataReceived(self, data):
-        if self.factory.online:
-            data = decrypt(data)
-        self.buf += data
-
         packets, self.buf = parse_packets(self.buf)
 
         if packets:
@@ -1198,9 +1197,11 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
         Send pre-assembled packets to the client.
         """
-        if self.factory.online:
-            # Encrypt packets
-            pass
+        if self.shared_secret != '':
+            packet = stream_encrypt(self.shared_secret, self.shared_secret, packet)
+        else:
+            if self.factory.online:
+                print "why is shared_secret blank if online is true?"
         self.transport.write(packet)
 
     def update_ping(self):
@@ -1473,6 +1474,49 @@ class BravoProtocol(BetaServerProtocol):
         self.motd = self.config.getdefault(self.config_name, "motd",
                                            "BravoServer")
 
+    def dataReceived(self, data):
+        if self.shared_secret != '':
+            data = stream_decrypt(self.shared_secret, self.shared_secret, data)
+        else:
+            if self.factory.online:
+                print "why is shared_secret blank if online is true?"
+        self.buf += data
+
+        packets, self.buf = parse_packets(self.buf)
+
+        if packets:
+            self.resetTimeout()
+
+        for header, payload in packets:
+            if header in serverbound[self.mode]:  # replace with try/except ?
+                struct = serverbound[self.mode][header]
+                name = 'handle_%s' % struct.name
+                try:
+                    method = getattr(self, name)
+                except AttributeError:
+                    print "no such method %s exists!" % name
+                    return ''
+                print name, hexout(payload, 60)
+                if payload == '':
+                    packet = ''
+                else:
+                    try:
+                        packet = struct.parse(payload)
+                    except Exception as e:
+                        log.err(e)
+                        log.err(header)
+                        log.err(payload)
+                d = maybeDeferred(method, packet=packet)
+
+                @d.addErrback
+                def eb(failure):
+                    log.err("Error while handling packet 0x%.2x" % header)
+                    log.err(failure)
+                    return None
+            else:
+                log.err("Didn't handle parseable packet 0x%.2x!" % header)
+                log.err(payload)
+
     def register_hooks(self):
         log.msg("Registering client hooks...")
         plugin_types = {
@@ -1521,7 +1565,6 @@ class BravoProtocol(BetaServerProtocol):
         self.player = yield self.factory.world.load_player(self.username)
         self.player.eid = self.eid
         self.player.uuid = self.uuid
-        print self.username, self.uuid
         self.write_packet('login_success', uuid=self.uuid, username=self.username)
         self.mode = 'play'
 
@@ -1920,47 +1963,17 @@ class BravoProtocol(BetaServerProtocol):
             log.msg('unexpected next state value: %s' % packet.next_state)
         return ''
 
-    def _decrypt(self, secret, strict=False):
-        from Crypto.Cipher import PKCS1_v1_5
-        from Crypto.Hash import SHA
-        from Crypto import Random
-        dsize = SHA.digest_size
-        sentinel = Random.new().read(15+dsize)
-
-        cipher = PKCS1_v1_5.new(self.factory.private_key)
-        message = cipher.decrypt(secret, sentinel)
-        digest = SHA.new(message[:-dsize]).digest()
-        if not strict or digest == message[-dsize:]:
-            return message
-        else:
-            return None
-
-    def _hash(self, server_id, secret, public_key):
-        # JMT: write tests with '' for server_id and public_key, with names for secret!
-        from Crypto.Hash import SHA
-        s = SHA.new()
-        s.update(server_id)
-        s.update(secret)
-        s.update(public_key)
-        val = int(s.hexdigest(), 16)
-        if val >= 2**159:
-            val -= 2**160
-        return '{0:{1}x}'.format(val, 20).lstrip()
-
     def handle_encryption_response(self, packet):
         f = self.factory
-        print packet
-        check_token = self._decrypt(packet.token)
+        check_token = pkcs1_decrypt(f.private_key, packet.token)
         if check_token != self.token:
             self.error("Token decryption failed!  %s does not match %s" % (check_token, self.token))
             return ''
-        self.shared_secret = self._decrypt(packet.secret)
-        hash = self._hash(server_id=f.server_id, secret=self.shared_secret, public_key=f.public_key_der)
-        # JMT: consider this too
+        self.shared_secret = pkcs1_decrypt(f.private_key, packet.secret)
+        hash = sha_hash(server_id=f.server_id, secret=self.shared_secret, public_key=f.public_key_der)
         response = urlopen('https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s' % (self.username, hash))
         id_dict = json.loads(response.read())
         self.uuid = id_dict[u'id']
-        print "woo -- new UUID is %s" % self.uuid
         self.authenticated()
 
     def handle_login_start(self, packet):
@@ -1968,7 +1981,6 @@ class BravoProtocol(BetaServerProtocol):
         f = self.factory
         if f.online:
             self.token = ''.join(choice(printable) for x in range(20))
-            print "token is: %s" % self.token
             self.write_packet('encryption_request', server_id=f.server_id, key=f.public_key_der, key_len=len(f.public_key_der), token=self.token, token_len=len(self.token))
         else:
             self.uuid = uuid3(NAMESPACE_DNS, self.username).hex
