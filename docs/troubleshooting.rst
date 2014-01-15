@@ -65,6 +65,6 @@ If you are having a hard time figuring something out, encountered a bug,
 or have ideas, feel free to reach out to the community in one of several
 different ways:
 
-* **IRC:** #Bravo on FreeNode
+* **IRC:** #bravoserver on FreeNode
 * Post to our `issue tracker`_.
 * Speak up over our `mailing list`_.

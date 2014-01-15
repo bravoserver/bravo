@@ -80,11 +80,11 @@ Q & A
 
 *It doesn't install? Okay, maybe it installed, but I'm having issues!*
 
- On Freenode IRC (irc.freenode.net), #bravo is dedicated to Bravo development
- and assistance, and #mcdevs is a more general channel for all custom
- Minecraft development. You can generally get help from those channels. If you
- think you have found a bug, you can directly report it on the Github issue
- tracker as well.
+ On Freenode IRC (irc.freenode.net), #bravoserver is dedicated to Bravo
+ development and assistance, and #mcdevs is a more general channel for all
+ custom Minecraft development. You can generally get help from those channels.
+ If you think you have found a bug, you can directly report it on the Github
+ issue tracker as well.
 
  Please, please, please read the installation instructions in the README first,
  as well as the comments in bravo.ini.example. I did not type them out so that
