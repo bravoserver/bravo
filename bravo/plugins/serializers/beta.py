@@ -427,6 +427,7 @@ class Anvil(object):
     # ISerializer API.
 
     def connect(self, url):
+        #TODO: Test this with relative paths. It fails silently.
         parsed = urlparse(url)
         if not parsed.scheme:
             raise Exception("I need to be handed a URL, not a path")

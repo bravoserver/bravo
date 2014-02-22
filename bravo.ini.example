@@ -38,8 +38,6 @@ limitPerIP = 0
 
 # The folder to use for storing the world. Make sure you have write
 # permissions to this folder. If it does not exist, it will be created.
-# Relative paths are allowed but discouraged.
-#url = file://relative/path/to/world
 url = file:///absolute/path/to/world
 
 # The gameplay mode for this server. Valid modes are "creative" and
