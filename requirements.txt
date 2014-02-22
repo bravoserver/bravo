@@ -1,2 +1,7 @@
+PIL==1.1.7
+Twisted==13.2.0
+argparse==1.2.1
 construct==2.0.6
-Twisted>=11.0
+distribute==0.6.34
+wsgiref==0.1.2
+zope.interface==4.1.0
