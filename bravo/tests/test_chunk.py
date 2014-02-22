@@ -6,6 +6,7 @@ from bravo.blocks import blocks
 from bravo.chunk import Chunk
 from bravo.utilities.coords import XZ
 
+
 class TestChunkBlocks(unittest.TestCase):
 
     def setUp(self):

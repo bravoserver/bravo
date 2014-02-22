@@ -6,12 +6,13 @@ from bravo.beta.packets import make_packet
 from bravo.blocks import blocks
 from bravo.entity import Chest as ChestTile, Furnace as FurnaceTile
 from bravo.ibravo import (IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
-        IPreBuildHook, IDigHook)
+                          IPreBuildHook, IDigHook)
 from bravo.inventory.windows import (WorkbenchWindow, ChestWindow,
-        LargeChestWindow, FurnaceWindow)
+                                     LargeChestWindow, FurnaceWindow)
 from bravo.location import Location
 from bravo.utilities.building import chestsAround
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
+
 
 def drop_items(factory, location, items, y_offset=0):
     """
@@ -35,20 +36,23 @@ def drop_items(factory, location, items, y_offset=0):
             continue
         factory.give(coords, (item[0], item[1]), item[2])
 
+
 def processClickMessage(factory, player, window, container):
 
     # Clicked out of the window
     # TODO: change packet's slot to signed
-    if container.slot == 64537: # -999
+    if container.slot_no == -999:
         items = window.drop_selected(bool(container.button))
         drop_items(factory, player.location.in_front_of(1), items, 1)
-        player.write_packet("window-token", wid=container.wid,
-            token=container.token, acknowledged=True)
+        player.write_packet('confirm_transaction',
+                            wid=container.wid,
+                            token=container.token,
+                            acknowledged=True)
         return
 
     # perform selection action
     selected = window.select(container.slot, bool(container.button),
-                                bool(container.shift))
+                             bool(container.shift))
 
     if selected:
         # Notchian server does not send any packets here because both server
@@ -63,7 +67,7 @@ def processClickMessage(factory, player, window, container):
         equipped_slot = player.player.equipped + 36
         # Inform other players about changes to this player's equipment.
         if container.wid == 0 and (container.slot in range(5, 9) or
-                                    container.slot == equipped_slot):
+                                   container.slot == equipped_slot):
 
             # Currently equipped item changes.
             if container.slot == equipped_slot:
@@ -76,16 +80,14 @@ def processClickMessage(factory, player, window, container):
                 slot = 4 - (container.slot - 5)
 
             if item is None:
-                primary, secondary, count = -1, 0, 0
+                item_id, count, damage = -1, 0, 0
             else:
-                primary, secondary, count = item
-            packet = make_packet("entity-equipment",
-                eid=player.player.eid,
-                slot=slot,
-                primary=primary,
-                secondary=secondary,
-                count=0
-            )
+                item_id, count, damage = item
+            packet = make_packet("entity_equipment",
+                                 eid=player.player.eid,
+                                 slot_no=slot,
+                                 slot=Slot(item_id=item_id, count=count, damage=damage)
+                                 )
             factory.broadcast_for_others(packet, player)
 
         # If the window is SharedWindow for tile...
@@ -110,6 +112,7 @@ def processClickMessage(factory, player, window, container):
                 def mark_chunk_dirty(chunk):
                     chunk.dirty = True
     return True
+
 
 class Windows(object):
     '''
@@ -161,6 +164,7 @@ class Windows(object):
     before = tuple()
     after = ("inventory",)
 
+
 class Inventory(object):
     '''
     Player's inventory hooks
@@ -181,7 +185,7 @@ class Inventory(object):
             return
 
         # NOTE: player is a protocol. Not Player class!
-        items, packets = player.inventory.close() # it's window from protocol
+        items, packets = player.inventory.close()  # its window from protocol
         if packets:
             player.transport.write(packets)
         drop_items(self.factory, player.location.in_front_of(1), items, 1)
@@ -202,6 +206,7 @@ class Inventory(object):
 
     before = tuple()
     after = tuple()
+
 
 class Workbench(object):
 
@@ -228,6 +233,7 @@ class Workbench(object):
 
     before = tuple()
     after = tuple()
+
 
 class Furnace(object):
 
@@ -281,7 +287,7 @@ class Furnace(object):
         """
 
         if container.wid == 0:
-            return # skip inventory window
+            return  # skip inventory window
         elif player.windows:
             window = player.windows[-1]
         else:
@@ -311,8 +317,7 @@ class Furnace(object):
 
         # the furnace cannot be oriented up or down
         if face == "-y" or face == "+y":
-            orientation = ('+x', '+z', '-x', '-z')[((int(player.location.yaw) \
-                                                - 45 + 360) % 360) / 90]
+            orientation = ('+x', '+z', '-x', '-z')[((int(player.location.yaw) - 45 + 360) % 360) / 90]
             metadata = blocks["furnace"].orientation(orientation)
             builddata = builddata._replace(metadata=metadata)
 
@@ -340,13 +345,14 @@ class Furnace(object):
         z = chunk.z * 16 + z
         furnace = furnace.inventory
         drop_items(self.factory, (x, y, z),
-                furnace.crafted + furnace.crafting + furnace.fuel)
+                   furnace.crafted + furnace.crafting + furnace.fuel)
         del(chunk.tiles[coords])
 
     name = "furnace"
 
-    before = ("windows",) # plugins that comes before this plugin
+    before = ("windows",)  # plugins that comes before this plugin
     after = tuple()
+
 
 class Chest(object):
 
@@ -384,17 +390,17 @@ class Chest(object):
         chunk = yield self.factory.world.request_chunk(bigx, bigz)
 
         chests_around = chestsAround(self.factory,
-                (container.x, container.y, container.z))
+                                     (container.x, container.y, container.z))
         chests_around_num = len(chests_around)
 
-        if chests_around_num == 0: # small chest
+        if chests_around_num == 0:  # small chest
             chest = self.get_chest_tile(chunk, (smallx, container.y, smallz))
             if chest is None:
                 returnValue(None)
             coords = bigx, smallx, bigz, smallz, container.y
             window = ChestWindow(player.wid, player.player.inventory,
                                  chest.inventory, coords)
-        elif chests_around_num == 1: # large chest
+        elif chests_around_num == 1:  # large chest
             # process second chest coordinates
             x2, y2, z2 = chests_around[0]
             bigx2, smallx2, bigz2, smallz2 = split_coords(x2, z2)
@@ -413,10 +419,10 @@ class Chest(object):
             # We shall properly order chest inventories
             if c1 < c2:
                 window = LargeChestWindow(player.wid, player.player.inventory,
-                        chest1.inventory, chest2.inventory, c1)
+                                          chest1.inventory, chest2.inventory, c1)
             else:
                 window = LargeChestWindow(player.wid, player.player.inventory,
-                        chest2.inventory, chest1.inventory, c2)
+                                          chest2.inventory, chest1.inventory, c2)
         else:
             log.msg("Chest at (%d, %d, %d) have three chests connected" %
                     (container.x, container.y, container.z))
@@ -437,8 +443,7 @@ class Chest(object):
 
         # chest orientation according to players position
         if face == "-y" or face == "+y":
-            orientation = ('+x', '+z', '-x', '-z')[((int(player.location.yaw) \
-                                                - 45 + 360) % 360) / 90]
+            orientation = ('+x', '+z', '-x', '-z')[((int(player.location.yaw) - 45 + 360) % 360) / 90]
         else:
             orientation = face
 

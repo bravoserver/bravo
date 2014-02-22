@@ -61,8 +61,8 @@ class Paintings(object):
             return False, builddata, False
 
         entity = self.factory.create_entity(x, y, z, "Painting",
-            direction=face_to_direction[face],
-            motive=random.choice(painting_names))
+                                            direction=face_to_direction[face],
+                                            motive=random.choice(painting_names))
         self.factory.broadcast(entity.save_to_packet())
 
         # Force the chunk (with its entities) to be saved to disk.
@@ -86,7 +86,7 @@ class Paintings(object):
         self.factory.destroy_entity(target)
         self.factory.give(coords, (items["paintings"].slot, 0), 1)
 
-        packet = make_packet("destroy", count=1, eid=[target.eid])
+        packet = make_packet("destroy_entities", eid=[target.eid])
         self.factory.broadcast(packet)
 
         # Force the chunk (with its entities) to be saved to disk.

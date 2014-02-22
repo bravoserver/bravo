@@ -1,7 +1,7 @@
 from itertools import chain
 
 from bravo import blocks
-from bravo.beta.structures import Slot
+from bravo.beta.packets import Slot
 
 
 class SerializableSlots(object):
@@ -19,13 +19,14 @@ class SerializableSlots(object):
     def load_from_list(self, l):
         if len(l) < self.metalength:
             # XXX why will it break everything? :T
-            raise AttributeError # otherwise it will break everything
+            raise AttributeError  # otherwise it will break everything
         for target in self.metalist:
             if target:
                 target[:], l = l[:len(target)], l[len(target):]
 
     def save_to_list(self):
         return [i for i in chain(*self.metalist)]
+
 
 class Inventory(SerializableSlots):
     '''
@@ -37,28 +38,27 @@ class Inventory(SerializableSlots):
         self.crafting = [None] * 27
         self.storage = [None] * 27
         self.holdables = [None] * 9
-        self.dummy = [None] * 64 # represents gap in serialized structure
+        self.dummy = [None] * 64  # represents gap in serialized structure
 
-    def add(self, item, quantity):
+    def add(self, item, count):
         """
         Attempt to add an item to the inventory.
 
         :param tuple item: a key representing the item
-        :returns: quantity of items that did not fit inventory
+        :returns: count of items that did not fit inventory
         """
 
         # Try to stack first
         for stash in (self.holdables, self.storage):
             for i, slot in enumerate(stash):
-                if slot is not None and slot.holds(item) and slot.quantity < 64 \
-                                    and slot.primary not in blocks.unstackable:
-                    count = slot.quantity + quantity
-                    if count > 64:
-                        count, quantity = 64, count - 64
+                if slot is not None and slot.holds(item) and slot.count < 64 and slot.item_id not in blocks.unstackable:
+                    total = slot.count + count
+                    if total > 64:
+                        total, count = 64, total - 64
                     else:
-                        quantity = 0
-                    stash[i] = slot.replace(quantity=count)
-                    if quantity == 0:
+                        count = 0
+                    stash[i].count = total
+                    if count == 0:
                         return 0
 
         # try to find empty space
@@ -66,10 +66,10 @@ class Inventory(SerializableSlots):
             for i, slot in enumerate(stash):
                 if slot is None:
                     # XXX bug; might overflow a slot!
-                    stash[i] = Slot(item[0], item[1], quantity)
+                    stash[i] = Slot(item[0], count, item[1])
                     return 0
 
-        return quantity
+        return count
 
     def consume(self, item, index):
         """
@@ -95,7 +95,7 @@ class Inventory(SerializableSlots):
 
         return False
 
-    def select_armor(self, index, alternate, shift, selected = None):
+    def select_armor(self, index, alternate, shift, selected=None):
         """
         Handle a slot selection on an armor slot.
 
@@ -112,20 +112,20 @@ class Inventory(SerializableSlots):
 
         if selected is not None:
             sslot = selected
-            if sslot.primary not in allowed_items:
+            if sslot.item_id not in allowed_items:
                 return (False, selected)
 
             if self.armor[index] is None:
                 # Put one armor piece into the slot, decrement the amount
                 # in the selection.
-                self.armor[index] = sslot.replace(quantity=1)
+                self.armor[index] = Slot(item_id=sslot.item_id, count=1, damage=sslot.damage)
                 selected = sslot.decrement()
             else:
                 # If both slot and selection are the same item, do nothing.
-                # If not, the quantity needs to be 1, because only one item
+                # If not, the count needs to be 1, because only one item
                 # fits into the slot, and exchanging slot and selection is not
                 # possible otherwise.
-                if not self.armor[index].holds(sslot) and sslot.quantity == 1:
+                if not self.armor[index].holds(sslot) and sslot.count == 1:
                     selected, self.armor[index] = self.armor[index], selected
                 else:
                     return (False, selected)

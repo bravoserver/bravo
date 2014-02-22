@@ -1,17 +1,23 @@
 import unittest
 
 from bravo.entity import Chuck, Creeper, Painting, Player
+from uuid import uuid3, NAMESPACE_DNS
+
 
 class TestPlayerEntity(unittest.TestCase):
 
     def setUp(self):
-        self.p = Player(username="unittest")
+	username="unittest"
+        self.p = Player(username=username)
+        # JMT: hax
+        self.p.uuid = uuid3(NAMESPACE_DNS, username).hex
 
     def test_trivial(self):
         pass
 
     def test_player_serialization(self):
         self.p.save_to_packet()
+
 
 class TestPainting(unittest.TestCase):
 
@@ -21,6 +27,7 @@ class TestPainting(unittest.TestCase):
     def test_painting_serialization(self):
         self.p.save_to_packet()
 
+
 class GenericMobMixin(object):
 
     def test_save_to_packet(self):
@@ -29,6 +36,7 @@ class GenericMobMixin(object):
     def test_save_location_to_packet(self):
         self.m.save_location_to_packet()
 
+
 class TestChuck(unittest.TestCase, GenericMobMixin):
 
     def setUp(self):
@@ -36,6 +44,7 @@ class TestChuck(unittest.TestCase, GenericMobMixin):
 
     def test_trivial(self):
         pass
+
 
 class TestCreeper(unittest.TestCase, GenericMobMixin):
 

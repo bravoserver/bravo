@@ -4,6 +4,9 @@ from itertools import product, chain
 import json
 from time import time
 from urlparse import urlunparse
+from urllib import urlopen
+from random import choice
+from string import printable
 
 from twisted.internet import reactor
 from twisted.internet.defer import (DeferredList, inlineCallbacks,
@@ -17,18 +20,19 @@ from twisted.web.client import getPage
 
 from bravo import version
 from bravo.beta.structures import BuildData, Settings
+from bravo.beta.encryption import BravoCryptRSA, BravoCryptAES
 from bravo.blocks import blocks, items
 from bravo.chunk import CHUNK_HEIGHT
 from bravo.entity import Sign
 from bravo.errors import BetaClientError, BuildError
 from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
-    IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
-    IPreDigHook, IDigHook, ISignHook, IUseHook)
+                          IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
+                          IPreDigHook, IDigHook, ISignHook, IUseHook)
 from bravo.infini.factory import InfiniClientFactory
 from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location, Orientation, Position
 from bravo.motd import get_motd
-from bravo.beta.packets import parse_packets, make_packet, make_error_packet
+from bravo.beta.packets import parse_packets, make_packet, hexout, Slot, SlotAdapter
 from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
@@ -36,10 +40,1026 @@ from bravo.utilities.chat import complete, username_alternatives
 from bravo.utilities.maths import circling, clamp, sorted_by_distance
 from bravo.utilities.temporal import timestamp_from_clock
 
+from uuid import uuid3, NAMESPACE_DNS
+
+from collections import namedtuple
+
+from construct import Struct, Container, Embed, Enum, MetaField
+from construct import MetaArray, If, Switch, Const, Peek, Magic
+from construct import OptionalGreedyRange, RepeatUntil
+from construct import Flag, PascalString, Adapter
+from construct import UBInt8, UBInt16, UBInt32, UBInt64
+from construct import SBInt8, SBInt16, SBInt32
+from construct import BFloat32, BFloat64
+from construct import BitStruct, BitField
+from construct import StringAdapter, LengthValueAdapter, Sequence
+from construct import ConstructError
+from varint import VarInt
+
+
 # States of the protocol.
 (STATE_UNAUTHENTICATED, STATE_AUTHENTICATED, STATE_LOCATED) = range(3)
 
-SUPPORTED_PROTOCOL = 78
+SUPPORTED_PROTOCOL = 4
+
+server_protocols = {
+    4: '1.7.2',
+}
+
+
+# Data structures required for the beta protocol.
+def AlphaString(name):
+    return PascalString(name, length_field=VarInt('length'))
+
+
+def Bool(*args, **kwargs):
+    return Flag(*args, default=True, **kwargs)
+
+
+slot = SlotAdapter(
+    Struct("slot",
+           SBInt16("item_id"),
+           If(lambda context: context["item_id"] >= 0,
+              Embed(Struct("item_information",
+                           SBInt8("count"),
+                           SBInt16("damage"),
+                           SBInt16("nbt_len"),
+                           If(lambda context: context["nbt_len"] >= 0,
+                              MetaField("nbt", lambda ctx: ctx["nbt_len"])
+                              )
+                           )),
+              )
+           )
+)
+
+
+Metadata = namedtuple("Metadata", "type value")
+# JMT: merge metadata_types with metadata_switch
+metadata_types = ["byte", "short", "int", "float", "string", "slot", "coords"]
+
+
+# Metadata adaptor.
+class MetadataAdapter(Adapter):
+
+    def _decode(self, obj, context):
+        d = {}
+        for m in obj.data:
+            d[m.id.key] = Metadata(metadata_types[m.id.type], m.value)
+        return d
+
+    def _encode(self, obj, context):
+        c = Container(data=[], terminator=None)
+        for k, v in obj.iteritems():
+            t, value = v
+            d = Container(
+                id=Container(type=metadata_types.index(t), key=k),
+                value=value,
+                peeked=None)
+            c.data.append(d)
+        if c.data:
+            c.data[-1].peeked = 127
+        else:
+            c.data.append(Container(id=Container(first=0, second=0), value=0,
+                                    peeked=127))
+        return c
+
+# Metadata inner container.
+metadata_switch = {
+    0: UBInt8("value"),
+    1: SBInt16("value"),
+    2: SBInt32("value"),
+    3: BFloat32("value"),
+    4: AlphaString("value"),
+    5: slot,
+    6: Struct("coords",
+              SBInt32("x"),
+              SBInt32("y"),
+              SBInt32("z"),
+              ),
+}
+
+# Metadata subconstruct.
+metadata = MetadataAdapter(
+    Struct("metadata",
+           RepeatUntil(lambda obj, context: obj["peeked"] == 0x7f,
+                       Struct("data",
+                              BitStruct("id",
+                                        BitField("type", 3),
+                                        BitField("key", 5),
+                                        ),
+                              Switch("value", lambda context: context["id"]["type"],
+                                     metadata_switch),
+                              Peek(UBInt8("peeked")),
+                              ),
+                       ),
+           Const(UBInt8("terminator"), 0x7f),
+           ),
+)
+
+# Enums.
+effecttypes = {
+    1000: 'random.click',
+    1001: 'random.click',
+    1002: 'random.bow',
+    1003: 'random.door_open or random.door_close (50/50 chance)',
+    1004: 'random.fizz',
+    1005: 'Play a music disc.',  # Data: Record ID
+    1007: 'mob.ghast.charge',
+    1008: 'mob.ghast.fireball',
+    1009: 'mob.ghast.fireball, but with a lower volume.',
+    1010: 'mob.zombie.wood',
+    1011: 'mob.zombie.metal',
+    1012: 'mob.zombie.woodbreak',
+    1013: 'mob.wither.spawn',
+    1014: 'mob.wither.shoot',
+    1015: 'mob.bat.takeoff',
+    1016: 'mob.zombie.infect',
+    1017: 'mob.zombie.unfect',
+    1018: 'mob.enderdragon.end',
+    1020: 'random.anvil_break',
+    1021: 'random.anvil_use',
+    1022: 'random.anvil_land',
+    2000: 'Spawns 10 smoke particles, e.g. from a fire.',  # Data: smoke direction
+    2001: 'Block break.',  # Data: Block ID
+    2002: 'Splash potion. Particle effect + glass break sound.',  # Data: Potion ID
+    2003: 'Eye of ender entity break animation - particles and sound',
+    2004: 'Mob spawn particle effect: smoke + flames',
+    2005: 'Spawn "happy villager" effect (hearts).',
+}
+
+smokedirectiontypes = {
+    0: 'Southeast',
+    1: 'South',
+    2: 'Southwest',
+    3: 'East',
+    4: 'Up',
+    5: 'West',
+    6: 'Northeast',
+    7: 'North',
+    8: 'Northwest',
+}
+
+# Old enums.
+faces = {
+    'noop': -1,
+    '-y': 0,
+    '+y': 1,
+    '-z': 2,
+    '+z': 3,
+    '-x': 4,
+    '+x': 5,
+}
+
+face_enum = Enum(SBInt8('face'), **faces)
+
+dimensions = {
+    'earth': 0,
+    'sky': 1,
+    'nether': -1,
+}
+
+dimension_enum = Enum(SBInt8('dimension'), **dimensions)
+
+difficulties = {
+    'peaceful': 0,
+    'easy': 1,
+    'normal': 2,
+    'hard': 3,
+}
+
+difficulty_enum = Enum(UBInt8('difficulty'), **difficulties)
+
+modes = {
+    'survival': 0,
+    'creative': 1,
+    'adventure': 2,
+}
+
+mode_enum = Enum(UBInt8('mode'), **modes)
+
+# Packet-specific enums.
+handshaking_state = {
+    'status': 1,
+    'login': 2,
+}
+
+handshaking_state_enum = Enum(VarInt('next_state'), **handshaking_state)
+
+mouse = {
+    'left': 0,
+    'right': 1,
+}
+
+mouse_enum = Enum(UBInt8('mouse'), **mouse)
+
+player_digging_status = {
+    'started': 0,
+    'cancelled': 1,
+    'stopped': 2,
+    'dropped_stack': 3,  # New!
+    'dropped': 4,
+    'shooting': 5,  # Also eating
+}
+
+player_digging_status_enum = Enum(UBInt8('state'), **player_digging_status)
+
+server_animation = {
+    'noop': 0,
+    'arm': 1,
+    'hit': 2,
+    'leave_bed': 3,
+    # XXX FIX ME
+    'eat': 5,
+    'critical': 6,  # New!
+    'magic_critical': 7,  # New!
+    'unknown': 102,
+    'crouch': 104,
+    'uncrouch': 105,
+}
+
+server_animation_enum = Enum(UBInt8('animation'), **server_animation)
+
+object_type = {
+    'boat': 1,
+    'item_stack': 2,
+    'minecart': 10,
+    'storage_cart': 11,
+    'powered_cart': 12,
+    'tnt': 50,
+    'ender_crystal': 51,
+    'arrow': 60,
+    'snowball': 61,
+    'egg': 62,
+    'fireball': 63,  # New!
+    'firecharge': 64,  # New!
+    'thrown_enderpearl': 65,
+    'wither_skull': 66,
+    'falling_block': 70,
+    'frames': 71,
+    'ender_eye': 72,
+    'thrown_potion': 73,
+    'dragon_egg': 74,
+    'thrown_xp_bottle': 75,
+    'fishing_float': 90,
+}
+
+object_type_enum = Enum(UBInt8('type'), **object_type)
+
+mob_type = {
+    "Creeper": 50,
+    "Skeleton": 51,
+    "Spider": 52,
+    "GiantZombie": 53,
+    "Zombie": 54,
+    "Slime": 55,
+    "Ghast": 56,
+    "ZombiePig": 57,
+    "Enderman": 58,
+    "CaveSpider": 59,
+    "Silverfish": 60,
+    "Blaze": 61,
+    "MagmaCube": 62,
+    "EnderDragon": 63,
+    "Wither": 64,
+    "Bat": 65,
+    "Witch": 66,
+    "Pig": 90,
+    "Sheep": 91,
+    "Cow": 92,
+    "Chicken": 93,
+    "Squid": 94,
+    "Wolf": 95,
+    "Mooshroom": 96,
+    "Snowman": 97,
+    "Ocelot": 98,
+    "IronGolem": 99,
+    "Horse": 100,
+    "Villager": 120
+}
+
+mob_type_enum = Enum(UBInt8('type'), **mob_type)
+
+entity_action = {
+    'crouch': 1,
+    'uncrouch': 2,
+    'leave_bed': 3,
+    'start_sprint': 4,
+    'stop_sprint': 5,
+}
+
+entity_action_enum = Enum(UBInt8('action'), **entity_action)
+
+entity_status = {
+    'damaged': 2,
+    'killed': 3,
+    'taming': 6,
+    'tamed': 7,
+    'drying': 8,
+    'eating': 9,
+    'sheep_eat': 10,
+    'golem_rose': 11,
+    'heart_particle': 12,
+    'angry_particle': 13,
+    'happy_particle': 14,
+    'magic_particle': 15,
+    'shaking': 16,
+    'firework': 17,
+}
+
+entity_status_enum = Enum(UBInt8('status'), **entity_status)
+
+client_animation = {
+    'arm': 0,
+    'hit': 1,
+    'leave_bed': 2,
+    'eat': 3,
+    'critical': 4,  # New!
+    'magic_critical': 5,  # New!
+    'unknown': 102,
+    'crouch': 104,
+    'uncrouch': 105,
+}
+
+client_animation_enum = Enum(UBInt8('animation'), **client_animation)
+
+client_status = {
+    'respawn': 0,
+    'stats': 1,
+    'open_inventory_achievement': 2,
+}
+
+client_status_enum = Enum(UBInt8('status'), **client_status)
+
+game_state = {
+    'bad_bed': 0,
+    'stop_rain': 1,
+    'start_rain': 2,
+    'mode_change': 3,
+    'run_credits': 4,
+    'demo_messages': 5,  # New!
+    'arrow_hits_player': 6,  # New!
+    'fade_value': 7,  # New!
+    'fade_time': 8,  # New!
+}
+
+game_state_enum = Enum(UBInt8('reason'), **game_state)
+
+# Commonly-occurring packet elements.
+grounded = Struct("grounded",
+                  UBInt8("grounded"),  # Bool('on_ground')
+                  )
+position = Struct("position",
+                  BFloat64("x"),
+                  BFloat64("y"),
+                  BFloat64("stance"),
+                  BFloat64("z")
+                  )
+orientation = Struct("orientation",
+                     BFloat32("rotation"),  # BFloat32('yaw')
+                     BFloat32("pitch"),
+                     )
+# JMT: try adding these
+block_target = Struct('block_target',
+                      SBInt32('x'),
+                      UBInt8('y'),
+                      SBInt32('z'),
+                      )
+
+# Packets.
+serverbound = {
+    'handshaking': {
+        0x00: Struct('handshaking',
+                     VarInt('protocol'),
+                     AlphaString('name'),
+                     UBInt16('port'),
+                     # VarInt('next_state'),
+                     handshaking_state_enum,
+                     ),
+    },
+    'login': {
+        0x00: Struct('login_start',
+                     AlphaString('username'),
+                     ),
+        0x01: Struct('encryption_response',
+                     SBInt16('secret_len'),
+                     MetaField('secret', lambda ctx: ctx['secret_len']),
+                     SBInt16('token_len'),
+                     MetaField('token', lambda ctx: ctx['token_len']),
+                     ),
+    },
+    'status': {
+        0x00: Struct('status_request',
+                     UBInt8('unknown'),
+                     ),
+        0x01: Struct('status_ping',
+                     UBInt64('time'),
+                     ),
+    },
+    'play': {
+        0x00: Struct('keepalive',
+                     SBInt32('keepalive_id'),
+                     ),
+        0x01: Struct('chat',
+                     AlphaString('json'),
+                     ),
+        0x02: Struct('use_entity',
+                     UBInt32('target'),  # eid is apparently self
+                     mouse_enum,
+                     ),
+        0x03: Struct('player',
+                     grounded,
+                     ),
+        0x04: Struct('player_position',
+                     position,
+                     grounded,
+                     ),
+        0x05: Struct('player_look',
+                     orientation,
+                     grounded,
+                     ),
+        0x06: Struct('player_position_and_look',
+                     position,
+                     orientation,
+                     grounded,
+                     ),
+        0x07: Struct('player_digging',
+                     player_digging_status_enum,
+                     SBInt32('x'),
+                     UBInt8('y'),
+                     SBInt32('z'),
+                     face_enum,
+                     ),
+        0x08: Struct('player_block_placement',
+                     SBInt32('x'),
+                     UBInt8('y'),
+                     SBInt32('z'),
+                     face_enum,  # direction
+                     slot,
+                     UBInt8('cursorx'),
+                     UBInt8('cursory'),
+                     UBInt8('cursorz'),
+                     ),
+        0x09: Struct('held_item_change',
+                     UBInt16('slot'),
+                     ),
+        0x0a: Struct('animation',
+                     UBInt32('eid'),
+                     server_animation_enum,
+                     ),
+        0x0b: Struct('entity_action',
+                     UBInt32('eid'),
+                     entity_action_enum,
+                     UBInt32('unknown'),  # jump_boost
+                     ),
+        0x0c: Struct('steer_vehicle',
+                     BFloat32('first'),  # sideways
+                     BFloat32('second'),  # forward
+                     Bool('third'),  # jump
+                     Bool('fourth'),  # mount
+                     ),
+        0x0d: Struct('close_window',
+                     UBInt8('wid'),
+                     ),
+        0x0e: Struct('click_window',
+                     UBInt8('wid'),
+                     SBInt16('slot_no'),
+                     UBInt8('button'),
+                     UBInt16('token'),
+                     UBInt8('mode'),
+                     slot,
+                     ),
+        0x0f: Struct('confirm_transaction',
+                     UBInt8('wid'),
+                     UBInt16('token'),
+                     Bool('acknowledged'),
+                     ),
+        0x10: Struct('creative_inventory_action',
+                     UBInt16('slot_no'),
+                     slot,
+                     ),
+        0x11: Struct('enchant_item',
+                     UBInt8('wid'),
+                     UBInt8('enchantment'),
+                     ),
+        0x12: Struct('update_sign',
+                     SBInt32('x'),
+                     UBInt16('y'),  # JMT: yet another y sigh
+                     SBInt32('z'),
+                     AlphaString('line1'),
+                     AlphaString('line2'),
+                     AlphaString('line3'),
+                     AlphaString('line4'),
+                     ),
+        0x13: Struct('player_abilities',
+                     UBInt8('flags'),
+                     BFloat32('fly_speed'),
+                     BFloat32('walk_speed'),
+                     ),
+        0x14: Struct('tab',
+                     AlphaString('autocomplete'),  # text
+                     ),
+        0x15: Struct('client_settings',
+                     AlphaString('locale'),
+                     UBInt8('distance'),
+                     UBInt8('chat'),
+                     Bool('unused'),
+                     difficulty_enum,
+                     Bool('cape'),
+                     ),
+        0x16: Struct('client_status',
+                     client_status_enum,
+                     ),
+        0x17: Struct('plugin_message',
+                     AlphaString('channel'),
+                     PascalString('data', length_field=UBInt16('length')),
+                     ),
+    }
+}
+
+serverbound_by_name = dict((k, dict((iv.name, ik) for (ik, iv) in serverbound[k].iteritems())) for (k, v) in serverbound.iteritems())
+
+clientbound = {
+    'handshaking': {
+        0x00: Struct('handshaking',
+                     AlphaString('json'),
+                     ),
+        0x40: Struct('disconnect',
+                     AlphaString('reason'),
+                     ),
+    },
+    'status': {
+        0x00: Struct('status_response',
+                     AlphaString('json'),
+                     ),
+        0x01: Struct('status_ping',
+                     UBInt64('time'),
+                     ),
+        0x40: Struct('disconnect',
+                     AlphaString('reason'),
+                     ),
+    },
+    'login': {
+        0x01: Struct('encryption_request',
+                     AlphaString('server_id'),
+                     SBInt16('key_len'),
+                     MetaField('key', lambda ctx: ctx['key_len']),
+                     SBInt16('token_len'),
+                     MetaField('token', lambda ctx: ctx['token_len']),
+                     ),
+        0x02: Struct('login_success',
+                     AlphaString('uuid'),
+                     AlphaString('username'),
+                     ),
+        0x40: Struct('disconnect',
+                     AlphaString('reason'),
+                     ),
+    },
+    'play': {
+        0x00: Struct('keepalive',
+                     SBInt32('keepalive_id'),
+                     ),
+        0x01: Struct('join',
+                     SBInt32('eid'),
+                     UBInt8('gamemode'),
+                     dimension_enum,
+                     difficulty_enum,
+                     UBInt8('max_players'),
+                     AlphaString('level_type'),
+                     ),
+        0x02: Struct('chat',
+                     AlphaString('json'),
+                     ),
+        0x03: Struct('time',
+                     UBInt64('age_of_world'),
+                     UBInt64('time_of_day'),
+                     ),
+        0x04: Struct('entity_equipment',
+                     SBInt32('eid'),
+                     SBInt16('slot_no'),
+                     slot,
+                     ),
+        0x05: Struct('spawn_position',
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     ),
+        0x06: Struct('update_health',
+                     BFloat32('health'),
+                     SBInt16('food'),
+                     BFloat32('food_saturation'),
+                     ),
+        0x07: Struct('respawn',
+                     dimension_enum,
+                     difficulty_enum,
+                     UBInt8('gamemode'),
+                     AlphaString('level_type'),
+                     ),
+        0x08: Struct('player_position_and_look',
+                     BFloat64("x"),
+                     BFloat64("y"),
+                     BFloat64("z"),
+                     orientation,
+                     grounded,
+                     ),
+        0x09: Struct('held_item',
+                     UBInt8('slot'),
+                     ),
+        0x0a: Struct('use_bed',
+                     SBInt32('eid'),
+                     SBInt32('x'),
+                     UBInt8('y'),
+                     SBInt32('z'),
+                     ),
+        0x0b: Struct('animation',
+                     VarInt('eid'),
+                     client_animation_enum,
+                     ),
+        0x0c: Struct('spawn_player',
+                     VarInt('eid'),
+                     AlphaString('uuid'),
+                     AlphaString('name'),
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     UBInt8('yaw'),
+                     UBInt8('pitch'),
+                     SBInt16('current_item'),
+                     metadata,
+                     ),
+        0x0d: Struct('collect_item',
+                     SBInt32('collected_eid'),
+                     SBInt32('collector_eid'),
+                     ),
+        0x0e: Struct('spawn_object',
+                     VarInt('eid'),
+                     object_type_enum,
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     UBInt8('pitch'),
+                     UBInt8('yaw'),
+                     SBInt32('data'),
+                     If(lambda ctx: ctx['data'] != 0,
+                        Struct('speed',
+                               SBInt16('x'),
+                               SBInt16('y'),
+                               SBInt16('z'),
+                               ),
+                        ),
+                     ),
+        0x0f: Struct('spawn_mob',
+                     VarInt('eid'),
+                     mob_type_enum,
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     UBInt8('pitch'),
+                     UBInt8('head_pitch'),
+                     UBInt8('yaw'),
+                     SBInt16('vx'),
+                     SBInt16('vy'),
+                     SBInt16('vz'),
+                     metadata,
+                     ),
+        0x10: Struct('spawn_painting',
+                     VarInt('eid'),
+                     AlphaString('title'),  # max len 13 ?
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     face_enum,  # direction
+                     ),
+        0x11: Struct('spawn_experience_orb',
+                     VarInt('eid'),
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     SBInt16('count'),
+                     ),
+        0x12: Struct('entity_velocity',
+                     SBInt32('eid'),
+                     SBInt16('vx'),
+                     SBInt16('vy'),
+                     SBInt16('vz'),
+                     ),
+        0x13: Struct('destroy_entities',
+                     SBInt8('count'),
+                     MetaArray(lambda ctx: ctx['count'], SBInt32('eid')),
+                     ),
+        0x14: Struct('create_entity',
+                     SBInt32('eid'),
+                     ),
+        0x15: Struct('entity_relative_move',
+                     SBInt32('eid'),
+                     UBInt8('dx'),
+                     UBInt8('dy'),
+                     UBInt8('dz'),
+                     ),
+        0x16: Struct('entity_look',
+                     SBInt32('eid'),
+                     UBInt8('yaw'),
+                     UBInt8('pitch'),
+                     ),
+        0x17: Struct('entity_look_and_relative_move',
+                     SBInt32('eid'),
+                     UBInt8('dx'),
+                     UBInt8('dy'),
+                     UBInt8('dz'),
+                     UBInt8('yaw'),
+                     UBInt8('pitch'),
+                     ),
+        0x18: Struct('entity_teleport',
+                     SBInt32('eid'),
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     UBInt8('yaw'),
+                     UBInt8('pitch'),
+                     ),
+        0x19: Struct('entity_head_look',
+                     SBInt32('eid'),
+                     UBInt8('head_yaw'),
+                     ),
+        0x1a: Struct('entity_status',
+                     SBInt32('eid'),
+                     entity_status_enum,
+                     ),
+        0x1b: Struct('attach_entity',
+                     SBInt32('eid'),
+                     SBInt32('vehicle'),
+                     Bool('leash'),
+                     ),
+        0x1c: Struct('entity_metadata',
+                     SBInt32('eid'),
+                     metadata,
+                     ),
+        0x1d: Struct('entity_effect',
+                     SBInt32('eid'),
+                     UBInt8('effect'),
+                     UBInt8('amplifier'),
+                     SBInt16('duration'),
+                     ),
+        0x1e: Struct('entity_remove_effect',
+                     SBInt32('eid'),
+                     UBInt8('effect'),
+                     ),
+        0x1f: Struct('set_experience',
+                     BFloat32('bar'),
+                     SBInt16('level'),
+                     SBInt16('total'),
+                     ),
+        0x20: Struct('entity_properties',
+                     SBInt32('eid'),
+                     SBInt32('count'),
+                     MetaArray(lambda ctx: ctx['count'],
+                               Struct('property',
+                                      AlphaString('key'),
+                                      BFloat64('value'),
+                                      SBInt16('list_length'),
+                                      MetaArray(lambda ctx: ctx['list_length'],
+                                                Struct('modifier',
+                                                       UBInt64('uuid_1'),
+                                                       UBInt64('uuid_2'),
+                                                       BFloat64('amount'),
+                                                       UBInt8('operation'),
+                                                       ),
+                                                ),
+                                      ),
+                               ),
+                     ),
+        0x21: Struct('chunk_data',
+                     SBInt32('chunk_x'),
+                     SBInt32('chunk_z'),
+                     Bool('continuous'),
+                     UBInt16('primary_bitmap'),
+                     UBInt16('add_bitmap'),
+                     SBInt32('compressed_size'),
+                     MetaField('compressed_data',
+                               lambda ctx: ctx['compressed_size']
+                               ),
+                     ),
+        0x22: Struct('multi_block_change',
+                     SBInt32('chunk_x'),
+                     SBInt32('chunk_z'),
+                     SBInt16('count'),
+                     SBInt32('data_size'),
+                     MetaField('data',
+                               lambda ctx: ctx['data_size']
+                               ),
+                     ),
+        0x23: Struct('block_change',
+                     SBInt32('x'),
+                     UBInt8('y'),
+                     SBInt32('z'),
+                     VarInt('block_type'),
+                     UBInt8('block_data'),
+                     ),
+        0x24: Struct('block_action',
+                     SBInt32('x'),
+                     SBInt16('y'),
+                     SBInt32('z'),
+                     UBInt8('byte_1'),
+                     UBInt8('byte_2'),
+                     VarInt('block_type'),
+                     ),
+        0x25: Struct('block_break_animation',
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     UBInt8('destroy_stage'),
+                     ),
+        0x26: Struct('map_chunk_bulk',
+                     SBInt16('count'),
+                     SBInt32('length'),
+                     Bool('sky_light_sent'),
+                     MetaField('data',
+                               lambda ctx: ctx['length']),
+                     MetaArray(lambda ctx: ctx['count'],
+                               Struct('metadata',
+                                      SBInt32('chunk_x'),
+                                      SBInt32('chunk_z'),
+                                      SBInt16('primary_bitmap'),
+                                      SBInt16('add_bitmap'),
+                                      ),
+                               ),
+                     ),
+        0x27: Struct('explosion',
+                     BFloat32('x'),
+                     BFloat32('y'),
+                     BFloat32('z'),
+                     BFloat32('radius'),
+                     SBInt32('count'),
+                     MetaField('data',
+                               lambda ctx: ctx['count']*3
+                               ),
+                     BFloat32('player_motion_x'),
+                     BFloat32('player_motion_y'),
+                     BFloat32('player_motion_z'),
+                     ),
+        0x28: Struct('effect',
+                     SBInt32('eid'),
+                     SBInt32('x'),
+                     UBInt8('y'),
+                     SBInt32('z'),
+                     SBInt32('data'),
+                     Bool('disable_relative_volume'),
+                     ),
+        0x29: Struct('sound_effect',
+                     AlphaString('sound_name'),
+                     SBInt32('effect_x'),
+                     SBInt32('effect_y'),
+                     SBInt32('effect_z'),
+                     BFloat32('volume'),
+                     UBInt8('pitch'),
+                     ),
+        0x2a: Struct('particle',
+                     AlphaString('sound_name'),
+                     BFloat32('x'),
+                     BFloat32('y'),
+                     BFloat32('z'),
+                     BFloat32('offset_x'),
+                     BFloat32('offset_y'),
+                     BFloat32('offset_z'),
+                     BFloat32('data'),
+                     SBInt32('number'),
+                     ),
+        0x2b: Struct('change_game_state',
+                     game_state_enum,
+                     BFloat32('value'),
+                     ),
+        0x2c: Struct('spawn_global_entity',
+                     VarInt('eid'),
+                     UBInt8('type'),
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     ),
+        0x2d: Struct('open_window',
+                     UBInt8('wid'),
+                     UBInt8('type'),
+                     AlphaString('title'),
+                     UBInt8('slots'),
+                     Bool('use_provided_title'),
+                     If(lambda ctx: ctx['type'] == 11,
+                        SBInt32('eid'),
+                        ),
+                     ),
+        0x2e: Struct('close_window',
+                     UBInt8('wid'),
+                     ),
+        0x2f: Struct('set_slot',
+                     UBInt8('wid'),
+                     SBInt16('slot_no'),
+                     slot,
+                     ),
+        0x30: Struct('window_items',
+                     UBInt8('wid'),
+                     UBInt16('count'),
+                     MetaArray(lambda ctx: ctx['count'], slot),
+                     ),
+        0x31: Struct('window_property',
+                     UBInt8('wid'),
+                     SBInt8('property'),
+                     SBInt8('value'),
+                     ),
+        0x32: Struct('confirm_transaction',
+                     UBInt8('wid'),
+                     UBInt16('token'),  # action_number
+                     Bool('acknowledged'),  # accepted
+                     ),
+        0x33: Struct('update_sign',
+                     SBInt32('x'),
+                     SBInt16('y'),
+                     SBInt32('z'),
+                     AlphaString('line_1'),
+                     AlphaString('line_2'),
+                     AlphaString('line_3'),
+                     AlphaString('line_4'),
+                     ),
+        0x34: Struct('maps',
+                     VarInt('damage'),
+                     SBInt16('length'),
+                     MetaField('data', lambda ctx: ctx['length']),
+                     ),
+        0x35: Struct('update_block_entity',
+                     SBInt32('x'),
+                     SBInt16('y'),
+                     SBInt32('z'),
+                     UBInt8('action'),
+                     SBInt16('nbt_len'),
+                     If(lambda ctx: ctx['nbt_len'] > 0,
+                        MetaField('nbt', lambda ctx: ctx['nbt_len'])
+                        ),
+                     ),
+        0x36: Struct('sign_editor_open',
+                     SBInt32('x'),
+                     SBInt32('y'),
+                     SBInt32('z'),
+                     ),
+        0x37: Struct('statistics',
+                     VarInt('count'),
+                     MetaArray(lambda ctx: ctx['count'],
+                               Struct('statistic',
+                                      AlphaString('key'),
+                                      VarInt('value'),
+                                      )
+                               ),
+                     ),
+        0x38: Struct('player_list_item',
+                     AlphaString('player_name'),
+                     UBInt8('online'),
+                     UBInt16('ping'),
+                     ),
+        0x39: Struct('player_abilities',
+                     UBInt8('flags'),
+                     BFloat32('fly_speed'),
+                     BFloat32('walk_speed'),
+                     ),
+        0x3a: Struct('tab_complete',
+                     VarInt('count'),
+                     # JMT: doubtful
+                     AlphaString('match'),
+                     ),
+        0x3b: Struct('scoreboard_objective',
+                     AlphaString('name'),
+                     AlphaString('value'),
+                     UBInt8('create'),
+                     ),
+        0x3c: Struct('update_score',
+                     AlphaString('item_name'),
+                     UBInt8('update'),
+                     AlphaString('score_name'),
+                     SBInt32('value'),
+                     ),
+        0x3d: Struct('display_scoreboard',
+                     UBInt8('position'),
+                     AlphaString('score_name'),
+                     ),
+        0x3e: Struct('teams',
+                     AlphaString('team_name'),
+                     UBInt8('mode'),
+                     # JMT: Switch!
+                     AlphaString('team_display_name'),
+                     AlphaString('team_prefix'),
+                     AlphaString('team_suffix'),
+                     UBInt8('friendly_fire'),
+                     SBInt16('count'),
+                     MetaArray(lambda ctx: ctx['count'],
+                               AlphaString('player')
+                               ),
+                     ),
+        0x3f: Struct('plugin_message',
+                     AlphaString('channel'),
+                     PascalString('data', length_field=UBInt16('length')),
+                     ),
+        0x40: Struct('disconnect',
+                     AlphaString('reason'),
+                     ),
+    }
+}
+
+clientbound_by_name = dict((k, dict((iv.name, ik) for (ik, iv) in clientbound[k].iteritems())) for (k, v) in clientbound.iteritems())
+
 
 class BetaServerProtocol(object, Protocol, TimeoutMixin):
     """
@@ -53,18 +1073,22 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     packet = None
 
     state = STATE_UNAUTHENTICATED
+    mode = 'handshaking'
 
     buf = ""
     parser = None
     handler = None
 
     player = None
+    uuid = None
     username = None
     settings = Settings()
     motd = "Bravo Generic Beta Server"
 
     _health = 20
     _latency = 0
+
+    cryptAES = None
 
     def __init__(self):
         self.chunks = dict()
@@ -73,319 +1097,40 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         self.location = Location()
 
-        self.handlers = {
-            0x00: self.ping,
-            0x02: self.handshake,
-            0x03: self.chat,
-            0x07: self.use,
-            0x09: self.respawn,
-            0x0a: self.grounded,
-            0x0b: self.position,
-            0x0c: self.orientation,
-            0x0d: self.location_packet,
-            0x0e: self.digging,
-            0x0f: self.build,
-            0x10: self.equip,
-            0x12: self.animate,
-            0x13: self.action,
-            0x15: self.pickup,
-            0x65: self.wclose,
-            0x66: self.waction,
-            0x6a: self.wacknowledge,
-            0x6b: self.wcreative,
-            0x82: self.sign,
-            0xca: self.client_settings,
-            0xcb: self.complete,
-            0xcc: self.settings_packet,
-            0xfe: self.poll,
-            0xff: self.quit,
-        }
-
         self._ping_loop = LoopingCall(self.update_ping)
 
         self.setTimeout(30)
-
-    # Low-level packet handlers
-    # Try not to hook these if possible, since they offer no convenient
-    # abstractions or protections.
-
-    def ping(self, container):
-        """
-        Hook for ping packets.
-
-        By default, this hook will examine the timestamps on incoming pings,
-        and use them to estimate the current latency of the connected client.
-        """
-
-        now = timestamp_from_clock(reactor)
-        then = container.pid
-
-        self.latency = now - then
-
-    def handshake(self, container):
-        """
-        Hook for handshake packets.
-
-        Override this to customize how logins are handled. By default, this
-        method will only confirm that the negotiated wire protocol is the
-        correct version, copy data out of the packet and onto the protocol,
-        and then run the ``authenticated`` callback.
-
-        This method will call the ``pre_handshake`` method hook prior to
-        logging in the client.
-        """
-
-        self.username = container.username
-
-        if container.protocol < SUPPORTED_PROTOCOL:
-            # Kick old clients.
-            self.error("This server doesn't support your ancient client.")
-            return
-        elif container.protocol > SUPPORTED_PROTOCOL:
-            # Kick new clients.
-            self.error("This server doesn't support your newfangled client.")
-            return
-
-        log.msg("Handshaking with client, protocol version %d" %
-                container.protocol)
-
-        if not self.pre_handshake():
-            log.msg("Pre-handshake hook failed; kicking client")
-            self.error("You failed the pre-handshake hook.")
-            return
-
-        players = min(self.factory.limitConnections, 20)
-
-        self.write_packet("login", eid=self.eid, leveltype="default",
-                          mode=self.factory.mode,
-                          dimension=self.factory.world.dimension,
-                          difficulty="peaceful", unused=0, maxplayers=players)
-
-        self.authenticated()
-
-    def pre_handshake(self):
-        """
-        Whether this client should be logged in.
-        """
-
-        return True
-
-    def chat(self, container):
-        """
-        Hook for chat packets.
-        """
-
-    def use(self, container):
-        """
-        Hook for use packets.
-        """
-
-    def respawn(self, container):
-        """
-        Hook for respawn packets.
-        """
-
-    def grounded(self, container):
-        """
-        Hook for grounded packets.
-        """
-
-        self.location.grounded = bool(container.grounded)
-
-    def position(self, container):
-        """
-        Hook for position packets.
-        """
-
-        if self.state != STATE_LOCATED:
-            log.msg("Ignoring unlocated position!")
-            return
-
-        self.grounded(container.grounded)
-
-        old_position = self.location.pos
-        position = Position.from_player(container.position.x,
-                container.position.y, container.position.z)
-        altered = False
-
-        dx, dy, dz = old_position - position
-        if any(abs(d) >= 64 for d in (dx, dy, dz)):
-            # Whoa, slow down there, cowboy. You're moving too fast. We're
-            # gonna ignore this position change completely, because it's
-            # either bogus or ignoring a recent teleport.
-            altered = True
-        else:
-            self.location.pos = position
-            self.location.stance = container.position.stance
-
-        # Santitize location. This handles safety boundaries, illegal stance,
-        # etc.
-        altered = self.location.clamp() or altered
-
-        # If, for any reason, our opinion on where the client should be
-        # located is different than theirs, force them to conform to our point
-        # of view.
-        if altered:
-            log.msg("Not updating bogus position!")
-            self.update_location()
-
-        # If our position actually changed, fire the position change hook.
-        if old_position != position:
-            self.position_changed()
-
-    def orientation(self, container):
-        """
-        Hook for orientation packets.
-        """
-
-        self.grounded(container.grounded)
-
-        old_orientation = self.location.ori
-        orientation = Orientation.from_degs(container.orientation.rotation,
-                container.orientation.pitch)
-        self.location.ori = orientation
-
-        if old_orientation != orientation:
-            self.orientation_changed()
-
-    def location_packet(self, container):
-        """
-        Hook for location packets.
-        """
-
-        self.position(container)
-        self.orientation(container)
-
-    def digging(self, container):
-        """
-        Hook for digging packets.
-        """
-
-    def build(self, container):
-        """
-        Hook for build packets.
-        """
-
-    def equip(self, container):
-        """
-        Hook for equip packets.
-        """
-
-    def pickup(self, container):
-        """
-        Hook for pickup packets.
-        """
-
-    def animate(self, container):
-        """
-        Hook for animate packets.
-        """
-
-    def action(self, container):
-        """
-        Hook for action packets.
-        """
-
-    def wclose(self, container):
-        """
-        Hook for wclose packets.
-        """
-
-    def waction(self, container):
-        """
-        Hook for waction packets.
-        """
-
-    def wacknowledge(self, container):
-        """
-        Hook for wacknowledge packets.
-        """
-
-    def wcreative(self, container):
-        """
-        Hook for creative inventory action packets.
-        """
-
-    def sign(self, container):
-        """
-        Hook for sign packets.
-        """
-
-    def client_settings(self, container):
-        """
-        Hook for interaction setting packets.
-        """
-
-        self.settings.update_interaction(container)
-
-    def complete(self, container):
-        """
-        Hook for tab-completion packets.
-        """
-
-    def settings_packet(self, container):
-        """
-        Hook for presentation setting packets.
-        """
-
-        self.settings.update_presentation(container)
-
-    def poll(self, container):
-        """
-        Hook for poll packets.
-
-        By default, queries the parent factory for some data, and replays it
-        in a specific format to the requester. The connection is then closed
-        at both ends. This functionality is used by Beta 1.8 clients to poll
-        servers for status.
-        """
-
-        log.msg("Poll data: %r" % container.data)
-
-        players = unicode(len(self.factory.protocols))
-        max_players = unicode(self.factory.limitConnections or 1000000)
-
-        data = [
-            u"§1",
-            unicode(SUPPORTED_PROTOCOL),
-            u"Bravo %s" % version,
-            self.motd,
-            players,
-            max_players,
-        ]
-
-        response = u"\u0000".join(data)
-        self.error(response)
-
-    def quit(self, container):
-        """
-        Hook for quit packets.
-
-        By default, merely logs the quit message and drops the connection.
-
-        Even if the connection is not dropped, it will be lost anyway since
-        the client will close the connection. It's better to explicitly let it
-        go here than to have zombie protocols.
-        """
-
-        log.msg("Client is quitting: %s" % container.message)
-        self.transport.loseConnection()
 
     # Twisted-level data handlers and methods
     # Please don't override these needlessly, as they are pretty solid and
     # shouldn't need to be touched.
 
     def dataReceived(self, data):
-        self.buf += data
-
         packets, self.buf = parse_packets(self.buf)
 
         if packets:
             self.resetTimeout()
 
         for header, payload in packets:
-            if header in self.handlers:
-                d = maybeDeferred(self.handlers[header], payload)
+            if header in serverbound[self.mode]:  # replace with try/except ?
+                struct = serverbound[self.mode][header]
+                name = 'handle_%s' % struct.name
+                try:
+                    method = getattr(self, name)
+                except AttributeError:
+                    print "no such method %s exists!" % name
+                    return ''
+                print name, hexout(payload, 60)
+                if payload == '':
+                    packet = ''
+                else:
+                    try:
+                        packet = struct.parse(payload)
+                    except Exception as e:
+                        log.err(e)
+                        log.err(header)
+                        log.err(payload)
+                d = maybeDeferred(method, packet=packet)
 
                 @d.addErrback
                 def eb(failure):
@@ -441,20 +1186,33 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
     # be used, then *PLEASE* use it; not using it is the same as open-coding
     # whatever you're doing, and only hurts in the long run.
 
-    def write_packet(self, header, **payload):
+    def write_packet(self, packet_name, *args, **kwargs):
         """
         Send a packet to the client.
         """
+        print "woo write packet: %s" % packet_name
+        packet = make_packet(packet_name, mode=self.mode, *args, **kwargs)
+        self.write_packets(packet)
 
-        self.transport.write(make_packet(header, **payload))
+    def write_packets(self, packet):
+        """
+        Send pre-assembled packets to the client.
+        """
+        if self.cryptAES is not None:
+            print "write_packets: encrypting data"
+            packet = self.cryptAES.encrypt(packet)
+        else:
+            if self.factory.online:
+                print "write_packets: why is self.cryptAES None if online is true?"
+        self.transport.write(packet)
 
     def update_ping(self):
         """
         Send a keepalive to the client.
         """
-
-        timestamp = timestamp_from_clock(reactor)
-        self.write_packet("ping", pid=timestamp)
+        if self.mode == 'play':
+            timestamp = timestamp_from_clock(reactor)
+            self.write_packet("keepalive", keepalive_id=timestamp)
 
     def update_location(self):
         """
@@ -472,13 +1230,13 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         yaw, pitch = self.location.ori.to_fracs()
 
         # Inform everybody of our new location.
-        packet = make_packet("teleport", eid=self.player.eid, x=x, y=y, z=z,
-                yaw=yaw, pitch=pitch)
+        packet = make_packet("entity_teleport", eid=self.player.eid, x=x, y=y, z=z,
+                             yaw=yaw, pitch=pitch)
         self.factory.broadcast_for_others(packet, self)
 
         # Inform ourselves of our new location.
         packet = self.location.save_to_packet()
-        self.transport.write(packet)
+        self.write_packets(packet)
 
     def ascend(self, count):
         """
@@ -534,7 +1292,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
 
         log.msg("Error: %r" % message)
-        self.transport.write(make_error_packet(message))
+        self.write_packet('disconnect', reason=message, )
         self.transport.loseConnection()
 
     def play_notes(self, notes):
@@ -571,7 +1329,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         for instrument, pitch in notes:
             self.write_packet("note", x=x, y=y, z=z, pitch=pitch,
-                    instrument=instrument)
+                              instrument=instrument)
 
         self.write_packet("block", x=x, y=y, z=z, type=block, meta=meta)
 
@@ -581,7 +1339,7 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         """
 
         data = json.dumps({"text": message})
-        self.write_packet("chat", message=data)
+        self.write_packet("chat", json=data)
 
     # Automatic properties. Assigning to them causes the client to be notified
     # of changes.
@@ -596,7 +1354,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
             raise BetaClientError("Invalid health value %d" % value)
 
         if self._health != value:
-            self.write_packet("health", hp=value, fp=0, saturation=0)
+            # JMT: the test fails without this added line...
+            self.mode = 'play'
+            self.write_packet('update_health', health=value, food=0, food_saturation=0)
             self._health = value
 
     @property
@@ -611,8 +1371,8 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         # Check to see if this is a new value, and if so, alert everybody.
         if self._latency != value:
-            packet = make_packet("players", name=self.username, online=True,
-                ping=value)
+            packet = make_packet("player_list_item", player_name=self.username, online=True,
+                                 ping=value)
             self.factory.broadcast(packet)
             self._latency = value
 
@@ -653,10 +1413,10 @@ class BetaProxyProtocol(BetaServerProtocol):
         self.username = container.username
 
         self.write_packet("login", protocol=0, username="", seed=0,
-            dimension="earth")
+                          dimension="earth")
 
         url = urlunparse(("http", self.gateway, "/node/0/0/", None, None,
-            None))
+                          None))
         d = getPage(url)
         d.addCallback(self.start_proxy)
 
@@ -714,7 +1474,51 @@ class BravoProtocol(BetaServerProtocol):
 
         # Retrieve the MOTD. Only needs to be done once.
         self.motd = self.config.getdefault(self.config_name, "motd",
-            "BravoServer")
+                                           "BravoServer")
+
+    def dataReceived(self, data):
+        if self.cryptAES is not None:
+            print "dataReceived: decrypting data"
+            data = self.cryptAES.decrypt(data)
+        else:
+            if self.factory.online:
+                print "dataReceived: why is self.cryptAES None if online is true?"
+        self.buf += data
+
+        packets, self.buf = parse_packets(self.buf)
+
+        if packets:
+            self.resetTimeout()
+
+        for header, payload in packets:
+            if header in serverbound[self.mode]:  # replace with try/except ?
+                struct = serverbound[self.mode][header]
+                name = 'handle_%s' % struct.name
+                try:
+                    method = getattr(self, name)
+                except AttributeError:
+                    print "no such method %s exists!" % name
+                    return ''
+                print name, hexout(payload, 60)
+                if payload == '':
+                    packet = ''
+                else:
+                    try:
+                        packet = struct.parse(payload)
+                    except Exception as e:
+                        log.err(e)
+                        log.err(header)
+                        log.err(payload)
+                d = maybeDeferred(method, packet=packet)
+
+                @d.addErrback
+                def eb(failure):
+                    log.err("Error while handling packet 0x%.2x" % header)
+                    log.err(failure)
+                    return None
+            else:
+                log.err("Didn't handle parseable packet 0x%.2x!" % header)
+                log.err(payload)
 
     def register_hooks(self):
         log.msg("Registering client hooks...")
@@ -760,10 +1564,14 @@ class BravoProtocol(BetaServerProtocol):
     @inlineCallbacks
     def authenticated(self):
         BetaServerProtocol.authenticated(self)
-
         # Init player, and copy data into it.
         self.player = yield self.factory.world.load_player(self.username)
         self.player.eid = self.eid
+        self.player.uuid = self.uuid
+        self.write_packet('login_success', uuid=self.uuid, username=self.username)
+        self.mode = 'play'
+
+        # Set location.
         self.location = self.player.location
         # Init players' inventory window.
         self.inventory = InventoryWindow(self.player.inventory)
@@ -771,14 +1579,27 @@ class BravoProtocol(BetaServerProtocol):
         # *Now* we are in our factory's list of protocols. Be aware.
         self.factory.protocols[self.username] = self
 
+        # Actually join the game.
+        self.write_packet('join', eid=self.player.eid, gamemode=0, dimension='earth', difficulty='peaceful', max_players=self.factory.limitConnections, level_type="default")
+
+        # Advertise our brand.
+        self.write_packet('plugin_message', channel='MC|Brand', data='bravo')
+
+        # Shower me with player abilities!
+        kwargs = self.settings.make_interaction_packet_fodder()
+        self.write_packet('player_abilities', **kwargs)
+
+        # What are we holding in our hands?
+        self.write_packet('held_item', slot=0)
+
         # Announce our presence.
         self.factory.chat("%s is joining the game..." % self.username)
-        packet = make_packet("players", name=self.username, online=True,
+        packet = make_packet("player_list_item", player_name=self.username, online=True,
                              ping=0)
         self.factory.broadcast(packet)
 
         # Craft our avatar and send it to already-connected other players.
-        packet = make_packet("create", eid=self.player.eid)
+        packet = make_packet("create_entity", eid=self.player.eid)
         packet += self.player.save_to_packet()
         self.factory.broadcast_for_others(packet, self)
 
@@ -790,23 +1611,22 @@ class BravoProtocol(BetaServerProtocol):
             if protocol is self:
                 continue
 
-            self.write_packet("create", eid=protocol.player.eid)
+            self.write_packet("create_entity", eid=protocol.player.eid)
             packet = protocol.player.save_to_packet()
             packet += protocol.player.save_equipment_to_packet()
-            self.transport.write(packet)
+            self.write_packets(packet)
 
         # Send spawn and inventory.
         spawn = self.factory.world.level.spawn
-        packet = make_packet("spawn", x=spawn[0], y=spawn[1], z=spawn[2])
+        packet = make_packet("spawn_position", x=spawn[0], y=spawn[1], z=spawn[2])
         packet += self.inventory.save_to_packet()
-        self.transport.write(packet)
+        self.write_packets(packet)
 
-        # TODO: Send Abilities (0xca)
-        # TODO: Update Health (0x08)
+        self.health = 20
         # TODO: Update Experience (0x2b)
 
         # Send weather.
-        self.transport.write(self.factory.vane.make_packet())
+        self.write_packets(self.factory.vane.make_packet())
 
         self.send_initial_chunk_and_location()
 
@@ -816,8 +1636,8 @@ class BravoProtocol(BetaServerProtocol):
     def orientation_changed(self):
         # Bang your head!
         yaw, pitch = self.location.ori.to_fracs()
-        packet = make_packet("entity-orientation", eid=self.player.eid,
-                yaw=yaw, pitch=pitch)
+        packet = make_packet("entity_look", eid=self.player.eid,
+                             yaw=yaw, pitch=pitch)
         self.factory.broadcast_for_others(packet, self)
 
     def position_changed(self):
@@ -828,20 +1648,19 @@ class BravoProtocol(BetaServerProtocol):
             if entity.name != "Item":
                 continue
 
-            left = self.player.inventory.add(entity.item, entity.quantity)
-            if left != entity.quantity:
+            left = self.player.inventory.add(entity.item, entity.count)
+            if left != entity.count:
                 if left != 0:
                     # partial collect
-                    entity.quantity = left
+                    entity.count = left
                 else:
-                    packet = make_packet("collect", eid=entity.eid,
-                        destination=self.player.eid)
-                    packet += make_packet("destroy", count=1, eid=[entity.eid])
+                    packet = make_packet("collect_item", collected_eid=entity.eid, collector_eid=self.player.eid)
+                    packet += make_packet("destroy_entities", count=1, eid=[entity.eid])
                     self.factory.broadcast(packet)
                     self.factory.destroy_entity(entity)
 
                 packet = self.inventory.save_to_packet()
-                self.transport.write(packet)
+                self.write_packets(packet)
 
     def entities_near(self, radius):
         """
@@ -864,139 +1683,9 @@ class BravoProtocol(BetaServerProtocol):
             chunk = self.chunks[x, z]
 
             yieldables = [entity for entity in chunk.entities
-                if self.location.distance(entity.location) <= (radius * 32)]
+                          if self.location.distance(entity.location) <= (radius * 32)]
             for i in yieldables:
                 yield i
-
-    def chat(self, container):
-        # data = json.loads(container.data)
-        log.msg("Chat! %r" % container.data)
-        if container.message.startswith("/"):
-            commands = retrieve_plugins(IChatCommand, factory=self.factory)
-            # Register aliases.
-            for plugin in commands.values():
-                for alias in plugin.aliases:
-                    commands[alias] = plugin
-
-            params = container.message[1:].split(" ")
-            command = params.pop(0).lower()
-
-            if command and command in commands:
-                def cb(iterable):
-                    for line in iterable:
-                        self.send_chat(line)
-
-                def eb(error):
-                    self.send_chat("Error: %s" % error.getErrorMessage())
-
-                d = maybeDeferred(commands[command].chat_command,
-                                  self.username, params)
-                d.addCallback(cb)
-                d.addErrback(eb)
-            else:
-                self.send_chat("Unknown command: %s" % command)
-        else:
-            # Send the message up to the factory to be chatified.
-            message = "<%s> %s" % (self.username, container.message)
-            self.factory.chat(message)
-
-    def use(self, container):
-        """
-        For each entity in proximity (4 blocks), check if it is the target
-        of this packet and call all hooks that stated interested in this
-        type.
-        """
-        nearby_players = self.factory.players_near(self.player, 4)
-        for entity in chain(self.entities_near(4), nearby_players):
-            if entity.eid == container.target:
-                for hook in self.use_hooks[entity.name]:
-                    hook.use_hook(self.factory, self.player, entity,
-                        container.button == 0)
-                break
-
-    @inlineCallbacks
-    def digging(self, container):
-        if container.x == -1 and container.z == -1 and container.y == 255:
-            # Lala-land dig packet. Discard it for now.
-            return
-
-        # Player drops currently holding item/block.
-        if (container.state == "dropped" and container.face == "-y" and
-            container.x == 0 and container.y == 0 and container.z == 0):
-            i = self.player.inventory
-            holding = i.holdables[self.player.equipped]
-            if holding:
-                primary, secondary, count = holding
-                if i.consume((primary, secondary), self.player.equipped):
-                    dest = self.location.in_front_of(2)
-                    coords = dest.pos._replace(y=dest.pos.y + 1)
-                    self.factory.give(coords, (primary, secondary), 1)
-
-                    # Re-send inventory.
-                    packet = self.inventory.save_to_packet()
-                    self.transport.write(packet)
-
-                    # If no items in this slot are left, this player isn't
-                    # holding an item anymore.
-                    if i.holdables[self.player.equipped] is None:
-                        packet = make_packet("entity-equipment",
-                            eid=self.player.eid,
-                            slot=0,
-                            primary=65535,
-                            count=1,
-                            secondary=0
-                        )
-                        self.factory.broadcast_for_others(packet, self)
-            return
-
-        if container.state == "shooting":
-            self.shoot_arrow()
-            return
-
-        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
-        coords = smallx, container.y, smallz
-
-        try:
-            chunk = self.chunks[bigx, bigz]
-        except KeyError:
-            self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
-            return
-
-        block = chunk.get_block((smallx, container.y, smallz))
-
-        if container.state == "started":
-            # Run pre dig hooks
-            for hook in self.pre_dig_hooks:
-                cancel = yield maybeDeferred(hook.pre_dig_hook, self.player,
-                            (container.x, container.y, container.z), block)
-                if cancel:
-                    return
-
-            tool = self.player.inventory.holdables[self.player.equipped]
-            # Check to see whether we should break this block.
-            if self.dig_policy.is_1ko(block, tool):
-                self.run_dig_hooks(chunk, coords, blocks[block])
-            else:
-                # Set up a timer for breaking the block later.
-                dtime = time() + self.dig_policy.dig_time(block, tool)
-                self.last_dig = coords, block, dtime
-        elif container.state == "stopped":
-            # The client thinks it has broken a block. We shall see.
-            if not self.last_dig:
-                return
-
-            oldcoords, oldblock, dtime = self.last_dig
-            if oldcoords != coords or oldblock != block:
-                # Nope!
-                self.last_dig = None
-                return
-
-            dtime -= time()
-
-            # When enough time has elapsed, run the dig hooks.
-            d = deferLater(reactor, max(dtime, 0), self.run_dig_hooks, chunk,
-                           coords, blocks[block])
-            d.addCallback(lambda none: setattr(self, "last_dig", None))
 
     def run_dig_hooks(self, chunk, coords, block):
         """
@@ -1015,123 +1704,6 @@ class BravoProtocol(BetaServerProtocol):
         dl = DeferredList(l)
         dl.addCallback(lambda none: self.factory.flush_chunk(chunk))
 
-    @inlineCallbacks
-    def build(self, container):
-        """
-        Handle a build packet.
-
-        Several things must happen. First, the packet's contents need to be
-        examined to ensure that the packet is valid. A check is done to see if
-        the packet is opening a windowed object. If not, then a build is
-        run.
-        """
-
-        # Is the target within our purview? We don't do a very strict
-        # containment check, but we *do* require that the chunk be loaded.
-        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
-        try:
-            chunk = self.chunks[bigx, bigz]
-        except KeyError:
-            self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
-            return
-
-        target = blocks[chunk.get_block((smallx, container.y, smallz))]
-
-        # Attempt to open a window.
-        from bravo.policy.windows import window_for_block
-        window = window_for_block(target)
-        if window is not None:
-            # We have a window!
-            self.windows[self.wid] = window
-            identifier, title, slots = window.open()
-            self.write_packet("window-open", wid=self.wid, type=identifier,
-                              title=title, slots=slots)
-            self.wid += 1
-            return
-
-        # Try to open it first
-        for hook in self.open_hooks:
-            window = yield maybeDeferred(hook.open_hook, self, container,
-                           chunk.get_block((smallx, container.y, smallz)))
-            if window:
-                self.write_packet("window-open", wid=window.wid,
-                    type=window.identifier, title=window.title,
-                    slots=window.slots_num)
-                packet = window.save_to_packet()
-                self.transport.write(packet)
-                # window opened
-                return
-
-        # Ignore clients that think -1 is placeable.
-        if container.primary == -1:
-            return
-
-        # Special case when face is "noop": Update the status of the currently
-        # held block rather than placing a new block.
-        if container.face == "noop":
-            return
-
-        # If the target block is vanishable, then adjust our aim accordingly.
-        if target.vanishes:
-            container.face = "+y"
-            container.y -= 1
-
-        if container.primary in blocks:
-            block = blocks[container.primary]
-        elif container.primary in items:
-            block = items[container.primary]
-        else:
-            log.err("Ignoring request to place unknown block 0x%x" %
-                    container.primary)
-            return
-
-        # Run pre-build hooks. These hooks are able to interrupt the build
-        # process.
-        builddata = BuildData(block, 0x0, container.x, container.y,
-            container.z, container.face)
-
-        for hook in self.pre_build_hooks:
-            cont, builddata, cancel = yield maybeDeferred(hook.pre_build_hook,
-                self.player, builddata)
-            if cancel:
-                # Flush damaged chunks.
-                for chunk in self.chunks.itervalues():
-                    self.factory.flush_chunk(chunk)
-                return
-            if not cont:
-                break
-
-        # Run the build.
-        try:
-            yield maybeDeferred(self.run_build, builddata)
-        except BuildError:
-            return
-
-        newblock = builddata.block.slot
-        coords = adjust_coords_for_face(
-            (builddata.x, builddata.y, builddata.z), builddata.face)
-
-        # Run post-build hooks. These are merely callbacks which cannot
-        # interfere with the build process, largely because the build process
-        # already happened.
-        for hook in self.post_build_hooks:
-            yield maybeDeferred(hook.post_build_hook, self.player, coords,
-                builddata.block)
-
-        # Feed automatons.
-        for automaton in self.factory.automatons:
-            if newblock in automaton.blocks:
-                automaton.feed(coords)
-
-        # Re-send inventory.
-        # XXX this could be optimized if/when inventories track damage.
-        packet = self.inventory.save_to_packet()
-        self.transport.write(packet)
-
-        # Flush damaged chunks.
-        for chunk in self.chunks.itervalues():
-            self.factory.flush_chunk(chunk)
-
     def run_build(self, builddata):
         block, metadata, x, y, z, face = builddata
 
@@ -1145,15 +1717,15 @@ class BravoProtocol(BetaServerProtocol):
             if metadata is None:
                 # Oh, I guess we can't even place the block on this face.
                 raise BuildError("Couldn't orient block %r on face %s" %
-                    (block, face))
+                                 (block, face))
 
         # Make sure we can remove it from the inventory first.
         if not self.player.inventory.consume((block.slot, 0),
-            self.player.equipped):
+                                             self.player.equipped):
             # Okay, first one was a bust; maybe we can consume the related
             # block for dropping instead?
             if not self.player.inventory.consume(block.drop,
-                self.player.equipped):
+                                                 self.player.equipped):
                 raise BuildError("Couldn't consume %r from inventory" % block)
 
         # Offset coords according to face.
@@ -1166,136 +1738,15 @@ class BravoProtocol(BetaServerProtocol):
 
         return DeferredList(dl)
 
-    def equip(self, container):
-        self.player.equipped = container.slot
-
-        # Inform everyone about the item the player is holding now.
-        item = self.player.inventory.holdables[self.player.equipped]
-        if item is None:
-            # Empty slot. Use signed short -1.
-            primary, secondary = -1, 0
-        else:
-            primary, secondary, count = item
-
-        packet = make_packet("entity-equipment",
-            eid=self.player.eid,
-            slot=0,
-            primary=primary,
-            count=1,
-            secondary=secondary
-        )
-        self.factory.broadcast_for_others(packet, self)
-
     def pickup(self, container):
         self.factory.give((container.x, container.y, container.z),
-            (container.primary, container.secondary), container.count)
-
-    def animate(self, container):
-        # Broadcast the animation of the entity to everyone else. Only swing
-        # arm is send by notchian clients.
-        packet = make_packet("animate",
-            eid=self.player.eid,
-            animation=container.animation
-        )
-        self.factory.broadcast_for_others(packet, self)
-
-    def wclose(self, container):
-        wid = container.wid
-        if wid == 0:
-            # WID 0 is reserved for the client inventory.
-            pass
-        elif wid in self.windows:
-            w = self.windows.pop(wid)
-            w.close()
-        else:
-            self.error("WID %d doesn't exist." % wid)
-
-    def waction(self, container):
-        wid = container.wid
-        if wid in self.windows:
-            w = self.windows[wid]
-            result = w.action(container.slot, container.button,
-                              container.token, container.shift,
-                              container.primary)
-            self.write_packet("window-token", wid=wid, token=container.token,
-                              acknowledged=result)
-        else:
-            self.error("WID %d doesn't exist." % wid)
-
-    def wcreative(self, container):
-        """
-        A slot was altered in creative mode.
-        """
-
-        # XXX Sometimes the container doesn't contain all of this information.
-        # What then?
-        applied = self.inventory.creative(container.slot, container.primary,
-            container.secondary, container.count)
-        if applied:
-            # Inform other players about changes to this player's equipment.
-            equipped_slot = self.player.equipped + 36
-            if container.slot == equipped_slot:
-                packet = make_packet("entity-equipment",
-                    eid=self.player.eid,
-                    # XXX why 0? why not the actual slot?
-                    slot=0,
-                    primary=container.primary,
-                    count=1,
-                    secondary=container.secondary,
-                )
-                self.factory.broadcast_for_others(packet, self)
+                          (container.primary, container.secondary), container.count)
 
     def shoot_arrow(self):
         # TODO 1. Create arrow entity:          arrow = Arrow(self.factory, self.player)
         #      2. Register within the factory:  self.factory.register_entity(arrow)
         #      3. Run it:                       arrow.run()
         pass
-
-    def sign(self, container):
-        bigx, smallx, bigz, smallz = split_coords(container.x, container.z)
-
-        try:
-            chunk = self.chunks[bigx, bigz]
-        except KeyError:
-            self.error("Couldn't handle sign in chunk (%d, %d)!" % (bigx, bigz))
-            return
-
-        if (smallx, container.y, smallz) in chunk.tiles:
-            new = False
-            s = chunk.tiles[smallx, container.y, smallz]
-        else:
-            new = True
-            s = Sign(smallx, container.y, smallz)
-            chunk.tiles[smallx, container.y, smallz] = s
-
-        s.text1 = container.line1
-        s.text2 = container.line2
-        s.text3 = container.line3
-        s.text4 = container.line4
-
-        chunk.dirty = True
-
-        # The best part of a sign isn't making one, it's showing everybody
-        # else on the server that you did.
-        packet = make_packet("sign", container)
-        self.factory.broadcast_for_chunk(packet, bigx, bigz)
-
-        # Run sign hooks.
-        for hook in self.sign_hooks:
-            hook.sign_hook(self.factory, chunk, container.x, container.y,
-                container.z, [s.text1, s.text2, s.text3, s.text4], new)
-
-    def complete(self, container):
-        """
-        Attempt to tab-complete user names.
-        """
-
-        needle = container.autocomplete
-        usernames = self.factory.protocols.keys()
-
-        results = complete(needle, usernames)
-
-        self.write_packet("tab", autocomplete=results)
 
     def settings_packet(self, container):
         """
@@ -1319,11 +1770,11 @@ class BravoProtocol(BetaServerProtocol):
 
         eids = [e.eid for e in chunk.entities]
 
-        self.write_packet("destroy", count=len(eids), eid=eids)
+        self.write_packet("destroy_entities", count=len(eids), eid=eids)
 
         # Clear chunk data on the client.
-        self.write_packet("chunk", x=x, z=z, continuous=False, primary=0x0,
-                add=0x0, data="")
+        empty_chunk_data = ''.join([]).encode("zlib")
+        self.write_packet("chunk_data", chunk_x=x, chunk_z=z, continuous=True, primary=0x0, add=0x0, compressed_size=len(empty_chunk_data), compressed_data=empty_chunk_data)
 
     def enable_chunk(self, x, z):
         """
@@ -1356,16 +1807,17 @@ class BravoProtocol(BetaServerProtocol):
         log.msg("Sending chunk %d, %d" % (chunk.x, chunk.z))
 
         packet = chunk.save_to_packet()
-        self.transport.write(packet)
+        self.write_packets(packet)
+        log.msg("Chunk sent!")
 
         for entity in chunk.entities:
             packet = entity.save_to_packet()
-            self.transport.write(packet)
+            self.write_packets(packet)
 
         for entity in chunk.tiles.itervalues():
             if entity.name == "Sign":
                 packet = entity.save_to_packet()
-                self.transport.write(packet)
+                self.write_packets(packet)
 
     def send_initial_chunk_and_location(self):
         """
@@ -1378,7 +1830,7 @@ class BravoProtocol(BetaServerProtocol):
         # Disable located hooks. We'll re-enable them at the end.
         self.state = STATE_AUTHENTICATED
 
-        log.msg("Initial, position %d, %d, %d" % self.location.pos)
+        log.msg("Initial position %d, %d, %d" % self.location.pos)
         x, y, z = self.location.pos.to_block()
         bigx, smallx, bigz, smallz = split_coords(x, z)
 
@@ -1457,7 +1909,7 @@ class BravoProtocol(BetaServerProtocol):
 
     def update_time(self):
         time = int(self.factory.time)
-        self.write_packet("time", timestamp=time, time=time % 24000)
+        self.write_packet("time", age_of_world=time, time_of_day=time % 24000)
 
     def connectionLost(self, reason=connectionDone):
         """
@@ -1476,12 +1928,12 @@ class BravoProtocol(BetaServerProtocol):
 
         if self.player:
             self.factory.destroy_entity(self.player)
-            packet = make_packet("destroy", count=1, eid=[self.player.eid])
+            packet = make_packet("destroy_entities", count=1, eid=[self.player.eid])
             self.factory.broadcast(packet)
 
         if self.username:
-            packet = make_packet("players", name=self.username, online=False,
-                ping=0)
+            packet = make_packet("player_list_item", player_name=self.username, online=False,
+                                 ping=0)
             self.factory.broadcast(packet)
             self.factory.chat("%s has left the game." % self.username)
 
@@ -1500,3 +1952,501 @@ class BravoProtocol(BetaServerProtocol):
                     task.stop()
                 except (TaskDone, TaskFailed):
                     pass
+
+    # 'handshaking' packets first!
+    def handle_handshaking(self, packet):
+        if packet.protocol != SUPPORTED_PROTOCOL:
+            self.error("This server does not support your client's protocol.")
+            return ''
+        if packet.next_state == 'status':
+            self.mode = 'status'
+        elif packet.next_state == 'login':
+            self.mode = 'login'
+        else:
+            log.msg('unexpected next state value: %s' % packet.next_state)
+        return ''
+
+    def handle_encryption_response(self, packet):
+        fcRSA = self.factory.cryptRSA
+        check_token = fcRSA.decrypt(packet.token)
+        if check_token != self.token:
+            self.error("Token decryption failed!  %s does not match %s" % (check_token, self.token))
+            return ''
+        shared_secret = fcRSA.decrypt(packet.secret)
+        self.cryptAES = BravoCryptAES(key=shared_secret, iv=shared_secret)
+        hash = fcRSA.hash(secret=shared_secret)
+        response = urlopen('https://sessionserver.mojang.com/session/minecraft/hasJoined?username=%s&serverId=%s' % (self.username, hash))
+        id_dict = json.loads(response.read())
+        self.uuid = id_dict[u'id']
+        self.authenticated()
+
+    def handle_login_start(self, packet):
+        self.username = packet.username
+        f = self.factory
+        if f.online:
+            server_id = f.cryptRSA.server_id
+            key = f.cryptRSA.public_key_der()
+            self.token = ''.join(choice(printable) for x in range(20))
+            self.write_packet('encryption_request', server_id=server_id, key=key, key_len=len(key), token=self.token, token_len=len(self.token))
+        else:
+            self.uuid = uuid3(NAMESPACE_DNS, self.username).hex
+            self.authenticated()
+
+    def handle_status_request(self, packet):
+        # XXX make proper json here!
+        p = self.factory.protocols
+        version = '"version":{"name":"%s","protocol":%d}' % (server_protocols[SUPPORTED_PROTOCOL], SUPPORTED_PROTOCOL)
+        description = '"description":{"text":"%s"}' % self.motd
+        if len(p) > 0:
+            samples = ',"sample":[' + ''.join(['{"id":"%s","name":"%s"}' % (p[name].uuid, name) for name in p]) + ']'
+        else:
+            samples = ''
+        players = '"players":{"max":%s,"online":%s%s}' % (unicode(self.factory.limitConnections or 1000000), unicode(len(p)), samples)
+        json_string = '{%s,%s,%s}' % (description, players, version)
+        self.write_packet('status_response', json=json_string)
+
+    def handle_status_ping(self, packet):
+        self.write_packet('status_ping', time=packet.time)
+        self.mode = 'handshaking'
+
+    def handle_keepalive(self, packet):
+        now = timestamp_from_clock(reactor)
+        then = packet.keepalive_id
+        latency = now - then
+
+    def handle_chat(self, packet):
+        log.msg("Chat! %r" % packet.json)
+        data = packet.json
+        if data.startswith("/"):
+            commands = retrieve_plugins(IChatCommand, factory=self.factory)
+            # Register aliases.
+            for plugin in commands.values():
+                for alias in plugin.aliases:
+                    commands[alias] = plugin
+
+            params = data[1:].split(" ")
+            command = params.pop(0).lower()
+
+            if command and command in commands:
+                def cb(iterable):
+                    for line in iterable:
+                        self.send_chat(line)
+
+                def eb(error):
+                    self.send_chat("Error: %s" % error.getErrorMessage())
+
+                d = maybeDeferred(commands[command].chat_command,
+                                  self.username, params)
+                d.addCallback(cb)
+                d.addErrback(eb)
+            else:
+                self.send_chat("Unknown command: %s" % command)
+        else:
+            # Send the message up to the factory to be chatified.
+            message = "<%s> %s" % (self.username, data)
+            self.factory.chat(message)
+
+    def handle_use_entity(self, packet):
+        nearby_players = self.factory.players_near(self.player, 4)
+        for entity in chain(self.entities_near(4), nearby_players):
+            if entity.eid == packet.target:
+                for hook in self.use_hooks[entity.name]:
+                    hook.use_hook(self.factory, self.player, entity, packet.mouse == 'left')
+                break
+
+    def _grounded(self, packet):
+        self.location.grounded = bool(packet.grounded)
+
+    def _position(self, packet):
+        if self.state != STATE_LOCATED:
+            log.msg("Ignoring unlocated position!")
+            return
+
+        old_position = self.location.pos
+        position = Position.from_player(packet.position.x, packet.position.y, packet.position.z)
+        altered = False
+
+        dx, dy, dz = old_position - position
+        if any(abs(d) >= 64 for d in (dx, dy, dz)):
+            # Whoa, slow down there, cowboy. You're moving too fast. We're
+            # gonna ignore this position change completely, because it's
+            # either bogus or ignoring a recent teleport.
+            altered = True
+        else:
+            self.location.pos = position
+            self.location.stance = packet.position.stance
+
+        # Santitize location. This handles safety boundaries, illegal stance,
+        # etc.
+        altered = self.location.clamp() or altered
+
+        # If, for any reason, our opinion on where the client should be
+        # located is different than theirs, force them to conform to our point
+        # of view.
+        if altered:
+            log.msg("Not updating bogus position!")
+            self.update_location()
+
+        # If our position actually changed, fire the position change hook.
+        if old_position != position:
+            self.position_changed()
+
+    def _orientation(self, packet):
+
+        old_orientation = self.location.ori
+        orientation = Orientation.from_degs(packet.orientation.rotation, packet.orientation.pitch)
+        self.location.ori = orientation
+
+        if old_orientation != orientation:
+            self.orientation_changed()
+
+    def handle_player(self, packet):
+        self._grounded(packet)
+
+    def handle_player_position(self, packet):
+        self._position(packet)
+        self._grounded(packet)
+
+    def handle_player_look(self, packet):
+        self._orientation(packet)
+        self._grounded(packet)
+
+    def handle_player_position_and_look(self, packet):
+        self._position(packet)
+        self._orientation(packet)
+        self._grounded(packet)
+
+    @inlineCallbacks
+    def handle_player_digging(self, packet):
+        if packet.x == -1 and packet.z == -1 and packet.y == 255:
+            # Lala-land dig packet. Discard it for now.
+            return
+
+        # Player drops currently holding item/block.
+        if (packet.state == "dropped" and packet.face == "-y" and packet.x == 0 and packet.y == 0 and packet.z == 0):
+            i = self.player.inventory
+            holding = i.holdables[self.player.equipped]
+            if holding:
+                item_id, count, damage = holding
+                if i.consume((item_id, damage), self.player.equipped):
+                    dest = self.location.in_front_of(2)
+                    coords = dest.pos._replace(y=dest.pos.y + 1)
+                    self.factory.give(coords, (item_id, damage), 1)
+
+                    # Re-send inventory.
+                    packet = self.inventory.save_to_packet()
+                    self.write_packets(packet)
+
+                    # If no items in this slot are left, this player isn't
+                    # holding an item anymore.
+                    if i.holdables[self.player.equipped] is None:
+                        packet = make_packet("entity_equipment",
+                                             eid=self.player.eid,
+                                             slot_no=0,
+                                             slot=Slot()
+                                             )
+                        self.factory.broadcast_for_others(packet, self)
+            return
+
+        if packet.state == "shooting":
+            self.shoot_arrow()
+            return
+
+        bigx, smallx, bigz, smallz = split_coords(packet.x, packet.z)
+        coords = smallx, packet.y, smallz
+
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't dig in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        block = chunk.get_block((smallx, packet.y, smallz))
+
+        if packet.state == "started":
+            # Run pre dig hooks
+            for hook in self.pre_dig_hooks:
+                cancel = yield maybeDeferred(hook.pre_dig_hook, self.player,
+                                             (packet.x, packet.y, packet.z), block)
+                if cancel:
+                    return
+
+            tool = self.player.inventory.holdables[self.player.equipped]
+            # Check to see whether we should break this block.
+            if self.dig_policy.is_1ko(block, tool):
+                self.run_dig_hooks(chunk, coords, blocks[block])
+            else:
+                # Set up a timer for breaking the block later.
+                dtime = time() + self.dig_policy.dig_time(block, tool)
+                self.last_dig = coords, block, dtime
+        elif packet.state == "stopped":
+            # The client thinks it has broken a block. We shall see.
+            if not self.last_dig:
+                return
+
+            oldcoords, oldblock, dtime = self.last_dig
+            if oldcoords != coords or oldblock != block:
+                # Nope!
+                self.last_dig = None
+                return
+
+            dtime -= time()
+
+            # When enough time has elapsed, run the dig hooks.
+            d = deferLater(reactor, max(dtime, 0), self.run_dig_hooks, chunk,
+                           coords, blocks[block])
+            d.addCallback(lambda none: setattr(self, "last_dig", None))
+
+    @inlineCallbacks
+    def handle_player_block_placement(self, packet):
+        # Is the target within our purview? We don't do a very strict
+        # containment check, but we *do* require that the chunk be loaded.
+        bigx, smallx, bigz, smallz = split_coords(packet.x, packet.z)
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't select in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        target_block = chunk.get_block((smallx, packet.y, smallz))
+        target = blocks[target_block]
+
+        print "coords were %d %d %d, target was " % (packet.x, packet.y, packet.z), target
+
+        # Attempt to open a window.
+        from bravo.policy.windows import window_for_block
+        window = window_for_block(target)
+        if window is not None:
+            # We have a window!
+            self.windows[self.wid] = window
+            identifier, title, slots = window.open()
+            # JMT: no horse support
+            self.write_packet('open_window', wid=self.wid, type=identifier, title=title, slots=slots, use_provided_title=True)
+            self.wid += 1
+            return
+
+        # Try to open it first
+        for hook in self.open_hooks:
+            window = yield maybeDeferred(hook.open_hook, self, packet, target_block)
+            if window:
+                self.write_packet('open_window', wid=window.wid,
+                                  type=window.identifier, title=window.title, slots=windows.slots_num, use_provided_title=True)
+                new_packet = window.save_to_packet()
+                self.write_packets(new_packet)
+                # window opened
+                return
+
+        # Access item in slot directly.
+        slot = packet.slot
+
+        # Ignore clients that think -1 is placeable.
+        if slot.item_id == -1:
+            return
+
+        # Special case when face is "noop": Update the status of the currently
+        # held block rather than placing a new block.
+        if packet.face == "noop":
+            return
+
+        # If the target block is vanishable, then adjust our aim accordingly.
+        if target.vanishes:
+            packet.face = "+y"
+            packet.y -= 1
+
+        if slot.item_id in blocks:
+            block = blocks[slot.item_id]
+        elif slot.item_id in items:
+            block = items[slot.item_id]
+        else:
+            log.err("Ignoring request to place unknown block 0x%x" %
+                    slot.item_id)
+            return
+
+        # Run pre-build hooks. These hooks are able to interrupt the build
+        # process.
+        builddata = BuildData(block, 0x0, packet.x, packet.y,
+                              packet.z, packet.face)
+
+        for hook in self.pre_build_hooks:
+            cont, builddata, cancel = yield maybeDeferred(hook.pre_build_hook,
+                                                          self.player, builddata)
+            if cancel:
+                # Flush damaged chunks.
+                for chunk in self.chunks.itervalues():
+                    self.factory.flush_chunk(chunk)
+                return
+            if not cont:
+                break
+
+        # Run the build.
+        try:
+            yield maybeDeferred(self.run_build, builddata)
+        except BuildError:
+            return
+
+        newblock = builddata.block.slot
+        coords = adjust_coords_for_face(
+            (builddata.x, builddata.y, builddata.z), builddata.face)
+
+        # Run post-build hooks. These are merely callbacks which cannot
+        # interfere with the build process, largely because the build process
+        # already happened.
+        for hook in self.post_build_hooks:
+            yield maybeDeferred(hook.post_build_hook, self.player, coords,
+                                builddata.block)
+
+        # Feed automatons.
+        for automaton in self.factory.automatons:
+            if newblock in automaton.blocks:
+                automaton.feed(coords)
+
+        # Re-send inventory.
+        # XXX this could be optimized if/when inventories track damage.
+        new_packet = self.inventory.save_to_packet()
+        self.write_packets(new_packet)
+
+        # Flush damaged chunks.
+        for chunk in self.chunks.itervalues():
+            self.factory.flush_chunk(chunk)
+
+    def handle_held_item_change(self, packet):
+        self.player.equipped = packet.slot
+
+        # Inform everyone about the item the player is holding now.
+        item = self.player.inventory.holdables[self.player.equipped]
+        if item is None:
+            slot = Slot()
+        else:
+            slot = item  # Slot(item_id=item[0], count=item[1], damage=item[2])
+
+        new_packet = make_packet("entity_equipment",
+                                 eid=self.player.eid,
+                                 slot_no=0,
+                                 slot=slot
+                                 )
+        self.factory.broadcast_for_others(new_packet, self)
+
+    def handle_animation(self, packet):
+        # Broadcast the animation of the entity to everyone else. Only swing
+        # arm is send by notchian clients.
+        new_packet = make_packet('animation',
+                                 eid=self.player.eid,
+                                 animation=packet.animation
+                                 )
+        self.factory.broadcast_for_others(new_packet, self)
+
+    def handle_entity_action(self, packet):
+        return NotImplementedError
+
+    def handle_steer_vehicle(self, packet):
+        return NotImplementedError
+
+    def handle_close_window(self, packet):
+        wid = packet.wid
+        if wid == 0:
+            # WID 0 is reserved for the client inventory.
+            pass
+        elif wid in self.windows:
+            w = self.windows.pop(wid)
+            w.close()
+        else:
+            self.error("WID %d doesn't exist." % wid)
+
+    def handle_click_window(self, packet):
+        wid = packet.wid
+        result = False
+        if wid == 0:
+            # Acknowledge all clicks to window 0
+            result = True
+        elif wid in self.windows:
+            # WID 0 is reserved for the client inventory.
+            w = self.windows[wid]
+            result = w.action(packet.slot, packet.button,
+                              packet.token, packet.mode,
+                              packet.primary)
+        else:
+            self.error("WID %d doesn't exist." % wid)
+        self.write_packet('confirm_transaction', wid=wid, token=packet.token,
+                          acknowledged=result)
+
+    def handle_confirm_transaction(self, packet):
+        return NotImplementedError
+
+    def handle_creative_inventory_action(self, packet):
+        # XXX Sometimes the container doesn't contain all of this information.
+        # What then?
+        applied = self.inventory.creative(packet.slot, packet.item_id,
+                                          packet.count, packet.damage)
+        if applied:
+            # Inform other players about changes to this player's equipment.
+            equipped_slot = self.player.equipped + 36
+            if packet.slot == equipped_slot:
+                new_packet = make_packet("entity_equipment",
+                                         eid=self.player.eid,
+                                         # XXX why 0? why not the actual slot?
+                                         slot_no=0,
+                                         slot=Slot(item_id=packet.item_id,
+                                                   count=packet.count,
+                                                   damage=packet.damage),
+                                         )
+                self.factory.broadcast_for_others(new_packet, self)
+
+    def handle_enchant_item(self, packet):
+        return NotImplementedError
+
+    def handle_update_sign(self, packet):
+        bigx, smallx, bigz, smallz = split_coords(packet.x, packet.z)
+
+        try:
+            chunk = self.chunks[bigx, bigz]
+        except KeyError:
+            self.error("Couldn't handle sign in chunk (%d, %d)!" % (bigx, bigz))
+            return
+
+        if (smallx, packet.y, smallz) in chunk.tiles:
+            new = False
+            s = chunk.tiles[smallx, packet.y, smallz]
+        else:
+            new = True
+            s = Sign(smallx, packet.y, smallz)
+            chunk.tiles[smallx, packet.y, smallz] = s
+
+        s.text1 = packet.line1
+        s.text2 = packet.line2
+        s.text3 = packet.line3
+        s.text4 = packet.line4
+
+        chunk.dirty = True
+
+        # The best part of a sign isn't making one, it's showing everybody
+        # else on the server that you did.
+        new_packet = make_packet("update_sign", packet)
+        self.factory.broadcast_for_chunk(new_packet, bigx, bigz)
+
+        # Run sign hooks.
+        for hook in self.sign_hooks:
+            hook.sign_hook(self.factory, chunk, packet.x, packet.y,
+                           packet.z, [s.text1, s.text2, s.text3, s.text4], new)
+
+    def handle_player_abilities(self, packet):
+        self.settings.update_interaction(packet)
+
+    def handle_tab(self, packet):
+        needle = packet.autocomplete
+        usernames = self.factory.protocols.keys()
+
+        results = complete(needle, usernames)
+
+        self.write_packet('tab_complete', autocomplete=results)
+
+    def handle_client_settings(self, packet):
+        # JMT: The packet has more than the object
+        self.settings.update_presentation(packet)
+        self.update_chunks()
+
+    def handle_client_status(self, packet):
+        if packet.status == 'open_inventory_achievement':
+            pass
+
+    def handle_plugin_message(self, packet):
+        pass

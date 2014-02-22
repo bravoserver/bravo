@@ -9,11 +9,13 @@ from construct import Container
 
 from bravo.beta.packets import make_packet
 
+
 def _combinator(op):
     def f(self, other):
         return self._replace(x=op(self.x, other.x), y=op(self.y, other.y),
                              z=op(self.z, other.z))
     return f
+
 
 class Position(namedtuple("Position", "x, y, z")):
     """
@@ -77,6 +79,7 @@ class Position(namedtuple("Position", "x, y, z")):
             theta += pi * 2
         return theta
 
+
 class Orientation(namedtuple("Orientation", "theta, phi")):
     """
     The angles corresponding to the heading of an entity.
@@ -117,6 +120,7 @@ class Orientation(namedtuple("Orientation", "theta, phi")):
         pitch = int(self.phi * 255 / (2 * pi)) % 256
         return yaw, pitch
 
+
 class Location(object):
     """
     The position and orientation of an entity.
@@ -133,7 +137,7 @@ class Location(object):
         self.ori = Orientation(0.0, 0.0)
 
         # Whether we are in the air.
-        self.grounded = False
+        self.grounded = True  # False
 
     @classmethod
     def at_block(cls, x, y, z):
@@ -213,8 +217,8 @@ class Location(object):
         orientation = Container(rotation=yaw, pitch=pitch)
         grounded = Container(grounded=self.grounded)
 
-        packet = make_packet("location", position=position,
-            orientation=orientation, grounded=grounded)
+        packet = make_packet("player_position_and_look", x=x, y=y, z=z,
+                             orientation=orientation, grounded=grounded)
 
         return packet
 

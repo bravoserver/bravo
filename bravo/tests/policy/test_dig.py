@@ -1,14 +1,16 @@
 import unittest
 
-from bravo.beta.structures import Slot
+from bravo.beta.packets import Slot
 from bravo.blocks import blocks, items
 from bravo.policy.dig import dig_policies, is_effective_against
+
 
 class TestEffectiveness(unittest.TestCase):
 
     def test_wooden_pickaxe_is_effective_against_diamond(self):
         self.assertTrue(is_effective_against(blocks["diamond-block"].slot,
-            Slot(items["wooden-pickaxe"].slot, 100, 1)))
+                                             Slot(items["wooden-pickaxe"].slot, count=1, damage=0)))
+
 
 class TestNotchyDigPolicy(unittest.TestCase):
 
@@ -26,7 +28,8 @@ class TestNotchyDigPolicy(unittest.TestCase):
         Snow can't be 1KO'd by hand, just with a shovel.
         """
 
-        slot = Slot(items["wooden-shovel"].slot, 0x64, 1)
+        # JMT: was secondary 0x64 - not sure why
+        slot = Slot(items["wooden-shovel"].slot, count=1, damage=0)
 
         self.assertFalse(self.p.is_1ko(blocks["snow"].slot, None))
         self.assertTrue(self.p.is_1ko(blocks["snow"].slot, slot))

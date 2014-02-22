@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from bravo.beta.structures import Slot
+from bravo.beta.packets import Slot
 from bravo.blocks import blocks, items
 from bravo.ibravo import IRecipe
 from bravo.policy.recipes.blueprints import all_blueprints
@@ -8,6 +8,7 @@ from bravo.policy.recipes.ingredients import all_ingredients
 
 all_recipes = all_ingredients + all_blueprints
 recipe_dict = dict((r.name, r) for r in all_recipes)
+
 
 class TestRecipeConformity(TestCase):
     """
@@ -20,11 +21,12 @@ for recipe in all_recipes:
     setattr(TestRecipeConformity, "test_recipe_conformity_%s" % recipe.name,
             f)
 
+
 class TestRecipeProperties(TestCase):
 
     def test_compass_provides(self):
         self.assertEqual(recipe_dict["compass"].provides,
-                (items["compass"].key, 1))
+                         (items["compass"].key, 1))
 
     def test_black_wool_matches_white(self):
         """

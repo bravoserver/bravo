@@ -11,11 +11,13 @@ from bravo.utilities.bits import pack_nibbles
 from bravo.utilities.coords import CHUNK_HEIGHT, XZ, iterchunk
 from bravo.utilities.maths import clamp
 
+
 class ChunkWarning(Warning):
     """
     Somebody did something inappropriate to this chunk, but it probably isn't
     lethal, so the chunk is issuing a warning instead of an exception.
     """
+
 
 def check_bounds(f):
     """
@@ -32,8 +34,7 @@ def check_bounds(f):
 
         # Coordinates were out-of-bounds; warn and run away.
         if not (0 <= x < 16 and 0 <= z < 16 and 0 <= y < CHUNK_HEIGHT):
-            warn("Coordinates %s are OOB in %s() of %s, ignoring call"
-                % (coords, f.func_name, chunk), ChunkWarning, stacklevel=2)
+            warn("Coordinates %s are OOB in %s() of %s, ignoring call" % (coords, f.func_name, chunk), ChunkWarning, stacklevel=2)
             # A concession towards where this decorator will be used. The
             # value is likely to be discarded either way, but if the value is
             # used, we shouldn't horribly die because of None/0 mismatch.
@@ -42,6 +43,7 @@ def check_bounds(f):
         return f(chunk, coords, *args, **kwargs)
 
     return deco
+
 
 def ci(x, y, z):
     """
@@ -52,6 +54,7 @@ def ci(x, y, z):
     """
 
     return (x * 16 + z) * CHUNK_HEIGHT + y
+
 
 def segment_array(a):
     """
@@ -69,6 +72,7 @@ def segment_array(a):
         index = (index + 1) % 16
 
     return l
+
 
 def make_glows():
     """
@@ -88,6 +92,7 @@ def make_glows():
     return glow
 
 glow = make_glows()
+
 
 def composite_glow(target, strength, x, y, z):
     """
@@ -138,6 +143,7 @@ def composite_glow(target, strength, x, y, z):
                 ambient_index = (ax * adim + az) * adim + ay
                 target[ci(tx, ty, tz)] += ambient[ambient_index]
 
+
 def iter_neighbors(coords):
     """
     Iterate over the chunk-local coordinates surrounding the given
@@ -151,23 +157,26 @@ def iter_neighbors(coords):
 
     x, z, y = coords
 
-    for dx, dz, dy in (
+    matrix = (
         (1, 0, 0),
         (-1, 0, 0),
         (0, 1, 0),
         (0, -1, 0),
         (0, 0, 1),
-        (0, 0, -1)):
+        (0, 0, -1))
+
+    for dx, dz, dy in matrix:
         nx = x + dx
         nz = z + dz
         ny = y + dy
 
         if not (0 <= nx < 16 and
-            0 <= nz < 16 and
-            0 <= ny < CHUNK_HEIGHT):
+                0 <= nz < 16 and
+                0 <= ny < CHUNK_HEIGHT):
             continue
 
         yield nx, nz, ny
+
 
 def neighboring_light(glow, block):
     """
@@ -409,12 +418,12 @@ class Chunk(object):
 
             x, y, z = coords
 
-            return make_packet("block",
-                    x=x + self.x * 16,
-                    y=y,
-                    z=z + self.z * 16,
-                    type=block,
-                    meta=metadata)
+            return make_packet("block_change",
+                               x=x + self.x * 16,
+                               y=y,
+                               z=z + self.z * 16,
+                               block_type=block,
+                               block_data=metadata)
         else:
             # Use a batch update.
             records = []
@@ -430,8 +439,8 @@ class Chunk(object):
 
             data = "".join(pack(">I", record) for record in records)
 
-            return make_packet("batch", x=self.x, z=self.z,
-                               count=len(records), data=data)
+            return make_packet("multi_block_change", chunk_x=self.x, chunk_z=self.z,
+                               count=len(records), data_size=len(data), data=data)
 
     def clear_damage(self):
         """
@@ -441,9 +450,9 @@ class Chunk(object):
         self.damaged.clear()
         self.all_damaged = False
 
-    def save_to_packet(self):
+    def generate_packet_fodder(self, continuous=True, sky_light=True):
         """
-        Generate a chunk packet.
+        Return packed data for transmission.
         """
 
         mask = 0
@@ -470,9 +479,22 @@ class Chunk(object):
 
         # Fake the biome data.
         packed.append("\x00" * 256)
+        data = ''.join(packed).encode("zlib")
 
-        packet = make_packet("chunk", x=self.x, z=self.z, continuous=True,
-                primary=mask, add=0x0, data="".join(packed))
+        # Return mask and data.
+        return mask, data
+
+    def save_to_packet(self):
+        """
+        Generate a chunk packet.
+        """
+
+        mask, data = self.generate_packet_fodder()
+
+        packet = make_packet("chunk_data", chunk_x=self.x, chunk_z=self.z, continuous=True,
+                             primary_bitmap=mask, add_bitmap=0x0,
+                             compressed_size=len(data),
+                             compressed_data=data)
         return packet
 
     @check_bounds
@@ -526,7 +548,7 @@ class Chunk(object):
             # Do the blocklight at this coordinate, if appropriate.
             if block in glowing_blocks:
                 composite_glow(self.blocklight, glowing_blocks[block],
-                    x, y, z)
+                               x, y, z)
                 bl = [clamp(light, 0, 15) for light in self.blocklight]
                 self.blocklight = array("B", bl)
 

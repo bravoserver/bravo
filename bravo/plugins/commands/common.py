@@ -11,11 +11,13 @@ from bravo.plugin import retrieve_plugins
 from bravo.policy.seasons import Spring, Winter
 from bravo.utilities.temporal import split_time
 
+
 def parse_player(factory, name):
     if name in factory.protocols:
         return factory.protocols[name]
     else:
         raise Exception("Couldn't find player %s" % name)
+
 
 class Help(object):
     """
@@ -83,6 +85,7 @@ class Help(object):
     aliases = tuple()
     usage = ""
 
+
 class List(object):
     """
     List the currently connected players.
@@ -94,8 +97,7 @@ class List(object):
         self.factory = factory
 
     def dispatch(self, factory):
-        yield "Connected players: %s" % (", ".join(
-                player for player in factory.protocols))
+        yield "Connected players: %s" % (", ".join(player for player in factory.protocols))
 
     def chat_command(self, username, parameters):
         for i in self.dispatch(self.factory):
@@ -108,6 +110,7 @@ class List(object):
     name = "list"
     aliases = ("playerlist",)
     usage = ""
+
 
 class Time(object):
     """
@@ -133,7 +136,7 @@ class Time(object):
             while day_of_season < 0:
                 day_of_season += 360
             date = "{0} ({1} {2})".format(factory.day, day_of_season,
-                    season.name)
+                                          season.name)
         else:
             date = "%d" % factory.day
 
@@ -153,7 +156,7 @@ class Time(object):
                 hours, minutes = int(hours), int(minutes)
                 # 24000 ticks / day = 1000 ticks / hour ~= 16.6 ticks / minute
                 time = (hours * 1000) + (minutes * 50 / 3)
-                time -= 6000 # to account for 24000 being high noon in minecraft.
+                time -= 6000  # to account for 24000 being high noon in minecraft.
 
             if len(parameters) >= 2:
                 self.factory.day = int(parameters[1])
@@ -173,6 +176,7 @@ class Time(object):
     name = "time"
     aliases = ("date",)
     usage = "[time] [day]"
+
 
 class Say(object):
     """
@@ -194,6 +198,7 @@ class Say(object):
     name = "say"
     aliases = tuple()
     usage = "<message>"
+
 
 class Give(object):
     """
@@ -224,9 +229,10 @@ class Give(object):
 
         # Get a location two blocks in front of the player.
         dest = player.player.location.in_front_of(2)
-        dest.y += 1
+        print 'give', dest
+        dest.pos.y += 1
 
-        coords = int(dest.x * 32), int(dest.y * 32), int(dest.z * 32)
+        coords = int(dest.pos.x * 32), int(dest.pos.y * 32), int(dest.pos.z * 32)
 
         self.factory.give(coords, block, count)
 
@@ -236,6 +242,7 @@ class Give(object):
     name = "give"
     aliases = tuple()
     usage = "<block> <quantity>"
+
 
 class Quit(object):
     """
@@ -267,6 +274,7 @@ class Quit(object):
     aliases = ("exit",)
     usage = ""
 
+
 class SaveAll(object):
     """
     Save all world data to disk.
@@ -289,6 +297,7 @@ class SaveAll(object):
     aliases = tuple()
     usage = ""
 
+
 class SaveOff(object):
     """
     Disable saving world data to disk.
@@ -309,6 +318,7 @@ class SaveOff(object):
     name = "save-off"
     aliases = tuple()
     usage = ""
+
 
 class SaveOn(object):
     """
@@ -331,6 +341,7 @@ class SaveOn(object):
     aliases = tuple()
     usage = ""
 
+
 class WriteConfig(object):
     """
     Write configuration to disk.
@@ -349,6 +360,7 @@ class WriteConfig(object):
     name = "write-config"
     aliases = tuple()
     usage = ""
+
 
 class Season(object):
     """
@@ -383,6 +395,7 @@ class Season(object):
     aliases = tuple()
     usage = "<season>"
 
+
 class Me(object):
     """
     Emote.
@@ -402,6 +415,7 @@ class Me(object):
     aliases = tuple()
     usage = "<message>"
 
+
 class Kick(object):
     """
     Kick a player from the world.
@@ -420,7 +434,7 @@ class Kick(object):
             msg = "%s has been kicked." % parameters[0]
         elif len(parameters) > 1:
             reason = " ".join(parameters[1:])
-            msg = "%s has been kicked for %s" % (parameters[0],reason)
+            msg = "%s has been kicked for %s" % (parameters[0], reason)
         packet = make_packet("error", message=msg)
         player.transport.write(packet)
         yield msg
@@ -432,6 +446,7 @@ class Kick(object):
     name = "kick"
     aliases = tuple()
     usage = "<player> [<reason>]"
+
 
 class GetPos(object):
     """
@@ -454,6 +469,7 @@ class GetPos(object):
     name = "getpos"
     aliases = tuple()
     usage = ""
+
 
 class Nick(object):
     """

@@ -7,8 +7,10 @@ from bravo.plugin import retrieve_plugins
 from bravo.world import World
 from bravo.utilities.redstone import Asic, truthify_block
 
+
 class RedstoneMockFactory(object):
     pass
+
 
 class TestRedstone(TestCase):
 
@@ -47,14 +49,16 @@ class TestRedstone(TestCase):
 
         d = self.w.request_chunk(0, 0)
 
+        matrix = (
+            (False, False, False),
+            (True, False, False),
+            (False, True, False),
+            (True, True, True),
+        )
+
         @d.addCallback
         def cb(chunk):
-            for i1, i2, o in (
-                (False, False, False),
-                (True, False, False),
-                (False, True, False),
-                (True, True, True),
-                ):
+            for i1, i2, o in matrix:
                 # Reset the hook.
                 self.hook.asic = Asic()
 
@@ -65,26 +69,26 @@ class TestRedstone(TestCase):
 
                 chunk.set_block((1, 2, 1), blocks["redstone-torch"].slot)
                 chunk.set_metadata((1, 2, 1),
-                    blocks["redstone-torch"].orientation("+y"))
+                                   blocks["redstone-torch"].orientation("+y"))
                 chunk.set_block((1, 2, 3), blocks["redstone-torch"].slot)
                 chunk.set_metadata((1, 2, 3),
-                    blocks["redstone-torch"].orientation("+y"))
+                                   blocks["redstone-torch"].orientation("+y"))
 
                 chunk.set_block((1, 2, 2), blocks["redstone-wire"].slot)
 
                 # Output torch.
                 chunk.set_block((2, 1, 2), blocks["redstone-torch"].slot)
                 chunk.set_metadata((2, 1, 2),
-                    blocks["redstone-torch"].orientation("+x"))
+                                   blocks["redstone-torch"].orientation("+x"))
 
                 # Attach the levers to the sand block.
                 orientation = blocks["lever"].orientation("-x")
                 iblock, imetadata = truthify_block(i1, blocks["lever"].slot,
-                    orientation)
+                                                   orientation)
                 chunk.set_block((0, 1, 1), iblock)
                 chunk.set_metadata((0, 1, 1), imetadata)
                 iblock, imetadata = truthify_block(i2, blocks["lever"].slot,
-                    orientation)
+                                                   orientation)
                 chunk.set_block((0, 1, 3), iblock)
                 chunk.set_metadata((0, 1, 3), imetadata)
 
@@ -102,7 +106,7 @@ class TestRedstone(TestCase):
                 block = chunk.get_block((2, 1, 2))
                 metadata = chunk.get_metadata((2, 1, 2))
                 self.assertEqual((block, metadata),
-                    truthify_block(o, block, metadata))
+                                 truthify_block(o, block, metadata))
 
         return d
 
@@ -113,14 +117,16 @@ class TestRedstone(TestCase):
 
         d = self.w.request_chunk(0, 0)
 
+        matrix = (
+            (False, False, False),
+            (True, False, True),
+            (False, True, True),
+            (True, True, True),
+        )
+
         @d.addCallback
         def cb(chunk):
-            for i1, i2, o in (
-                (False, False, False),
-                (True, False, True),
-                (False, True, True),
-                (True, True, True),
-                ):
+            for i1, i2, o in matrix:
                 # Reset the hook.
                 self.hook.asic = Asic()
 
@@ -128,22 +134,22 @@ class TestRedstone(TestCase):
                 chunk.set_block((1, 1, 2), blocks["sand"].slot)
                 chunk.set_block((1, 2, 2), blocks["redstone-torch"].slot)
                 chunk.set_metadata((1, 2, 2),
-                    blocks["redstone-torch"].orientation("+y"))
+                                   blocks["redstone-torch"].orientation("+y"))
                 chunk.set_block((2, 2, 2), blocks["redstone-wire"].slot)
                 chunk.set_block((2, 1, 2), blocks["sand"].slot)
                 chunk.set_block((3, 1, 2), blocks["redstone-torch"].slot)
                 chunk.set_metadata((3, 1, 2),
-                    blocks["redstone-torch"].orientation("+x"))
+                                   blocks["redstone-torch"].orientation("+x"))
 
                 # Attach the levers to the sand block.
                 orientation = blocks["lever"].orientation("-z")
                 iblock, imetadata = truthify_block(i1, blocks["lever"].slot,
-                    orientation)
+                                                   orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
                 orientation = blocks["lever"].orientation("+z")
                 iblock, imetadata = truthify_block(i2, blocks["lever"].slot,
-                    orientation)
+                                                   orientation)
                 chunk.set_block((1, 1, 3), iblock)
                 chunk.set_metadata((1, 1, 3), imetadata)
 
@@ -161,7 +167,7 @@ class TestRedstone(TestCase):
                 block = chunk.get_block((3, 1, 2))
                 metadata = chunk.get_metadata((3, 1, 2))
                 self.assertEqual((block, metadata),
-                    truthify_block(o, block, metadata))
+                                 truthify_block(o, block, metadata))
 
         return d
 
@@ -172,14 +178,16 @@ class TestRedstone(TestCase):
 
         d = self.w.request_chunk(0, 0)
 
+        matrix = (
+            (False, False, True),
+            (True, False, False),
+            (False, True, False),
+            (True, True, False),
+        )
+
         @d.addCallback
         def cb(chunk):
-            for i1, i2, o in (
-                (False, False, True),
-                (True, False, False),
-                (False, True, False),
-                (True, True, False),
-                ):
+            for i1, i2, o in matrix:
                 # Reset the hook.
                 self.hook.asic = Asic()
 
@@ -190,12 +198,12 @@ class TestRedstone(TestCase):
                 # Attach the levers to the sand block.
                 orientation = blocks["lever"].orientation("-z")
                 iblock, imetadata = truthify_block(i1, blocks["lever"].slot,
-                    orientation)
+                                                   orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
                 orientation = blocks["lever"].orientation("+z")
                 iblock, imetadata = truthify_block(i2, blocks["lever"].slot,
-                    orientation)
+                                                   orientation)
                 chunk.set_block((1, 1, 3), iblock)
                 chunk.set_metadata((1, 1, 3), imetadata)
                 # Attach the torch to the sand block too.
@@ -213,7 +221,7 @@ class TestRedstone(TestCase):
                 block = chunk.get_block((2, 1, 2))
                 metadata = chunk.get_metadata((2, 1, 2))
                 self.assertEqual((block, metadata),
-                    truthify_block(o, block, metadata))
+                                 truthify_block(o, block, metadata))
 
         return d
 
@@ -239,7 +247,7 @@ class TestRedstone(TestCase):
                 # definition.
                 orientation = blocks["lever"].orientation("-x")
                 iblock, imetadata = truthify_block(i, blocks["lever"].slot,
-                    orientation)
+                                                   orientation)
                 chunk.set_block((1, 1, 1), iblock)
                 chunk.set_metadata((1, 1, 1), imetadata)
 
@@ -258,6 +266,6 @@ class TestRedstone(TestCase):
                 block = chunk.get_block((3, 1, 1))
                 metadata = chunk.get_metadata((3, 1, 1))
                 self.assertEqual((block, metadata),
-                    truthify_block(o, block, metadata))
+                                 truthify_block(o, block, metadata))
 
         return d

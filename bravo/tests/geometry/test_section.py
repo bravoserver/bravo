@@ -2,6 +2,7 @@ from unittest import TestCase
 
 from bravo.geometry.section import Section
 
+
 class TestSectionInternals(TestCase):
 
     def setUp(self):

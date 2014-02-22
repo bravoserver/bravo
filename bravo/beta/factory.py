@@ -1,16 +1,23 @@
 from collections import defaultdict
 from itertools import product
 import json
+from urlparse import urlparse
+from random import choice
+from string import printable
+from ConfigParser import NoOptionError
 
 from twisted.internet import reactor
 from twisted.internet.interfaces import IPushProducer
 from twisted.internet.protocol import Factory
 from twisted.internet.task import LoopingCall
 from twisted.python import log
+from twisted.python.filepath import FilePath, Permissions
+from twisted.conch.ssh import keys
 from zope.interface import implements
 
 from bravo.beta.packets import make_packet
 from bravo.beta.protocol import BravoProtocol, KickedProtocol
+from bravo.beta.encryption import BravoCryptRSA
 from bravo.entity import entities
 from bravo.ibravo import (ISortedPlugin, IAutomaton, ITerrainGenerator,
                           IUseHook, ISignHook, IPreDigHook, IDigHook,
@@ -24,13 +31,20 @@ from bravo.utilities.chat import chat_name, sanitize_chat
 from bravo.weather import WeatherVane
 from bravo.world import World
 
+# JMT: write something that checks imports for crypto code
+# and fails gracefully if they are not present
+# twisted-conch pycrypto pyasn1
+from Crypto.PublicKey import RSA
+from Crypto import Random
+
 (STATE_UNAUTHENTICATED, STATE_CHALLENGED, STATE_AUTHENTICATED,
     STATE_LOCATED) = range(4)
 
 circle = [(i, j)
-    for i, j in product(xrange(-5, 5), xrange(-5, 5))
-    if i**2 + j**2 <= 25
-]
+          for i, j in product(xrange(-5, 5), xrange(-5, 5))
+          if i**2 + j**2 <= 25
+          ]
+
 
 class BravoFactory(Factory):
     """
@@ -45,6 +59,8 @@ class BravoFactory(Factory):
     time = 0
     day = 0
     eid = 1
+
+    online = False
 
     interfaces = []
 
@@ -72,11 +88,8 @@ class BravoFactory(Factory):
         if self.mode not in ("creative", "survival"):
             raise Exception("Unsupported mode %s" % self.mode)
 
-        self.limitConnections = self.config.getintdefault(self.config_name,
-                                                            "limitConnections",
-                                                            0)
-        self.limitPerIP = self.config.getintdefault(self.config_name,
-                                                      "limitPerIP", 0)
+        self.limitConnections = self.config.getintdefault(self.config_name, "limitConnections", 0)
+        self.limitPerIP = self.config.getintdefault(self.config_name, "limitPerIP", 0)
 
         self.vane = WeatherVane(self)
 
@@ -85,6 +98,55 @@ class BravoFactory(Factory):
 
         # Get our plugins set up.
         self.register_plugins()
+
+        # Check for online mode.
+        try:
+            self.online = self.config.get(self.config_name, 'online') == 'true'
+            key_dir_url = self.config.get(self.config_name, 'key_dir')
+        except NoOptionError:
+            self.online = False
+
+        log.msg("Online mode is %s..." % self.online)
+        if self.online:
+            log.msg("Online mode tests out as true!")
+
+        if self.online is True:
+            # http://my.safaribooksonline.com/book/networking/network-management/0596100329/ssh/twistedadn-chp-10-sect-1
+            from stat import S_IRUSR, S_IWUSR, S_IXUSR
+            chmod_value = (S_IRUSR | S_IWUSR | S_IXUSR)
+            secure_permissions = Permissions(chmod_value)
+            key_dir_parsed = urlparse(key_dir_url)
+            key_dir_path = key_dir_parsed.path
+            key_dir = FilePath(key_dir_path)
+            if not key_dir.exists():
+                key_dir.makedirs()
+                # JMT: chmod should somehow take secure_permissions
+                key_dir.chmod(chmod_value)
+                key_dir.restat()
+            try:
+                if key_dir.getPermissions() == secure_permissions:
+                    public_key_file = key_dir.child('server_id_rsa.pub')
+                    private_key_file = key_dir.child('server_id_rsa')
+                    #print "A public key file does%s exist!" % ('' if public_key.exists() else ' not')
+                    #print "A private key file does%s exist!" % ('' if private_key.exists() else ' not')
+                    if not(public_key_file.exists() and private_key_file.exists()):
+                        log.msg('Generating RSA keypair...')
+                        KEY_LENGTH = 1024
+                        rsaKey = RSA.generate(KEY_LENGTH, Random.new().read)
+                        public_key_file.setContent(rsaKey.publickey().exportKey('PEM'))
+                        private_key_file.setContent(rsaKey.exportKey('PEM'))
+                    with open(public_key_file.path) as f:
+                        public_key = RSA.importKey(f.read())
+                    with open(private_key_file.path) as f:
+                        private_key = RSA.importKey(f.read())
+                    server_id = ''.join(choice(printable) for x in range(20))
+                    self.cryptRSA = BravoCryptRSA(public_key=public_key, private_key=private_key, server_id=server_id)
+                else:
+                    log.msg('Key directory %s insecure, online mode disabled!' % key_dir_url)
+                    self.online = False
+            except IOError:
+                log.msg('Cannot write to key directory %s, online mode disabled!' % key_dir_url)
+                self.online = False
 
         log.msg("Starting world...")
         self.world.start()
@@ -157,8 +219,7 @@ class BravoFactory(Factory):
 
         # We are ignoring values less that 1, but making sure not to go over
         # the connection limit.
-        if (self.limitConnections
-            and len(self.protocols) >= self.limitConnections):
+        if (self.limitConnections and len(self.protocols) >= self.limitConnections):
             log.msg("Reached maximum players, turning %s away." % addr.host)
             p = KickedProtocol("The player limit has already been reached."
                                " Please try again later.")
@@ -166,8 +227,7 @@ class BravoFactory(Factory):
             return p
 
         # Do our connection-per-IP check.
-        if (self.limitPerIP and
-            self.connectedIPs[addr.host] >= self.limitPerIP):
+        if (self.limitPerIP and self.connectedIPs[addr.host] >= self.limitPerIP):
             log.msg("At maximum connections for %s already, dropping." % addr.host)
             p = KickedProtocol("There are too many players connected from this IP.")
             p.factory = self
@@ -269,8 +329,7 @@ class BravoFactory(Factory):
                 plugins = retrieve_sorted_plugins(interface, l, factory=self)
             else:
                 plugins = retrieve_named_plugins(interface, l, factory=self)
-            log.msg("Using %s: %s" % (t.replace("_", " "),
-                ", ".join(plugin.name for plugin in plugins)))
+            log.msg("Using %s: %s" % (t.replace("_", " "), ", ".join(plugin.name for plugin in plugins)))
             setattr(self, t, plugins)
 
         # Deal with seasons.
@@ -309,7 +368,7 @@ class BravoFactory(Factory):
             "dig_hooks",
             "sign_hooks",
             "use_hooks",
-            ]:
+        ]:
             delattr(self, name)
 
     def create_entity(self, x, y, z, name, **kwargs):
@@ -335,7 +394,7 @@ class BravoFactory(Factory):
             log.msg("Created entity %s" % entity)
             # XXX Maybe just send the entity object to the manager instead of
             # the following?
-            if hasattr(entity,'loop'):
+            if hasattr(entity, 'loop'):
                 self.world.mob_manager.start_mob(entity)
 
         return entity
@@ -444,7 +503,9 @@ class BravoFactory(Factory):
 
         data = json.dumps({"text": message})
 
-        packet = make_packet("chat", data=data)
+        log.msg("Chat Data: %s" % data)
+
+        packet = make_packet("chat", json=data)
         self.broadcast(packet)
 
     def broadcast(self, packet):
@@ -453,7 +514,7 @@ class BravoFactory(Factory):
         """
 
         for player in self.protocols.itervalues():
-            player.transport.write(packet)
+            player.write_packets(packet)
 
     def broadcast_for_others(self, packet, protocol):
         """
@@ -465,7 +526,7 @@ class BravoFactory(Factory):
 
         for player in self.protocols.itervalues():
             if player is not protocol:
-                player.transport.write(packet)
+                player.write_packets(packet)
 
     def broadcast_for_chunk(self, packet, x, z):
         """
@@ -476,7 +537,7 @@ class BravoFactory(Factory):
 
         for player in self.protocols.itervalues():
             if (x, z) in player.chunks:
-                player.transport.write(packet)
+                player.write_packets(packet)
 
     def scan_chunk(self, chunk):
         """
@@ -499,7 +560,7 @@ class BravoFactory(Factory):
             packet = chunk.get_damage_packet()
             for player in self.protocols.itervalues():
                 if (chunk.x, chunk.z) in player.chunks:
-                    player.transport.write(packet)
+                    player.write_packets(packet)
             chunk.clear_damage()
 
     def flush_all_chunks(self):
@@ -533,10 +594,10 @@ class BravoFactory(Factory):
 
         while quantity > 0:
             entity = self.create_entity(x // 32, y // 32, z // 32, "Item",
-                item=block, quantity=min(quantity, 64))
+                                        item=block, quantity=min(quantity, 64))
 
             packet = entity.save_to_packet()
-            packet += make_packet("create", eid=entity.eid)
+            packet += make_packet("create_entity", eid=entity.eid)
             self.broadcast(packet)
 
             quantity -= 64

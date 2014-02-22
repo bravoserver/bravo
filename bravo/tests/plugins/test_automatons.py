@@ -9,6 +9,7 @@ from bravo.ibravo import IAutomaton
 from bravo.plugin import retrieve_plugins
 from bravo.world import World
 
+
 class GrassMockFactory(object):
 
     def flush_chunk(self, chunk):
@@ -19,6 +20,7 @@ class GrassMockFactory(object):
 
     def scan_chunk(self, chunk):
         pass
+
 
 class TestGrass(TestCase):
 

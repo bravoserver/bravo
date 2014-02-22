@@ -1,5 +1,7 @@
 from collections import namedtuple
 
+from bravo.beta.packets import make_packet
+
 BuildData = namedtuple("BuildData", "block, metadata, x, y, z, face")
 """
 A named tuple representing data for a block which is planned to be built.
@@ -27,9 +29,8 @@ class Settings(object):
     flying = False
     creative = False
 
-    # XXX what should these actually default to?
-    walking_speed = 0
-    flying_speed = 0
+    walking_speed = 0.1
+    flying_speed = 0.05
 
     def __init__(self, presentation=None, interaction=None):
         if presentation:
@@ -40,7 +41,11 @@ class Settings(object):
     def update_presentation(self, presentation):
         self.locale = presentation["locale"]
         distance = presentation["distance"]
-        self.distance = ["far", "normal", "short", "tiny"][distance]
+        try:
+            self.distance = ["far", "normal", "short", "tiny"][distance]
+        except IndexError:
+            print "Distance was %s" % distance
+            self.distance = 0
 
     def update_interaction(self, interaction):
         flags = interaction["flags"]
@@ -48,69 +53,17 @@ class Settings(object):
         self.can_fly = bool(flags & 0x4)
         self.flying = bool(flags & 0x2)
         self.creative = bool(flags & 0x1)
-        self.walking_speed = interaction["walk-speed"]
-        self.flying_speed = interaction["fly-speed"]
+        self.walking_speed = interaction["walk_speed"]
+        self.flying_speed = interaction["fly_speed"]
 
-
-class Slot(namedtuple("Slot", "primary, secondary, quantity")):
-    """
-    A slot in an inventory.
-
-    Slots are essentially tuples of the primary and secondary identifiers of a
-    block or item, along with a quantity, but they provide several convenience
-    methods which make them a useful data structure for building inventories.
-    """
-
-    __slots__ = tuple()
-
-    @classmethod
-    def from_key(cls, key, quantity=1):
-        """
-        Alternative constructor which loads a key instead of a primary and
-        secondary.
-
-        This is meant to simplify code which wants to create slots from keys.
-        """
-
-        return cls(key[0], key[1], quantity)
-
-    def holds(self, other):
-        """
-        Whether these slots hold the same item.
-
-        This method is comfortable with other ``Slot`` instances, and also
-        with regular {2,3}-tuples.
-        """
-
-        return self.primary == other[0] and self.secondary == other[1]
-
-    def decrement(self, quantity=1):
-        """
-        Return a copy of this slot, with quantity decremented, or None if the
-        slot is empty.
-        """
-
-        if quantity >= self.quantity:
-            return None
-
-        return self._replace(quantity=self.quantity - quantity)
-
-    def increment(self, quantity=1):
-        """
-        Return a copy of this slot, with quantity incremented.
-
-        For parity with ``decrement()``.
-        """
-
-        return self._replace(quantity=self.quantity + quantity)
-
-    def replace(self, **kwargs):
-        """
-        Exposed version of ``_replace()`` with slot semantics.
-        """
-
-        new = self._replace(**kwargs)
-        if new.quantity == 0:
-            return None
-
-        return new
+    def make_interaction_packet_fodder(self):
+        flags = 0
+        if self.god_mode:
+            flags |= 0x8
+        if self.can_fly:
+            flags |= 0x4
+        if self.flying:
+            flags |= 0x2
+        if self.creative:
+            flags |= 0x1
+        return {'flags': flags, 'fly_speed': self.flying_speed, 'walk_speed': self.walking_speed}

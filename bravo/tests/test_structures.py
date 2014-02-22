@@ -1,6 +1,7 @@
 from twisted.trial import unittest
 
-from bravo.beta.structures import Slot
+from bravo.beta.packets import Slot
+
 
 class TestSlot(unittest.TestCase):
     """
@@ -8,12 +9,12 @@ class TestSlot(unittest.TestCase):
     """
 
     def test_decrement_none(self):
-        slot = Slot(0, 0, 1)
+        slot = Slot(0, 1, 0)
         self.assertEqual(slot.decrement(), None)
 
     def test_holds(self):
-        slot1 = Slot(4, 5, 1)
-        slot2 = Slot(4, 5, 1)
+        slot1 = Slot(4, 1, 5)
+        slot2 = Slot(4, 1, 5)
         self.assertTrue(slot1.holds(slot2))
 
     def test_holds_secondary(self):
@@ -21,8 +22,8 @@ class TestSlot(unittest.TestCase):
         Secondary attributes always matter for .holds.
         """
 
-        slot1 = Slot(4, 5, 1)
-        slot2 = Slot(4, 6, 1)
+        slot1 = Slot(4, 1, 5)
+        slot2 = Slot(4, 1, 6)
         self.assertFalse(slot1.holds(slot2))
 
     def test_from_key(self):
@@ -30,6 +31,6 @@ class TestSlot(unittest.TestCase):
         Slots have an alternative constructor.
         """
 
-        slot1 = Slot(2, 3, 1)
+        slot1 = Slot(2, 1, 3)
         slot2 = Slot.from_key((2, 3))
         self.assertEqual(slot1, slot2)

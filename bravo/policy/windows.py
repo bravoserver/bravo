@@ -18,7 +18,7 @@ class Pane(object):
     def close(self):
         self.window.close()
 
-    def action(self, slot, button, transaction, shifted, item):
+    def action(self, slot, button, transaction, mode, item):
         return False
 
     @property

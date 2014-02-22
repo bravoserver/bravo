@@ -2,8 +2,7 @@ from itertools import chain, izip
 from construct import Container, ListContainer
 
 from bravo import blocks
-from bravo.beta.packets import make_packet
-from bravo.beta.structures import Slot
+from bravo.beta.packets import make_packet, Slot
 from bravo.inventory import SerializableSlots
 from bravo.inventory.slots import Crafting, Workbench, LargeChestStorage
 
@@ -96,21 +95,24 @@ class Window(SerializableSlots):
             if item.id < 0:
                 items[i] = None
             else:
-                items[i] = Slot(item.id, item.damage, item.count)
+                items[i] = Slot(item.id, item.count, item.damage)
 
         self.load_from_list(items)
 
     def save_to_packet(self):
         lc = ListContainer()
-        for item in chain(*self.metalist):
+        set_slots = make_packet('set_slot', wid=255, slot_no=-1, slot=Slot())
+        for index, item in enumerate(chain(*self.metalist)):
             if item is None:
-                lc.append(Container(primary=-1))
+                slot = Slot()
             else:
-                lc.append(Container(primary=item.primary,
-                    secondary=item.secondary, count=item.quantity))
+                slot = Slot(item_id=item.item_id, count=item.count, damage=item.damage)
+                set_slots += make_packet('set_slot', wid=self.wid, slot_no=index, slot=slot)
+            lc.append(slot)
 
-        packet = make_packet("inventory", wid=self.wid, length=len(lc), items=lc)
-        return packet
+        packet = make_packet("window_items", wid=self.wid, count=len(lc), slot=lc)
+
+        return packet+set_slots
 
     def select_stack(self, container, index):
         """
@@ -121,7 +123,7 @@ class Window(SerializableSlots):
         if item is None:
             return False
 
-        loop_over = enumerate # default enumerator - from start to end
+        loop_over = enumerate  # default enumerator - from start to end
         # same as enumerate() but in reverse order
         reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
 
@@ -144,23 +146,23 @@ class Window(SerializableSlots):
         else:
             return False
 
-        initial_quantity = item_quantity = item.quantity
+        initial_count = item_count = item.count
 
         # find same item to stack
         for stash in targets:
             for i, slot in loop_over(stash):
-                if slot is not None and slot.holds(item) and slot.quantity < 64 \
-                        and slot.primary not in blocks.unstackable:
-                    count = slot.quantity + item_quantity
+                if slot is not None and slot.holds(item) and slot.count < 64 \
+                        and slot.item_id not in blocks.unstackable:
+                    count = slot.count + item_count
                     if count > 64:
-                        count, item_quantity = 64, count - 64
+                        count, item_count = 64, count - 64
                     else:
-                        item_quantity = 0
-                    stash[i] = slot.replace(quantity=count)
-                    container[index] = item.replace(quantity=item_quantity)
+                        item_count = 0
+                    stash[i] = Slot(item_id=slot.item_id, count=count, damage=slot.damage)
+                    container[index] = Slot(item_id=item.item_id, count=item_count, damage=item.damage)
                     self.mark_dirty(stash, i)
                     self.mark_dirty(container, index)
-                    if item_quantity == 0:
+                    if item_count == 0:
                         container[index] = None
                         return True
 
@@ -169,13 +171,13 @@ class Window(SerializableSlots):
             for i, slot in loop_over(stash):
                 if slot is None:
                     # XXX bug; might overflow a slot!
-                    stash[i] = item.replace(quantity=item_quantity)
+                    stash[i] = Slot(item_id=item.item_id, count=item_count, damage=item.damage)
                     container[index] = None
                     self.mark_dirty(stash, i)
                     self.mark_dirty(container, index)
                     return True
 
-        return initial_quantity != item_quantity
+        return initial_count != item_count
 
     def select(self, slot, alternate=False, shift=False):
         """
@@ -201,11 +203,10 @@ class Window(SerializableSlots):
             return False
 
         if l is self.inventory.armor:
-            result, self.selected = self.inventory.select_armor(index,
-                                         alternate, shift, self.selected)
+            result, self.selected = self.inventory.select_armor(index, alternate, shift, self.selected)
             return result
         elif l is self.slots.crafted:
-            if shift: # shift-click on crafted slot
+            if shift:  # shift-click on crafted slot
                 # Notchian client works this way: you lose items
                 # that was not moved to inventory. So, it's not a bug.
                 if (self.select_stack(self.slots.crafted, 0)):
@@ -217,32 +218,30 @@ class Window(SerializableSlots):
                 else:
                     result = False
             else:
-                result, self.selected = self.slots.select_crafted(index,
-                                            alternate, shift, self.selected)
+                result, self.selected = self.slots.select_crafted(index, alternate, shift, self.selected)
             return result
         elif shift:
             return self.select_stack(l, index)
         elif self.selected is not None and l[index] is not None:
             sslot = self.selected
             islot = l[index]
-            if islot.holds(sslot) and islot.primary not in blocks.unstackable:
+            if islot.holds(sslot) and islot.item_id not in blocks.unstackable:
                 # both contain the same item
                 if alternate:
-                    if islot.quantity < 64:
+                    if islot.count < 64:
                         l[index] = islot.increment()
                         self.selected = sslot.decrement()
                         self.mark_dirty(l, index)
                 else:
-                    if sslot.quantity + islot.quantity <= 64:
+                    if sslot.count + islot.count <= 64:
                         # Sum of items fits in one slot, so this is easy.
-                        l[index] = islot.increment(sslot.quantity)
+                        l[index] = islot.increment(sslot.count)
                         self.selected = None
                     else:
                         # fill up slot to 64, move left overs to selection
                         # valid for left and right mouse click
-                        l[index] = islot.replace(quantity=64)
-                        self.selected = sslot.replace(
-                            quantity=sslot.quantity + islot.quantity - 64)
+                        l[index] = Slot(item_id=islot.item_id, count=64, damage=islot.damage)
+                        self.selected = Slot(item_id=sslot.item_id, count=sslot.count+islot.count-64, damage=sslot.damage)
                     self.mark_dirty(l, index)
             else:
                 # Default case: just swap
@@ -253,7 +252,7 @@ class Window(SerializableSlots):
             if alternate:
                 if self.selected is not None:
                     sslot = self.selected
-                    l[index] = sslot.replace(quantity=1)
+                    l[index] = Slot(item_id=sslot.item_id, count=1, damage=sslot.damage)
                     self.selected = sslot.decrement()
                     self.mark_dirty(l, index)
                 elif l[index] is None:
@@ -262,10 +261,10 @@ class Window(SerializableSlots):
                 else:
                     # Logically, l[index] is not None, but self.selected is.
                     islot = l[index]
-                    scount = islot.quantity // 2
-                    scount, lcount = islot.quantity - scount, scount
-                    l[index] = islot.replace(quantity=lcount)
-                    self.selected = islot.replace(quantity=scount)
+                    scount = islot.count // 2
+                    scount, lcount = islot.count - scount, scount
+                    l[index] = Slot(item_id=islot.item_id, count=lcount, damage=islot.damage)
+                    self.selected = Slot(item_id=islot.item_id, count=scount, damage=islot.damage)
                     self.mark_dirty(l, index)
             else:
                 # Default case: just swap.
@@ -299,11 +298,11 @@ class Window(SerializableSlots):
     def drop_selected(self, alternate=False):
         items = []
         if self.selected is not None:
-            if alternate: # drop one item
-                i = Slot(self.selected.primary, self.selected.secondary, 1)
+            if alternate:  # drop one item
+                i = Slot(self.selected.item_id, 1, self.selected.damage)
                 items.append(i)
                 self.selected = self.selected.decrement()
-            else: # drop all
+            else:  # drop all
                 items.append(self.selected)
                 self.selected = None
         return items
@@ -315,6 +314,7 @@ class Window(SerializableSlots):
     def packets_for_dirty(self, a):
         # override later in SharedWindow
         return ""
+
 
 class InventoryWindow(Window):
     '''
@@ -345,7 +345,7 @@ class InventoryWindow(Window):
         m += [self.inventory.armor, self.inventory.storage, self.inventory.holdables]
         return m
 
-    def creative(self, slot, primary, secondary, quantity):
+    def creative(self, slot, item_id, count, damage):
         ''' Process inventory changes made in creative mode
         '''
         try:
@@ -356,10 +356,11 @@ class InventoryWindow(Window):
         # Current notchian implementation has only holdable slots.
         # Prevent changes in other slots.
         if container is self.inventory.holdables:
-            container[index] = Slot(primary, secondary, quantity)
+            container[index] = Slot(item_id, count, damage)
             return True
         else:
             return False
+
 
 class WorkbenchWindow(Window):
 
@@ -374,6 +375,7 @@ class WorkbenchWindow(Window):
         m += [self.inventory.storage, self.inventory.holdables]
         return m
 
+
 class SharedWindow(Window):
     """
     Base class for all windows with shared containers (like chests, furnace and dispenser)
@@ -387,7 +389,7 @@ class SharedWindow(Window):
         """
         Window.__init__(self, wid, inventory, slots)
         self.coords = coords
-        self.dirty_slots = {} # { slot : value, ... }
+        self.dirty_slots = {}  # { slot : value, ... }
 
     def mark_dirty(self, table, index):
         # player's inventory are not shareable slots, skip it
@@ -402,18 +404,19 @@ class SharedWindow(Window):
         packets = ""
         for slot, item in dirty_slots.iteritems():
             if item is None:
-                packets += make_packet("window-slot", wid=self.wid, slot=slot, primary=-1)
+                packets += make_packet("set_slot", wid=self.wid, slot_no=slot, slot=Slot())
             else:
-                packets += make_packet("window-slot", wid=self.wid, slot=slot,
-                                       primary=item.primary, secondary=item.secondary,
-                                       count=item.quantity)
+                packets += make_packet("set_slot", wid=self.wid, slot_no=slot,
+                                       slot=Slot(item_id=item.item_id, count=item.count, damage=item.damage))
         return packets
+
 
 class ChestWindow(SharedWindow):
     @property
     def metalist(self):
         m = [self.slots.storage, self.inventory.storage, self.inventory.holdables]
         return m
+
 
 class LargeChestWindow(SharedWindow):
 
@@ -425,6 +428,7 @@ class LargeChestWindow(SharedWindow):
     def metalist(self):
         m = [self.slots.storage, self.inventory.storage, self.inventory.holdables]
         return m
+
 
 class FurnaceWindow(SharedWindow):
 

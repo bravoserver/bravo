@@ -3,8 +3,10 @@ from twisted.trial.unittest import TestCase
 from bravo.ibravo import IPostBuildHook
 from bravo.plugin import retrieve_plugins
 
+
 class TrackMockFactory(object):
     pass
+
 
 class TestTracks(TestCase):
 
