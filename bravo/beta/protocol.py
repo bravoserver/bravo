@@ -197,8 +197,11 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         Hook for position packets.
         """
 
+        # Refuse to handle any new position information while we are
+        # relocating. Clients mess this up frequently, and it's fairly racy,
+        # so don't consider this to be exceptional. Just ignore this one
+        # packet and continue.
         if self.state != STATE_LOCATED:
-            log.msg("Ignoring unlocated position!")
             return
 
         self.grounded(container.grounded)
