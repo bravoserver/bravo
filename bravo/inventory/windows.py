@@ -1,5 +1,5 @@
 from itertools import chain, izip
-from construct import Container, ListContainer
+from construct import Container
 
 from bravo import blocks
 from bravo.beta.packets import make_packet
@@ -101,15 +101,15 @@ class Window(SerializableSlots):
         self.load_from_list(items)
 
     def save_to_packet(self):
-        lc = ListContainer()
+        l = []
         for item in chain(*self.metalist):
             if item is None:
-                lc.append(Container(primary=-1))
+                l.append(Container(primary=-1))
             else:
-                lc.append(Container(primary=item.primary,
+                l.append(Container(primary=item.primary,
                     secondary=item.secondary, count=item.quantity))
 
-        packet = make_packet("inventory", wid=self.wid, length=len(lc), items=lc)
+        packet = make_packet("inventory", wid=self.wid, length=len(l), items=l)
         return packet
 
     def select_stack(self, container, index):
