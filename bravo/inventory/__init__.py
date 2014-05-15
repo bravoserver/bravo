@@ -1,7 +1,7 @@
 from itertools import chain
 
 from bravo import blocks
-from bravo.beta.structures import Slot
+from bravo.protocols.beta.structures import Slot
 
 
 class SerializableSlots(object):

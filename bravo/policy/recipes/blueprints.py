@@ -1,5 +1,5 @@
 from bravo.blocks import blocks, items
-from bravo.beta.recipes import Blueprint
+from bravo.protocols.beta.recipes import Blueprint
 
 def one_by_two(top, bottom, provides, amount, name):
     """

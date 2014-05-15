@@ -2,7 +2,6 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python import log
 from zope.interface import implements
 
-from bravo.beta.packets import make_packet
 from bravo.blocks import blocks
 from bravo.entity import Chest as ChestTile, Furnace as FurnaceTile
 from bravo.ibravo import (IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
@@ -10,6 +9,7 @@ from bravo.ibravo import (IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
 from bravo.inventory.windows import (WorkbenchWindow, ChestWindow,
         LargeChestWindow, FurnaceWindow)
 from bravo.location import Location
+from bravo.protocols.beta.packets import make_packet
 from bravo.utilities.building import chestsAround
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
 

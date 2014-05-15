@@ -16,7 +16,6 @@ from twisted.python import log
 from twisted.web.client import getPage
 
 from bravo import version
-from bravo.beta.structures import BuildData, Settings
 from bravo.blocks import blocks, items
 from bravo.chunk import CHUNK_HEIGHT
 from bravo.entity import Sign
@@ -28,9 +27,10 @@ from bravo.infini.factory import InfiniClientFactory
 from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location, Orientation, Position
 from bravo.motd import get_motd
-from bravo.beta.packets import parse_packets, make_packet, make_error_packet
 from bravo.plugin import retrieve_plugins
 from bravo.policy.dig import dig_policies
+from bravo.protocols.beta.packets import parse_packets, make_packet, make_error_packet
+from bravo.protocols.beta.structures import BuildData, Settings
 from bravo.utilities.coords import adjust_coords_for_face, split_coords
 from bravo.utilities.chat import complete, username_alternatives
 from bravo.utilities.maths import circling, clamp, sorted_by_distance

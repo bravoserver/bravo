@@ -7,7 +7,7 @@ import operator
 
 from construct import Container
 
-from bravo.beta.packets import make_packet
+from bravo.protocols.beta.packets import make_packet
 
 def _combinator(op):
     def f(self, other):

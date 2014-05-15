@@ -6,9 +6,9 @@ from twisted.python import log
 
 from bravo.amp import ConsoleRPCFactory
 from bravo.config import read_configuration
-from bravo.beta.factory import BravoFactory
+from bravo.factory import BravoFactory
 from bravo.infini.factory import InfiniNodeFactory
-from bravo.beta.protocol import BetaProxyProtocol
+from bravo.protocols.beta.protocol import BetaProxyProtocol
 
 class BetaProxyFactory(Factory):
     protocol = BetaProxyProtocol

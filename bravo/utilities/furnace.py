@@ -1,6 +1,6 @@
-from bravo.beta.structures import Slot
 from bravo.blocks import blocks, items
 from bravo.inventory.windows import FurnaceWindow
+from bravo.protocols.beta.structures import Slot
 
 '''
 Furnace recipes

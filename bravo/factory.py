@@ -9,8 +9,6 @@ from twisted.internet.task import LoopingCall
 from twisted.python import log
 from zope.interface import implements
 
-from bravo.beta.packets import make_packet
-from bravo.beta.protocol import BravoProtocol, KickedProtocol
 from bravo.entity import entities
 from bravo.ibravo import (ISortedPlugin, IAutomaton, ITerrainGenerator,
                           IUseHook, ISignHook, IPreDigHook, IDigHook,
@@ -20,6 +18,8 @@ from bravo.location import Location
 from bravo.plugin import retrieve_named_plugins, retrieve_sorted_plugins
 from bravo.policy.packs import packs as available_packs
 from bravo.policy.seasons import Spring, Winter
+from bravo.protocols.beta.packets import make_packet
+from bravo.protocols.beta.protocol import BravoProtocol, KickedProtocol
 from bravo.utilities.chat import chat_name, sanitize_chat
 from bravo.weather import WeatherVane
 from bravo.world import World

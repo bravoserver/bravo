@@ -10,12 +10,12 @@ from twisted.internet.defer import (inlineCallbacks, maybeDeferred,
 from twisted.internet.task import LoopingCall, coiterate
 from twisted.python import log
 
-from bravo.beta.structures import Level
 from bravo.chunk import Chunk, CHUNK_HEIGHT
 from bravo.entity import Player, Furnace
 from bravo.errors import (ChunkNotLoaded, SerializerReadException,
                           SerializerWriteException)
 from bravo.ibravo import ISerializer
+from bravo.protocols.beta.structures import Level
 from bravo.plugin import retrieve_named_plugins
 from bravo.utilities.coords import split_coords
 from bravo.utilities.temporal import PendingEvent

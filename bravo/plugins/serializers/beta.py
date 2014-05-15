@@ -9,7 +9,6 @@ from twisted.python import log
 from twisted.python.filepath import FilePath
 from zope.interface import implements
 
-from bravo.beta.structures import Level, Slot
 from bravo.chunk import Chunk
 from bravo.entity import entities, tiles, Player
 from bravo.errors import SerializerReadException, SerializerWriteException
@@ -19,6 +18,7 @@ from bravo.location import Location, Orientation, Position
 from bravo.nbt import NBTFile
 from bravo.nbt import TAG_Compound, TAG_List, TAG_Byte_Array, TAG_String
 from bravo.nbt import TAG_Double, TAG_Long, TAG_Short, TAG_Int, TAG_Byte
+from bravo.protocols.beta.structures import Level, Slot
 from bravo.region import MissingChunk, Region
 from bravo.utilities.bits import unpack_nibbles, pack_nibbles
 from bravo.utilities.paths import name_for_anvil

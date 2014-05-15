@@ -6,7 +6,7 @@ from twisted.python import log
 from bravo.inventory import Inventory
 from bravo.inventory.slots import ChestStorage, FurnaceStorage
 from bravo.location import Location
-from bravo.beta.packets import make_packet, Speed, Slot
+from bravo.protocols.beta.packets import make_packet, Speed, Slot
 from bravo.utilities.geometry import gen_close_point
 from bravo.utilities.maths import clamp
 from bravo.utilities.furnace import (furnace_recipes, furnace_on_off,

@@ -5,8 +5,8 @@ from struct import pack
 from warnings import warn
 
 from bravo.blocks import blocks, glowing_blocks
-from bravo.beta.packets import make_packet
 from bravo.geometry.section import Section
+from bravo.protocols.beta.packets import make_packet
 from bravo.utilities.bits import pack_nibbles
 from bravo.utilities.coords import CHUNK_HEIGHT, XZ, iterchunk
 from bravo.utilities.maths import clamp

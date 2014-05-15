@@ -2,7 +2,7 @@ from twisted.internet.protocol import Factory
 from twisted.protocols.amp import AMP, Command, Unicode, ListOf
 
 from bravo import version as bravo_version
-from bravo.beta.factory import BravoFactory
+from bravo.factory import BravoFactory
 from bravo.ibravo import IChatCommand, IConsoleCommand
 from bravo.plugin import retrieve_plugins
 

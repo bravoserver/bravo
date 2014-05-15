@@ -5,7 +5,7 @@ from zope.interface import implements
 
 from bravo.blocks import items
 from bravo.ibravo import IPreBuildHook, IUseHook
-from bravo.beta.packets import make_packet
+from bravo.protocols.beta.packets import make_packet
 from bravo.utilities.coords import adjust_coords_for_face
 
 available_paintings = {

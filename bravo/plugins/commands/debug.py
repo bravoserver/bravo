@@ -104,7 +104,7 @@ class Rain(object):
         self.factory = factory
 
     def chat_command(self, username, parameters):
-        from bravo.beta.packets import make_packet
+        from bravo.protocols.beta.packets import make_packet
         arg = "".join(parameters)
         if arg == "start":
             self.factory.broadcast(make_packet("state", state="start_rain",

@@ -2,10 +2,10 @@ from itertools import chain, izip
 from construct import Container
 
 from bravo import blocks
-from bravo.beta.packets import make_packet
-from bravo.beta.structures import Slot
 from bravo.inventory import SerializableSlots
 from bravo.inventory.slots import Crafting, Workbench, LargeChestStorage
+from bravo.protocols.beta.packets import make_packet
+from bravo.protocols.beta.structures import Slot
 
 
 class Window(SerializableSlots):

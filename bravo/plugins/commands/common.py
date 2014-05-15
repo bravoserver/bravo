@@ -4,11 +4,11 @@ from textwrap import wrap
 from twisted.internet import reactor
 from zope.interface import implements
 
-from bravo.beta.packets import make_packet
 from bravo.blocks import parse_block
 from bravo.ibravo import IChatCommand, IConsoleCommand
 from bravo.plugin import retrieve_plugins
 from bravo.policy.seasons import Spring, Winter
+from bravo.protocols.beta.packets import make_packet
 from bravo.utilities.temporal import split_time
 
 def parse_player(factory, name):
