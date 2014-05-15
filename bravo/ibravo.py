@@ -148,6 +148,13 @@ class ChatToConsole(object):
 
 registerAdapter(ChatToConsole, IChatCommand, IConsoleCommand)
 
+class IProtocol(IBravoPlugin):
+    """
+    A Protocol
+
+    This will allow for different protocol versions on the same server
+    """
+
 class IRecipe(IBravoPlugin):
     """
     A description for creating materials from other materials.
