@@ -5,8 +5,8 @@ import warnings
 from twisted.internet import reactor
 from twisted.internet.task import deferLater
 
-from bravo.beta.protocol import (BetaServerProtocol, BravoProtocol,
-                                 STATE_LOCATED)
+from bravo.protocols.beta.protocol import (BetaServerProtocol, BravoProtocol,
+                                           STATE_LOCATED)
 from bravo.chunk import Chunk
 from bravo.config import BravoConfigParser
 from bravo.errors import BetaClientError

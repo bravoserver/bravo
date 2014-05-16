@@ -2,9 +2,9 @@ from unittest import TestCase
 
 from twisted.internet.defer import inlineCallbacks, succeed
 
-from bravo.beta.protocol import BuildData
 import bravo.blocks
 from bravo.ibravo import IPreBuildHook
+from bravo.protocols.beta.protocol import BuildData
 import bravo.plugin
 
 class TileMockFactory(object):

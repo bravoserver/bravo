@@ -1,10 +1,10 @@
 from unittest import TestCase
 
-from bravo.beta.structures import Slot
 from bravo.blocks import blocks, items
 from bravo.ibravo import IRecipe
 from bravo.policy.recipes.blueprints import all_blueprints
 from bravo.policy.recipes.ingredients import all_ingredients
+from bravo.protocols.beta.structures import Slot
 
 all_recipes = all_ingredients + all_blueprints
 recipe_dict = dict((r.name, r) for r in all_recipes)

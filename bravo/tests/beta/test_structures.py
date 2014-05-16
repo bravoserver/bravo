@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from bravo.beta.structures import Settings
+from bravo.protocols.beta.structures import Settings
 
 
 class TestSettings(TestCase):

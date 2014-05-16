@@ -3,7 +3,7 @@ from twisted.internet.task import Clock
 from twisted.trial import unittest
 
 from bravo.config import BravoConfigParser
-from bravo.beta.factory import BravoFactory
+from bravo.factory import BravoFactory
 
 class MockProtocol(object):
 

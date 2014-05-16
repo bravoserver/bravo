@@ -1,8 +1,8 @@
 import unittest
 
-from bravo.beta.structures import Slot
 from bravo.blocks import blocks, items
 from bravo.policy.dig import dig_policies, is_effective_against
+from bravo.protocols.beta.structures import Slot
 
 class TestEffectiveness(unittest.TestCase):
 

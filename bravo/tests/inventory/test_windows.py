@@ -2,11 +2,11 @@ from twisted.trial import unittest
 
 import bravo.blocks
 
-from bravo.beta.structures import Slot
 from bravo.inventory import Inventory
 from bravo.inventory.slots import ChestStorage, FurnaceStorage
 from bravo.inventory.windows import (InventoryWindow, WorkbenchWindow, ChestWindow,
     FurnaceWindow, LargeChestWindow)
+from bravo.protocols.beta.structures import Slot
 
 class TestInventoryInternals(unittest.TestCase):
     """

@@ -2,8 +2,8 @@ from twisted.trial import unittest
 
 import bravo.blocks
 
-from bravo.beta.structures import Slot
 from bravo.inventory.slots import comblist, Crafting, Workbench, ChestStorage
+from bravo.protocols.beta.structures import Slot
 
 class TestComblist(unittest.TestCase):
 

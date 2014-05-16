@@ -2,11 +2,11 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.internet.task import Clock
 
-from bravo.beta.structures import Slot
 from bravo.blocks import items, blocks
 from bravo.inventory import Inventory
 from bravo.entity import Furnace as FurnaceTile
 from bravo.inventory.windows import FurnaceWindow
+from bravo.protocols.beta.structures import Slot
 from bravo.utilities.furnace import update_all_windows_slot, update_all_windows_progress
 
 class FakeChunk(object):
