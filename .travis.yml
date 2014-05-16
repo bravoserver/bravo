@@ -4,3 +4,6 @@ python:
     - "2.7"
     - "pypy"
 script: "trial bravo"
+
+notifications:
+    irc: "chat.freenode.net#bravoserver"
