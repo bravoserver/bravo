@@ -193,8 +193,7 @@ Things to consider:
 FAQ
 ===
 
-The FAQ moved to the docs; see docs/faq.rst, or more usefully,
-http://bravo.readthedocs.org/en/latest/faq.html for an HTML version.
+The FAQ moved to readthedocs; see http://bravo.readthedocs.org/en/latest/introduction.html#q-a.
 
 License
 =======
