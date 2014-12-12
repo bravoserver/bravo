@@ -6,6 +6,7 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IDigHook
 
+
 class AlphaSnow(object):
     """
     Notch-style snow handling.
@@ -28,6 +29,7 @@ class AlphaSnow(object):
 
     before = tuple()
     after = tuple()
+
 
 class Give(object):
     """
@@ -63,6 +65,7 @@ class Give(object):
     before = tuple()
     after = tuple()
 
+
 class Torch(object):
     """
     Destroy torches attached to walls.
@@ -86,17 +89,21 @@ class Torch(object):
         # Block coordinates
         x = chunk.x * 16 + x
         z = chunk.z * 16 + z
-        for dx, dy, dz, dmetadata in (
+        __coords = (
             (1,  0,  0, 0x1),
             (-1, 0,  0, 0x2),
             (0,  0,  1, 0x3),
             (0,  0, -1, 0x4),
-            (0,  1,  0, 0x5)):
+            (0,  1,  0, 0x5)
+        )
+        for dx, dy, dz, dmetadata in __coords:
             # Check whether the attached block is a torch.
             coords = (x + dx, y + dy, z + dz)
             dblock = yield world.get_block(coords)
-            if dblock not in (blocks["torch"].slot,
-                blocks["redstone-torch"].slot):
+            _dblock_list = (
+                blocks["torch"].slot, blocks["redstone-torch"].slot
+            )
+            if dblock not in _dblock_list:
                 continue
 
             # Check whether this torch is attached to the block being dug out.

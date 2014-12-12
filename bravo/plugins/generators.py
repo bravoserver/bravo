@@ -334,8 +334,10 @@ class CliffGenerator(object):
             height *= 15
             height = int(height + 70)
             current_height = chunk.heightmap[x * 16 + z]
-            if (-6 < current_height - height < 3 and
-                current_height > 63 and height > 63):
+            if (
+                -6 < current_height - height < 3 and
+                current_height > 63 and height > 63
+            ):
                 for y in range(height - 3):
                     chunk.set_block((x, y, z), blocks["stone"].slot)
                 for y in range(y, CHUNK_HEIGHT // 2):
@@ -345,6 +347,7 @@ class CliffGenerator(object):
 
     before = tuple()
     after = tuple()
+
 
 class FloatGenerator(object):
     """
@@ -386,6 +389,7 @@ class FloatGenerator(object):
     before = tuple()
     after = tuple()
 
+
 class CaveGenerator(object):
     """
     Carve caves and seams out of terrain.
@@ -424,6 +428,7 @@ class CaveGenerator(object):
 
     before = ("grass", "erosion", "simplex", "complex", "boring")
     after = tuple()
+
 
 class SaplingGenerator(object):
     """

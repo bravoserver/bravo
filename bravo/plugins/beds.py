@@ -6,6 +6,7 @@ from bravo.ibravo import IPreBuildHook, IDigHook
 # Metadata
 HEAD_PART = 0x8
 
+
 class Bed(object):
     """
     Make placing/removing beds work correctly.
@@ -34,8 +35,9 @@ class Bed(object):
 
         # Offset coords for the second block; use facing direction to
         # set correct bed blocks.
-        orientation = ('-x', '-z', '+x', '+z')[((int(player.location.yaw) \
-                                            - 45 + 360) % 360) / 90]
+        orientation = ('-x', '-z', '+x', '+z')[
+            ((int(player.location.yaw) - 45 + 360) % 360) / 90
+        ]
         dx, dz = self.deltas(orientation)
         metadata = blocks["bed"].orientation(orientation)
 
@@ -50,16 +52,20 @@ class Bed(object):
             return False, builddata, False
 
         self.factory.world.set_block((x, y, z), blocks["bed-block"].slot)
-        self.factory.world.set_block((x + dx, y, z + dz),
-                blocks["bed-block"].slot)
+        self.factory.world.set_block(
+            (x + dx, y, z + dz),
+            blocks["bed-block"].slot
+        )
         self.factory.world.set_metadata((x, y, z), metadata)
-        self.factory.world.set_metadata((x + dx, y, z + dz),
-                metadata | HEAD_PART)
+        self.factory.world.set_metadata(
+            (x + dx, y, z + dz), metadata | HEAD_PART
+        )
 
-        # XXX As we doing all of the building actions manually we cancel at this point.
+        # XXX As we doing all of the building actions manually
+        # we cancel at this point.
         # This is not what we shall do, but now it's the best solution we have.
-        # Please note that post build hooks and automations will be skipped as well as
-        # default run_build() hook.
+        # Please note that post build hooks and automations will be skipped
+        # as well as default run_build() hook.
         return False, builddata, True
 
     def dig_hook(self, chunk, x, y, z, block):
@@ -84,5 +90,5 @@ class Bed(object):
 
     name = "bed"
 
-    before = () # plugins that come before this plugin
+    before = ()  # plugins that come before this plugin
     after = tuple()

@@ -5,6 +5,7 @@ from bravo.blocks import blocks, items
 from bravo.ibravo import IPreBuildHook
 from bravo.terrain.trees import ConeTree, NormalTree, RoundTree
 
+
 class Fertilizer(object):
     """
     Allows you to use bone meal to fertilize trees, and make them grow up
@@ -31,11 +32,12 @@ class Fertilizer(object):
         # dyes will work as a fertilizer.
         if item.slot == items["bone-meal"].slot:
             # Find the block we're aiming for.
-            block = yield self.factory.world.get_block((x,y,z))
+            block = yield self.factory.world.get_block((x, y, z))
             if block == blocks["sapling"].slot:
                 # Make sure we can remove it from the inventory.
-                if not player.inventory.consume(items["bone-meal"].key,
-                        player.equipped):
+                if not player.inventory.consume(
+                    items["bone-meal"].key, player.equipped
+                ):
                     # If not, don't let bone meal get placed.
                     returnValue((False, builddata, False))
 

@@ -14,6 +14,7 @@ from bravo.terrain.trees import ConeTree, NormalTree, RoundTree, RainforestTree
 from bravo.utilities.automatic import column_scan
 from bravo.world import ChunkNotLoaded
 
+
 class Trees(object):
     """
     Turn saplings into trees.
@@ -49,24 +50,26 @@ class Trees(object):
     def process(self, coords):
         try:
             metadata = self.factory.world.sync_get_metadata(coords)
-            # Is this sapling ready to grow into a big tree? We use a bit-trick to
-            # check.
+            # Is this sapling ready to grow into a big tree? We use a bit-trick
+            # to check.
             if metadata >= 12:
                 # Tree time!
                 tree = self.trees[metadata % 4](pos=coords)
                 tree.prepare(self.factory.world)
                 tree.make_trunk(self.factory.world)
                 tree.make_foliage(self.factory.world)
-                # We can't easily tell how many chunks were modified, so we have
-                # to flush all of them.
+                # We can't easily tell how many chunks were modified, so we
+                # have to flush all of them.
                 self.factory.flush_all_chunks()
             else:
                 # Increment metadata.
                 metadata += 4
                 self.factory.world.sync_set_metadata(coords, metadata)
                 call = reactor.callLater(
-                    randint(self.grow_step_min, self.grow_step_max), self.process,
-                    coords)
+                    randint(self.grow_step_min, self.grow_step_max),
+                    self.process,
+                    coords
+                )
                 self.tracked.add(call)
 
             # Filter tracked set.
@@ -83,6 +86,7 @@ class Trees(object):
     scan = column_scan
 
     name = "trees"
+
 
 class Grass(object):
 
@@ -135,9 +139,14 @@ class Grass(object):
 
                 # The number of grassy neighbors.
                 grasses = 0
+
                 # Intentional shadow.
-                for x, y, z in product(xrange(x - 1, x + 2),
-                    xrange(max(y - 1, 0), y + 4), xrange(z - 1, z + 2)):
+                _x_y_z_product = product(
+                    xrange(x - 1, x + 2),
+                    xrange(max(y - 1, 0), y + 4),
+                    xrange(z - 1, z + 2)
+                )
+                for x, y, z in _x_y_z_product:
                     # Early-exit to avoid block lookup if we finish early.
                     if grasses >= 8:
                         break
@@ -177,6 +186,7 @@ class Grass(object):
     before = tuple()
     after = tuple()
 
+
 class Rain(object):
     """
     Make it rain.
@@ -208,7 +218,8 @@ class Rain(object):
     def check_season(self):
         if self.factory.world.season.name == "spring":
             self.factory.vane.weather = "rainy"
-            reactor.callLater(1 * 60, setattr, self.factory.vane, "weather",
-                "sunny")
+            reactor.callLater(
+                1 * 60, setattr, self.factory.vane, "weather", "sunny"
+            )
 
     name = "rain"

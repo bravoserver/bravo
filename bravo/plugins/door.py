@@ -7,6 +7,7 @@ from bravo.utilities.coords import split_coords
 DOOR_TOP_BLOCK = 0x8
 DOOR_IS_SWUNG = 0x4
 
+
 class Trapdoor(object):
 
     implements(IPreBuildHook, IPreDigHook)
@@ -22,7 +23,7 @@ class Trapdoor(object):
         @d.addCallback
         def cb(chunk):
             block = chunk.get_block((x, y, z))
-            if block != blocks["trapdoor"].slot: # already removed
+            if block != blocks["trapdoor"].slot:  # already removed
                 return
             metadata = chunk.get_metadata((x, y, z))
             chunk.set_metadata((x, y, z), metadata ^ DOOR_IS_SWUNG)
@@ -53,6 +54,7 @@ class Trapdoor(object):
     before = tuple()
     after = tuple()
 
+
 class Door(object):
     """
     Implements all the door logic.
@@ -74,7 +76,8 @@ class Door(object):
 
     def open_or_close(self, world, point):
         """
-        Toggle the state of the door : open it if it was closed, close it if it was open.
+        Toggle the state of the door : open it if it was closed,
+        close it if it was open.
         """
         x, y, z = point[0], point[1], point[2]
 
@@ -84,7 +87,7 @@ class Door(object):
         @d.addCallback
         def cb(chunk):
             block = chunk.get_block((x, y, z))
-            if block not in Door.doors: # already removed
+            if block not in Door.doors:  # already removed
                 return
             metadata = chunk.get_metadata((x, y, z))
             chunk.set_metadata((x, y, z), metadata ^ DOOR_IS_SWUNG)
@@ -120,9 +123,16 @@ class Door(object):
             return False, builddata, True
 
         # Checking that we want to place a door.
-        if item.slot != items["wooden-door"].slot and item.slot != items["iron-door"].slot:
+        if (
+            item.slot != items["wooden-door"].slot and
+            item.slot != items["iron-door"].slot
+        ):
             return True, builddata, False
-        entity_name = "wooden-door" if items["wooden-door"].slot == item.slot else "iron-door"
+
+        if items["wooden-door"].slot == item.slot:
+            entity_name = "wooden-door"
+        else:
+            entity_name = "iron-door"
 
         if face != "+y":
             # No doors on the walls or on the ceiling!
@@ -137,24 +147,37 @@ class Door(object):
         if not player.inventory.consume((item.slot, 0), player.equipped):
             return False, builddata, True
 
-        # We compute the direction the door will face (which is the reverse of the direrction
-        # the player is facing).
-        orientation = ('+x', '+z', '-x', '-z')[((int(player.location.yaw) \
-                                               - 45 + 360) % 360) / 90]
+        # We compute the direction the door will face
+        # (which is the reverse of the direrction the player is facing).
+        orientation = ('+x', '+z', '-x', '-z')[
+            ((int(player.location.yaw) - 45 + 360) % 360) / 90
+        ]
         metadata = blocks[entity_name].orientation(orientation)
 
         # Check if we shall mirror the door.
-        # By default the door is left-sided. It must be mirrored if has nothing on left
+        # By default the door is left-sided.
+        # It must be mirrored if has nothing on left
         # and have something on right (notchian).
         # dx, dz for blocks on left of the door
-        dx, dz = {'+x': (0, 1), '-x': (0, -1), '+z': (-1, 0), '-z': (1, 0)}[orientation]
+        dx, dz = {
+            '+x': (0, 1),
+            '-x': (0, -1),
+            '+z': (-1, 0),
+            '-z': (1, 0)
+        }[orientation]
         bl1 = world.sync_get_block((x + dx, y, z + dz))
         bl2 = world.sync_get_block((x + dx, y + 1, z + dz))
-        if (bl1 == 0 or bl1 in self.doors) and (bl2 == 0 or bl2 in self.doors):
+        if (
+            (bl1 == 0 or bl1 in self.doors) and
+            (bl2 == 0 or bl2 in self.doors)
+        ):
             # blocks on right of the door
             br1 = world.sync_get_block((x - dx, y, z - dz))
             br2 = world.sync_get_block((x - dx, y + 1, z - dz))
-            if (br1 and br1 not in self.doors) or (br2 and br2 not in self.doors):
+            if (
+                (br1 and br1 not in self.doors) or
+                (br2 and br2 not in self.doors)
+            ):
                 # mirror the door: rotate 90deg and open (sic!)
                 metadata = ((metadata + 3) % 4) | DOOR_IS_SWUNG
 
@@ -166,13 +189,15 @@ class Door(object):
         return False, builddata, True
 
     def dig_hook(self, chunk, x, y, z, block):
-        if block.slot != blocks["wooden-door-block"].slot and block.slot != blocks["iron-door-block"].slot:
+        _not_door = (block.slot != blocks["wooden-door-block"].slot and
+                     block.slot != blocks["iron-door-block"].slot)
+        if _not_door:
             return
 
         # We get the coordinates of the other door block
         metadata = chunk.get_metadata((x, y, z))
         if metadata & DOOR_TOP_BLOCK:
-            y -= 1 # The block was top block.
+            y -= 1  # The block was top block.
         else:
             y += 1
         # And we change it to air.

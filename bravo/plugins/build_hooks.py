@@ -6,6 +6,7 @@ from bravo.entity import Sign as SignTile
 from bravo.ibravo import IPreBuildHook
 from bravo.utilities.coords import split_coords
 
+
 class Sign(object):
     """
     Place signs.
@@ -46,8 +47,10 @@ class Sign(object):
             # 23 degrees to get the sign to midpoint correctly.
             yaw = player.location.ori.to_degs()[0]
             metadata = ((yaw + 180) * 16 // 360) % 0xf
-            builddata = builddata._replace(block=blocks["signpost"],
-                metadata=metadata)
+            builddata = builddata._replace(
+                block=blocks["signpost"],
+                metadata=metadata
+            )
             y += 1
         elif face == "-z":
             builddata = builddata._replace(metadata=0x2)
