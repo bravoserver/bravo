@@ -11,6 +11,7 @@ from construct import BitStruct, BitField
 from construct import StringAdapter, LengthValueAdapter, Sequence
 from construct import ConstructError
 
+
 def IPacket(object):
     """
     Interface for packets.
@@ -28,6 +29,7 @@ def IPacket(object):
 
         Exceptions may be raised if the parser finds invalid data.
         """
+
 
 def simple(name, fmt, *args):
     """
@@ -66,15 +68,18 @@ from bravo.encodings import ucs2
 from codecs import register
 register(ucs2)
 
+
 class DoubleAdapter(LengthValueAdapter):
 
     def _encode(self, obj, context):
         return len(obj) / 2, obj
 
+
 def AlphaString(name):
     return StringAdapter(
         DoubleAdapter(
-            Sequence(name,
+            Sequence(
+                name,
                 UBInt16("length"),
                 MetaField("data", lambda ctx: ctx["length"] * 2),
             )
@@ -82,13 +87,17 @@ def AlphaString(name):
         encoding="ucs2",
     )
 
+
 # Boolean converter.
+
+
 def Bool(*args, **kwargs):
     return Flag(*args, default=True, **kwargs)
 
 # Flying, position, and orientation, reused in several places.
 grounded = Struct("grounded", UBInt8("grounded"))
-position = Struct("position",
+position = Struct(
+    "position",
     BFloat64("x"),
     BFloat64("y"),
     BFloat64("stance"),
@@ -98,18 +107,24 @@ orientation = Struct("orientation", BFloat32("rotation"), BFloat32("pitch"))
 
 # TODO: this must be replaced with 'slot' (see below)
 # Notchian item packing (slot data)
-items = Struct("items",
+items = Struct(
+    "items",
     SBInt16("primary"),
-    If(lambda context: context["primary"] >= 0,
-        Embed(Struct("item_information",
-            UBInt8("count"),
-            UBInt16("secondary"),
-            Magic("\xff\xff"),
-        )),
+    If(
+        lambda context: context["primary"] >= 0,
+        Embed(
+            Struct(
+                "item_information",
+                UBInt8("count"),
+                UBInt16("secondary"),
+                Magic("\xff\xff"),
+            )
+        ),
     ),
 )
 
 Speed = namedtuple('speed', 'x y z')
+
 
 class Slot(object):
     def __init__(self, item_id=-1, count=1, damage=0, nbt=None):
@@ -149,6 +164,7 @@ class Slot(object):
                 self.damage == self.damage and
                 self.nbt == self.nbt)
 
+
 class SlotAdapter(Adapter):
 
     def _decode(self, obj, context):
@@ -164,21 +180,29 @@ class SlotAdapter(Adapter):
         if obj.is_empty:
             return Container(item_id=-1)
         else:
-            return Container(item_id=obj.item_id, count=obj.count, damage=obj.damage,
-                             nbt_len=len(obj) if len(obj) else -1, nbt=obj.nbt)
+            return Container(
+                item_id=obj.item_id, count=obj.count, damage=obj.damage,
+                nbt_len=len(obj) if len(obj) else -1, nbt=obj.nbt
+            )
 
 slot = SlotAdapter(
-    Struct("slot",
+    Struct(
+        "slot",
         SBInt16("item_id"),
-        If(lambda context: context["item_id"] >= 0,
-            Embed(Struct("item_information",
-                UBInt8("count"),
-                UBInt16("damage"),
-                SBInt16("nbt_len"),
-                If(lambda context: context["nbt_len"] >= 0,
-                    MetaField("nbt", lambda ctx: ctx["nbt_len"])
+        If(
+            lambda context: context["item_id"] >= 0,
+            Embed(
+                Struct(
+                    "item_information",
+                    UBInt8("count"),
+                    UBInt16("damage"),
+                    SBInt16("nbt_len"),
+                    If(
+                        lambda context: context["nbt_len"] >= 0,
+                        MetaField("nbt", lambda ctx: ctx["nbt_len"])
+                    )
                 )
-            )),
+            ),
         )
     )
 )
@@ -187,7 +211,10 @@ slot = SlotAdapter(
 Metadata = namedtuple("Metadata", "type value")
 metadata_types = ["byte", "short", "int", "float", "string", "slot", "coords"]
 
+
 # Metadata adaptor.
+
+
 class MetadataAdapter(Adapter):
 
     def _decode(self, obj, context):
@@ -208,8 +235,9 @@ class MetadataAdapter(Adapter):
         if c.data:
             c.data[-1].peeked = 127
         else:
-            c.data.append(Container(id=Container(first=0, second=0), value=0,
-                peeked=127))
+            c.data.append(Container(
+                id=Container(first=0, second=0), value=0, peeked=127
+            ))
         return c
 
 # Metadata inner container.
@@ -220,7 +248,8 @@ metadata_switch = {
     3: BFloat32("value"),
     4: AlphaString("value"),
     5: slot,
-    6: Struct("coords",
+    6: Struct(
+        "coords",
         UBInt32("x"),
         UBInt32("y"),
         UBInt32("z"),
@@ -229,15 +258,22 @@ metadata_switch = {
 
 # Metadata subconstruct.
 metadata = MetadataAdapter(
-    Struct("metadata",
-        RepeatUntil(lambda obj, context: obj["peeked"] == 0x7f,
-            Struct("data",
-                BitStruct("id",
+    Struct(
+        "metadata",
+        RepeatUntil(
+            lambda obj, context: obj["peeked"] == 0x7f,
+            Struct(
+                "data",
+                BitStruct(
+                    "id",
                     BitField("type", 3),
                     BitField("key", 5),
                 ),
-                Switch("value", lambda context: context["id"]["type"],
-                    metadata_switch),
+                Switch(
+                    "value",
+                    lambda context: context["id"]["type"],
+                    metadata_switch
+                ),
                 Peek(UBInt8("peeked")),
             ),
         ),
@@ -283,7 +319,8 @@ mode = Enum(UBInt8("mode"), **modes)
 
 # Possible effects.
 # XXX these names aren't really canonized yet
-effect = Enum(UBInt8("effect"),
+effect = Enum(
+    UBInt8("effect"),
     move_fast=1,
     move_slow=2,
     dig_fast=3,
@@ -308,10 +345,12 @@ effect = Enum(UBInt8("effect"),
 
 # The actual packet list.
 packets = {
-    0x00: Struct("ping",
+    0x00: Struct(
+        "ping",
         UBInt32("pid"),
     ),
-    0x01: Struct("login",
+    0x01: Struct(
+        "login",
         # Player Entity ID (random number generated by the server)
         UBInt32("eid"),
         # default, flat, largeBiomes
@@ -322,42 +361,50 @@ packets = {
         UBInt8("unused"),
         UBInt8("maxplayers"),
     ),
-    0x02: Struct("handshake",
+    0x02: Struct(
+        "handshake",
         UBInt8("protocol"),
         AlphaString("username"),
         AlphaString("host"),
         UBInt32("port"),
     ),
-    0x03: Struct("chat",
+    0x03: Struct(
+        "chat",
         AlphaString("data"),
     ),
-    0x04: Struct("time",
+    0x04: Struct(
+        "time",
         # Total Ticks
         UBInt64("timestamp"),
         # Time of day
         UBInt64("time"),
     ),
-    0x05: Struct("entity-equipment",
+    0x05: Struct(
+        "entity-equipment",
         UBInt32("eid"),
         UBInt16("slot"),
         Embed(items),
     ),
-    0x06: Struct("spawn",
+    0x06: Struct(
+        "spawn",
         SBInt32("x"),
         SBInt32("y"),
         SBInt32("z"),
     ),
-    0x07: Struct("use",
+    0x07: Struct(
+        "use",
         UBInt32("eid"),
         UBInt32("target"),
         UBInt8("button"),
     ),
-    0x08: Struct("health",
+    0x08: Struct(
+        "health",
         BFloat32("hp"),
         UBInt16("fp"),
         BFloat32("saturation"),
     ),
-    0x09: Struct("respawn",
+    0x09: Struct(
+        "respawn",
         dimension,
         difficulty,
         mode,
@@ -365,22 +412,27 @@ packets = {
         AlphaString("leveltype"),
     ),
     0x0a: grounded,
-    0x0b: Struct("position",
+    0x0b: Struct(
+        "position",
         position,
         grounded
     ),
-    0x0c: Struct("orientation",
+    0x0c: Struct(
+        "orientation",
         orientation,
         grounded
     ),
     # TODO: Differ between client and server 'position'
-    0x0d: Struct("location",
+    0x0d: Struct(
+        "location",
         position,
         orientation,
         grounded
     ),
-    0x0e: Struct("digging",
-        Enum(UBInt8("state"),
+    0x0e: Struct(
+        "digging",
+        Enum(
+            UBInt8("state"),
             started=0,
             cancelled=1,
             stopped=2,
@@ -394,7 +446,8 @@ packets = {
         SBInt32("z"),
         face,
     ),
-    0x0f: Struct("build",
+    0x0f: Struct(
+        "build",
         SBInt32("x"),
         UBInt8("y"),
         SBInt32("z"),
@@ -405,20 +458,24 @@ packets = {
         UBInt8("cursorz"),
     ),
     # Hold Item Change
-    0x10: Struct("equip",
+    0x10: Struct(
+        "equip",
         # Only 0-8
         UBInt16("slot"),
     ),
-    0x11: Struct("bed",
+    0x11: Struct(
+        "bed",
         UBInt32("eid"),
         UBInt8("unknown"),
         SBInt32("x"),
         UBInt8("y"),
         SBInt32("z"),
     ),
-    0x12: Struct("animate",
+    0x12: Struct(
+        "animate",
         UBInt32("eid"),
-        Enum(UBInt8("animation"),
+        Enum(
+            UBInt8("animation"),
             noop=0,
             arm=1,
             hit=2,
@@ -429,9 +486,11 @@ packets = {
             uncrouch=105,
         ),
     ),
-    0x13: Struct("action",
+    0x13: Struct(
+        "action",
         UBInt32("eid"),
-        Enum(UBInt8("action"),
+        Enum(
+            UBInt8("action"),
             crouch=1,
             uncrouch=2,
             leave_bed=3,
@@ -440,7 +499,8 @@ packets = {
         ),
         UBInt32("unknown"),
     ),
-    0x14: Struct("player",
+    0x14: Struct(
+        "player",
         UBInt32("eid"),
         AlphaString("username"),
         SBInt32("x"),
@@ -453,14 +513,17 @@ packets = {
         SBInt16("item"),
         metadata,
     ),
-    0x16: Struct("collect",
+    0x16: Struct(
+        "collect",
         UBInt32("eid"),
         UBInt32("destination"),
     ),
     # Object/Vehicle
-    0x17: Struct("object",  # XXX: was 'vehicle'!
+    0x17: Struct(
+        "object",  # XXX: was 'vehicle'!
         UBInt32("eid"),
-        Enum(UBInt8("type"),  # See http://wiki.vg/Entities#Objects
+        Enum(
+            UBInt8("type"),  # See http://wiki.vg/Entities#Objects
             boat=1,
             item_stack=2,
             minecart=10,
@@ -487,46 +550,52 @@ packets = {
         UBInt8("pitch"),
         UBInt8("yaw"),
         SBInt32("data"),  # See http://www.wiki.vg/Object_Data
-        If(lambda context: context["data"] != 0,
-            Struct("speed",
+        If(
+            lambda context: context["data"] != 0,
+            Struct(
+                "speed",
                 SBInt16("x"),
                 SBInt16("y"),
                 SBInt16("z"),
             )
         ),
     ),
-    0x18: Struct("mob",
+    0x18: Struct(
+        "mob",
         UBInt32("eid"),
-        Enum(UBInt8("type"), **{
-            "Creeper": 50,
-            "Skeleton": 51,
-            "Spider": 52,
-            "GiantZombie": 53,
-            "Zombie": 54,
-            "Slime": 55,
-            "Ghast": 56,
-            "ZombiePig": 57,
-            "Enderman": 58,
-            "CaveSpider": 59,
-            "Silverfish": 60,
-            "Blaze": 61,
-            "MagmaCube": 62,
-            "EnderDragon": 63,
-            "Wither": 64,
-            "Bat": 65,
-            "Witch": 66,
-            "Pig": 90,
-            "Sheep": 91,
-            "Cow": 92,
-            "Chicken": 93,
-            "Squid": 94,
-            "Wolf": 95,
-            "Mooshroom": 96,
-            "Snowman": 97,
-            "Ocelot": 98,
-            "IronGolem": 99,
-            "Villager": 120
-        }),
+        Enum(
+            UBInt8("type"),
+            **{
+                "Creeper": 50,
+                "Skeleton": 51,
+                "Spider": 52,
+                "GiantZombie": 53,
+                "Zombie": 54,
+                "Slime": 55,
+                "Ghast": 56,
+                "ZombiePig": 57,
+                "Enderman": 58,
+                "CaveSpider": 59,
+                "Silverfish": 60,
+                "Blaze": 61,
+                "MagmaCube": 62,
+                "EnderDragon": 63,
+                "Wither": 64,
+                "Bat": 65,
+                "Witch": 66,
+                "Pig": 90,
+                "Sheep": 91,
+                "Cow": 92,
+                "Chicken": 93,
+                "Squid": 94,
+                "Wolf": 95,
+                "Mooshroom": 96,
+                "Snowman": 97,
+                "Ocelot": 98,
+                "IronGolem": 99,
+                "Villager": 120
+            }
+        ),
         SBInt32("x"),
         SBInt32("y"),
         SBInt32("z"),
@@ -538,7 +607,8 @@ packets = {
         SBInt16("vz"),
         metadata,
     ),
-    0x19: Struct("painting",
+    0x19: Struct(
+        "painting",
         UBInt32("eid"),
         AlphaString("title"),
         SBInt32("x"),
@@ -546,44 +616,52 @@ packets = {
         SBInt32("z"),
         face,
     ),
-    0x1a: Struct("experience",
+    0x1a: Struct(
+        "experience",
         UBInt32("eid"),
         SBInt32("x"),
         SBInt32("y"),
         SBInt32("z"),
         UBInt16("quantity"),
     ),
-    0x1b: Struct("steer",
+    0x1b: Struct(
+        "steer",
         BFloat32("first"),
         BFloat32("second"),
         Bool("third"),
         Bool("fourth"),
     ),
-    0x1c: Struct("velocity",
+    0x1c: Struct(
+        "velocity",
         UBInt32("eid"),
         SBInt16("dx"),
         SBInt16("dy"),
         SBInt16("dz"),
     ),
-    0x1d: Struct("destroy",
+    0x1d: Struct(
+        "destroy",
         UBInt8("count"),
         MetaArray(lambda context: context["count"], UBInt32("eid")),
     ),
-    0x1e: Struct("create",
+    0x1e: Struct(
+        "create",
         UBInt32("eid"),
     ),
-    0x1f: Struct("entity-position",
+    0x1f: Struct(
+        "entity-position",
         UBInt32("eid"),
         SBInt8("dx"),
         SBInt8("dy"),
         SBInt8("dz")
     ),
-    0x20: Struct("entity-orientation",
+    0x20: Struct(
+        "entity-orientation",
         UBInt32("eid"),
         UBInt8("yaw"),
         UBInt8("pitch")
     ),
-    0x21: Struct("entity-location",
+    0x21: Struct(
+        "entity-location",
         UBInt32("eid"),
         SBInt8("dx"),
         SBInt8("dy"),
@@ -591,7 +669,8 @@ packets = {
         UBInt8("yaw"),
         UBInt8("pitch")
     ),
-    0x22: Struct("teleport",
+    0x22: Struct(
+        "teleport",
         UBInt32("eid"),
         SBInt32("x"),
         SBInt32("y"),
@@ -599,13 +678,16 @@ packets = {
         UBInt8("yaw"),
         UBInt8("pitch"),
     ),
-    0x23: Struct("entity-head",
+    0x23: Struct(
+        "entity-head",
         UBInt32("eid"),
         UBInt8("yaw"),
     ),
-    0x26: Struct("status",
+    0x26: Struct(
+        "status",
         UBInt32("eid"),
-        Enum(UBInt8("status"),
+        Enum(
+            UBInt8("status"),
             damaged=2,
             killed=3,
             taming=6,
@@ -622,34 +704,40 @@ packets = {
             firework=17,
         ),
     ),
-    0x27: Struct("attach",
+    0x27: Struct(
+        "attach",
         UBInt32("eid"),
         # XXX -1 for detatching
         UBInt32("vid"),
         UBInt8("unknown"),
     ),
-    0x28: Struct("metadata",
+    0x28: Struct(
+        "metadata",
         UBInt32("eid"),
         metadata,
     ),
-    0x29: Struct("effect",
+    0x29: Struct(
+        "effect",
         UBInt32("eid"),
         effect,
         UBInt8("amount"),
         UBInt16("duration"),
     ),
-    0x2a: Struct("uneffect",
+    0x2a: Struct(
+        "uneffect",
         UBInt32("eid"),
         effect,
     ),
-    0x2b: Struct("levelup",
+    0x2b: Struct(
+        "levelup",
         BFloat32("current"),
         UBInt16("level"),
         UBInt16("total"),
     ),
     # XXX 0x2c, server to client, needs to be implemented, needs special
     # UUID-packing techniques
-    0x33: Struct("chunk",
+    0x33: Struct(
+        "chunk",
         SBInt32("x"),
         SBInt32("z"),
         Bool("continuous"),
@@ -657,13 +745,15 @@ packets = {
         UBInt16("add"),
         PascalString("data", length_field=UBInt32("length"), encoding="zlib"),
     ),
-    0x34: Struct("batch",
+    0x34: Struct(
+        "batch",
         SBInt32("x"),
         SBInt32("z"),
         UBInt16("count"),
         PascalString("data", length_field=UBInt32("length")),
     ),
-    0x35: Struct("block",
+    0x35: Struct(
+        "block",
         SBInt32("x"),
         UBInt8("y"),
         SBInt32("z"),
@@ -672,7 +762,8 @@ packets = {
     ),
     # XXX This covers general tile actions, not just note blocks.
     # TODO: Needs work
-    0x36: Struct("block-action",
+    0x36: Struct(
+        "block-action",
         SBInt32("x"),
         SBInt16("y"),
         SBInt32("z"),
@@ -680,7 +771,8 @@ packets = {
         UBInt8("byte2"),
         UBInt16("blockid"),
     ),
-    0x37: Struct("block-break-anim",
+    0x37: Struct(
+        "block-break-anim",
         UBInt32("eid"),
         UBInt32("x"),
         UBInt32("y"),
@@ -688,13 +780,16 @@ packets = {
         UBInt8("stage"),
     ),
     # XXX Server -> Client. Use 0x33 instead.
-    0x38: Struct("bulk-chunk",
+    0x38: Struct(
+        "bulk-chunk",
         UBInt16("count"),
         UBInt32("length"),
         UBInt8("sky_light"),
         MetaField("data", lambda ctx: ctx["length"]),
-        MetaArray(lambda context: context["count"],
-            Struct("metadata",
+        MetaArray(
+            lambda context: context["count"],
+            Struct(
+                "metadata",
                 UBInt32("chunk_x"),
                 UBInt32("chunk_z"),
                 UBInt16("bitmap_primary"),
@@ -703,7 +798,8 @@ packets = {
         )
     ),
     # TODO: Needs work?
-    0x3c: Struct("explosion",
+    0x3c: Struct(
+        "explosion",
         BFloat64("x"),
         BFloat64("y"),
         BFloat64("z"),
@@ -714,8 +810,10 @@ packets = {
         BFloat32("motiony"),
         BFloat32("motionz"),
     ),
-    0x3d: Struct("sound",
-        Enum(UBInt32("sid"),
+    0x3d: Struct(
+        "sound",
+        Enum(
+            UBInt32("sid"),
             click2=1000,
             click1=1001,
             bow_fire=1002,
@@ -740,7 +838,8 @@ packets = {
         UBInt32("data"),
         Bool("volume-mod"),
     ),
-    0x3e: Struct("named-sound",
+    0x3e: Struct(
+        "named-sound",
         AlphaString("name"),
         UBInt32("x"),
         UBInt32("y"),
@@ -748,7 +847,8 @@ packets = {
         BFloat32("volume"),
         UBInt8("pitch"),
     ),
-    0x3f: Struct("particle",
+    0x3f: Struct(
+        "particle",
         AlphaString("name"),
         BFloat32("x"),
         BFloat32("y"),
@@ -759,8 +859,10 @@ packets = {
         BFloat32("speed"),
         UBInt32("count"),
     ),
-    0x46: Struct("state",
-        Enum(UBInt8("state"),
+    0x46: Struct(
+        "state",
+        Enum(
+            UBInt8("state"),
             bad_bed=0,
             start_rain=1,
             stop_rain=2,
@@ -769,16 +871,19 @@ packets = {
         ),
         mode,
     ),
-    0x47: Struct("thunderbolt",
+    0x47: Struct(
+        "thunderbolt",
         UBInt32("eid"),
         UBInt8("gid"),
         SBInt32("x"),
         SBInt32("y"),
         SBInt32("z"),
     ),
-    0x64: Struct("window-open",
+    0x64: Struct(
+        "window-open",
         UBInt8("wid"),
-        Enum(UBInt8("type"),
+        Enum(
+            UBInt8("type"),
             chest=0,
             workbench=1,
             furnace=2,
@@ -796,10 +901,12 @@ packets = {
         # XXX iff type == 0xb (currently unknown) write an extra secret int
         # here. WTF?
     ),
-    0x65: Struct("window-close",
+    0x65: Struct(
+        "window-close",
         UBInt8("wid"),
     ),
-    0x66: Struct("window-action",
+    0x66: Struct(
+        "window-action",
         UBInt8("wid"),
         UBInt16("slot"),
         UBInt8("button"),
@@ -807,35 +914,42 @@ packets = {
         UBInt8("shift"),  # TODO: rename to 'mode'
         Embed(items),
     ),
-    0x67: Struct("window-slot",
+    0x67: Struct(
+        "window-slot",
         UBInt8("wid"),
         UBInt16("slot"),
         Embed(items),
     ),
-    0x68: Struct("inventory",
+    0x68: Struct(
+        "inventory",
         UBInt8("wid"),
         UBInt16("length"),
         MetaArray(lambda context: context["length"], items),
     ),
-    0x69: Struct("window-progress",
+    0x69: Struct(
+        "window-progress",
         UBInt8("wid"),
         UBInt16("bar"),
         UBInt16("progress"),
     ),
-    0x6a: Struct("window-token",
+    0x6a: Struct(
+        "window-token",
         UBInt8("wid"),
         UBInt16("token"),
         Bool("acknowledged"),
     ),
-    0x6b: Struct("window-creative",
+    0x6b: Struct(
+        "window-creative",
         UBInt16("slot"),
         Embed(items),
     ),
-    0x6c: Struct("enchant",
+    0x6c: Struct(
+        "enchant",
         UBInt8("wid"),
         UBInt8("enchantment"),
     ),
-    0x82: Struct("sign",
+    0x82: Struct(
+        "sign",
         SBInt32("x"),
         UBInt16("y"),
         SBInt32("z"),
@@ -844,124 +958,159 @@ packets = {
         AlphaString("line3"),
         AlphaString("line4"),
     ),
-    0x83: Struct("map",
+    0x83: Struct(
+        "map",
         UBInt16("type"),
         UBInt16("itemid"),
         PascalString("data", length_field=UBInt16("length")),
     ),
-    0x84: Struct("tile-update",
+    0x84: Struct(
+        "tile-update",
         SBInt32("x"),
         UBInt16("y"),
         SBInt32("z"),
         UBInt8("action"),
         PascalString("nbt_data", length_field=UBInt16("length")),  # gzipped
     ),
-    0x85: Struct("0x85",
+    0x85: Struct(
+        "0x85",
         UBInt8("first"),
         UBInt32("second"),
         UBInt32("third"),
         UBInt32("fourth"),
     ),
-    0xc8: Struct("statistics",
-        UBInt32("sid"), # XXX I should be an Enum!
+    0xc8: Struct(
+        "statistics",
+        UBInt32("sid"),  # XXX I should be an Enum!
         UBInt32("count"),
     ),
-    0xc9: Struct("players",
+    0xc9: Struct(
+        "players",
         AlphaString("name"),
         Bool("online"),
         UBInt16("ping"),
     ),
-    0xca: Struct("abilities",
+    0xca: Struct(
+        "abilities",
         UBInt8("flags"),
         BFloat32("fly-speed"),
         BFloat32("walk-speed"),
     ),
-    0xcb: Struct("tab",
+    0xcb: Struct(
+        "tab",
         AlphaString("autocomplete"),
     ),
-    0xcc: Struct("settings",
+    0xcc: Struct(
+        "settings",
         AlphaString("locale"),
         UBInt8("distance"),
         UBInt8("chat"),
         difficulty,
         Bool("cape"),
     ),
-    0xcd: Struct("statuses",
+    0xcd: Struct(
+        "statuses",
         UBInt8("payload")
     ),
-    0xce: Struct("score_item",
+    0xce: Struct(
+        "score_item",
         AlphaString("name"),
         AlphaString("value"),
-        Enum(UBInt8("action"),
+        Enum(
+            UBInt8("action"),
             create=0,
             remove=1,
             update=2,
         ),
     ),
-    0xcf: Struct("score_update",
+    0xcf: Struct(
+        "score_update",
         AlphaString("item_name"),
         UBInt8("remove"),
-        If(lambda context: context["remove"] == 0,
-            Embed(Struct("information",
+        If(
+            lambda context: context["remove"] == 0,
+            Embed(Struct(
+                "information",
                 AlphaString("score_name"),
                 UBInt32("value"),
             ))
         ),
     ),
-    0xd0: Struct("score_display",
-        Enum(UBInt8("position"),
+    0xd0: Struct(
+        "score_display",
+        Enum(
+            UBInt8("position"),
             as_list=0,
             sidebar=1,
             below_name=2,
         ),
         AlphaString("score_name"),
     ),
-    0xd1: Struct("teams",
+    0xd1: Struct(
+        "teams",
         AlphaString("name"),
-        Enum(UBInt8("mode"),
+        Enum(
+            UBInt8("mode"),
             team_created=0,
             team_removed=1,
             team_updates=2,
             players_added=3,
             players_removed=4,
         ),
-        If(lambda context: context["mode"] in ("team_created", "team_updated"),
-            Embed(Struct("team_info",
+        If(
+            lambda context: context["mode"] in
+            ("team_created", "team_updated"),
+            Embed(Struct(
+                "team_info",
                 AlphaString("team_name"),
                 AlphaString("team_prefix"),
                 AlphaString("team_suffix"),
-                Enum(UBInt8("friendly_fire"),
+                Enum(
+                    UBInt8("friendly_fire"),
                     off=0,
                     on=1,
                     invisibles=2,
                 ),
             ))
         ),
-        If(lambda context: context["mode"] in ("team_created", "players_added", "players_removed"),
-            Embed(Struct("players_info",
+        If(
+            lambda context: context["mode"] in
+            ("team_created", "players_added", "players_removed"),
+            Embed(Struct(
+                "players_info",
                 UBInt16("count"),
-                MetaArray(lambda context: context["count"], AlphaString("player_names")),
+                MetaArray(
+                    lambda context: (
+                        context["count"],
+                        AlphaString("player_names")
+                    )
+                ),
             ))
         ),
     ),
-    0xfa: Struct("plugin-message",
+    0xfa: Struct(
+        "plugin-message",
         AlphaString("channel"),
         PascalString("data", length_field=UBInt16("length")),
     ),
-    0xfc: Struct("key-response",
+    0xfc: Struct(
+        "key-response",
         PascalString("key", length_field=UBInt16("key-len")),
         PascalString("token", length_field=UBInt16("token-len")),
     ),
-    0xfd: Struct("key-request",
+    0xfd: Struct(
+        "key-request",
         AlphaString("server"),
         PascalString("key", length_field=UBInt16("key-len")),
         PascalString("token", length_field=UBInt16("token-len")),
     ),
-    0xfe: Struct("poll",
-        Magic("\x01" # Poll packet constant
-              "\xfa" # Followed by a plugin message
-              "\x00\x0b" # Length of plugin channel name
-              + u"MC|PingHost".encode("ucs2") # Plugin channel name
+    0xfe: Struct(
+        "poll",
+        Magic(
+            "\x01"                           # Poll packet constant
+            "\xfa"                           # Followed by a plugin message
+            "\x00\x0b"                       # Length of plugin channel name
+            + u"MC|PingHost".encode("ucs2")  # Plugin channel name
         ),
         PascalString("data", length_field=UBInt16("length")),
     ),
@@ -969,9 +1118,11 @@ packets = {
     0xff: Struct("error", AlphaString("message")),
 }
 
-packet_stream = Struct("packet_stream",
+packet_stream = Struct(
+    "packet_stream",
     OptionalGreedyRange(
-        Struct("full_packet",
+        Struct(
+            "full_packet",
             UBInt8("header"),
             Switch("payload", lambda context: context["header"], packets),
         ),
@@ -980,6 +1131,7 @@ packet_stream = Struct("packet_stream",
         UBInt8("leftovers"),
     ),
 )
+
 
 def parse_packets(bytestream):
     """
@@ -1002,8 +1154,10 @@ def parse_packets(bytestream):
 
     return l, leftovers
 
-incremental_packet_stream = Struct("incremental_packet_stream",
-    Struct("full_packet",
+incremental_packet_stream = Struct(
+    "incremental_packet_stream",
+    Struct(
+        "full_packet",
         UBInt8("header"),
         Switch("payload", lambda context: context["header"], packets),
     ),
@@ -1011,6 +1165,7 @@ incremental_packet_stream = Struct("incremental_packet_stream",
         UBInt8("leftovers"),
     ),
 )
+
 
 def parse_packets_incrementally(bytestream):
     """
@@ -1034,6 +1189,7 @@ def parse_packets_incrementally(bytestream):
         yield header, payload
 
 packets_by_name = dict((v.name, k) for (k, v) in packets.iteritems())
+
 
 def make_packet(packet, *args, **kwargs):
     """
@@ -1059,6 +1215,7 @@ def make_packet(packet, *args, **kwargs):
         print container
     payload = packets[header].build(container)
     return chr(header) + payload
+
 
 def make_error_packet(message):
     """

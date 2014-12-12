@@ -15,10 +15,12 @@ from zope.interface import implements
 from bravo.blocks import blocks
 from bravo.ibravo import IRecipe
 
+
 def grouper(n, iterable):
     args = [iter(iterable)] * n
     for i in zip(*args):
         yield i
+
 
 def pad_to_stride(recipe, rstride, cstride):
     """
@@ -46,10 +48,12 @@ def pad_to_stride(recipe, rstride, cstride):
 
     return padded
 
+
 class RecipeError(Exception):
     """
     Something bad happened inside a recipe.
     """
+
 
 class Blueprint(object):
     """
@@ -120,8 +124,7 @@ class Blueprint(object):
             # We need all of these slots to match. All of them.
             matches_needed = len(padded)
 
-            for i, j in zip(padded,
-                table[offset:len(padded) + offset]):
+            for i, j in zip(padded, table[offset:len(padded) + offset]):
                 if i is None and j is None:
                     matches_needed -= 1
                 elif i is not None and j is not None:
@@ -161,6 +164,7 @@ class Blueprint(object):
                 rcount = slot[1]
                 slot = table[index]
                 table[index] = slot.decrement(rcount)
+
 
 class Ingredients(object):
     """

@@ -21,9 +21,9 @@ from bravo.blocks import blocks, items
 from bravo.chunk import CHUNK_HEIGHT
 from bravo.entity import Sign
 from bravo.errors import BetaClientError, BuildError
-from bravo.ibravo import (IChatCommand, IPreBuildHook, IPostBuildHook,
-    IWindowOpenHook, IWindowClickHook, IWindowCloseHook,
-    IPreDigHook, IDigHook, ISignHook, IUseHook)
+from bravo.ibravo import IChatCommand, IPreBuildHook, IPostBuildHook
+from bravo.ibravo import IWindowOpenHook, IWindowClickHook, IWindowCloseHook
+from bravo.ibravo import IPreDigHook, IDigHook, ISignHook, IUseHook
 from bravo.infini.factory import InfiniClientFactory
 from bravo.inventory.windows import InventoryWindow
 from bravo.location import Location, Orientation, Position
@@ -40,6 +40,7 @@ from bravo.utilities.temporal import timestamp_from_clock
 (STATE_UNAUTHENTICATED, STATE_AUTHENTICATED, STATE_LOCATED) = range(3)
 
 SUPPORTED_PROTOCOL = 78
+
 
 class BetaServerProtocol(object, Protocol, TimeoutMixin):
     """
@@ -207,8 +208,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         self.grounded(container.grounded)
 
         old_position = self.location.pos
-        position = Position.from_player(container.position.x,
-                container.position.y, container.position.z)
+        position = Position.from_player(
+            container.position.x, container.position.y, container.position.z
+        )
         altered = False
 
         dx, dy, dz = old_position - position
@@ -244,8 +246,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         self.grounded(container.grounded)
 
         old_orientation = self.location.ori
-        orientation = Orientation.from_degs(container.orientation.rotation,
-                container.orientation.pitch)
+        orientation = Orientation.from_degs(
+            container.orientation.rotation, container.orientation.pitch
+        )
         self.location.ori = orientation
 
         if old_orientation != orientation:
@@ -475,8 +478,13 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
         yaw, pitch = self.location.ori.to_fracs()
 
         # Inform everybody of our new location.
-        packet = make_packet("teleport", eid=self.player.eid, x=x, y=y, z=z,
-                yaw=yaw, pitch=pitch)
+        packet = make_packet(
+            "teleport",
+            eid=self.player.eid,
+            x=x, y=y, z=z,
+            yaw=yaw,
+            pitch=pitch
+        )
         self.factory.broadcast_for_others(packet, self)
 
         # Inform ourselves of our new location.
@@ -573,8 +581,14 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
                           type=blocks["note-block"].slot, meta=0)
 
         for instrument, pitch in notes:
-            self.write_packet("note", x=x, y=y, z=z, pitch=pitch,
-                    instrument=instrument)
+            self.write_packet(
+                "note",
+                x=x,
+                y=y,
+                z=z,
+                pitch=pitch,
+                instrument=instrument
+            )
 
         self.write_packet("block", x=x, y=y, z=z, type=block, meta=meta)
 
@@ -614,8 +628,9 @@ class BetaServerProtocol(object, Protocol, TimeoutMixin):
 
         # Check to see if this is a new value, and if so, alert everybody.
         if self._latency != value:
-            packet = make_packet("players", name=self.username, online=True,
-                ping=value)
+            packet = make_packet(
+                "players", name=self.username, online=True, ping=value
+            )
             self.factory.broadcast(packet)
             self._latency = value
 
@@ -655,11 +670,14 @@ class BetaProxyProtocol(BetaServerProtocol):
     def login(self, container):
         self.username = container.username
 
-        self.write_packet("login", protocol=0, username="", seed=0,
-            dimension="earth")
+        self.write_packet(
+            "login", protocol=0, username="", seed=0, dimension="earth"
+        )
 
-        url = urlunparse(("http", self.gateway, "/node/0/0/", None, None,
-            None))
+        url = urlunparse(
+            ("http", self.gateway, "/node/0/0/", None, None, None)
+        )
+
         d = getPage(url)
         d.addCallback(self.start_proxy)
 
@@ -716,8 +734,9 @@ class BravoProtocol(BetaServerProtocol):
         self.config_name = "world %s" % name
 
         # Retrieve the MOTD. Only needs to be done once.
-        self.motd = self.config.getdefault(self.config_name, "motd",
-            "BravoServer")
+        self.motd = self.config.getdefault(
+            self.config_name, "motd", "BravoServer"
+        )
 
     def register_hooks(self):
         log.msg("Registering client hooks...")
@@ -776,8 +795,9 @@ class BravoProtocol(BetaServerProtocol):
 
         # Announce our presence.
         self.factory.chat("%s is joining the game..." % self.username)
-        packet = make_packet("players", name=self.username, online=True,
-                             ping=0)
+        packet = make_packet(
+            "players", name=self.username, online=True, ping=0
+        )
         self.factory.broadcast(packet)
 
         # Craft our avatar and send it to already-connected other players.
@@ -819,8 +839,11 @@ class BravoProtocol(BetaServerProtocol):
     def orientation_changed(self):
         # Bang your head!
         yaw, pitch = self.location.ori.to_fracs()
-        packet = make_packet("entity-orientation", eid=self.player.eid,
-                yaw=yaw, pitch=pitch)
+        packet = make_packet(
+            "entity-orientation",
+            eid=self.player.eid,
+            yaw=yaw, pitch=pitch
+        )
         self.factory.broadcast_for_others(packet, self)
 
     def position_changed(self):
@@ -837,8 +860,11 @@ class BravoProtocol(BetaServerProtocol):
                     # partial collect
                     entity.quantity = left
                 else:
-                    packet = make_packet("collect", eid=entity.eid,
-                        destination=self.player.eid)
+                    packet = make_packet(
+                        "collect",
+                        eid=entity.eid,
+                        destination=self.player.eid
+                    )
                     packet += make_packet("destroy", count=1, eid=[entity.eid])
                     self.factory.broadcast(packet)
                     self.factory.destroy_entity(entity)
@@ -866,8 +892,10 @@ class BravoProtocol(BetaServerProtocol):
                 continue
             chunk = self.chunks[x, z]
 
-            yieldables = [entity for entity in chunk.entities
-                if self.location.distance(entity.location) <= (radius * 32)]
+            yieldables = [
+                entity for entity in chunk.entities
+                if self.location.distance(entity.location) <= (radius * 32)
+            ]
             for i in yieldables:
                 yield i
 
@@ -913,8 +941,10 @@ class BravoProtocol(BetaServerProtocol):
         for entity in chain(self.entities_near(4), nearby_players):
             if entity.eid == container.target:
                 for hook in self.use_hooks[entity.name]:
-                    hook.use_hook(self.factory, self.player, entity,
-                        container.button == 0)
+                    hook.use_hook(
+                        self.factory, self.player, entity,
+                        container.button == 0
+                    )
                 break
 
     @inlineCallbacks
@@ -924,8 +954,11 @@ class BravoProtocol(BetaServerProtocol):
             return
 
         # Player drops currently holding item/block.
-        if (container.state == "dropped" and container.face == "-y" and
-            container.x == 0 and container.y == 0 and container.z == 0):
+        _dropped = (
+            container.state == "dropped" and container.face == "-y" and
+            container.x == 0 and container.y == 0 and container.z == 0
+        )
+        if _dropped:
             i = self.player.inventory
             holding = i.holdables[self.player.equipped]
             if holding:
@@ -942,7 +975,8 @@ class BravoProtocol(BetaServerProtocol):
                     # If no items in this slot are left, this player isn't
                     # holding an item anymore.
                     if i.holdables[self.player.equipped] is None:
-                        packet = make_packet("entity-equipment",
+                        packet = make_packet(
+                            "entity-equipment",
                             eid=self.player.eid,
                             slot=0,
                             primary=65535,
@@ -970,8 +1004,11 @@ class BravoProtocol(BetaServerProtocol):
         if container.state == "started":
             # Run pre dig hooks
             for hook in self.pre_dig_hooks:
-                cancel = yield maybeDeferred(hook.pre_dig_hook, self.player,
-                            (container.x, container.y, container.z), block)
+                cancel = yield maybeDeferred(
+                    hook.pre_dig_hook, self.player,
+                    (container.x, container.y, container.z),
+                    block
+                )
                 if cancel:
                     return
 
@@ -1054,12 +1091,16 @@ class BravoProtocol(BetaServerProtocol):
 
         # Try to open it first
         for hook in self.open_hooks:
-            window = yield maybeDeferred(hook.open_hook, self, container,
-                           chunk.get_block((smallx, container.y, smallz)))
+            window = yield maybeDeferred(
+                hook.open_hook, self, container,
+                chunk.get_block((smallx, container.y, smallz))
+            )
             if window:
-                self.write_packet("window-open", wid=window.wid,
+                self.write_packet(
+                    "window-open", wid=window.wid,
                     type=window.identifier, title=window.title,
-                    slots=window.slots_num)
+                    slots=window.slots_num
+                )
                 packet = window.save_to_packet()
                 self.transport.write(packet)
                 # window opened
@@ -1090,12 +1131,14 @@ class BravoProtocol(BetaServerProtocol):
 
         # Run pre-build hooks. These hooks are able to interrupt the build
         # process.
-        builddata = BuildData(block, 0x0, container.x, container.y,
-            container.z, container.face)
+        builddata = BuildData(
+            block, 0x0, container.x, container.y, container.z, container.face
+        )
 
         for hook in self.pre_build_hooks:
-            cont, builddata, cancel = yield maybeDeferred(hook.pre_build_hook,
-                self.player, builddata)
+            cont, builddata, cancel = yield maybeDeferred(
+                hook.pre_build_hook, self.player, builddata
+            )
             if cancel:
                 # Flush damaged chunks.
                 for chunk in self.chunks.itervalues():
@@ -1118,8 +1161,9 @@ class BravoProtocol(BetaServerProtocol):
         # interfere with the build process, largely because the build process
         # already happened.
         for hook in self.post_build_hooks:
-            yield maybeDeferred(hook.post_build_hook, self.player, coords,
-                builddata.block)
+            yield maybeDeferred(
+                hook.post_build_hook, self.player, coords, builddata.block
+            )
 
         # Feed automatons.
         for automaton in self.factory.automatons:
@@ -1147,16 +1191,21 @@ class BravoProtocol(BetaServerProtocol):
             metadata = block.orientation(face)
             if metadata is None:
                 # Oh, I guess we can't even place the block on this face.
-                raise BuildError("Couldn't orient block %r on face %s" %
-                    (block, face))
+                raise BuildError(
+                    "Couldn't orient block %r on face %s" % (block, face)
+                )
 
         # Make sure we can remove it from the inventory first.
-        if not self.player.inventory.consume((block.slot, 0),
-            self.player.equipped):
+        _consume = self.player.inventory.consume(
+            (block.slot, 0), self.player.equipped
+        )
+        if not _consume:
             # Okay, first one was a bust; maybe we can consume the related
             # block for dropping instead?
-            if not self.player.inventory.consume(block.drop,
-                self.player.equipped):
+            __consume = self.player.inventory.consume(
+                block.drop, self.player.equipped
+            )
+            if not __consume:
                 raise BuildError("Couldn't consume %r from inventory" % block)
 
         # Offset coords according to face.
@@ -1180,7 +1229,8 @@ class BravoProtocol(BetaServerProtocol):
         else:
             primary, secondary, count = item
 
-        packet = make_packet("entity-equipment",
+        packet = make_packet(
+            "entity-equipment",
             eid=self.player.eid,
             slot=0,
             primary=primary,
@@ -1190,13 +1240,17 @@ class BravoProtocol(BetaServerProtocol):
         self.factory.broadcast_for_others(packet, self)
 
     def pickup(self, container):
-        self.factory.give((container.x, container.y, container.z),
-            (container.primary, container.secondary), container.count)
+        self.factory.give(
+            (container.x, container.y, container.z),
+            (container.primary, container.secondary),
+            container.count
+        )
 
     def animate(self, container):
         # Broadcast the animation of the entity to everyone else. Only swing
         # arm is send by notchian clients.
-        packet = make_packet("animate",
+        packet = make_packet(
+            "animate",
             eid=self.player.eid,
             animation=container.animation
         )
@@ -1232,13 +1286,16 @@ class BravoProtocol(BetaServerProtocol):
 
         # XXX Sometimes the container doesn't contain all of this information.
         # What then?
-        applied = self.inventory.creative(container.slot, container.primary,
-            container.secondary, container.count)
+        applied = self.inventory.creative(
+            container.slot, container.primary,
+            container.secondary, container.count
+        )
         if applied:
             # Inform other players about changes to this player's equipment.
             equipped_slot = self.player.equipped + 36
             if container.slot == equipped_slot:
-                packet = make_packet("entity-equipment",
+                packet = make_packet(
+                    "entity-equipment",
                     eid=self.player.eid,
                     # XXX why 0? why not the actual slot?
                     slot=0,
@@ -1249,8 +1306,12 @@ class BravoProtocol(BetaServerProtocol):
                 self.factory.broadcast_for_others(packet, self)
 
     def shoot_arrow(self):
-        # TODO 1. Create arrow entity:          arrow = Arrow(self.factory, self.player)
-        #      2. Register within the factory:  self.factory.register_entity(arrow)
+        # TODO 1. Create arrow entity:          arrow = Arrow(
+        #                                           self.factory, self.player
+        #                                       )
+        #      2. Register within the factory:  self.factory.register_entity(
+        #                                           arrow
+        #                                       )
         #      3. Run it:                       arrow.run()
         pass
 
@@ -1260,7 +1321,9 @@ class BravoProtocol(BetaServerProtocol):
         try:
             chunk = self.chunks[bigx, bigz]
         except KeyError:
-            self.error("Couldn't handle sign in chunk (%d, %d)!" % (bigx, bigz))
+            self.error(
+                "Couldn't handle sign in chunk (%d, %d)!" % (bigx, bigz)
+            )
             return
 
         if (smallx, container.y, smallz) in chunk.tiles:
@@ -1285,8 +1348,10 @@ class BravoProtocol(BetaServerProtocol):
 
         # Run sign hooks.
         for hook in self.sign_hooks:
-            hook.sign_hook(self.factory, chunk, container.x, container.y,
-                container.z, [s.text1, s.text2, s.text3, s.text4], new)
+            hook.sign_hook(
+                self.factory, chunk, container.x, container.y,
+                container.z, [s.text1, s.text2, s.text3, s.text4], new
+            )
 
     def complete(self, container):
         """
@@ -1325,8 +1390,9 @@ class BravoProtocol(BetaServerProtocol):
         self.write_packet("destroy", count=len(eids), eid=eids)
 
         # Clear chunk data on the client.
-        self.write_packet("chunk", x=x, z=z, continuous=False, primary=0x0,
-                add=0x0, data="")
+        self.write_packet(
+            "chunk", x=x, z=z, continuous=False, primary=0x0, add=0x0, data=""
+        )
 
     def enable_chunk(self, x, z):
         """
@@ -1483,8 +1549,9 @@ class BravoProtocol(BetaServerProtocol):
             self.factory.broadcast(packet)
 
         if self.username:
-            packet = make_packet("players", name=self.username, online=False,
-                ping=0)
+            packet = make_packet(
+                "players", name=self.username, online=False, ping=0
+            )
             self.factory.broadcast(packet)
             self.factory.chat("%s has left the game." % self.username)
 
