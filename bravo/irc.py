@@ -2,6 +2,7 @@ from twisted.internet.protocol import ClientFactory
 from twisted.python import log
 from twisted.words.protocols.irc import IRCClient
 
+
 class BravoIRCClient(IRCClient):
     """
     Simple bot.
@@ -33,8 +34,9 @@ class BravoIRCClient(IRCClient):
 
     def signedOn(self):
         for channel in self.config.get(self.name, "channels").split(","):
-            key = self.config.getdefault(self.name, "%s_key" % channel,
-                None)
+            key = self.config.getdefault(
+                self.name, "%s_key" % channel, None
+            )
             self.join(channel, key)
 
     def joined(self, channel):
@@ -70,6 +72,7 @@ class BravoIRCClient(IRCClient):
 
         for channel in self.channels:
             self.msg(channel, message.encode("utf8"))
+
 
 class BravoIRC(ClientFactory):
     protocol = BravoIRCClient

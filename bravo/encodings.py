@@ -2,6 +2,7 @@ from codecs import (BufferedIncrementalDecoder, CodecInfo, IncrementalEncoder,
                     StreamReader, StreamWriter, utf_16_be_encode,
                     utf_16_be_decode)
 
+
 def ucs2(name):
     if name.lower() not in ("ucs2", "ucs-2"):
         return None

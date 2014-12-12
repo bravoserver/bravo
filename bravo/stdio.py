@@ -35,6 +35,7 @@ typeToColor = {
 
 normalColor = '\x1b[0m'
 
+
 class AMPGateway(object):
     """
     Wrapper around the logical implementation of a console.
@@ -116,8 +117,10 @@ class AMPGateway(object):
                 # Remote command. Do we have a world?
                 if self.world:
                     try:
-                        d = self.remote.callRemote(RunCommand, world=self.world,
-                            command=command, parameters=params)
+                        d = self.remote.callRemote(
+                            RunCommand, world=self.world,
+                            command=command, parameters=params
+                        )
                         d.addCallback(self.results)
                         self.ready = False
                     except:
@@ -140,6 +143,7 @@ class AMPGateway(object):
             line = line.encode("utf8")
         self.print_hook(line)
 
+
 class BravoInterpreter(object):
 
     def __init__(self, handler, ag):
@@ -153,7 +157,7 @@ class BravoInterpreter(object):
 
     def print_hook(self, line):
         # XXX
-        #for user in self.factory.protocols:
+        # for user in self.factory.protocols:
         #    printable = printable.replace(user, fancy_console_name(user))
         self.handler.addOutput("%s\n" % line)
 
@@ -182,6 +186,7 @@ class BravoInterpreter(object):
                 else:
                     s.append(normalColor + token)
         return normalColor + " ".join(s)
+
 
 class BravoManhole(Manhole):
     """
@@ -229,8 +234,9 @@ class BravoManhole(Manhole):
         else:
             # Success!  Clear the source on this line.
             self.terminal.eraseLine()
-            self.terminal.cursorBackward(len(self.lineBuffer) +
-                    len(self.ps[self.pn]) - 1)
+            self.terminal.cursorBackward(
+                len(self.lineBuffer) + len(self.ps[self.pn]) - 1
+            )
 
             # And write a new, colorized one.
             self.terminal.write(self.ps[self.pn] + coloredLine)
@@ -245,6 +251,7 @@ Welcome to Bravo!
 This terminal has no fancy features.
 """
 prompt = "Bravo > "
+
 
 class BravoConsole(LineReceiver):
     """
@@ -279,6 +286,7 @@ class BravoConsole(LineReceiver):
 
 oldSettings = None
 
+
 def start_console():
     ag = AMPGateway("localhost", 25600)
     ag.connect()
@@ -294,6 +302,7 @@ def start_console():
 
     StandardIO(p)
     return p
+
 
 def stop_console():
     if fancy_console:

@@ -6,11 +6,13 @@ from bravo.beta.factory import BravoFactory
 from bravo.ibravo import IChatCommand, IConsoleCommand
 from bravo.plugin import retrieve_plugins
 
+
 class Version(Command):
     arguments = tuple()
     response = (
         ("version", Unicode()),
     )
+
 
 class Worlds(Command):
     arguments = tuple()
@@ -18,11 +20,13 @@ class Worlds(Command):
         ("worlds", ListOf(Unicode())),
     )
 
+
 class Commands(Command):
     arguments = tuple()
     response = (
         ("commands", ListOf(Unicode())),
     )
+
 
 class RunCommand(Command):
     arguments = (
@@ -37,6 +41,7 @@ class RunCommand(Command):
         KeyError: "KEY_ERROR",
         ValueError: "VALUE_ERROR",
     }
+
 
 class ConsoleRPCProtocol(AMP):
     """
@@ -76,12 +81,13 @@ class ConsoleRPCProtocol(AMP):
 
         factory = self.factories[world]
 
-        lines = [i
-            for i in self.commands[command].console_command(factory,
-                parameters)]
+        lines = [i for i in self.commands[command].console_command(
+            factory, parameters
+        )]
 
         return {"output": lines}
     RunCommand.responder(run_command)
+
 
 class ConsoleRPCFactory(Factory):
     protocol = ConsoleRPCProtocol

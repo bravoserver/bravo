@@ -13,6 +13,7 @@ from zope.interface.verify import verifyObject
 from bravo.errors import PluginException
 from bravo.ibravo import InvariantException, ISortedPlugin
 
+
 def sort_plugins(plugins):
     """
     Make a sorted list of plugins by dependency.
@@ -39,6 +40,7 @@ def sort_plugins(plugins):
 
     return l
 
+
 def add_plugin_edges(d):
     """
     Mirror edges to all plugins in a dictionary.
@@ -61,6 +63,7 @@ def add_plugin_edges(d):
                 plugin.after.discard(edge)
 
     return d
+
 
 def expand_names(plugins, names):
     """
@@ -97,6 +100,7 @@ def expand_names(plugins, names):
 
     return names
 
+
 def verify_plugin(interface, plugin):
     """
     Plugin interface verification.
@@ -111,8 +115,9 @@ def verify_plugin(interface, plugin):
 
     converted = interface(plugin, None)
     if converted is None:
-        raise PluginException("Couldn't convert %s to %s" % (plugin,
-            interface))
+        raise PluginException(
+            "Couldn't convert %s to %s" % (plugin, interface)
+        )
 
     try:
         verifyObject(interface, converted)
@@ -120,13 +125,19 @@ def verify_plugin(interface, plugin):
         log.msg(" ( ^^) Plugin: %s" % converted.name)
     except BrokenImplementation, bi:
         if hasattr(plugin, "name"):
-            log.msg(" ( ~~) Plugin %s is missing attribute %r!" %
-                (plugin.name, bi.name))
+            log.msg(
+                " ( ~~) Plugin %s is missing attribute %r!" %
+                (plugin.name, bi.name)
+            )
         else:
             log.msg(" ( >&) Plugin %s is unnamed and useless!" % plugin)
     except BrokenMethodImplementation, bmi:
-        log.msg(" ( Oo) Plugin %s has a broken %s()!" % (plugin.name,
-            bmi.method))
+        log.msg(
+            " ( Oo) Plugin %s has a broken %s()!" % (
+                plugin.name,
+                bmi.method
+            )
+        )
         log.msg(bmi)
     except InvariantException, ie:
         log.msg(" ( >&) Plugin %s failed validation!" % plugin.name)
@@ -137,6 +148,7 @@ def verify_plugin(interface, plugin):
     raise PluginException("Plugin failed verification")
 
 __cache = {}
+
 
 def get_plugins(interface, package):
     """
@@ -183,6 +195,7 @@ def get_plugins(interface, package):
             except SyntaxError, se:
                 log.msg(se)
 
+
 def retrieve_plugins(interface, **kwargs):
     """
     Look up all plugins for a certain interface.
@@ -217,6 +230,7 @@ def retrieve_plugins(interface, **kwargs):
 
     return d
 
+
 def retrieve_named_plugins(interface, names, **kwargs):
     """
     Look up a list of plugins by name.
@@ -243,6 +257,7 @@ def retrieve_named_plugins(interface, names, **kwargs):
     Candidates were: %r
         """ % (e.args[0], interface.__name__, sorted(d.keys()))
         raise PluginException(msg)
+
 
 def retrieve_sorted_plugins(interface, names, **kwargs):
     """

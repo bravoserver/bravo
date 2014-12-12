@@ -2,10 +2,12 @@ from gzip import GzipFile
 from StringIO import StringIO
 from struct import pack, unpack
 
+
 class MissingChunk(Exception):
     """
     The requested chunk isn't in this region.
     """
+
 
 class Region(object):
     """
@@ -136,11 +138,11 @@ class Region(object):
             found = False
             for candidate in sorted(self.free_pages):
                 if all(candidate + i in self.free_pages
-                    for i in range(needed_pages)):
-                        # Excellent.
-                        position = candidate
-                        found = True
-                        break
+                       for i in range(needed_pages)):
+                    # Excellent.
+                    position = candidate
+                    found = True
+                    break
 
             # If we couldn't find a reusable run of pages, we should just go
             # to the end of the file.

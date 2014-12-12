@@ -2,6 +2,7 @@ from __future__ import division
 
 faces = ("-y", "+y", "-z", "+z", "-x", "+x")
 
+
 class Block(object):
     """
     A model for a block.
@@ -33,7 +34,8 @@ class Block(object):
     )
 
     def __init__(self, slot, name, secondary=0, drop=None, replace=0, ratio=1,
-        quantity=1, dim=16, breakable=True, orientation=None, vanishes=False):
+                 quantity=1, dim=16, breakable=True, orientation=None,
+                 vanishes=False):
         """
         :param int slot: The index of this block. Must be globally unique.
         :param str name: A common name for this block.
@@ -55,8 +57,8 @@ class Block(object):
             bombable, explodeable, etc. Only a few blocks actually genuinely
             cannot be broken, so the default is True.
         :param tuple orientation: The orientation data for a block. See
-            :meth:`orientable` for an explanation. The data should be in standard
-            face order.
+            :meth:`orientable` for an explanation. The data should be in
+            standard face order.
         :param bool vanishes: Whether this block vanishes, or is replaced by,
             another block when built upon.
         """
@@ -99,8 +101,10 @@ class Block(object):
         if self.replace:
             attributes.append("becomes %d" % self.replace)
         if self.ratio != 1 or self.quantity > 1 or self.drop != self.key:
-            attributes.append("drops %r (key %r, rate %2.2f%%)" %
-                (self.quantity, self.drop, self.ratio * 100))
+            attributes.append(
+                "drops %r (key %r, rate %2.2f%%)" %
+                (self.quantity, self.drop, self.ratio * 100)
+            )
         if attributes:
             attributes = ": %s" % ", ".join(attributes)
         else:
@@ -149,6 +153,7 @@ class Block(object):
 
         return self._o_dict.get(face)
 
+
 class Item(object):
     """
     An item.
@@ -173,7 +178,7 @@ class Item(object):
     __repr__ = __str__
 
 block_names = [
-    "air", # 0x0
+    "air",  # 0x0
     "stone",
     "grass",
     "dirt",
@@ -189,7 +194,7 @@ block_names = [
     "gravel",
     "gold-ore",
     "iron-ore",
-    "coal-ore", # 0x10
+    "coal-ore",  # 0x10
     "log",
     "leaves",
     "sponge",
@@ -205,7 +210,7 @@ block_names = [
     "sticky-piston",
     "spider-web",
     "tall-grass",
-    "shrub", # 0x20
+    "shrub",  # 0x20
     "piston",
     "",
     "wool",
@@ -221,7 +226,7 @@ block_names = [
     "brick",
     "tnt",
     "bookshelf",
-    "mossy-cobblestone", # 0x30
+    "mossy-cobblestone",  # 0x30
     "obsidian",
     "torch",
     "fire",
@@ -237,7 +242,7 @@ block_names = [
     "furnace",
     "burning-furnace",
     "signpost",
-    "wooden-door-block", # 0x40
+    "wooden-door-block",  # 0x40
     "ladder",
     "tracks",
     "stone-stairs",
@@ -253,7 +258,7 @@ block_names = [
     "stone-button",
     "snow",
     "ice",
-    "snow-block", # 0x50
+    "snow-block",  # 0x50
     "cactus",
     "clay",
     "reed",
@@ -269,7 +274,7 @@ block_names = [
     "redstone-repeater-off",
     "redstone-repeater-on",
     "locked-chest",
-    "trapdoor", # 0x60
+    "trapdoor",  # 0x60
     "hidden-silverfish",
     "stone-brick",
     "huge-brown-mushroom",
@@ -285,10 +290,10 @@ block_names = [
     "stone-brick-stairs",
     "mycelium",
     "lily-pad",
-    "nether-brick", # 0x70
+    "nether-brick",  # 0x70
     "nether-brick-fence",
     "nether-brick-stairs",
-    "nether-wart-block", # 0x73
+    "nether-wart-block",  # 0x73
     "",
     "",
     "",
@@ -301,21 +306,21 @@ block_names = [
     "double-wooden-slab",
     "single-wooden-slab",
     "",
-    "", # 0x80
+    "",  # 0x80
     "emerald-ore",
     "",
     "",
     "",
-    "emerald-block", # 0x85
+    "emerald-block",  # 0x85
     "",
     "",
     "",
     "",
-    "beacon", # 0x8a
+    "beacon",  # 0x8a
 ]
 
 item_names = [
-    "iron-shovel", # 0x100
+    "iron-shovel",  # 0x100
     "iron-pickaxe",
     "iron-axe",
     "flint-and-steel",
@@ -331,7 +336,7 @@ item_names = [
     "wooden-shovel",
     "wooden-pickaxe",
     "wooden-axe",
-    "stone-sword", # 0x110
+    "stone-sword",  # 0x110
     "stone-shovel",
     "stone-pickaxe",
     "stone-axe",
@@ -347,7 +352,7 @@ item_names = [
     "gold-pickaxe",
     "gold-axe",
     "string",
-    "feather", # 0x120
+    "feather",  # 0x120
     "sulphur",
     "wooden-hoe",
     "stone-hoe",
@@ -363,7 +368,7 @@ item_names = [
     "leather-boots",
     "chainmail-helmet",
     "chainmail-chestplate",
-    "chainmail-leggings", # 0x130
+    "chainmail-leggings",  # 0x130
     "chainmail-boots",
     "iron-helmet",
     "iron-chestplate",
@@ -379,7 +384,7 @@ item_names = [
     "gold-boots",
     "flint",
     "raw-porkchop",
-    "cooked-porkchop", # 0x140
+    "cooked-porkchop",  # 0x140
     "paintings",
     "golden-apple",
     "sign",
@@ -395,7 +400,7 @@ item_names = [
     "boat",
     "leather",
     "milk",
-    "clay-brick", # 0x150
+    "clay-brick",  # 0x150
     "clay-balls",
     "sugar-cane",
     "paper",
@@ -411,7 +416,7 @@ item_names = [
     "raw-fish",
     "cooked-fish",
     "dye",
-    "bone", # 0x160
+    "bone",  # 0x160
     "sugar",
     "cake",
     "bed",
@@ -427,7 +432,7 @@ item_names = [
     "raw-chicken",
     "cooked-chicken",
     "rotten-flesh",
-    "ender-pearl", # 0x170
+    "ender-pearl",  # 0x170
     "blaze-rod",
     "ghast-tear",
     "gold-nugget",
@@ -437,28 +442,28 @@ item_names = [
     "spider-eye",
     "fermented-spider-eye",
     "blaze-powder",
-    "magma-cream", # 0x17a
+    "magma-cream",  # 0x17a
     "",
     "",
     "",
     "",
-    "spawn-egg", # 0x17f
-    "", # 0x180
+    "spawn-egg",  # 0x17f
+    "",  # 0x180
     "",
     "",
     "",
-    "emerald", #0x184
-    "",
-    "",
-    "",
-    "",
-    "",
+    "emerald",  # 0x184
     "",
     "",
     "",
     "",
     "",
-    "nether-star", # 0x18f
+    "",
+    "",
+    "",
+    "",
+    "",
+    "nether-star",  # 0x18f
 ]
 
 special_item_names = [
@@ -544,79 +549,79 @@ drops = {}
 
 # Block -> block drops.
 # If the drop block is zero, then it drops nothing.
-drops[1]  = (4, 0)  # Stone           -> Cobblestone
-drops[2]  = (3, 0)  # Grass           -> Dirt
-drops[20] = (0, 0)  # Glass
-drops[52] = (0, 0)  # Mob spawner
-drops[60] = (3, 0)  # Soil            -> Dirt
-drops[62] = (61, 0) # Burning Furnace -> Furnace
-drops[78] = (0, 0)  # Snow
+drops[1] = (4, 0)   # Stone           -> Cobblestone
+drops[2] = (3, 0)   # Grass           -> Dirt
+drops[20] = (0, 0)   # Glass
+drops[52] = (0, 0)   # Mob spawner
+drops[60] = (3, 0)   # Soil            -> Dirt
+drops[62] = (61, 0)  # Burning Furnace -> Furnace
+drops[78] = (0, 0)   # Snow
 
 # Block -> item drops.
-drops[16] = (263, 0)  # Coal Ore Block         -> Coal
-drops[56] = (264, 0)  # Diamond Ore Block      -> Diamond
-drops[63] = (323, 0)  # Sign Post              -> Sign Item
-drops[68] = (323, 0)  # Wall Sign              -> Sign Item
-drops[83] = (338, 0)  # Reed                   -> Reed Item
-drops[89] = (348, 0)  # Lightstone             -> Lightstone Dust
-drops[93] = (356, 0)  # Redstone Repeater, on  -> Redstone Repeater
-drops[94] = (356, 0)  # Redstone Repeater, off -> Redstone Repeater
-drops[97] = (0, 0)    # Hidden Silverfish
-drops[110] = (3, 0)   # Mycelium               -> Dirt
-drops[111] = (0, 0)   # Lily Pad
-drops[115] = (372, 0) # Nether Wart BLock      -> Nether Wart
+drops[16] = (263, 0)   # Coal Ore Block         -> Coal
+drops[56] = (264, 0)   # Diamond Ore Block      -> Diamond
+drops[63] = (323, 0)   # Sign Post              -> Sign Item
+drops[68] = (323, 0)   # Wall Sign              -> Sign Item
+drops[83] = (338, 0)   # Reed                   -> Reed Item
+drops[89] = (348, 0)   # Lightstone             -> Lightstone Dust
+drops[93] = (356, 0)   # Redstone Repeater, on  -> Redstone Repeater
+drops[94] = (356, 0)   # Redstone Repeater, off -> Redstone Repeater
+drops[97] = (0, 0)     # Hidden Silverfish
+drops[110] = (3, 0)    # Mycelium               -> Dirt
+drops[111] = (0, 0)    # Lily Pad
+drops[115] = (372, 0)  # Nether Wart BLock      -> Nether Wart
 
 
 unbreakables = set()
 
-unbreakables.add(0)  # Air
-unbreakables.add(7)  # Bedrock
-unbreakables.add(10) # Lava
-unbreakables.add(11) # Lava spring
+unbreakables.add(0)   # Air
+unbreakables.add(7)   # Bedrock
+unbreakables.add(10)  # Lava
+unbreakables.add(11)  # Lava spring
 
 # When one of these is targeted and a block is placed, these are replaced
 softblocks = set()
-softblocks.add(30)  # Cobweb
-softblocks.add(31)  # Tall grass
-softblocks.add(70)  # Snow
-softblocks.add(106) # Vines
+softblocks.add(30)   # Cobweb
+softblocks.add(31)   # Tall grass
+softblocks.add(70)   # Snow
+softblocks.add(106)  # Vines
 
 dims = {}
 
-dims[0]  = 0 # Air
-dims[6]  = 0 # Sapling
-dims[10] = 0 # Lava
-dims[11] = 0 # Lava spring
-dims[20] = 0 # Glass
-dims[26] = 0 # Bed
-dims[37] = 0 # Yellow Flowers
-dims[38] = 0 # Red Flowers
-dims[39] = 0 # Brown Mushrooms
-dims[40] = 0 # Red Mushrooms
-dims[44] = 0 # Single Step
-dims[51] = 0 # Fire
-dims[52] = 0 # Mob spawner
-dims[53] = 0 # Wooden stairs
-dims[55] = 0 # Redstone (Wire)
-dims[59] = 0 # Crops
-dims[60] = 0 # Soil
-dims[63] = 0 # Sign
-dims[64] = 0 # Wood door
-dims[66] = 0 # Rails
-dims[67] = 0 # Stone stairs
-dims[68] = 0 # Sign (on wall)
-dims[69] = 0 # Lever
-dims[70] = 0 # Stone Pressure Plate
-dims[71] = 0 # Iron door
-dims[72] = 0 # Wood Pressure Plate
-dims[78] = 0 # Snow
-dims[81] = 0 # Cactus
-dims[83] = 0 # Sugar Cane
-dims[85] = 0 # Fence
-dims[90] = 0 # Portal
-dims[92] = 0 # Cake
-dims[93] = 0 # redstone-repeater-off
-dims[94] = 0 # redstone-repeater-on
+dims[0] = 0  # Air
+dims[6] = 0  # Sapling
+dims[10] = 0  # Lava
+dims[11] = 0  # Lava spring
+dims[20] = 0  # Glass
+dims[26] = 0  # Bed
+dims[37] = 0  # Yellow Flowers
+dims[38] = 0  # Red Flowers
+dims[39] = 0  # Brown Mushrooms
+dims[40] = 0  # Red Mushrooms
+dims[44] = 0  # Single Step
+dims[51] = 0  # Fire
+dims[52] = 0  # Mob spawner
+dims[53] = 0  # Wooden stairs
+dims[55] = 0  # Redstone (Wire)
+dims[59] = 0  # Crops
+dims[60] = 0  # Soil
+dims[63] = 0  # Sign
+dims[64] = 0  # Wood door
+dims[66] = 0  # Rails
+dims[67] = 0  # Stone stairs
+dims[68] = 0  # Sign (on wall)
+dims[69] = 0  # Lever
+dims[70] = 0  # Stone Pressure Plate
+dims[71] = 0  # Iron door
+dims[72] = 0  # Wood Pressure Plate
+dims[78] = 0  # Snow
+dims[81] = 0  # Cactus
+dims[83] = 0  # Sugar Cane
+dims[85] = 0  # Fence
+dims[90] = 0  # Portal
+dims[92] = 0  # Cake
+dims[93] = 0  # redstone-repeater-off
+dims[94] = 0  # redstone-repeater-on
 
 
 blocks = {}
@@ -625,6 +630,7 @@ A dictionary of ``Block`` objects.
 
 This dictionary can be indexed by slot number or block name.
 """
+
 
 def _add_block(block):
     blocks[block.slot] = block
@@ -643,8 +649,9 @@ _add_block(Block(18, "leaves", drop=(6, 0), ratio=1 / 9, dim=1))
 # Lapis lazuli ore drops 6 lapis lazuli items.
 _add_block(Block(21, "lapis-lazuli-ore", drop=(351, 4), quantity=6))
 # Beds are orientable and drops Bed Item
-_add_block(Block(26, "bed-block", drop=(355, 0),
-    orientation=(None, None, 2, 0, 1, 3)))
+_add_block(Block(
+    26, "bed-block", drop=(355, 0), orientation=(None, None, 2, 0, 1, 3))
+)
 # Torches are orientable and don't dim.
 _add_block(Block(50, "torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 # Chests are orientable.
@@ -652,8 +659,10 @@ _add_block(Block(54, "chest", orientation=(None, None, 2, 3, 4, 5)))
 # Furnaces are orientable.
 _add_block(Block(61, "furnace", orientation=(None, None, 2, 3, 4, 5)))
 # Wooden Door is orientable and drops Wooden Door item
-_add_block(Block(64, "wooden-door-block", drop=(324, 0),
-    orientation=(None, None, 1, 3, 0, 2)))
+_add_block(Block(
+    64, "wooden-door-block", drop=(324, 0),
+    orientation=(None, None, 1, 3, 0, 2))
+)
 # Ladders are orientable and don't dim.
 _add_block(Block(65, "ladder", orientation=(None, None, 2, 3, 4, 5), dim=0))
 # Levers are orientable and don't dim. Additionally, levers have special hax
@@ -662,16 +671,23 @@ _add_block(Block(69, "lever", orientation=(None, 5, 4, 3, 2, 1), dim=0))
 blocks["lever"]._f_dict.update(
     {13: "+y", 12: "-z", 11: "+z", 10: "-x", 9: "+x"})
 # Iron Door is orientable and drops Iron Door item
-_add_block(Block(71, "iron-door-block", drop=(330, 0),
-    orientation=(None, None, 1, 3, 0, 2)))
+_add_block(Block(
+    71, "iron-door-block", drop=(330, 0), orientation=(None, None, 1, 3, 0, 2))
+)
 # Redstone ore drops 5 redstone dusts.
 _add_block(Block(73, "redstone-ore", drop=(331, 0), quantity=5))
 _add_block(Block(74, "glowing-redstone-ore", drop=(331, 0), quantity=5))
 # Redstone torches are orientable and don't dim.
-_add_block(Block(75, "redstone-torch-off", orientation=(None, 5, 4, 3, 2, 1), dim=0))
-_add_block(Block(76, "redstone-torch", orientation=(None, 5, 4, 3, 2, 1), dim=0))
+_add_block(Block(
+    75, "redstone-torch-off", orientation=(None, 5, 4, 3, 2, 1), dim=0)
+)
+_add_block(Block(
+    76, "redstone-torch", orientation=(None, 5, 4, 3, 2, 1), dim=0)
+)
 # Stone buttons are orientable and don't dim.
-_add_block(Block(77, "stone-button", orientation=(None, None, 1, 2, 3, 4), dim=0))
+_add_block(Block(
+    77, "stone-button", orientation=(None, None, 1, 2, 3, 4), dim=0)
+)
 # Snow vanishes upon build.
 _add_block(Block(78, "snow", vanishes=True))
 # Ice drops nothing, is replaced by springs, and dims by 3.
@@ -814,22 +830,23 @@ unstackable = (
 List of fuel blocks and items maped to burn time
 """
 furnace_fuel = {
-    items["stick"].slot: 10,          # 5s
-    blocks["sapling"].slot: 10,       # 5s
-    blocks["wood"].slot: 30,          # 15s
-    blocks["fence"].slot: 30,         # 15s
-    blocks["wooden-stairs"].slot: 30, # 15s
-    blocks["trapdoor"].slot: 30,      # 15s
-    blocks["log"].slot: 30,           # 15s
-    blocks["workbench"].slot: 30,     # 15s
-    blocks["bookshelf"].slot: 30,     # 15s
-    blocks["chest"].slot: 30,         # 15s
-    blocks["locked-chest"].slot: 30,  # 15s
-    blocks["jukebox"].slot: 30,       # 15s
-    blocks["note-block"].slot: 30,    # 15s
-    items["coal"].slot: 160,          # 80s
-    items["lava-bucket"].slot: 2000   # 1000s
+    items["stick"].slot: 10,           # 5s
+    blocks["sapling"].slot: 10,        # 5s
+    blocks["wood"].slot: 30,           # 15s
+    blocks["fence"].slot: 30,          # 15s
+    blocks["wooden-stairs"].slot: 30,  # 15s
+    blocks["trapdoor"].slot: 30,       # 15s
+    blocks["log"].slot: 30,            # 15s
+    blocks["workbench"].slot: 30,      # 15s
+    blocks["bookshelf"].slot: 30,      # 15s
+    blocks["chest"].slot: 30,          # 15s
+    blocks["locked-chest"].slot: 30,   # 15s
+    blocks["jukebox"].slot: 30,        # 15s
+    blocks["note-block"].slot: 30,     # 15s
+    items["coal"].slot: 160,           # 80s
+    items["lava-bucket"].slot: 2000    # 1000s
 }
+
 
 def parse_block(block):
     """
@@ -838,7 +855,8 @@ def parse_block(block):
 
     try:
         if block.startswith("0x") and (
-            (int(block, 16) in blocks) or (int(block, 16) in items)):
+            (int(block, 16) in blocks) or (int(block, 16) in items)
+        ):
             return (int(block, 16), 0)
         elif (int(block) in blocks) or (int(block) in items):
             return (int(block), 0)

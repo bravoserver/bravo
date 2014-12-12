@@ -5,15 +5,18 @@ Module for specifying types of errors which might occur internally.
 # Errors which can be raised by serializers in the course of doing things
 # which serializers might normally do.
 
+
 class SerializerException(Exception):
     """
     Something bad happened in a serializer.
     """
 
+
 class SerializerReadException(SerializerException):
     """
     A serializer had issues reading data.
     """
+
 
 class SerializerWriteException(SerializerException):
     """
@@ -22,10 +25,12 @@ class SerializerWriteException(SerializerException):
 
 # Errors from plugin loading.
 
+
 class InvariantException(Exception):
     """
     Exception raised by failed invariant conditions.
     """
+
 
 class PluginException(Exception):
     """
@@ -34,6 +39,7 @@ class PluginException(Exception):
 
 # Errors from NBT handling.
 
+
 class MalformedFileError(Exception):
     """
     Exception raised on parse error.
@@ -41,10 +47,12 @@ class MalformedFileError(Exception):
 
 # Errors from bravo clients.
 
+
 class BetaClientError(Exception):
     """
     Something bad happened while dealing with a client.
     """
+
 
 class BuildError(BetaClientError):
     """
@@ -52,6 +60,7 @@ class BuildError(BetaClientError):
     """
 
 # Errors from the world.
+
 
 class ChunkNotLoaded(Exception):
     """

@@ -4,6 +4,7 @@ from sys import maxint
 from bravo.errors import ChunkNotLoaded
 from bravo.simplex import dot3
 
+
 class MobManager(object):
 
     """
@@ -48,16 +49,16 @@ class MobManager(object):
         min_block = min_point.to_block()
         max_block = max_point.to_block()
 
-        for x in xrange(min_block[0],max_block[0]):
-            for y in xrange(min_block[1],max_block[1]):
-                for z in xrange(min_block[2],max_block[2]):
-                    if self.world.sync_get_block((x,y,z)):
+        for x in xrange(min_block[0], max_block[0]):
+            for y in xrange(min_block[1], max_block[1]):
+                for z in xrange(min_block[2], max_block[2]):
+                    if self.world.sync_get_block((x, y, z)):
                         return False
 
         return True
 
-    def calculate_slide(vector,normal):
-        dot = dot3(vector,normal)
+    def calculate_slide(vector, normal):
+        dot = dot3(vector, normal)
         return (vector[0] - (dot)*normal[0],
                 vector[1] - (dot)*normal[1],
                 vector[2] - (dot)*normal[2])

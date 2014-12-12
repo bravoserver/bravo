@@ -29,17 +29,20 @@ edges3 = list(
 )
 edges3.sort()
 
+
 def dot2(u, v):
     """
     Dot product of two 2-dimensional vectors.
     """
     return u[0] * v[0] + u[1] * v[1]
 
+
 def dot3(u, v):
     """
     Dot product of two 3-dimensional vectors.
     """
     return u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
+
 
 def reseed(seed):
     """
@@ -55,6 +58,7 @@ def reseed(seed):
     r.shuffle(p)
     p *= 2
     fields[seed] = p
+
 
 def set_seed(seed):
     """
@@ -73,6 +77,7 @@ current_seed = None
 
 f2 = 0.5 * (math.sqrt(3) - 1)
 g2 = (3 - math.sqrt(3)) / 6
+
 
 def simplex2(x, y):
     """
@@ -134,6 +139,7 @@ def simplex2(x, y):
 
     # Where's this scaling factor come from?
     return n * 70
+
 
 def simplex3(x, y, z):
     """
@@ -226,13 +232,16 @@ def simplex3(x, y, z):
 
     n = 0
     for coord, gradient in izip(coords, gradients):
-        t = (0.6 - coord[0] * coord[0] - coord[1] * coord[1] - coord[2] *
-            coord[2])
+        t = (
+            0.6 - coord[0] * coord[0] - coord[1] *
+            coord[1] - coord[2] * coord[2]
+        )
         if t > 0:
             n += t**4 * dot3(edges2[gradient % 12], coord)
 
     # Where's this scaling factor come from?
     return n * 32
+
 
 def simplex(*args):
     if len(args) == 2:
@@ -241,6 +250,7 @@ def simplex(*args):
         return simplex3(*args)
     else:
         raise Exception("Don't know how to do %dD noise!" % len(args))
+
 
 def octaves2(x, y, count):
     """
@@ -264,6 +274,7 @@ def octaves2(x, y, count):
         count -= 1
     return sigma
 
+
 def octaves3(x, y, z, count):
     """
     Generate fractal octaves of noise.
@@ -284,6 +295,7 @@ def octaves3(x, y, z, count):
         count -= 1
     return sigma
 
+
 def offset2(x, y, xoffset, yoffset, octaves=1):
     """
     Generate an offset noise difference field.
@@ -296,5 +308,8 @@ def offset2(x, y, xoffset, yoffset, octaves=1):
     :returns: Difference of noises
     """
 
-    return (octaves2(x, y, octaves) -
-        octaves2(x + xoffset, y + yoffset, octaves) + 1) * 0.5
+    return (
+        octaves2(x, y, octaves) -
+        octaves2(x + xoffset, y + yoffset, octaves)
+        + 1
+    ) * 0.5

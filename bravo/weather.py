@@ -1,5 +1,6 @@
 from bravo.beta.packets import make_packet
 
+
 class WeatherVane(object):
     """
     An indicator of the current weather.

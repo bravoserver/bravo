@@ -4,6 +4,7 @@ from zope.interface import implements, invariant, Attribute, Interface
 
 from bravo.errors import InvariantException
 
+
 class IBravoPlugin(Interface):
     """
     Interface for plugins.
@@ -18,11 +19,15 @@ class IBravoPlugin(Interface):
         to uniquely index the plugin.
         """)
 
+
 def sorted_invariant(s):
     intersection = set(s.before) & set(s.after)
     if intersection:
-        raise InvariantException("Plugin wants to come before and after %r" %
-            intersection)
+        raise InvariantException(
+            "Plugin wants to come before and after %r" %
+            intersection
+        )
+
 
 class ISortedPlugin(IBravoPlugin):
     """
@@ -46,6 +51,7 @@ class ISortedPlugin(IBravoPlugin):
         Should be a tuple, list, or some other iterable.
         """)
 
+
 class ITerrainGenerator(ISortedPlugin):
     """
     Interface for terrain generators.
@@ -59,9 +65,11 @@ class ITerrainGenerator(ISortedPlugin):
         that the chunk may already be partially or totally populated.
         """
 
+
 def command_invariant(c):
     if c.__doc__ is None:
         raise InvariantException("Command has no documentation")
+
 
 class ICommand(IBravoPlugin):
     """
@@ -81,6 +89,7 @@ class ICommand(IBravoPlugin):
     usage = Attribute("""
         String explaining how to use this command.
         """)
+
 
 class IChatCommand(ICommand):
     """
@@ -103,6 +112,7 @@ class IChatCommand(ICommand):
         :returns: a generator object or other iterable yielding lines
         """
 
+
 class IConsoleCommand(ICommand):
     """
     Interface for console commands.
@@ -121,6 +131,7 @@ class IConsoleCommand(ICommand):
 
         :returns: a generator object or other iterable yielding lines
         """
+
 
 class ChatToConsole(object):
     """
@@ -147,6 +158,7 @@ class ChatToConsole(object):
             return self.chatcommand.chat_command(username, parameters)
 
 registerAdapter(ChatToConsole, IChatCommand, IConsoleCommand)
+
 
 class IRecipe(IBravoPlugin):
     """
@@ -183,6 +195,7 @@ class IRecipe(IBravoPlugin):
         This tuple must be of the format (slot, count).
         """)
 
+
 class ISeason(IBravoPlugin):
     """
     Seasons are transformational stages run during certain days to emulate an
@@ -197,6 +210,7 @@ class ISeason(IBravoPlugin):
     day = Attribute("""
         Day of the year on which to switch to this season.
         """)
+
 
 class ISerializer(IBravoPlugin):
     """
@@ -284,6 +298,7 @@ class ISerializer(IBravoPlugin):
 
 # Hooks
 
+
 class IWindowOpenHook(ISortedPlugin):
     """
     Hook for actions to be taken on container open
@@ -297,6 +312,7 @@ class IWindowOpenHook(ISortedPlugin):
         :returns: ``Deffered`` with None or window object
         """
         pass
+
 
 class IWindowClickHook(ISortedPlugin):
     """
@@ -312,6 +328,7 @@ class IWindowClickHook(ISortedPlugin):
         """
         pass
 
+
 class IWindowCloseHook(ISortedPlugin):
     """
     Hook for actions to be taken on window clicks
@@ -323,6 +340,7 @@ class IWindowCloseHook(ISortedPlugin):
         The ``container`` is a 0x65 message
         """
         pass
+
 
 class IPreBuildHook(ISortedPlugin):
     """
@@ -380,6 +398,7 @@ class IPreBuildHook(ISortedPlugin):
                   hooks will run
         """
 
+
 class IPostBuildHook(ISortedPlugin):
     """
     Hook for actions to be taken after a block is placed.
@@ -392,6 +411,7 @@ class IPostBuildHook(ISortedPlugin):
         The coordinates for the given block have already been pre-adjusted.
         """
 
+
 class IPreDigHook(ISortedPlugin):
     """
     Hook for actions to be taken as dig started.
@@ -403,6 +423,7 @@ class IPreDigHook(ISortedPlugin):
         The ``block`` is a block we going to dig
         :returns: True to cancel the dig action.
         """
+
 
 class IDigHook(ISortedPlugin):
     """
@@ -419,6 +440,7 @@ class IDigHook(ISortedPlugin):
         :param int z: Z coordinate
         :param `Block` block: dug block
         """
+
 
 class ISignHook(ISortedPlugin):
     """
@@ -438,6 +460,7 @@ class ISignHook(ISortedPlugin):
         :param list text: list of lines of text
         :param bool new: whether this sign is newly placed
         """
+
 
 class IUseHook(ISortedPlugin):
     """
@@ -459,6 +482,7 @@ class IUseHook(ISortedPlugin):
     targets = Attribute("""
         List of entity names this plugin wants to be called for.
         """)
+
 
 class IAutomaton(IBravoPlugin):
     """
@@ -498,6 +522,7 @@ class IAutomaton(IBravoPlugin):
         After this method is called, the automaton should not continue
         processing data; it needs to stop immediately.
         """
+
 
 class IWorldResource(IBravoPlugin, IResource):
     """

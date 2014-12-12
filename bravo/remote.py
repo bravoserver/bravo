@@ -7,6 +7,7 @@ from bravo.chunk import Chunk
 from bravo.ibravo import ITerrainGenerator
 from bravo.plugin import retrieve_sorted_plugins
 
+
 class MakeChunk(Command):
     arguments = [
         ("x", Integer()),
@@ -24,6 +25,7 @@ class MakeChunk(Command):
     errors = {
         Exception: "Exception",
     }
+
 
 class Slave(AMPChild):
     """

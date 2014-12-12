@@ -10,12 +10,14 @@ from bravo.beta.factory import BravoFactory
 from bravo.infini.factory import InfiniNodeFactory
 from bravo.beta.protocol import BetaProxyProtocol
 
+
 class BetaProxyFactory(Factory):
     protocol = BetaProxyProtocol
 
     def __init__(self, config, name):
         self.name = name
         self.port = config.getint("infiniproxy %s" % name, "port")
+
 
 def services_for_endpoints(endpoints, factory):
     l = []
@@ -26,6 +28,7 @@ def services_for_endpoints(endpoints, factory):
         server.setName("%s (%s)" % (factory.name, endpoint))
         l.append(server)
     return l
+
 
 class BravoService(MultiService):
 
