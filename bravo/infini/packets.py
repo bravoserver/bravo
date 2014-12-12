@@ -8,17 +8,18 @@ from construct import UBInt8, UBInt16, UBInt32
 
 DUMP_ALL_PACKETS = False
 
-AlphaString = functools.partial(PascalString,
-    length_field=UBInt16("length"),
-    encoding="utf8")
+AlphaString = functools.partial(
+    PascalString, length_field=UBInt16("length"), encoding="utf8"
+)
+
 
 def String(name):
     """
     UTF-8 length-prefixed string.
     """
 
-    return PascalString(name, length_field=UBInt16("length"),
-        encoding="utf-8")
+    return PascalString(name, length_field=UBInt16("length"), encoding="utf-8")
+
 
 def InfiniPacket(name, identifier, subconstruct):
     """
@@ -28,7 +29,8 @@ def InfiniPacket(name, identifier, subconstruct):
     things.
     """
 
-    header = Struct("header",
+    header = Struct(
+        "header",
         # XXX Should this be Magic(chr(identifier))?
         Const(UBInt8("identifier"), identifier),
         UBInt8("flags"),
@@ -38,19 +40,27 @@ def InfiniPacket(name, identifier, subconstruct):
     return Struct(name, header, subconstruct)
 
 packets = {
-    0: InfiniPacket("ping", 0x00,
-        Struct("payload",
+    0: InfiniPacket(
+        "ping",
+        0x00,
+        Struct(
+            "payload",
             UBInt16("uid"),
             UBInt32("timestamp"),
         )
     ),
-    255: InfiniPacket("disconnect", 0xff,
-        Struct("payload",
+    255: InfiniPacket(
+        "disconnect",
+        0xff,
+        Struct(
+            "payload",
             AlphaString("explanation"),
         )
     ),
-    "__default__": Struct("unknown",
-        Struct("header",
+    "__default__": Struct(
+        "unknown",
+        Struct(
+            "header",
             UBInt8("identifier"),
             UBInt8("flags"),
             UBInt32("length"),
@@ -60,22 +70,26 @@ packets = {
 }
 
 packets_by_name = {
-    "ping"       : 0,
-    "disconnect" : 255,
+    "ping": 0,
+    "disconnect": 255,
 }
 
-infinipacket_parser = Struct("parser",
+infinipacket_parser = Struct(
+    "parser",
     OptionalGreedyRange(
-        Struct("packets",
+        Struct(
+            "packets",
             Peek(UBInt8("header")),
-            Embed(Switch("packet", lambda context: context["header"],
-                packets)),
+            Embed(
+                Switch("packet", lambda context: context["header"], packets)
+            ),
         ),
     ),
     OptionalGreedyRange(
         UBInt8("leftovers"),
     ),
 )
+
 
 def parse_packets(bytestream):
     container = infinipacket_parser.parse(bytestream)
@@ -89,6 +103,7 @@ def parse_packets(bytestream):
             print packet[1]
 
     return l, leftovers
+
 
 def make_packet(packet, *args, **kwargs):
     """

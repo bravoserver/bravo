@@ -19,6 +19,7 @@ entities_by_name = {
     "Pickup": Pickup,
 }
 
+
 class InfiniClientFactory(Factory):
     """
     A ``Factory`` that serves as an InfiniCraft client.
@@ -37,6 +38,7 @@ class InfiniClientFactory(Factory):
 
         return Factory.buildProtocol(self, addr)
 
+
 class InfiniNodeFactory(Factory):
     """
     A ``Factory`` that serves as an InfiniCraft node.
@@ -53,8 +55,9 @@ class InfiniNodeFactory(Factory):
         self.port = self.config.getint("infininode %s" % name, "port")
         self.gateway = self.config.get("infininode %s" % name, "gateway")
 
-        self.private_key = self.config.getdefault("infininode %s" % name,
-            "private_key", None)
+        self.private_key = self.config.getdefault(
+            "infininode %s" % name, "private_key", None
+        )
 
         self.broadcast_loop = LoopingCall(self.broadcast)
         self.broadcast_loop.start(220)
@@ -71,11 +74,14 @@ class InfiniNodeFactory(Factory):
         })
 
         if self.private_key:
-            url = urlunparse(("http", self.gateway,
-                "/broadcast/%s/" % self.private_key, None, args, None))
+            url = urlunparse(
+                ("http", self.gateway, "/broadcast/%s/" % self.private_key,
+                 None, args, None)
+            )
         else:
-            url = urlunparse(("http", self.gateway, "/broadcast/", None, args,
-                None))
+            url = urlunparse(
+                ("http", self.gateway, "/broadcast/", None, args, None)
+            )
         d = getPage(url)
         d.addCallback(self.online)
         d.addErrback(self.error)
