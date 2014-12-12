@@ -6,6 +6,7 @@ from bravo.simplex import set_seed, simplex2, simplex3
 
 set_seed(time())
 
+
 def bench2():
     times = []
     for i in range(25):
@@ -16,6 +17,7 @@ def bench2():
         t = (after - before) / 10000
         times.append(1/t)
     return "simplex2", times
+
 
 def bench3():
     times = []
