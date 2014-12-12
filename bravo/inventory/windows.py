@@ -15,8 +15,8 @@ class Window(SerializableSlots):
     The ``Window`` covers all kinds of inventory and crafting windows,
     ranging from user inventories to furnaces and workbenches.
 
-    The ``Window`` agregates player's inventory and other crafting/storage slots
-    as building blocks of the window.
+    The ``Window`` agregates player's inventory and other crafting/storage
+    slots as building blocks of the window.
 
     :param int wid: window ID
     :param Inventory inventory: player's inventory object
@@ -33,12 +33,12 @@ class Window(SerializableSlots):
     # NOTE: The property must be defined in every final class
     #       of certain window. Never use generic one. This can lead to
     #       awfull bugs.
-    #@property
-    #def metalist(self):
-    #    m = [self.slots.crafted, self.slots.crafting,
-    #         self.slots.fuel, self.slots.storage]
-    #    m += [self.inventory.storage, self.inventory.holdables]
-    #    return m
+    # @property
+    # def metalist(self):
+    #     m = [self.slots.crafted, self.slots.crafting,
+    #          self.slots.fuel, self.slots.storage]
+    #     m += [self.inventory.storage, self.inventory.holdables]
+    #     return m
 
     @property
     def slots_num(self):
@@ -106,8 +106,11 @@ class Window(SerializableSlots):
             if item is None:
                 l.append(Container(primary=-1))
             else:
-                l.append(Container(primary=item.primary,
-                    secondary=item.secondary, count=item.quantity))
+                l.append(Container(
+                    primary=item.primary,
+                    secondary=item.secondary,
+                    count=item.quantity
+                ))
 
         packet = make_packet("inventory", wid=self.wid, length=len(l), items=l)
         return packet
@@ -121,13 +124,19 @@ class Window(SerializableSlots):
         if item is None:
             return False
 
-        loop_over = enumerate # default enumerator - from start to end
+        loop_over = enumerate  # default enumerator - from start to end
         # same as enumerate() but in reverse order
-        reverse_enumerate = lambda l: izip(xrange(len(l)-1, -1, -1), reversed(l))
+        reverse_enumerate = lambda l: izip(
+            xrange(len(l)-1, -1, -1), reversed(l)
+        )
 
+        _crafted_or_storage = (
+            container is self.slots.crafted or
+            container is self.slots.storage
+        )
         if container is self.slots.crafting or container is self.slots.fuel:
             targets = self.inventory.storage, self.inventory.holdables
-        elif container is self.slots.crafted or container is self.slots.storage:
+        elif _crafted_or_storage:
             targets = self.inventory.holdables, self.inventory.storage
             # in this case notchian client enumerates from the end. o_O
             loop_over = reverse_enumerate
@@ -149,8 +158,12 @@ class Window(SerializableSlots):
         # find same item to stack
         for stash in targets:
             for i, slot in loop_over(stash):
-                if slot is not None and slot.holds(item) and slot.quantity < 64 \
-                        and slot.primary not in blocks.unstackable:
+                _stackable = (
+                    slot is not None and slot.holds(item) and
+                    slot.quantity < 64 and
+                    slot.primary not in blocks.unstackable
+                )
+                if _stackable:
                     count = slot.quantity + item_quantity
                     if count > 64:
                         count, item_quantity = 64, count - 64
@@ -201,11 +214,12 @@ class Window(SerializableSlots):
             return False
 
         if l is self.inventory.armor:
-            result, self.selected = self.inventory.select_armor(index,
-                                         alternate, shift, self.selected)
+            result, self.selected = self.inventory.select_armor(
+                index, alternate, shift, self.selected
+            )
             return result
         elif l is self.slots.crafted:
-            if shift: # shift-click on crafted slot
+            if shift:  # shift-click on crafted slot
                 # Notchian client works this way: you lose items
                 # that was not moved to inventory. So, it's not a bug.
                 if (self.select_stack(self.slots.crafted, 0)):
@@ -213,12 +227,15 @@ class Window(SerializableSlots):
                     # we must update the recipe to generate new item there
                     self.slots.update_crafted()
                     # and now we emulate taking of the items
-                    result, temp = self.slots.select_crafted(0, alternate, True, None)
+                    result, temp = self.slots.select_crafted(
+                        0, alternate, True, None
+                    )
                 else:
                     result = False
             else:
-                result, self.selected = self.slots.select_crafted(index,
-                                            alternate, shift, self.selected)
+                result, self.selected = self.slots.select_crafted(
+                    index, alternate, shift, self.selected
+                )
             return result
         elif shift:
             return self.select_stack(l, index)
@@ -281,7 +298,8 @@ class Window(SerializableSlots):
 
     def close(self):
         '''
-        Clear crafting areas and return items to drop and packets to send to client
+        Clear crafting areas and return items to drop and packets to
+        send to client
         '''
         items = []
         packets = ""
@@ -299,11 +317,11 @@ class Window(SerializableSlots):
     def drop_selected(self, alternate=False):
         items = []
         if self.selected is not None:
-            if alternate: # drop one item
+            if alternate:  # drop one item
                 i = Slot(self.selected.primary, self.selected.secondary, 1)
                 items.append(i)
                 self.selected = self.selected.decrement()
-            else: # drop all
+            else:  # drop all
                 items.append(self.selected)
                 self.selected = None
         return items
@@ -316,6 +334,7 @@ class Window(SerializableSlots):
         # override later in SharedWindow
         return ""
 
+
 class InventoryWindow(Window):
     '''
     Special case of window - player's inventory window
@@ -326,23 +345,30 @@ class InventoryWindow(Window):
 
     @property
     def slots_num(self):
-        # Actually it doesn't matter. Client never notifies when it opens inventory
+        # Actually it doesn't matter.
+        # Client never notifies when it opens inventory
         return 5
 
     @property
     def identifier(self):
-        # Actually it doesn't matter. Client never notifies when it opens inventory
+        # Actually it doesn't matter.
+        # Client never notifies when it opens inventory
         return "inventory"
 
     @property
     def title(self):
-        # Actually it doesn't matter. Client never notifies when it opens inventory
+        # Actually it doesn't matter.
+        # Client never notifies when it opens inventory
         return "Inventory"
 
     @property
     def metalist(self):
         m = [self.slots.crafted, self.slots.crafting]
-        m += [self.inventory.armor, self.inventory.storage, self.inventory.holdables]
+        m += [
+            self.inventory.armor,
+            self.inventory.storage,
+            self.inventory.holdables
+        ]
         return m
 
     def creative(self, slot, primary, secondary, quantity):
@@ -361,6 +387,7 @@ class InventoryWindow(Window):
         else:
             return False
 
+
 class WorkbenchWindow(Window):
 
     def __init__(self, wid, inventory):
@@ -374,20 +401,25 @@ class WorkbenchWindow(Window):
         m += [self.inventory.storage, self.inventory.holdables]
         return m
 
+
 class SharedWindow(Window):
     """
-    Base class for all windows with shared containers (like chests, furnace and dispenser)
+    Base class for all windows with shared containers
+    (like chests, furnace and dispenser)
     """
+
     def __init__(self, wid, inventory, slots, coords):
         """
         :param int wid: window ID
         :param Inventory inventory: player's inventory object
         :param Tile tile: tile object
-        :param tuple coords: world coords of the tile (bigx, smallx, bigz, smallz, y)
+        :param tuple coords: world coords of the tile
+        (bigx, smallx, bigz, smallz, y)
         """
+
         Window.__init__(self, wid, inventory, slots)
         self.coords = coords
-        self.dirty_slots = {} # { slot : value, ... }
+        self.dirty_slots = {}  # { slot : value, ... }
 
     def mark_dirty(self, table, index):
         # player's inventory are not shareable slots, skip it
@@ -397,23 +429,41 @@ class SharedWindow(Window):
 
     def packets_for_dirty(self, dirty_slots):
         """
-        Generate update packets for dirty usually privided by another window (sic!)
+        Generate update packets for dirty usually privided
+        by another window (sic!)
         """
+
         packets = ""
         for slot, item in dirty_slots.iteritems():
             if item is None:
-                packets += make_packet("window-slot", wid=self.wid, slot=slot, primary=-1)
+                packets += make_packet(
+                    "window-slot",
+                    wid=self.wid,
+                    slot=slot,
+                    primary=-1
+                )
             else:
-                packets += make_packet("window-slot", wid=self.wid, slot=slot,
-                                       primary=item.primary, secondary=item.secondary,
-                                       count=item.quantity)
+                packets += make_packet(
+                    "window-slot",
+                    wid=self.wid,
+                    slot=slot,
+                    primary=item.primary,
+                    secondary=item.secondary,
+                    count=item.quantity
+                )
         return packets
+
 
 class ChestWindow(SharedWindow):
     @property
     def metalist(self):
-        m = [self.slots.storage, self.inventory.storage, self.inventory.holdables]
+        m = [
+            self.slots.storage,
+            self.inventory.storage,
+            self.inventory.holdables
+        ]
         return m
+
 
 class LargeChestWindow(SharedWindow):
 
@@ -423,8 +473,13 @@ class LargeChestWindow(SharedWindow):
 
     @property
     def metalist(self):
-        m = [self.slots.storage, self.inventory.storage, self.inventory.holdables]
+        m = [
+            self.slots.storage,
+            self.inventory.storage,
+            self.inventory.holdables
+        ]
         return m
+
 
 class FurnaceWindow(SharedWindow):
 

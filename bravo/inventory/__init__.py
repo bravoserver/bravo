@@ -19,13 +19,14 @@ class SerializableSlots(object):
     def load_from_list(self, l):
         if len(l) < self.metalength:
             # XXX why will it break everything? :T
-            raise AttributeError # otherwise it will break everything
+            raise AttributeError  # otherwise it will break everything
         for target in self.metalist:
             if target:
                 target[:], l = l[:len(target)], l[len(target):]
 
     def save_to_list(self):
         return [i for i in chain(*self.metalist)]
+
 
 class Inventory(SerializableSlots):
     '''
@@ -37,7 +38,7 @@ class Inventory(SerializableSlots):
         self.crafting = [None] * 27
         self.storage = [None] * 27
         self.holdables = [None] * 9
-        self.dummy = [None] * 64 # represents gap in serialized structure
+        self.dummy = [None] * 64  # represents gap in serialized structure
 
     def add(self, item, quantity):
         """
@@ -50,8 +51,12 @@ class Inventory(SerializableSlots):
         # Try to stack first
         for stash in (self.holdables, self.storage):
             for i, slot in enumerate(stash):
-                if slot is not None and slot.holds(item) and slot.quantity < 64 \
-                                    and slot.primary not in blocks.unstackable:
+                _stackable = (
+                    slot is not None and slot.holds(item) and
+                    slot.quantity < 64 and
+                    slot.primary not in blocks.unstackable
+                )
+                if _stackable:
                     count = slot.quantity + quantity
                     if count > 64:
                         count, quantity = 64, count - 64
@@ -95,7 +100,7 @@ class Inventory(SerializableSlots):
 
         return False
 
-    def select_armor(self, index, alternate, shift, selected = None):
+    def select_armor(self, index, alternate, shift, selected=None):
         """
         Handle a slot selection on an armor slot.
 
